@@ -1,5 +1,12 @@
 # CircleGuard Monorepo
 
+#### **Integrantes:**
+* **Daniela Castaño Moreno**
+* **Santiago Alejandro Estrada**
+* **Faiber Piedrahita**
+* **Alejandro Quiñones Caicedo**
+
+
 **Absolute Privacy. High-Speed Containment. Secure Campus.**
 
 CircleGuard is a state-of-the-art university contact tracing and fencing system designed to identify interconnected contact groups ("Circles") and apply rapid health fences while preserving individual anonymity.
