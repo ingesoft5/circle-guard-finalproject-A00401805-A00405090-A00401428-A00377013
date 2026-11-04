@@ -1,6 +1,32 @@
-# form-service: estructura del código
+# form-service: funcionamiento y estructura
 
-Este documento registra la estructura y las dependencias actuales de `circleguard-form-service` para las subtareas 1 y 2 de HU-FORM-01.
+Este documento explica el funcionamiento, la estructura y las dependencias actuales de `circleguard-form-service` para el diagnóstico de HU-FORM-01.
+
+## Cómo funciona form-service
+
+`form-service` administra cuestionarios de salud dinámicos y recibe las respuestas asociadas a un identificador anónimo. También permite subir un certificado o resultado de prueba y registrar su validación. La entidad `HealthSurvey` usa `anonymousId` y no contiene campos de nombre o correo.
+
+El cliente Expo consulta el cuestionario activo y envía las respuestas por HTTP. `HealthSurveyService` obtiene ese cuestionario, usa `SymptomMapper` para determinar si las respuestas indican síntomas y guarda la encuesta en PostgreSQL. Si el usuario adjunta un archivo, `StorageService` lo guarda en el sistema de archivos local y la encuesta conserva el nombre devuelto.
+
+```mermaid
+flowchart LR
+    cliente["Cliente Expo: web o móvil"] -->|HTTP| controladores["Controladores de form-service"]
+    controladores --> cuestionarios["QuestionnaireService"]
+    controladores --> encuestas["HealthSurveyService"]
+    controladores --> adjuntos["StorageService"]
+    encuestas --> cuestionarios
+    encuestas --> sintomas["SymptomMapper"]
+    cuestionarios --> postgres[(PostgreSQL)]
+    encuestas --> postgres
+    adjuntos --> archivos["Archivos locales"]
+    encuestas -->|survey.submitted| kafka{{Kafka}}
+    encuestas -->|certificate.validated| kafka
+    kafka --> promocion["promotion-service"]
+```
+
+Después de guardar una encuesta, el servicio publica `survey.submitted` en Kafka. Si se aprueba un certificado, publica `certificate.validated`. `promotion-service` consume esos eventos para evaluar cambios en el estado de salud: puede marcar a una persona como `SUSPECT` cuando se detectan síntomas o intentar restaurar `ACTIVE` tras una aprobación. Esta comunicación es asíncrona; recibir la respuesta HTTP de `form-service` no confirma que `promotion-service` ya haya procesado el evento.
+
+Dentro de CircleGuard, este servicio convierte los reportes de salud en señales para el sistema que gestiona los estados y cercos sanitarios. Las rutas y los datos de cada evento se detallan más adelante.
 
 ## Organización
 
