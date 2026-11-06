@@ -7,6 +7,9 @@ plugins {
     jacoco
 }
 
+// Alinea los módulos y el núcleo de Testcontainers en el classpath de pruebas.
+extra["testcontainers.version"] = "1.21.4"
+
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
     testImplementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
@@ -17,6 +20,18 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation(project(":services:circleguard-promotion-service")) {  //SOLO para la prueba de integración FORM -> PROMOTION
+        exclude(group = "org.springframework.boot", module = "spring-boot-starter-security")
+        // Usa las clases reales sin incluir migraciones ni application.yml de Promotion.
+        attributes {
+            attribute(
+                org.gradle.api.attributes.LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                objects.named(org.gradle.api.attributes.LibraryElements.CLASSES)
+            )
+        }
+    }
+    testImplementation("org.testcontainers:junit-jupiter:1.21.4")
+    testImplementation("org.testcontainers:kafka:1.21.4")
 }
 
 // Configuración JaCoCo
