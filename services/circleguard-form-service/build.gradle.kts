@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.spring")
     kotlin("plugin.jpa")
+    jacoco
 }
 
 dependencies {
@@ -16,4 +17,38 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+}
+
+// Configuración JaCoCo
+tasks.jacocoTestReport {
+    // La tarea test se ejecuta antes y deja disponible la información de cobertura.
+    dependsOn(tasks.test)
+    reports {
+        xml.required = true
+        csv.required = false
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir("reports/jacoco/test/html")
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    // Verifica la cobertura generada por las pruebas del módulo y deja el reporte disponible.
+    dependsOn(tasks.jacocoTestReport)
+    violationRules {
+        rule {
+
+            element = "BUNDLE"
+            
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.60".toBigDecimal()
+            }
+        }
+    }
+}
+
+// ./gradlew check falle si la cobertura de líneas es menor al 60 %.
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
