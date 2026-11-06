@@ -32,6 +32,7 @@ dependencies {
     }
     testImplementation("org.testcontainers:junit-jupiter:1.21.4")
     testImplementation("org.testcontainers:kafka:1.21.4")
+    testImplementation("org.testcontainers:postgresql:1.21.4")
 }
 
 // Configuración JaCoCo
