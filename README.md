@@ -170,6 +170,9 @@ We maintain high system integrity via multi-level testing:
 
 ## Project Structure
 
+# Estructura del Proyecto - CircleGuard
+
+```text
 circleguard/
 │
 ├── .github/
@@ -227,8 +230,12 @@ circleguard/
 │   ├── release-notes/                # Historial de cambios (generado)
 │   └── imagenes/                     # Capturas para el PDF final
 │
+├── .githooks/                        # [E1.1] Validaciones locales (Git Hooks)
+│   ├── commit-msg                    # Valida Conventional Commits
+│   └── pre-push                      # Bloquea push directo a main
+│
 ├── .gitignore                        # Ignorar .env, build/, node_modules/, etc.
 ├── BRANCHING-STRATEGY.md             # [E1.1] Estrategia de ramas y commits
 ├── CHANGELOG.md                      # [E1.7] Generado automáticamente por el pipeline
-├── README.md                         # [E1.8] Documentación principal y operativa
+├── README.md                         # [E1.8] Documentación principal y operativa (este archivo)
 └── IAG_REGISTRO.md                   # [E1.8] Bitácora de uso de IA (Nivel 3)
