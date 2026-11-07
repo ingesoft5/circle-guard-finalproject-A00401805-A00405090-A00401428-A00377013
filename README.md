@@ -3,7 +3,7 @@
 #### **Integrantes:**
 * **Daniela Castaño Moreno**
 * **Santiago Alejandro Estrada**
-* **Faiber Piedrahita**
+* **Faiber Piedrahita Perlaza**
 * **Alejandro Quiñones Caicedo**
 
 
