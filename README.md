@@ -165,3 +165,29 @@ We maintain high system integrity via multi-level testing:
 - **FERPA Compliance**: Student identities are never stored in the contact graph.
 - **Right to be Forgotten**: Users can trigger complete data purging via the Identity Vault.
 - **Temporal Privacy**: All contact edges are automatically purged after 14 days.
+
+---
+
+## CI/CD — Parte 1
+
+La plataforma CI/CD del gateway se aprovisiona con dos instancias EC2:
+
+- `cg-tools`: Jenkins, SonarQube, PostgreSQL y Nexus.
+- `cg-envs`: ambientes `dev`, `stage` y `prod` para gateway + Redis.
+
+Reconstrucción desde cero:
+
+```bash
+export AWS_REGION=us-east-1
+export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
+./infra/bootstrap/all.sh
+```
+
+Documentación:
+
+- [Validación AWS](docs/infra/aws-free-tier-validation.md)
+- [Ambientes](docs/infra/environments.md)
+- [Configuración CI/CD](docs/infra/ci-cd-setup.md)
+- [Runbook](docs/infra/runbook.md)
+- Pipeline: [`Jenkinsfile`](Jenkinsfile) y [`vars/ci.groovy`](vars/ci.groovy)
+- Correcciones de seguridad del gateway: `SecurityConfig`, `JwtAuthenticationFilter`, `QrValidationService`.
