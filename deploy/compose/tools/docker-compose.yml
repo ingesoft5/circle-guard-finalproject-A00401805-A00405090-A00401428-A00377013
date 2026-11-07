@@ -1,0 +1,114 @@
+services:
+  jenkins:
+    build: ./jenkins
+    container_name: cg-jenkins
+    restart: unless-stopped
+    user: root
+    environment:
+      CASC_JENKINS_CONFIG: /var/jenkins_home/casc/jenkins.yaml
+      JAVA_OPTS: "-Xms512m -Xmx1536m"
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
+      GITHUB_USER: ${GITHUB_USER}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      GITHUB_OWNER: ${GITHUB_OWNER}
+      GITHUB_REPO: ${GITHUB_REPO}
+      GITHUB_REPO_URL: ${GITHUB_REPO_URL}
+      SONAR_TOKEN: ${SONAR_TOKEN}
+      NEXUS_USER: ${NEXUS_USER}
+      NEXUS_PASSWORD: ${NEXUS_PASSWORD}
+      NEXUS_URL: ${NEXUS_URL}
+      NEXUS_REGISTRY: ${NEXUS_REGISTRY}
+      SONAR_HOST_URL: ${SONAR_HOST_URL}
+      ENVS_IP: ${ENVS_IP}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./jenkins/casc:/var/jenkins_home/casc:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/login >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    mem_limit: 2g
+    networks: [tools-net]
+
+  sonar-db:
+    image: postgres:16
+    container_name: cg-sonar-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sonar
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD}
+    volumes:
+      - sonar_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonar"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [tools-net]
+
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: cg-sonarqube
+    restart: unless-stopped
+    depends_on:
+      sonar-db:
+        condition: service_healthy
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonar-db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD}
+      SONAR_WEB_JAVAOPTS: "-Xmx1g"
+      SONAR_CE_JAVAOPTS: "-Xmx1g"
+      SONAR_SEARCH_JAVAOPTS: "-Xmx1g"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    ports:
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/api/system/status | grep -q UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+    mem_limit: 3g
+    networks: [tools-net]
+
+  nexus:
+    image: sonatype/nexus3:3.68.1
+    container_name: cg-nexus
+    restart: unless-stopped
+    environment:
+      INSTALL4J_ADD_VM_PARAMS: "-Xms512m -Xmx1200m -XX:MaxDirectMemorySize=2g"
+    volumes:
+      - nexus_data:/nexus-data
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/service/rest/v1/status >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+    mem_limit: 2g
+    networks: [tools-net]
+
+volumes:
+  jenkins_home:
+  sonar_db:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  nexus_data:
+
+networks:
+  tools-net:
+    name: tools-net
+    driver: bridge

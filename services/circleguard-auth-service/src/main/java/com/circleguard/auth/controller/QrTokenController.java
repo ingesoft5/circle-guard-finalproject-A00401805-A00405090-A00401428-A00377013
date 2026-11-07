@@ -2,6 +2,7 @@ package com.circleguard.auth.controller;
 
 import com.circleguard.auth.service.QrTokenService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class QrTokenController {
     private final QrTokenService qrService;
+
+    @Value("${qr.expiration:300}")
+    private long expirationSeconds;
 
     /**
      * Generates a short-lived QR token for campus entry.
@@ -26,7 +30,7 @@ public class QrTokenController {
         
         return ResponseEntity.ok(Map.of(
             "qrToken", token,
-            "expiresIn", "60"
+            "expiresIn", String.valueOf(expirationSeconds)
         ));
     }
 }

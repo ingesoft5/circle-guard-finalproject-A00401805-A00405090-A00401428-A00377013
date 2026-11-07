@@ -58,7 +58,7 @@ public class QrTokenControllerTest {
                 .header("Authorization", "Bearer " + bearerJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.qrToken").value(expectedQrToken))
-                .andExpect(jsonPath("$.expiresIn").value("60"));
+                .andExpect(jsonPath("$.expiresIn").value("300"));
     }
 
     @Test

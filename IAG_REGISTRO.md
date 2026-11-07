@@ -14,6 +14,9 @@
 1. [Módulo: `circleguard-auth-service` e `identity-service` (Faiber Piedrahita)](#1-módulo-circleguard-auth-service-e-identity-service-faiber-piedrahita)
    - [1.1 HU-AUTH-01 (DCG-77) — Diagnóstico de estructura y dependencias de `auth-service`](#11-hu-auth-01-dcg-77--diagnóstico-de-estructura-y-dependencias-de-auth-service)
    - [1.2 HU-AUTH-02 (DCG-78) — Automatizar las pruebas unitarias y de integración de `auth-service`](#12-hu-auth-02-dcg-78--automatizar-las-pruebas-unitarias-y-de-integración-de-auth-service)
+   - [1.3 HU-AUTH-03 (DCG-79) — Empaquetar `auth-service` e integrarlo al pipeline de CI](#13-hu-auth-03-dcg-79--empaquetar-auth-service-e-integrarlo-al-pipeline-de-ci)
+2. [Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)](#2-módulo-circleguard-gateway-service-e-infraestructura-cicd-daniela-castaño)
+   - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
 
 ---
 
@@ -171,3 +174,102 @@ Con base en este diseño previo y el archivo `Proyecto_Final_CircleGuard.pdf` ad
 
 El diseño previo caso por caso a partir del diagnóstico de `HU-AUTH-01` permitió orientar a la IAG con precisión sobre qué escenarios de borde probar (como el fallback de LDAP a PostgreSQL cuando `LdapAuthenticationProvider` lanza `AuthenticationException`, el bloqueo de cuentas con `isActive = false`, y la limpieza del `SecurityContextHolder` ante tokens malformados). Además, el ajuste de constructores en `IdentityClient` con `@Value` y `RestTemplate` no solo desbloqueó las pruebas unitarias con `MockRestServiceServer`, sino que dejó listo el cliente para su contenerización en `HU-AUTH-03`.
 
+---
+
+### 1.3 HU-AUTH-03 (DCG-79) — Empaquetar `auth-service` e integrarlo al pipeline de CI
+
+- **Fecha:** 6 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Historia / Subtareas en Jira:** `DCG-79` (`DCG-94`, `DCG-95`, `DCG-96`, `DCG-97`)
+- **Objetivo de la interacción:** Sincronizar la base del pipeline CI/CD del equipo (`origin/feature/HU-GATEWAY-CICD-01`), externalizar credenciales, URLs y secretos de `circleguard-auth-service` mediante variables de entorno (`DCG-95`), construir el `Dockerfile` multi-stage con usuario no-root y `HEALTHCHECK` alimentado por Spring Boot Actuator (`DCG-94`), e integrar `auth-service` a las etapas de compilación, cobertura JaCoCo, SonarQube Quality Gate, publicación en Nexus y construcción/publicación de imagen Docker con etiquetado semántico (`DCG-96` y `DCG-97`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+A partir de la matriz de parametrización levantada en `HU-AUTH-01`, la batería de pruebas de `HU-AUTH-02` y la estructura de pipeline creada en `origin/feature/HU-GATEWAY-CICD-01` (`f053ef6`), definí previamente el diseño de implementación para las 4 subtareas:
+
+1. **Sincronización con `origin/feature/HU-GATEWAY-CICD-01`:** Integrar `Jenkinsfile`, `vars/ci.groovy`, `sonar-project.properties`, `.dockerignore` y `gradle/wrapper/gradle-wrapper.jar` en `feature/HU-AUTH-03`, alineando `QrTokenControllerTest`, `QrTokenServiceTest` y `AuthIntegrationTest` con el ajuste de `qr.expiration: 300` (en segundos) introducido en `f053ef6`.
+2. **Externalización de configuración y secretos (`DCG-95`):**
+   - En `src/main/resources/application.yml`: parametrizar `SERVER_PORT`, `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `SPRING_JPA_HIBERNATE_DDL_AUTO`, `SPRING_LDAP_URLS`, `SPRING_LDAP_BASE`, `SPRING_LDAP_USERNAME`, `SPRING_LDAP_PASSWORD`, `IDENTITY_SERVICE_URL`, `JWT_SECRET`, `JWT_EXPIRATION`, `QR_SECRET`, `QR_EXPIRATION`, `CORS_ALLOWED_ORIGINS` y `MANAGEMENT_HEALTH_LDAP_ENABLED`, exponiendo `/actuator/health` y `/actuator/info`.
+   - En `SecurityConfig.java`: eliminar las cadenas quemadas en `contextSource()` y `corsConfigurationSource()` inyectando propiedades `@Value(...)`, y permitir `/actuator/health` y `/actuator/info` en `securityFilterChain`.
+3. **Empaquetamiento inmutable con Docker (`DCG-94`):**
+   - Declarar `spring-boot-starter-actuator` en `services/circleguard-auth-service/build.gradle.kts`.
+   - Crear `services/circleguard-auth-service/Dockerfile` multi-stage (`eclipse-temurin:21-jdk` $\rightarrow$ `eclipse-temurin:21-jre-alpine`), creando el usuario y grupo del sistema `circleguard` (no-root), exponiendo `8180` y configurando `HEALTHCHECK` contra `http://localhost:8180/actuator/health`.
+4. **Integración a Jenkins, SonarQube y Nexus (`DCG-96` y `DCG-97`):**
+   - Configurar `maven-publish` hacia el repositorio `nexus` en `services/circleguard-auth-service/build.gradle.kts`.
+   - Incluir `services/circleguard-auth-service` en `sonar-project.properties`, `Jenkinsfile` y `vars/ci.groovy` (`buildAndTest`, `publish`, `dockerBuildPush` con tag semver `${env.TAG}`).
+
+#### B. Prompt empleado
+
+```text
+Estoy desarrollando la historia de usuario HU-AUTH-03 (DCG-79): Empaquetar `auth-service` e integrarlo al pipeline de CI del proyecto CircleGuard ubicado en:
+`/home/faiber/Desktop/IngesoftV/final/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`
+Actualmente ya me encuentro en la rama `feature/HU-AUTH-03`.
+
+Tras revisar el diagnóstico de `docs/arquitectura/diagnostico-auth-service.md`, el código actual de `services/circleguard-auth-service/` y la infraestructura de CI/CD que mi compañera configuró en la rama remota `origin/feature/HU-GATEWAY-CICD-01` (commit `f053ef6`), definí el siguiente diseño técnico para completar las 4 subtareas de HU-AUTH-03 (`DCG-94`, `DCG-95`, `DCG-96`, `DCG-97`):
+
+1. Sincronización con la base de CI/CD del equipo (`origin/feature/HU-GATEWAY-CICD-01`):
+   - En `origin/feature/HU-GATEWAY-CICD-01` ya están creados `Jenkinsfile`, `vars/ci.groovy`, `sonar-project.properties`, `.dockerignore` y `gradle/wrapper/gradle-wrapper.jar` (con la excepción en `.gitignore`).
+   - Debemos traer/integrar esos archivos base del pipeline a `feature/HU-AUTH-03` conservando intactos nuestro `docs/arquitectura/diagnostico-auth-service.md`, la bitácora `IAG_REGISTRO.md` (fusionando cualquier entrada si aplica) y la suite de pruebas de `services/circleguard-auth-service/`. Nota: si se incorpora el ajuste de `QrTokenController.java` y `QrTokenService.java` de `f053ef6` (`qr.expiration: 300` en segundos), actualizar `QrTokenControllerTest` y `QrTokenServiceTest` para que todas las pruebas sigan en verde.
+
+2. Subtarea `DCG-95` — Externalización de configuración y secretos en `auth-service`:
+   - En `services/circleguard-auth-service/src/main/resources/application.yml`:
+     - Parametrizar `server.port: ${SERVER_PORT:8180}`.
+     - Parametrizar PostgreSQL: `url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/circleguard_auth}`, `username: ${SPRING_DATASOURCE_USERNAME:admin}`, `password: ${SPRING_DATASOURCE_PASSWORD:password}` y `ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}`.
+     - Parametrizar OpenLDAP: `urls: ${SPRING_LDAP_URLS:ldap://localhost:389}`, `base: ${SPRING_LDAP_BASE:dc=circleguard,dc=edu}`, `username: ${SPRING_LDAP_USERNAME:cn=admin,dc=circleguard,dc=edu}`, `password: ${SPRING_LDAP_PASSWORD:admin}`.
+     - Parametrizar `identity.service.url: ${IDENTITY_SERVICE_URL:http://localhost:8083/api/v1/identities/map}`.
+     - Parametrizar secretos y expiraciones: `jwt.secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}`, `jwt.expiration: ${JWT_EXPIRATION:3600000}`, `qr.secret: ${QR_SECRET:5367566B5970337336763979244226452948404D635166546A576E5A72347537}`, `qr.expiration: ${QR_EXPIRATION:300}`.
+     - Parametrizar `cors.allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8081,http://localhost:8080}`.
+     - Exponer endpoints de Actuator (`management.endpoints.web.exposure.include: health,info` y `management.health.ldap.enabled: ${MANAGEMENT_HEALTH_LDAP_ENABLED:false}` para que el healthcheck no falle cuando LDAP no esté activo).
+   - En `SecurityConfig.java`:
+     - Eliminar las cadenas quemadas en `contextSource()` e inyectar `@Value("${spring.ldap.urls:ldap://localhost:389}")`, `@Value("${spring.ldap.base:dc=circleguard,dc=edu}")`, `@Value("${spring.ldap.username:cn=admin,dc=circleguard,dc=edu}")` y `@Value("${spring.ldap.password:admin}")`.
+     - Eliminar las URLs quemadas en `corsConfigurationSource()` e inyectar `@Value("${cors.allowed-origins:http://localhost:8081,http://localhost:8080}")` separando por comas.
+     - Permitir `/actuator/health` y `/actuator/info` en `securityFilterChain`.
+
+3. Subtarea `DCG-94` — `Dockerfile` multi-stage con usuario no root y `HEALTHCHECK`:
+   - Agregar `implementation("org.springframework.boot:spring-boot-starter-actuator")` en `services/circleguard-auth-service/build.gradle.kts`.
+   - Crear `services/circleguard-auth-service/Dockerfile` siguiendo el estándar multi-stage del equipo:
+     - Etapa 1 (`build`): `eclipse-temurin:21-jdk`, compila `./gradlew :services:circleguard-auth-service:bootJar --no-daemon`.
+     - Etapa 2 (runtime): `eclipse-temurin:21-jre-alpine`, crea grupo y usuario del sistema no-root `circleguard`, copia el fat JAR (excluyendo `*-plain.jar`) a `/app/app.jar`, asigna permisos a `circleguard:circleguard`, cambia a `USER circleguard`, expone `8180`, define `HEALTHCHECK` contra `http://localhost:8180/actuator/health` y ejecuta `ENTRYPOINT ["java", "-jar", "/app/app.jar"]`.
+
+4. Subtareas `DCG-96` y `DCG-97` — Integración al pipeline de Jenkins, SonarQube, Nexus y publicación Docker con semver:
+   - En `services/circleguard-auth-service/build.gradle.kts`:
+     - Agregar el plugin `` `maven-publish` `` y el bloque `publishing` hacia el repositorio `nexus` (`NEXUS_URL`, `NEXUS_USER`, `NEXUS_PASSWORD`) siguiendo exactamente la convención usada en `services/circleguard-gateway-service/build.gradle.kts`, y excluir `**/*Application*` en JaCoCo si aplica.
+   - En `sonar-project.properties`:
+     - Incluir `services/circleguard-auth-service` en `sonar.sources`, `sonar.tests`, `sonar.java.binaries` y `sonar.coverage.jacoco.xmlReportPaths` junto con `gateway-service` para que SonarQube analice ambos módulos y verifique su cobertura JaCoCo >= 60%.
+   - En `Jenkinsfile` / `vars/ci.groovy`:
+     - Integrar `services/circleguard-auth-service` (imagen `auth`) en las etapas de `Build & Test`, `Package`, `Publish` (Nexus Maven) y `Docker` (`ci.dockerBuildPush('services/circleguard-auth-service', 'auth', env.TAG)`) garantizando que el Quality Gate de SonarQube sea bloqueante y que la imagen se etiquete con versión semántica (`${env.TAG}`, nunca `latest`).
+
+---
+
+Con base en este diseño previo y el archivo `Proyecto_Final_CircleGuard.pdf` adjunto, apóyame ejecutando los cambios en la rama `feature/HU-AUTH-03`:
+1. Integra los archivos de CI/CD de `origin/feature/HU-GATEWAY-CICD-01` sin perder el trabajo de `HU-AUTH-01` y `HU-AUTH-02`.
+2. Implementa las 4 subtareas (`DCG-94`, `DCG-95`, `DCG-96`, `DCG-97`) en `services/circleguard-auth-service/`, `sonar-project.properties`, `Jenkinsfile` y `vars/ci.groovy`.
+3. Ejecuta con Java 21 `./gradlew :services:circleguard-auth-service:clean :services:circleguard-auth-service:test :services:circleguard-auth-service:jacocoTestReport :services:circleguard-auth-service:jacocoTestCoverageVerification :services:circleguard-auth-service:bootJar` y verifica que `docker build -f services/circleguard-auth-service/Dockerfile -t circleguard/auth:1.0.0-test .` construya correctamente (si el daemon de Docker está activo).
+4. Registra esta interacción en una nueva sección `1.3 HU-AUTH-03 (DCG-79)` dentro de `IAG_REGISTRO.md` manteniendo el mismo formato de Nivel 3.
+```
+
+#### C. Validación humana y ajustes realizados
+
+- **Normalización de rutas de subproyecto Gradle en `vars/ci.groovy`:** En `vars/ci.groovy` original se invocaba `./gradlew :${serviceDir}:clean test ...` donde `serviceDir` tenía formato `services/circleguard-...` (con `/` en vez de `:`). Se normalizó con `def gradleProject = serviceDir.replace('/', ':')` y se prefijaron explícitamente todas las tareas (`:${gradleProject}:clean :${gradleProject}:test :${gradleProject}:jacocoTestReport :${gradleProject}:jacocoTestCoverageVerification` y `:${gradleProject}:publish`) para evitar ejecutar tareas sobre servicios no configurados del monorepo.
+- **Verificación de Actuator `/actuator/health` en `AuthIntegrationTest`:** Se añadió una aserción en `AuthIntegrationTest` que realiza `GET /actuator/health` sin token JWT y comprueba HTTP `200 OK` con `$.status == "UP"`, validando que el endpoint del `HEALTHCHECK` de Docker responda correctamente incluso con OpenLDAP deshabilitado (`management.health.ldap.enabled: false`).
+
+#### D. Reflexión crítica
+
+La integración entre las ramas del equipo (`origin/feature/HU-GATEWAY-CICD-01` y `feature/HU-AUTH-03`) demostró la importancia de haber documentado previamente en `HU-AUTH-01` el doble quemado de configuración en `SecurityConfig.java`: externalizar únicamente `application.yml` no habría bastado sin inyectar `@Value` en `contextSource()` y `corsConfigurationSource()`. Asimismo, la verificación del `HEALTHCHECK` de Actuator en las pruebas de integración asegura que el contenedor no entre en estado `unhealthy` cuando se despliegue en `dev`, `stage` y `prod`.
+
+---
+
+## 2. Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)
+
+### 2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway
+
+- **Nivel de uso:** 3 (colaboración con IAG).
+- **Herramienta:** OpenCode / DeepSeek.
+- **Contenido propio entregado:** estructura del repositorio, hallazgos del análisis del gateway, requisitos del PDF, decisiones de topología (2 instancias, `dev`/`stage`/`prod`).
+- **Prompts principales:**
+  - Analizar la estructura del microservicio Gateway.
+  - Validar el plan de la HU contra el PDF del proyecto.
+  - Ajustar la HU a la Parte 1 / Sprint 1 y al microservicio gateway.
+  - Generar scripts Bash idempotentes, Docker Compose y pipeline de Jenkins.
+- **Resultado:** scripts de infraestructura, compose de herramientas y ambientes, Jenkinsfile, Shared Library, correcciones de seguridad del gateway, pruebas y documentación.
+- **Verificación humana:** el equipo debe revisar y ejecutar cada script, validar las credenciales y estar en capacidad de explicar la configuración en la sustentación.

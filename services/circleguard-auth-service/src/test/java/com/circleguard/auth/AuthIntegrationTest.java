@@ -116,7 +116,7 @@ public class AuthIntegrationTest {
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.qrToken").isNotEmpty())
-                .andExpect(jsonPath("$.expiresIn").value("60"));
+                .andExpect(jsonPath("$.expiresIn").value("300"));
 
         // 3. Query users with permission alert:receive_priority from relational DB
         mockMvc.perform(get("/api/v1/users/permissions/alert:receive_priority"))
@@ -124,6 +124,11 @@ public class AuthIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].username").value("health_user"))
                 .andExpect(jsonPath("$[0].email").value("health@circleguard.edu"));
+
+        // 4. Verify Actuator health endpoint is publicly exposed and UP
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
     }
 
     @Test

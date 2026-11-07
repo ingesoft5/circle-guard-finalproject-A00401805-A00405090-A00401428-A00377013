@@ -1,0 +1,13 @@
+configuration-as-code
+git
+workflow-aggregator
+github-branch-source
+job-dsl
+sonar
+nexus-artifact-uploader
+jacoco
+credentials-binding
+docker-workflow
+pipeline-stage-view
+ssh-agent
+timestamper
