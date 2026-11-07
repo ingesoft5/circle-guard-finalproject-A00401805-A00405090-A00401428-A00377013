@@ -15,16 +15,11 @@ Para este proyecto, aplicamos estrictamente **GitHub Flow**, garantizando que la
 ## 2. Nomenclatura de Ramas (Trazabilidad con Jira)
 Para mantener un orden estricto y trazabilidad con las Historias de Usuario (HU) gestionadas en Jira, las ramas deben seguir la siguiente estructura:
 
-**Formato:** `HU-<microservicio>-<numero_de_HU>-<descripcion_corta>`
+**Formato:** `HU-<nombre del microservicio>-<número de HU>-<descripción corta de funcionalidad>`
 
-*   **microservicio:** Nombre del servicio afectado (ej. `auth`, `gateway`, `frontend`, `infra`).
-*   **numero_de_HU:** El ID numérico de la tarea en Jira.
-*   **descripcion_corta:** Breve descripción de la funcionalidad en minúsculas y separada por guiones.
-
-**Ejemplos válidos:**
-*   `HU-auth-12-implementar-login`
-*   `HU-infra-08-crear-scripts-bootstrap`
-*   `HU-gateway-03-corregir-expiracion-qr`
+*   **nombre del microservicio:** Nombre del servicio afectado (ej. `auth`, `gateway`, `frontend`, `infra`).
+*   **número de HU:** El ID numérico de la tarea en Jira.
+*   **descripción corta de funcionalidad:** Breve descripción en minúsculas y separada por guiones.
 
 ## 3. Convención de Commits (Conventional Commits)
 Usamos el estándar **Conventional Commits** para permitir el versionado semántico (SemVer) automático y la generación de *release notes*. Los mensajes de commit locales **no llevan el ID de Jira**, ya que la trazabilidad se garantiza por el nombre de la rama y el título del PR.
@@ -54,6 +49,6 @@ En GitHub Flow, el Pull Request es el corazón de la calidad. Para garantizar qu
 ## 5. Herramientas de Validación Local (Git Hooks)
 Para evitar errores humanos antes de llegar al repositorio remoto, el proyecto incluye hooks locales compartidos en la carpeta `.githooks/`:
 *   `commit-msg`: Valida que el mensaje siga el estándar Conventional Commits.
-*   `pre-push`: Bloquea intentos de push directo a `main` y advierte si el nombre de la rama no cumple el formato `HU-...`.
+*   `pre-push`: Bloquea intentos de push directo a `main` y advierte si el nombre de la rama no cumple el formato `HU-<nombre del microservicio>-<número de HU>-<descripción corta de funcionalidad>`.
 
 *(Nota para el equipo: Para activar estos hooks en cada máquina local, ejecutar una vez: `git config core.hooksPath .githooks`)*
