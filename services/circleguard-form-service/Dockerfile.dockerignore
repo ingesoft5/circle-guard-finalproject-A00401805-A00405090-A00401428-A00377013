@@ -1,0 +1,27 @@
+# Se aplica al contexto de la raíz al construir con el Dockerfile de Form.
+.git
+.agents
+.codex
+.gradle
+**/.gradle
+**/build
+**/target
+**/node_modules
+mobile
+.idea
+.vscode
+**/*.log
+
+# Solo Form necesita código fuente; los demás módulos aportan sus scripts Gradle.
+services/*/src
+!services/circleguard-form-service/src
+**/src/test
+
+# Las credenciales se suministran al ejecutar el contenedor.
+**/.env
+**/.env.*
+**/*.env
+**/*.pem
+**/*.key
+**/*.p12
+**/*.jks

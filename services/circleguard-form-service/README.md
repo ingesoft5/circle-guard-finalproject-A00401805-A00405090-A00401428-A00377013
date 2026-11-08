@@ -103,3 +103,79 @@ El código principal está en `src/main/java/com/circleguard/form/`. `FormApplic
 | `certificate.validated` | Después de aprobar la validación de una encuesta en `POST /api/v1/certificates/{id}/validate`. | El identificador anónimo, el estado `APPROVED`, el identificador del administrador y la marca de tiempo. Solicita el cambio de estado a `ACTIVE`. |
 
 La dirección de Kafka se configura en `application.yml`. **`promotion-service`** escucha ambos temas en `SurveyListener` y procesa los mensajes; `form-service` no le hace llamadas HTTP directas.
+
+## Empaquetado Docker (DCG-21)
+
+Ejecuta la construcción desde la raíz del repositorio, porque Gradle configura allí los módulos:
+
+```bash
+docker build \
+  -f services/circleguard-form-service/Dockerfile \
+  -t circleguard-form-service:1.0.0-dcg21 .
+```
+
+La primera etapa usa la imagen oficial de Gradle 8.14 con JDK 21 y ejecuta únicamente `bootJar` de Form. Así funciona sin Gradle instalado en el equipo ni `gradle-wrapper.jar` local. La segunda etapa contiene el JRE 21 y el JAR ejecutable, y utiliza UID/GID `10001:10001`. Ambas bases están fijadas por digest; para actualizarlas hay que verificar los nuevos digests y repetir la validación.
+
+`Dockerfile.dockerignore` excluye compilaciones locales, pruebas, archivos de entorno y claves. También excluye el código de los otros servicios, conservando sus scripts Gradle para configurar el proyecto. La imagen se etiqueta con versión, nunca con `latest`.
+
+### Configuración al ejecutar
+
+| Variable | Uso |
+| --- | --- |
+| `FORM_DB_PASSWORD` | Contraseña obligatoria de PostgreSQL, sin valor predeterminado en el JAR. |
+| `SPRING_DATASOURCE_URL` | URL JDBC de la base `circleguard_form`, accesible desde el contenedor. |
+| `SPRING_DATASOURCE_USERNAME` | Usuario de PostgreSQL; el valor local predeterminado es `admin`. |
+| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | Dirección de Kafka accesible desde el contenedor. |
+
+Por ejemplo, con PostgreSQL y Kafka disponibles como `postgres` y `kafka` en una red Docker llamada `circleguard`:
+
+```bash
+# Define FORM_DB_PASSWORD en tu entorno antes de ejecutar este comando.
+docker run -d --name circleguard-form \
+  --network circleguard \
+  -p 127.0.0.1:8086:8086 \
+  --env FORM_DB_PASSWORD \
+  --env SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/circleguard_form \
+  --env SPRING_DATASOURCE_USERNAME=admin \
+  --env SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092 \
+  circleguard-form-service:1.0.0-dcg21
+```
+
+La base debe existir antes del arranque; Flyway aplica las migraciones de Form. Kafka debe anunciar una dirección alcanzable desde esa red, por ejemplo `kafka:9092`. El Compose de desarrollo anuncia `localhost:9092`, por lo que su configuración actual está orientada a ejecutar los servicios Java en el equipo anfitrión.
+
+La variable `FORM_DB_PASSWORD` también es necesaria para `bootRun` local. Las pruebas que cargan PostgreSQL obtienen sus credenciales de Testcontainers.
+
+Los adjuntos se escriben en `/tmp/circleguard-uploads`, con permisos para el usuario de la aplicación. Para conservarlos al recrear el contenedor, el entorno de ejecución debe montar almacenamiento con permisos para UID `10001`.
+
+### Comprobaciones y futura integración con Jenkins
+
+```bash
+docker image inspect --format '{{.Config.User}}' circleguard-form-service:1.0.0-dcg21
+docker run --rm --entrypoint id circleguard-form-service:1.0.0-dcg21
+docker run --rm --entrypoint java circleguard-form-service:1.0.0-dcg21 -version
+docker logs circleguard-form
+curl -i http://localhost:8086/api/v1/questionnaires
+```
+
+El usuario debe ser `10001:10001`, Java debe ser 21 y el endpoint debe devolver HTTP `200`. Los logs permiten comprobar el arranque de Spring y las migraciones Flyway.
+
+En Jenkins, ejecutar `./gradlew :services:circleguard-form-service:check --console=plain` antes de construir la imagen. Esta comprobación necesita Docker para Testcontainers y genera los reportes JUnit y JaCoCo de HU2. El clon de CI utiliza el Gradle Wrapper versionado en el repositorio, incluido `gradle-wrapper.jar`; el Dockerfile usa Gradle de su imagen de compilación. La construcción de la imagen usa el comando anterior y no necesita acceso al socket Docker desde sus etapas. La publicación en el registro y el pipeline compartido corresponden a las siguientes subtareas.
+
+### Resultado de la validación local de DCG-21
+
+Validación realizada el 6 de noviembre de 2026 con la imagen `1.0.0-dcg21` en Linux amd64:
+
+| Comprobación | Resultado |
+| --- | --- |
+| Construcción desde fuentes con `bootJar` | Correcta, Gradle 8.14.6 de la base fijada. |
+| Imagen final | 160 812 532 bytes (153,36 MiB); JRE Temurin 21.0.13+9 y sin Gradle. |
+| Usuario efectivo | UID/GID `10001:10001`. |
+| Configuración del JAR | Contraseña externa mediante `FORM_DB_PASSWORD`; sin dependencias de prueba ni archivos de credenciales. |
+| Arranque sobre PostgreSQL vacío | Cinco migraciones Flyway aplicadas correctamente. |
+| Consulta de cuestionarios | HTTP `200`. |
+| Carga de adjunto | HTTP `200`; contenido escrito y leído en `/tmp/circleguard-uploads`. |
+| Envío de encuesta con fiebre | HTTP `200`; recibido en `survey.submitted` con clave igual a `anonymousId`, `hasSymptoms=true` y marca de tiempo numérica. |
+| `check` de Form | 35 pruebas, 0 fallos, 0 omitidas. |
+| JaCoCo, cobertura de líneas | 86,43 % (121 de 140); supera el mínimo del 60 %. |
+
+La comprobación de arranque utilizó PostgreSQL 16 y Kafka/ZooKeeper 7.6.0 en una red temporal, con Kafka anunciando `kafka:9092` y la contraseña suministrada solo al ejecutar. Se eliminaron los contenedores, sus volúmenes temporales y la red al finalizar; la imagen construida queda disponible localmente.
