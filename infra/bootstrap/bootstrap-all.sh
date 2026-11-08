@@ -11,6 +11,8 @@ prepare_tools_env() {
   ensure_env_file "${TOOLS_ENV_LOCAL}" <<EOF
 JENKINS_ADMIN_PASSWORD=$(rand_secret)
 PROFESSOR_PASSWORD=$(rand_secret)
+PROFESSOR_SONAR_PASSWORD=$(rand_secret)
+PROFESSOR_NEXUS_PASSWORD=$(rand_secret)
 GITHUB_USER=${GITHUB_USER:-change-me}
 GITHUB_TOKEN=${GITHUB_TOKEN:-change-me}
 GITHUB_OWNER=${GITHUB_OWNER:-ingesoft5}

@@ -20,6 +20,8 @@ ensure_tools_env() {
   ensure_env_file "${TOOLS_ENV}" <<EOF
 JENKINS_ADMIN_PASSWORD=$(rand_secret)
 PROFESSOR_PASSWORD=$(rand_secret)
+PROFESSOR_SONAR_PASSWORD=$(rand_secret)
+PROFESSOR_NEXUS_PASSWORD=$(rand_secret)
 GITHUB_USER=${GITHUB_USER:-change-me}
 GITHUB_TOKEN=${GITHUB_TOKEN:-change-me}
 GITHUB_OWNER=${GITHUB_OWNER:-ingesoft5}
@@ -44,6 +46,8 @@ SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
 EOF
   ensure_secret "${TOOLS_ENV}" JENKINS_ADMIN_PASSWORD
   ensure_secret "${TOOLS_ENV}" PROFESSOR_PASSWORD
+  ensure_secret "${TOOLS_ENV}" PROFESSOR_SONAR_PASSWORD
+  ensure_secret "${TOOLS_ENV}" PROFESSOR_NEXUS_PASSWORD
   ensure_secret "${TOOLS_ENV}" SONAR_DB_PASSWORD
   ensure_secret "${TOOLS_ENV}" SONAR_ADMIN_PASSWORD
   ensure_secret "${TOOLS_ENV}" NEXUS_PASSWORD
@@ -84,6 +88,15 @@ configure_sonar() {
   curl -fsS -u "${auth}" -X POST "${base}/api/projects/create" \
     --data-urlencode "name=CircleGuard Gateway" \
     --data-urlencode "project=circleguard-gateway-service" >/dev/null 2>&1 || true
+  curl -fsS -u "${auth}" -X POST "${base}/api/users/create" \
+    --data-urlencode "login=professor" --data-urlencode "name=Professor" \
+    --data-urlencode "password=${PROFESSOR_SONAR_PASSWORD}" --data-urlencode "local=true" >/dev/null 2>&1 || true
+  curl -fsS -u "${auth}" -X POST "${base}/api/permissions/add_user" \
+    --data-urlencode "login=professor" --data-urlencode "permission=user" \
+    --data-urlencode "projectKey=circleguard-gateway-service" >/dev/null 2>&1 || true
+  curl -fsS -u "${auth}" -X POST "${base}/api/permissions/add_user" \
+    --data-urlencode "login=professor" --data-urlencode "permission=codeviewer" \
+    --data-urlencode "projectKey=circleguard-gateway-service" >/dev/null 2>&1 || true
   token="${SONAR_TOKEN:-}"
   if [ -z "${token}" ] || [ "${token}" = "change-me" ] || \
      ! curl -fsS -u "${token}:" "${base}/api/authentication/validate" | jq -e '.valid' >/dev/null; then
@@ -140,6 +153,29 @@ configure_nexus() {
       "${base}/service/rest/v1/security/users/${NEXUS_USER}" >/dev/null || true
   else
     curl -fsS -u "${auth}" -X POST -H 'Content-Type: application/json' -d "${user_json}" \
+      "${base}/service/rest/v1/security/users" >/dev/null || true
+  fi
+
+  local prof_role prof_user
+  prof_role="{\"id\":\"professor-read\",\"name\":\"professor-read\",
+    \"description\":\"Read-only professor role\",
+    \"privileges\":[\"nx-repository-view-*-*-read\",\"nx-repository-view-*-*-browse\"],
+    \"roles\":[]}"
+  if curl -fsS -u "${auth}" -o /dev/null "${base}/service/rest/v1/security/roles/professor-read" 2>/dev/null; then
+    curl -fsS -u "${auth}" -X PUT -H 'Content-Type: application/json' -d "${prof_role}" \
+      "${base}/service/rest/v1/security/roles/professor-read" >/dev/null || true
+  else
+    curl -fsS -u "${auth}" -X POST -H 'Content-Type: application/json' -d "${prof_role}" \
+      "${base}/service/rest/v1/security/roles" >/dev/null || true
+  fi
+  prof_user="{\"userId\":\"professor\",\"firstName\":\"Professor\",\"lastName\":\"Review\",
+    \"emailAddress\":\"professor@circleguard.local\",\"source\":\"default\",\"status\":\"active\",
+    \"roles\":[\"professor-read\"],\"password\":\"${PROFESSOR_NEXUS_PASSWORD}\"}"
+  if curl -fsS -u "${auth}" -o /dev/null "${base}/service/rest/v1/security/users/professor" 2>/dev/null; then
+    curl -fsS -u "${auth}" -X PUT -H 'Content-Type: application/json' -d "${prof_user}" \
+      "${base}/service/rest/v1/security/users/professor" >/dev/null || true
+  else
+    curl -fsS -u "${auth}" -X POST -H 'Content-Type: application/json' -d "${prof_user}" \
       "${base}/service/rest/v1/security/users" >/dev/null || true
   fi
 }
