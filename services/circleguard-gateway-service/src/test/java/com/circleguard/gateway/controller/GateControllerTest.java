@@ -4,6 +4,7 @@ import com.circleguard.gateway.service.QrValidationService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -13,7 +14,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(GateController.class)
-public class GateControllerTest {
+@AutoConfigureMockMvc(addFilters = false)
+class GateControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -25,15 +27,30 @@ public class GateControllerTest {
     void shouldReturnValidationResult() throws Exception {
         String token = "mock-token";
         QrValidationService.ValidationResult mockResult =
-            new QrValidationService.ValidationResult(true, "GREEN", "Welcome");
+                new QrValidationService.ValidationResult(true, "GREEN", "Welcome");
 
         Mockito.when(validationService.validateToken(token)).thenReturn(mockResult);
 
         mockMvc.perform(post("/api/v1/gate/validate")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"token\": \"mock-token\"}"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"mock-token\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true))
                 .andExpect(jsonPath("$.status").value("GREEN"));
+    }
+
+    @Test
+    void shouldReturnDeniedResult() throws Exception {
+        QrValidationService.ValidationResult denied =
+                new QrValidationService.ValidationResult(false, "RED", "Access Denied");
+
+        Mockito.when(validationService.validateToken("risk-token")).thenReturn(denied);
+
+        mockMvc.perform(post("/api/v1/gate/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"risk-token\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valid").value(false))
+                .andExpect(jsonPath("$.status").value("RED"));
     }
 }
