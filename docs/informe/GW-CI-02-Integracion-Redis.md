@@ -7,6 +7,8 @@
 **Rama:** `feat/HU-GATEWAY-03-integracion-redis-testcontainers`  
 **Fecha de verificación:** 8 de noviembre de 2026
 
+> **Versión DOCX con capturas:** [`GW-CI-02-Validacion-Testcontainers.docx`](GW-CI-02-Validacion-Testcontainers.docx)
+
 ---
 
 ## 1. Alcance y criterios de aceptación

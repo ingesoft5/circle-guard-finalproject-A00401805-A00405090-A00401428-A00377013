@@ -113,6 +113,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/GW-CI-02-Integracion-Redis.md` — GW-CI-02 report on gateway-Redis integration testing with Testcontainers.
 
+- `docs/informe/GW-CI-02-Validacion-Testcontainers.docx` — Binary asset: GW-CI-02 technical validation report with embedded captures.
+
 - `docs/informe/Gateway-Cobertura.md` — Gateway coverage, integration, E2E, and quality evidence report.
 
 - `docs/informe/P1.1-Branching-GitHub-Flow.html` — Repository file.
@@ -144,6 +146,36 @@ English purpose of every tracked repository file.
 - `docs/informe/evidencia/gw-ci-02/junit-integrationTest.xml` — JUnit XML report for the gateway Redis integration tests.
 
 - `docs/informe/evidencia/gw-ci-02/redis-container.log.txt` — Log of the ephemeral Redis container used by the gateway integration tests.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/00-portada.png` — Cover image of the GW-CI-02 validation report.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/01-dependencias.png` — Capture of the Testcontainers dependencies in build.gradle.kts.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/02-clase-base.png` — Capture of AbstractRedisIntegrationTest.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/03-perfil.png` — Capture of application-test.yml.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/04-tarea.png` — Capture of the integrationTest Gradle task.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/05-jenkinsfile.png` — Capture of the Integration Test Jenkins stage.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/06-ci-helper.png` — Capture of the ci.integrationTest helper.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/07-unitarias.png` — Capture of the unit test and coverage run.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/08-integracion.png` — Capture of the integration test run.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/09-tres-corridas.png` — Capture of the three consecutive integration runs.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/10-docker.png` — Capture of the final container cleanup check.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/11-git-log.png` — Capture of the GW-CI-02 commit history.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/12-junit.png` — Capture of the integration JUnit report summary.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/13-ciclo-contenedor.png` — Diagram of the Redis container lifecycle.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/14-pipeline.png` — Diagram of the pipeline stage position.
 
 - `docs/informe/evidencia/idempotencia-cli.png` — Binary asset.
 
