@@ -23,7 +23,7 @@ export LIBRARY_BRANCH=feat/HU-GATEWAY-01-configurar-servidores
 
 Do not print the token.
 
-`ADMIN_CIDR` and `TEACHER_CIDR` restrict SSH, Jenkins, SonarQube, and Nexus. For now `TEACHER_CIDR` uses the administrator IP; replace it with the teacher CIDR when available. The bootstrap rejects `0.0.0.0/0` for both values. Jenkins also allows the current GitHub `hooks` CIDRs so webhooks keep working.
+`ADMIN_CIDR` and `TEACHER_CIDR` restrict SSH, Jenkins, SonarQube, and Nexus. For now `TEACHER_CIDR` uses the administrator IP; replace it with the teacher CIDR when available. The bootstrap rejects `0.0.0.0/0` for both values.
 
 ## 3. Clean Old Resources
 
