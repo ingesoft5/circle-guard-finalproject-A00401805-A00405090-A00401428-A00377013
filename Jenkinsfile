@@ -45,17 +45,17 @@ pipeline {
 
         stage('Build & Test') {
             when { expression { !params.ROLLBACK_TAG?.trim() } }
-            steps { ci.buildAndTest(env.SERVICE_PATH) }
+            steps { script { ci.buildAndTest(env.SERVICE_PATH) } }
         }
 
         stage('SonarQube') {
             when { expression { !params.ROLLBACK_TAG?.trim() } }
-            steps { ci.sonarScan() }
+            steps { script { ci.sonarScan() } }
         }
 
         stage('Quality Gate') {
             when { expression { !params.ROLLBACK_TAG?.trim() } }
-            steps { ci.qualityGate() }
+            steps { script { ci.qualityGate() } }
         }
 
         stage('Package') {
@@ -65,27 +65,27 @@ pipeline {
 
         stage('Publish') {
             when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
-            steps { ci.publish(env.SERVICE_PATH) }
+            steps { script { ci.publish(env.SERVICE_PATH) } }
         }
 
         stage('Docker') {
             when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
-            steps { ci.dockerBuildPush(env.SERVICE_DIR, 'gateway', env.TAG) }
+            steps { script { ci.dockerBuildPush(env.SERVICE_DIR, 'gateway', env.TAG) } }
         }
 
         stage('Deploy dev') {
             when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
-            steps { ci.deploy('dev', env.TAG) }
+            steps { script { ci.deploy('dev', env.TAG) } }
         }
 
         stage('E2E') {
             when { allOf { branch 'main'; expression { !params.SKIP_E2E && !params.ROLLBACK_TAG?.trim() } } }
-            steps { ci.e2e() }
+            steps { script { ci.e2e() } }
         }
 
         stage('Deploy stage') {
             when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
-            steps { ci.deploy('stage', env.TAG) }
+            steps { script { ci.deploy('stage', env.TAG) } }
         }
 
         stage('Approval prod') {
@@ -97,7 +97,7 @@ pipeline {
 
         stage('Deploy prod') {
             when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
-            steps { ci.deploy('prod', env.TAG) }
+            steps { script { ci.deploy('prod', env.TAG) } }
         }
 
         stage('Tag') {
@@ -113,11 +113,11 @@ pipeline {
 
         stage('Rollback prod') {
             when { allOf { branch 'main'; expression { params.ROLLBACK_TAG?.trim() } } }
-            steps { ci.deploy('prod', params.ROLLBACK_TAG) }
+            steps { script { ci.deploy('prod', params.ROLLBACK_TAG) } }
         }
 
         stage('Notify') {
-            steps { ci.notify('success') }
+            steps { script { ci.notify('success') } }
         }
     }
 
