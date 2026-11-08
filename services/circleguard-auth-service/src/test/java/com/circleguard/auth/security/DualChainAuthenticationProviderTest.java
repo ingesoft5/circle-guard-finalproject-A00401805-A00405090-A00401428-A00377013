@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Dual Chain Authentication Provider Test in the auth service.
+ */
 package com.circleguard.auth.security;
 
 import org.junit.jupiter.api.BeforeEach;

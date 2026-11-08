@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: configuration for the promotion service: Neo4j Schema Config.
+ */
 package com.circleguard.promotion.config;
 
 import jakarta.annotation.PostConstruct;

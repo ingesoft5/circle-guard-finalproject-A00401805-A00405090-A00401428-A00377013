@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Reusable React Native component: Dynamic Form.test.
+ */
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { DynamicForm } from '../DynamicForm';

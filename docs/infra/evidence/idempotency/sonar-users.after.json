@@ -1,0 +1,10 @@
+[
+  {
+    "active": true,
+    "login": "admin"
+  },
+  {
+    "active": true,
+    "login": "professor"
+  }
+]

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Promotion Performance Test in the promotion service.
+ */
 package com.circleguard.promotion.performance;
 
 import com.circleguard.promotion.service.HealthStatusService;

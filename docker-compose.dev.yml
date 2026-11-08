@@ -1,3 +1,4 @@
+# CG-DOC: Local development Docker Compose stack for shared infrastructure.
 version: '3.8'
 
 services:

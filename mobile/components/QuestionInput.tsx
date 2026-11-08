@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Reusable React Native component: Question Input.
+ */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Check, Circle } from 'lucide-react-native';

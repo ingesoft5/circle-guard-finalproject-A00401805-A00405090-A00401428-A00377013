@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V1__initial_survey_schema for the form service.
 -- Health Survey Schema
 
 CREATE TABLE health_surveys (

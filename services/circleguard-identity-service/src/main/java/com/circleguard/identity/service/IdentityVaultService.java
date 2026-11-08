@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the identity service: Identity Vault Service.
+ */
 package com.circleguard.identity.service;
 
 import com.circleguard.identity.model.IdentityMapping;

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the auth service: Jwt Token Service.
+ */
 package com.circleguard.auth.service;
 
 import io.jsonwebtoken.Jwts;

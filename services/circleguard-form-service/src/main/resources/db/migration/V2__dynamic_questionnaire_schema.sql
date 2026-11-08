@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V2__dynamic_questionnaire_schema for the form service.
 -- Dynamic Questionnaire Schema
 
 CREATE TABLE questionnaires (

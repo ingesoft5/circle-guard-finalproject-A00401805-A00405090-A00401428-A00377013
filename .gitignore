@@ -1,3 +1,4 @@
+# CG-DOC: Git ignore rules for generated files, secrets, and local state.
 # Gradle
 .gradle/
 build/
@@ -7,6 +8,7 @@ build/
 # Java
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.zip
@@ -46,3 +48,11 @@ web-build/
 *_data/
 pgdata/
 neo4jdata/
+
+# CircleGuard infrastructure
+infra/state/
+*.pem
+*.key
+.env
+.env.*
+!.env.example

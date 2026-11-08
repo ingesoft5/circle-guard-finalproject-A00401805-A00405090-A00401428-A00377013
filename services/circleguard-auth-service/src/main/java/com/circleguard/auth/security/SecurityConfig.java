@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: security component for the auth service: Security Config.
+ */
 package com.circleguard.auth.security;
 
 import com.circleguard.auth.service.CustomUserDetailsService;

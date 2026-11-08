@@ -1,0 +1,112 @@
+# CG-DOC: Jenkins Configuration as Code for security, credentials, library, and job.
+jenkins:
+  systemMessage: "CircleGuard CI/CD - Gateway"
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: ${JENKINS_ADMIN_PASSWORD}
+        - id: professor
+          password: ${PROFESSOR_PASSWORD}
+  authorizationStrategy:
+    globalMatrix:
+      entries:
+        - user:
+            name: admin
+            permissions:
+              - "Overall/Administer"
+        - user:
+            name: professor
+            permissions:
+              - "Overall/Read"
+              - "Job/Read"
+              - "View/Read"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: github-creds
+              username: ${GITHUB_USER}
+              password: ${GITHUB_TOKEN}
+              description: GitHub
+          - string:
+              scope: GLOBAL
+              id: sonar-token
+              secret: ${SONAR_TOKEN}
+              description: SonarQube
+          - usernamePassword:
+              scope: GLOBAL
+              id: nexus-creds
+              username: ${NEXUS_USER}
+              password: ${NEXUS_PASSWORD}
+              description: Nexus
+          - basicSSHUserPrivateKey:
+              scope: GLOBAL
+              id: cg-envs-ssh
+              username: ubuntu
+              description: CircleGuard environments
+              privateKeySource:
+                directEntry:
+                  privateKey: "${readFile:/var/jenkins_home/.ssh/cg-envs-key}"
+
+unclassified:
+  location:
+    url: ${JENKINS_URL}
+  sonarGlobalConfiguration:
+    buildWrapperEnabled: false
+    installations:
+      - name: SonarQube
+        serverUrl: ${SONAR_HOST_URL}
+        credentialsId: sonar-token
+  globalLibraries:
+    libraries:
+      - name: circleguard
+        defaultVersion: ${LIBRARY_BRANCH}
+        retriever:
+          modernSCM:
+            scm:
+              git:
+                remote: ${GITHUB_REPO_URL}
+                credentialsId: github-creds
+
+jobs:
+  - script: |
+      multibranchPipelineJob('circleguard-gateway') {
+        branchSources {
+          branchSource {
+            source {
+              github {
+                id('circleguard-gateway')
+                repoOwner('${GITHUB_OWNER}')
+                repository('${GITHUB_REPO}')
+                credentialsId('github-creds')
+                repositoryUrl('${GITHUB_REPO_URL}')
+                configuredByUrl(true)
+                traits {
+                  gitHubBranchDiscovery {
+                    strategyId(1)
+                  }
+                  gitHubPullRequestDiscovery {
+                    strategyId(1)
+                  }
+                }
+              }
+            }
+          }
+        }
+        factory {
+          workflowBranchProjectFactory {
+            scriptPath('Jenkinsfile')
+          }
+        }
+        orphanedItemStrategy {
+          discardOldItems {
+            numToKeep(10)
+          }
+        }
+      }

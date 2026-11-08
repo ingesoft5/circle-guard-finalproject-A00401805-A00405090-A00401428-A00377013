@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: exception handling for the promotion service: Fence Exception.
+ */
 package com.circleguard.promotion.exception;
 
 import org.springframework.http.HttpStatus;

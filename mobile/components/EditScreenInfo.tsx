@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Reusable React Native component: Edit Screen Info.
+ */
 import React from 'react';
 import { StyleSheet } from 'react-native';
 

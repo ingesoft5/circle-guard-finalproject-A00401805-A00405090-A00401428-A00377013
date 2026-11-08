@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the promotion service: Mac Session Registry.
+ */
 package com.circleguard.promotion.service;
 
 import lombok.RequiredArgsConstructor;

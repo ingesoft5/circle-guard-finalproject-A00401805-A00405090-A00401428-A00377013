@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Mobile application file: metro.config.
+ */
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
 

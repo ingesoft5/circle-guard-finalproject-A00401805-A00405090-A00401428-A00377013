@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Analytics Controller Test in the dashboard service.
+ */
 package com.circleguard.dashboard.controller;
 
 import com.circleguard.dashboard.service.AnalyticsService;

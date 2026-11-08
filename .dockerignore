@@ -1,0 +1,11 @@
+# CG-DOC: Docker build context exclusions.
+.git
+.gradle
+**/build
+**/bin
+node_modules
+mobile
+docs
+design-assets
+*.pdf
+dashboard_test_output.txt

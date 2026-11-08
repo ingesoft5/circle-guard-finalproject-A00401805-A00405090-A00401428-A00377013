@@ -1,3 +1,4 @@
+-- CG-DOC: Database bootstrap script for local development.
 -- Initialize required microservice databases
 SELECT 'CREATE DATABASE circleguard_auth' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'circleguard_auth')\gexec
 SELECT 'CREATE DATABASE circleguard_identity' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'circleguard_identity')\gexec

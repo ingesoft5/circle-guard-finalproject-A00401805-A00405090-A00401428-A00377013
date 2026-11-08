@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V3__fix_user_passwords for the auth service.
 -- Fix test user passwords with valid BCrypt hashes
 -- Password is "password"
 UPDATE local_users SET password_hash = '$2b$12$91ldmSUu.lSKkxRXuo0GsuVDH8d/OnRXhaFiUNMk5dXvXOytwICxS'

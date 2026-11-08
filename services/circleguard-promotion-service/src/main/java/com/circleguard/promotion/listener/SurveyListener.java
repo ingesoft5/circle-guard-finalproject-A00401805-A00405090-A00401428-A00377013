@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Java source for the promotion service: Survey Listener.
+ */
 package com.circleguard.promotion.listener;
 
 import com.circleguard.promotion.service.HealthStatusService;

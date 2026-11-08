@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the auth service: Qr Token Service.
+ */
 package com.circleguard.auth.service;
 
 import io.jsonwebtoken.Jwts;
@@ -14,10 +17,10 @@ public class QrTokenService {
     private final Key key;
     private final long expiration;
 
-    public QrTokenService(@Value("${qr.secret}") String secret, 
-                         @Value("${qr.expiration:60000}") long expiration) {
+    public QrTokenService(@Value("${qr.secret}") String secret,
+                         @Value("${qr.expiration:300}") long expirationSeconds) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        this.expiration = expiration;
+        this.expiration = expirationSeconds * 1000;
     }
 
     public String generateQrToken(UUID anonymousId) {

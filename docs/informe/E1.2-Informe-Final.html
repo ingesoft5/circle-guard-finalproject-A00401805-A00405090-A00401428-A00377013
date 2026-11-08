@@ -1,0 +1,326 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>E1.2 Informe Final</title><style>
+@page { size: A4; margin: 17mm 16mm; }
+body { font-family: "DejaVu Sans", Arial, sans-serif; color:#20242a; font-size:10pt; line-height:1.42; }
+h1 { font-size:20pt; color:#0b3d6e; border-bottom:3px solid #0b3d6e; padding-bottom:6px; }
+h2 { font-size:14pt; color:#0b3d6e; margin-top:20px; border-bottom:1px solid #c8d6e5; padding-bottom:3px; }
+h3 { font-size:11.5pt; color:#174f82; margin-top:14px; }
+code { font-family:"DejaVu Sans Mono", monospace; font-size:8.8pt; background:#f2f5f8; padding:1px 3px; border-radius:3px; }
+pre { background:#f5f7fa; border:1px solid #d6dee8; border-left:4px solid #0b3d6e; padding:8px; font-size:8.3pt; white-space:pre-wrap; word-wrap:break-word; }
+table { width:100%; border-collapse:collapse; margin:8px 0; font-size:9pt; }
+th { background:#e8eef5; border:1px solid #b9c8d8; padding:5px; text-align:left; }
+td { border:1px solid #c9d5e2; padding:5px; vertical-align:top; }
+img { max-width:100%; border:1px solid #c9d5e2; margin:8px 0; }
+</style></head><body><h1>E1.2 - Informe final de la rama</h1>
+<p><strong>Rama:</strong> <code>feat/HU-GATEWAY-01-configurar-servidores</code><br />
+<strong>Región:</strong> <code>us-east-2</code><br />
+<strong>Fecha:</strong> 8 de noviembre de 2026<br />
+<strong>Alcance:</strong> microservicio gateway, servidores CI/CD y ambientes dev/stage/prod.</p>
+<h2>1. Resumen</h2>
+<p>Se aprovisionaron cuatro instancias EC2 <code>m7i-flex.large</code> con Ubuntu 24.04 en <code>us-east-2</code>, una Elastic IP para <code>cg-tools</code>, dos Security Groups y una llave SSH nueva. En <code>cg-tools</code> quedaron funcionando Jenkins, SonarQube, PostgreSQL, Nexus, el registro privado <code>5000</code> y un ingress Nginx.</p>
+<p>El gateway tiene pruebas unitarias, integración real con Redis y E2E Playwright. La cobertura de líneas medida es <strong>95.92 %</strong>.</p>
+<p>El pipeline aún no ha corrido porque el job multibranch existe pero Jenkins tiene <strong>0 ramas escaneadas</strong>.</p>
+<h2>2. Infraestructura</h2>
+<table>
+<thead>
+<tr>
+  <th>Host</th>
+  <th>Instancia</th>
+  <th>IP privada</th>
+  <th>IP pública</th>
+  <th>Función</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>cg-tools</td>
+  <td>i-0f39bae4a25328be1</td>
+  <td>172.31.20.46</td>
+  <td>77.112.223.174</td>
+  <td>Jenkins, SonarQube, Nexus, registro, ingress</td>
+</tr>
+<tr>
+  <td>cg-dev</td>
+  <td>i-0168db88a32069ccf</td>
+  <td>172.31.19.75</td>
+  <td>3.141.13.185</td>
+  <td>gateway + Redis</td>
+</tr>
+<tr>
+  <td>cg-stage</td>
+  <td>i-0a65406c7c44c52ec</td>
+  <td>172.31.29.207</td>
+  <td>18.222.218.169</td>
+  <td>gateway + Redis</td>
+</tr>
+<tr>
+  <td>cg-prod</td>
+  <td>i-05084037bd8177db7</td>
+  <td>172.31.20.75</td>
+  <td>3.16.131.65</td>
+  <td>gateway + Redis</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+  <th>Recurso</th>
+  <th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Security Group tools</td>
+  <td>sg-0ed6257fcc34b0f5b</td>
+</tr>
+<tr>
+  <td>Security Group ambientes</td>
+  <td>sg-03ed767c4bbcbf5fe</td>
+</tr>
+<tr>
+  <td>Key pair</td>
+  <td>circleguard-e12-key</td>
+</tr>
+<tr>
+  <td>PEM</td>
+  <td>infra/state/circleguard-e12-key.pem</td>
+</tr>
+<tr>
+  <td>Registro Docker</td>
+  <td>172.31.20.46:5000</td>
+</tr>
+</tbody>
+</table>
+<h2>3. Servicios</h2>
+<table>
+<thead>
+<tr>
+  <th>Servicio</th>
+  <th>URL</th>
+  <th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Jenkins</td>
+  <td>http://77.112.223.174:8080</td>
+  <td>200 OK</td>
+</tr>
+<tr>
+  <td>SonarQube</td>
+  <td>http://77.112.223.174:9000</td>
+  <td>200 OK, UP</td>
+</tr>
+<tr>
+  <td>Nexus</td>
+  <td>http://77.112.223.174:8081</td>
+  <td>200 OK</td>
+</tr>
+<tr>
+  <td>Ingress</td>
+  <td>http://77.112.223.174/</td>
+  <td>502, gateway pendiente</td>
+</tr>
+<tr>
+  <td>Registro</td>
+  <td>172.31.20.46:5000</td>
+  <td>privado</td>
+</tr>
+</tbody>
+</table>
+<p>Contenedores en <code>cg-tools</code>:</p>
+<pre><code class="language-text">cg-jenkins     healthy
+cg-sonarqube   healthy
+cg-sonar-db    healthy
+cg-nexus       healthy
+cg-ingress     running
+</code></pre>
+<h2>4. Evidencias con usuario professor</h2>
+<h3>Jenkins</h3>
+<p>Sesión iniciada como <code>professor</code>. El job <code>circleguard-gateway</code> está creado, pero el folder está vacío porque aún no se ha escaneado la rama.</p>
+<p><img src="evidencia/jenkins-professor.png" alt="Jenkins como professor" /></p>
+<h3>SonarQube</h3>
+<p>Sesión iniciada como <code>professor</code>. El proyecto <code>circleguard-gateway-service</code> existe; todavía no tiene análisis porque el pipeline no ha corrido.</p>
+<p><img src="evidencia/sonarqube-professor.png" alt="SonarQube como professor" /></p>
+<h3>Nexus</h3>
+<p>Sesión iniciada como <code>professor</code>. El repositorio <code>circleguard-docker</code> existe; todavía no tiene imagen ni JAR porque el pipeline no ha publicado.</p>
+<p><img src="evidencia/nexus-professor.png" alt="Nexus como professor" /></p>
+<h2>5. Cobertura y pruebas</h2>
+<pre><code class="language-text">Líneas:         95.92 %
+Instrucciones:  97.44 %
+Ramas:          72.73 %
+</code></pre>
+<table>
+<thead>
+<tr>
+  <th>Prueba</th>
+  <th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Unitarias gateway</td>
+  <td>16 pruebas, 0 fallos</td>
+</tr>
+<tr>
+  <td>Integración Redis</td>
+  <td>3 pruebas, 0 fallos</td>
+</tr>
+<tr>
+  <td>E2E Playwright</td>
+  <td>3 pruebas añadidas</td>
+</tr>
+</tbody>
+</table>
+<p>Reporte JaCoCo:</p>
+<pre><code class="language-text">services/circleguard-gateway-service/build/reports/jacoco/test/html/index.html
+</code></pre>
+<h2>6. Commits de la rama</h2>
+<pre><code class="language-text">dc353e9 docs ( informe ) : add e1.2 step by step pdf
+32500ad docs ( infra ) : add e1.2 operations tutorial
+46b367a fix ( infra ) : stabilize sonarqube and jenkins configuration
+03e583a test ( gateway ) : add redis integration and e2e coverage
+9de989f chore ( git ) : align github flow branch rules
+c87f143 refactor ( infra ) : consolidate bootstrap scripts and remove generated files
+7bcd41e feat ( infra ) : support four hosts, private registry and ingress
+a1fb650 feat ( infra ) : use m7i-flex.xlarge and add cost controls
+404428e docs ( git ) : document commit format and scope rules
+</code></pre>
+<h2>7. Problemas resueltos</h2>
+<table>
+<thead>
+<tr>
+  <th>Problema</th>
+  <th>Solución</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>SCP bloqueaba DescribeInstances en us-east-1</td>
+  <td>Se trabajó en us-east-2</td>
+</tr>
+<tr>
+  <td>Security Groups con dependencias cruzadas</td>
+  <td>Se revocaron reglas y se recrearon</td>
+</tr>
+<tr>
+  <td>SonarQube no iniciaba</td>
+  <td><code>-Xms1g -Xmx1g</code> en Elasticsearch</td>
+</tr>
+<tr>
+  <td>SonarQube unhealthy</td>
+  <td>Healthcheck con <code>wget</code></td>
+</tr>
+<tr>
+  <td>Jenkins JCasC fallaba con <code>fileOnMaster</code></td>
+  <td><code>directEntry</code> con <code>readFile</code></td>
+</tr>
+<tr>
+  <td>Jenkins fallaba con <code>matrix</code></td>
+  <td><code>globalMatrix.entries</code></td>
+</tr>
+<tr>
+  <td>Testcontainers no encontraba Docker</td>
+  <td><code>docker-java.properties</code> con <code>api.version=1.44</code></td>
+</tr>
+</tbody>
+</table>
+<h2>8. Seguridad</h2>
+<table>
+<thead>
+<tr>
+  <th>Puerto</th>
+  <th>Origen</th>
+  <th>Servicio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>22</td>
+  <td>admin y SG-tools</td>
+  <td>SSH</td>
+</tr>
+<tr>
+  <td>8080</td>
+  <td>Internet</td>
+  <td>Jenkins autenticado</td>
+</tr>
+<tr>
+  <td>9000</td>
+  <td>teacher/admin</td>
+  <td>SonarQube</td>
+</tr>
+<tr>
+  <td>8081</td>
+  <td>teacher/admin</td>
+  <td>Nexus</td>
+</tr>
+<tr>
+  <td>80</td>
+  <td>Internet</td>
+  <td>ingress</td>
+</tr>
+<tr>
+  <td>5000</td>
+  <td>SG-envs</td>
+  <td>registro privado</td>
+</tr>
+<tr>
+  <td>8087</td>
+  <td>SG-tools</td>
+  <td>gateway</td>
+</tr>
+</tbody>
+</table>
+<p><code>TEACHER_CIDR=0.0.0.0/0</code> deja SonarQube y Nexus abiertos. Cambiarlo por la IP del profesor cuando esté disponible.</p>
+<h2>9. Costos</h2>
+<pre><code class="language-text">4 × m7i-flex.large × 180 h = 69.12 USD
+EBS 130 GB proporcional     =  2.56 USD
+4 IPv4 × 180 h              =  3.60 USD
+Total                       = 75.28 USD
+</code></pre>
+<h2>10. Qué falta</h2>
+<ol>
+<li>Escanear el job multibranch en Jenkins.</li>
+<li>Ejecutar el pipeline de la rama.</li>
+<li>Desplegar gateway en dev, stage y aprobar prod.</li>
+<li>Ejecutar E2E contra dev.</li>
+<li>Capturar Jenkins, Sonar, Nexus con pipeline y artefactos reales.</li>
+<li>Repo privado antes del push final.</li>
+<li>Apagar instancias al terminar.</li>
+</ol>
+<h3>Escanear y ejecutar</h3>
+<pre><code class="language-bash">source infra/state/aws.env
+source infra/state/tools.env
+
+crumb=$(curl -s -c /tmp/jcookies \
+  -u &quot;admin:${JENKINS_ADMIN_PASSWORD}&quot; \
+  &quot;http://${TOOLS_IP}:8080/crumbIssuer/api/json&quot; | jq -r .crumb)
+
+curl -b /tmp/jcookies \
+  -u &quot;admin:${JENKINS_ADMIN_PASSWORD}&quot; \
+  -H &quot;Jenkins-Crumb: ${crumb}&quot; \
+  -X POST &quot;http://${TOOLS_IP}:8080/job/circleguard-gateway/build?delay=0&quot;
+</code></pre>
+<h3>E2E</h3>
+<pre><code class="language-bash">cd tests/e2e
+npm install
+npx playwright install --with-deps chromium
+GATEWAY_URL=http://3.141.13.185:8087 npx playwright test
+</code></pre>
+<h3>Apagar</h3>
+<pre><code class="language-bash">./infra/bootstrap/bootstrap-stop.sh
+</code></pre>
+<h2>11. Credenciales</h2>
+<p>Están en:</p>
+<pre><code class="language-text">infra/state/tools.env
+</code></pre>
+<p>Usuarios:</p>
+<pre><code class="language-text">Jenkins:   admin / profesor
+SonarQube: admin / professor
+Nexus:     admin / nexus / professor
+</code></pre>
+<p>No incluir contraseñas, tokens ni la llave privada en capturas o informes.</p>
+<h2>12. Conclusión</h2>
+<p>La infraestructura E1.2 está levantada y las herramientas están saludables. El acceso del profesor quedó configurado en Jenkins, SonarQube y Nexus. El gateway supera el 60 % de cobertura y tiene integración real con Redis. Falta ejecutar el pipeline para que las capturas muestren ramas, análisis, artefactos y despliegues reales.</p>
+</body></html>

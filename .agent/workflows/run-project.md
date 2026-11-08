@@ -1,3 +1,4 @@
+<!-- CG-DOC: Markdown documentation: run-project. -->
 ---
 description: How to run the CircleGuard project locally
 ---

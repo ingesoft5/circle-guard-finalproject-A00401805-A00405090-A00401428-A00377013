@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: persistence repository for the identity service: Identity Mapping Repository.
+ */
 package com.circleguard.identity.repository;
 
 import com.circleguard.identity.model.IdentityMapping;

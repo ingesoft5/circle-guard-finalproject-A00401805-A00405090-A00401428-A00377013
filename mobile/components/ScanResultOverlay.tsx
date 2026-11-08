@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Reusable React Native component: Scan Result Overlay.
+ */
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react-native';

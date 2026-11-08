@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: data model for the promotion service: Building.
+ */
 package com.circleguard.promotion.model;
 
 import jakarta.persistence.*;

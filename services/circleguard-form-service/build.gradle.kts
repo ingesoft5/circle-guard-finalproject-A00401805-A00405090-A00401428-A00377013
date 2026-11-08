@@ -1,3 +1,4 @@
+// CG-DOC: Build configuration for the form service.
 plugins {
     id("org.springframework.boot")
     id("io.spring.dependency-management")

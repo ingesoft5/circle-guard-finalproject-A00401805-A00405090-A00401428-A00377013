@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Auth Integration Test in the auth service.
+ */
 package com.circleguard.auth;
 
 import com.circleguard.auth.client.IdentityClient;

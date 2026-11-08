@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V1__initial_identity_schema for the identity service.
 -- Identity Vault Schema
 -- Stores the mapping between real and anonymous identities
 

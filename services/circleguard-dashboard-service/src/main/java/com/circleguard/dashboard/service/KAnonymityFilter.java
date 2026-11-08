@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the dashboard service: K Anonymity Filter.
+ */
 package com.circleguard.dashboard.service;
 
 import org.springframework.stereotype.Component;

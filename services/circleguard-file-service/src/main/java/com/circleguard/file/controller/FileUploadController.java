@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the file service: File Upload Controller.
+ */
 package com.circleguard.file.controller;
 
 import com.circleguard.file.service.FileStorageService;

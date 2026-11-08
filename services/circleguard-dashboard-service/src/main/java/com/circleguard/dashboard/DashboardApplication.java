@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Java source for the dashboard service: Dashboard Application.
+ */
 package com.circleguard.dashboard;
 
 import org.springframework.boot.SpringApplication;

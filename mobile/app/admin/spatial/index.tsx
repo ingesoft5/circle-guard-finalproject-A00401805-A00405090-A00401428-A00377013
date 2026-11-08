@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: index.
+ */
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { useSpatial, Building } from '@/hooks/useSpatial';

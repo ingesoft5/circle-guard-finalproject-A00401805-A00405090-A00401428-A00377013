@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: persistence repository for the promotion service: User Node Repository.
+ */
 package com.circleguard.promotion.repository.graph;
 
 import com.circleguard.promotion.model.graph.UserNode;

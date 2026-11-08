@@ -1,0 +1,407 @@
+[
+  {
+    "Egress": [
+      {
+        "IpProtocol": "-1",
+        "IpRanges": [
+          {
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "UserIdGroupPairs": []
+      }
+    ],
+    "ID": "sg-03ed767c4bbcbf5fe",
+    "Ingress": [
+      {
+        "FromPort": 5432,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 5432,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 8180,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 8180,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 8083,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 8083,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 1389,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 1389,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 8086,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 8086,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 8082,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 8082,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 8085,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 8085,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 389,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 389,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 8087,
+        "IpProtocol": "tcp",
+        "IpRanges": [],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 8087,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 8084,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 8084,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 22,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 22,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 6379,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 6379,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 7474,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 7474,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 29092,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 29092,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 7687,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 7687,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 9092,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 9092,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      }
+    ],
+    "Name": "circleguard-envs-sg"
+  },
+  {
+    "Egress": [
+      {
+        "IpProtocol": "-1",
+        "IpRanges": [
+          {
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "UserIdGroupPairs": []
+      }
+    ],
+    "ID": "sg-0ed6257fcc34b0f5b",
+    "Ingress": [
+      {
+        "FromPort": 80,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 80,
+        "UserIdGroupPairs": []
+      },
+      {
+        "FromPort": 9000,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 9000,
+        "UserIdGroupPairs": []
+      },
+      {
+        "FromPort": 8080,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 8080,
+        "UserIdGroupPairs": []
+      },
+      {
+        "FromPort": 22,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 22,
+        "UserIdGroupPairs": []
+      },
+      {
+        "FromPort": 5000,
+        "IpProtocol": "tcp",
+        "IpRanges": [],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 5000,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-03ed767c4bbcbf5fe",
+            "UserId": "039167286315"
+          },
+          {
+            "GroupId": "sg-0ed6257fcc34b0f5b",
+            "UserId": "039167286315"
+          }
+        ]
+      },
+      {
+        "FromPort": 8081,
+        "IpProtocol": "tcp",
+        "IpRanges": [
+          {
+            "CidrIp": "191.95.166.160/32"
+          }
+        ],
+        "Ipv6Ranges": [],
+        "PrefixListIds": [],
+        "ToPort": 8081,
+        "UserIdGroupPairs": []
+      }
+    ],
+    "Name": "circleguard-tools-sg"
+  }
+]

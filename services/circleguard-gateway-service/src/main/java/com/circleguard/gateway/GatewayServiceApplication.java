@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Java source for the gateway service: Gateway Service Application.
+ */
 package com.circleguard.gateway;
 
 import org.springframework.boot.SpringApplication;

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the notification service: Notification Dispatcher.
+ */
 package com.circleguard.notification.service;
 
 import lombok.RequiredArgsConstructor;

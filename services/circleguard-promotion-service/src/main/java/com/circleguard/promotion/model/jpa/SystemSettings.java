@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: data model for the promotion service: System Settings.
+ */
 package com.circleguard.promotion.model.jpa;
 
 import jakarta.persistence.*;

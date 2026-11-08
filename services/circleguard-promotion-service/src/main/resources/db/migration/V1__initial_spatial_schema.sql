@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V1__initial_spatial_schema for the promotion service.
 -- Initial Spatial Hierarchy Schema
 
 CREATE TABLE buildings (

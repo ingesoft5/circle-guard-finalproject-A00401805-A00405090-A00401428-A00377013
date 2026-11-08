@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Reusable React Native component: Mesh Background.
+ */
 import React, { useMemo, useEffect } from 'react';
 import { StyleSheet, View, useWindowDimensions, Platform } from 'react-native';
 import Svg, { Line, Circle, Defs, RadialGradient, Stop, Rect } from 'react-native-svg';

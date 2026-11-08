@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Jwt Authentication Filter Test in the auth service.
+ */
 package com.circleguard.auth.security;
 
 import com.circleguard.auth.service.JwtTokenService;

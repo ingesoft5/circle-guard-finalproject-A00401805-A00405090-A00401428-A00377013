@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Mobile utility module: proximity Scanner.
+ */
 import * as SecureStore from 'expo-secure-store';
 
 const ENCOUNTER_DUR_THRESHOLD = 60; // seconds

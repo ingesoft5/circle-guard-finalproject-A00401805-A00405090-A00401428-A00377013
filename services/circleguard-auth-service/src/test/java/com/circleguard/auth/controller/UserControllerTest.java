@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for User Controller Test in the auth service.
+ */
 package com.circleguard.auth.controller;
 
 import com.circleguard.auth.model.LocalUser;

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: configuration for the identity service: Jwt Authentication Filter.
+ */
 package com.circleguard.identity.config;
 
 import io.jsonwebtoken.Claims;

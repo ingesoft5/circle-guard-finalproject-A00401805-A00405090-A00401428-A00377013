@@ -5,16 +5,16 @@
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 # =====================================================================
-# 1. BLOQUEAR PUSH DIRECTO A RAMAS PROTEGIDAS (main y dev)
+# 1. BLOQUEAR PUSH DIRECTO A main
 # =====================================================================
 while read local_ref local_sha remote_ref remote_sha
 do
-    # Verificamos si el push va dirigido a main o dev
-    if [ "$remote_ref" = "refs/heads/main" ] || [ "$remote_ref" = "refs/heads/dev" ]; then
+    # Verificamos si el push va dirigido a main
+    if [ "$remote_ref" = "refs/heads/main" ]; then
         echo "======================================================"
         echo "❌ ERROR: Push directo a la rama protegida detectado."
         echo "======================================================"
-        echo "En GitHub Flow, está prohibido hacer push directo a 'main' o 'dev'."
+        echo "En GitHub Flow, está prohibido hacer push directo a 'main'."
         echo "Por favor, crea una rama (HU-...) y abre un Pull Request."
         echo "======================================================"
         exit 1
@@ -24,17 +24,17 @@ done
 # =====================================================================
 # 2. VALIDAR EL FORMATO DEL NOMBRE DE LA RAMA
 # =====================================================================
-# Formato esperado: HU-<microservicio>-<numero>-<descripcion>
-# Ejemplo: HU-auth-12-implementar-login
-# Nota: Si estás en main o dev (por ejemplo, para traer cambios), no validamos el nombre.
-if [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "dev" ]; then
-    if ! echo "$CURRENT_BRANCH" | grep -qE "^HU-[a-z]+-[0-9]+(-[a-z0-9-]+)?$"; then
+# Formato esperado: [<tipo>/]HU-<MICROSERVICIO>-<numero>-<descripcion>
+# Ejemplo: feat/HU-GATEWAY-01-configurar-servidores
+# Nota: Si estás en main (por ejemplo, para traer cambios), no validamos el nombre.
+if [ "$CURRENT_BRANCH" != "main" ]; then
+    if ! echo "$CURRENT_BRANCH" | grep -qE "^((feat|fix|docs|ci|chore|test|refactor|build|perf|style)/)?HU-[A-Z]+-[0-9]+(-[a-z0-9-]+)?$"; then
         echo "======================================================"
         echo "⚠️ ADVERTENCIA: El nombre de tu rama no sigue la convención."
         echo "======================================================"
         echo "Tu rama actual es: $CURRENT_BRANCH"
-        echo "Formato esperado: HU-<microservicio>-<numero>-<descripcion>"
-        echo "Ejemplo: HU-auth-12-implementar-login"
+        echo "Formato esperado: [<tipo>/]HU-<MICROSERVICIO>-<numero>-<descripcion>"
+        echo "Ejemplo: feat/HU-GATEWAY-01-configurar-servidores"
         echo ""
         echo "El push se cancelará en 5 segundos. Presiona Ctrl+C para abortar y renombrar tu rama."
         echo "======================================================"

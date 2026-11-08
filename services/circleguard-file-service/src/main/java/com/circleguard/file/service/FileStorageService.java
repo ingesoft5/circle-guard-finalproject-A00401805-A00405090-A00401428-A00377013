@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the file service: File Storage Service.
+ */
 package com.circleguard.file.service;
 
 import org.springframework.stereotype.Service;

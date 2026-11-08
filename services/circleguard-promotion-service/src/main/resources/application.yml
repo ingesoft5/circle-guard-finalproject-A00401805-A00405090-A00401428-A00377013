@@ -1,3 +1,4 @@
+# CG-DOC: Runtime resource for the promotion service: application.yml.
 spring:
   application:
     name: circleguard-promotion-service

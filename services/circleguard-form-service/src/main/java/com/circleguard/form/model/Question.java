@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: data model for the form service: Question.
+ */
 package com.circleguard.form.model;
 
 import jakarta.persistence.*;

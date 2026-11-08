@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the auth service: Custom User Details Service.
+ */
 package com.circleguard.auth.service;
 
 import com.circleguard.auth.model.*;

@@ -1,3 +1,4 @@
+# CG-DOC: Unit or integration tests for application in the auth service.
 jwt:
   secret: "my-super-secret-test-key-32-chars-long"
   expiration: 3600000

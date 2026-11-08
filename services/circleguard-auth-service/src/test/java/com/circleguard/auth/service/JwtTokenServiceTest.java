@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Jwt Token Service Test in the auth service.
+ */
 package com.circleguard.auth.service;
 
 import io.jsonwebtoken.Claims;

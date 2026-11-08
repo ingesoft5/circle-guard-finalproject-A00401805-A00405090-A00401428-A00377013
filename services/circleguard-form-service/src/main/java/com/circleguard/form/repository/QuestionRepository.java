@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: persistence repository for the form service: Question Repository.
+ */
 package com.circleguard.form.repository;
 
 import com.circleguard.form.model.Question;
