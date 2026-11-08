@@ -5,7 +5,7 @@ def checkoutRepo() {
 }
 
 def build(Map service) {
-    sh "./gradlew ${service.path}:classes --console=plain"
+    sh "./gradlew ${service.path}:classes --no-daemon --console=plain"
 }
 
 // `check` is the contract: each module decides what belongs in it (tests, coverage
@@ -18,7 +18,7 @@ def unitTest(Map service) {
     } else {
         echo "JaCoCo: ${service.short} no tiene cobertura configurada; check ejecuta solo las pruebas."
     }
-    sh "./gradlew ${service.path}:clean ${service.path}:check --console=plain"
+    sh "./gradlew ${service.path}:clean ${service.path}:check --no-daemon --console=plain"
 }
 
 def sonarScan(Map service) {
@@ -67,11 +67,11 @@ def integrationTest(Map service) {
         echo "Integración: ${service.short} no declara pruebas de integración."
         return
     }
-    sh "./gradlew ${service.path}:integrationTest --console=plain"
+    sh "./gradlew ${service.path}:integrationTest --no-daemon --console=plain"
 }
 
 def packageService(Map service) {
-    sh "./gradlew ${service.path}:bootJar --console=plain"
+    sh "./gradlew ${service.path}:bootJar --no-daemon --console=plain"
 }
 
 def publish(Map service) {
@@ -85,7 +85,7 @@ def publish(Map service) {
             NEXUS_URL=${env.NEXUS_URL} \
             NEXUS_USER=\$NEXUS_USER \
             NEXUS_PASSWORD=\$NEXUS_PASSWORD \
-            ./gradlew ${service.path}:publish --console=plain
+            ./gradlew ${service.path}:publish --no-daemon --console=plain
         """
     }
 }
