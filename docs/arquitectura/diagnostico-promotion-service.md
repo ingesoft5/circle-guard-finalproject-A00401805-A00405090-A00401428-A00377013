@@ -240,3 +240,112 @@ erDiagram
 > `Neo4jSchemaConfig` (perfil distinto de `test`) crea cinco índices (`user_anon_id_idx`, `user_status_idx`, `encounter_time_idx`, `circle_invite_idx`, `circle_loc_idx`) y ejecuta un `MERGE` dummy para registrar el tipo de relación `MEMBER_OF`. No crea constraints. El `seed_faculties.cypher` **no** está integrado al arranque: es un script manual.
 
 ---
+
+## 4. Matriz de Dependencias Externas y Parametrización (`DCG-323`)
+
+### 4.1 Dependencias de Infraestructura y Servicios
+
+| Dependencia | Endpoint / Coordenada | Uso en el código | Estado actual |
+| :--- | :--- | :--- | :--- |
+| **PostgreSQL** | `jdbc:postgresql://localhost:5432/circleguard_promotion` | JPA + Flyway: topología (`buildings`, `floors`, `access_points`) y `system_settings` | Credenciales en texto plano (`admin`/`password`) |
+| **Neo4j** | `bolt://localhost:7687` | `HealthStatusService` (propagación), `StatusLifecycleService` (expiración), `GraphCleanupTask`, `GraphService`, `CircleService`, `AutoCircleService` | Credenciales en texto plano (`neo4j`/`password`) |
+| **Redis** | `localhost:6379` | `HealthStatusService` (lotes `user:status:*`), `StatusLifecycleService` (expiración), `LocationResolutionService` (conjuntos de proximidad), `MacSessionRegistry` (sesiones MAC con TTL) | Sin contraseña configurada |
+| **Kafka (consume)** | `localhost:9092`, grupo `promotion-service-group` | `SurveyListener`: `survey.submitted`, `certificate.validated` | Deserializador JSON con `trusted.packages: "*"` |
+| **Kafka (produce)** | `localhost:9092` | `HealthStatusService`: `promotion.status.changed`, `alert.priority`, `circle.fenced`; `StatusLifecycleService`: `promotion.status.changed`; `LocationResolutionService`: `proximity.detected` | Sin contratos versionados |
+| **form-service** | Productor de `survey.submitted` | Origen de los eventos de cuestionario | Acoplamiento por nombre de topic |
+| **auth-service** | Secreto JWT compartido | `JwtAuthenticationFilter` valida el Bearer con `jwt.secret` | Secreto duplicado en texto plano |
+
+### 4.2 Problemas Detectados para Contenerización y CI/CD
+
+1. **Secretos y credenciales embebidos.** `application.yml` contiene `jwt.secret`, la contraseña de PostgreSQL y la de Neo4j en claro. Bloquea la contenerización limpia y obliga a externalizar todo por variables de entorno antes de `HU-PROMO-03`.
+2. **Hosts fijos a `localhost`.** PostgreSQL, Neo4j, Redis y Kafka apuntan a `localhost`, lo que impide que el servicio resuelva el middleware por nombre de servicio dentro de una red de Docker Compose.
+3. **`ddl-auto: update` junto a Flyway.** `spring.jpa.hibernate.ddl-auto=update` convive con migraciones versionadas; Hibernate puede alterar el esquema por fuera de Flyway y desincronizar el histórico.
+4. **Deserializador sin lista blanca.** `spring.json.trusted.packages: "*"` acepta cualquier paquete en el payload de Kafka: superficie de deserialización insegura.
+5. **Sin Dockerfile ni healthcheck.** El módulo no tiene imagen propia ni endpoint de salud expuesto para `HEALTHCHECK`/sondas.
+6. **Autorización dispersa y con huecos.** Ver §2: `AdminController` y varios `DELETE` quedan abiertos.
+
+### 4.3 Variables de Entorno a Parametrizar
+
+| Variable propuesta | Reemplaza a | Archivo de origen |
+| :--- | :--- | :--- |
+| `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | `spring.datasource.*` | `application.yml` |
+| `SPRING_NEO4J_URI` / `SPRING_NEO4J_AUTHENTICATION_USERNAME` / `_PASSWORD` | `spring.neo4j.*` | `application.yml` |
+| `SPRING_DATA_REDIS_HOST` / `_PORT` / `_PASSWORD` | `spring.data.redis.*` | `application.yml` |
+| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | `spring.kafka.bootstrap-servers` | `application.yml` |
+| `JWT_SECRET` / `JWT_EXPIRATION` | `jwt.secret` / `jwt.expiration` | `application.yml` |
+| `SERVER_PORT` | `server.port` | `application.yml` |
+
+---
+
+## 5. Verificación de Compilación, Pruebas y Preparación CI/CD (`DCG-324`)
+
+### 5.1 Hallazgos del Entorno de Construcción (Gradle y JDK)
+
+| Punto | Observación | Impacto |
+| :--- | :--- | :--- |
+| **Toolchain** | La raíz fija `JavaLanguageVersion.of(21)`, pero el entorno local tiene JDK 17 | Gradle resuelve el 21 por `foojay-resolver-convention`; el primer build descarga el JDK |
+| **Wrapper** | `gradle/wrapper/gradle-wrapper.jar` **no está versionado** en `main` (lo absorbe `*.jar` del `.gitignore`) | `./gradlew` falla con `ClassNotFoundException: org.gradle.wrapper.GradleWrapperMain` hasta recuperar el jar |
+| **Docker** | Engine `29.9.3`, API `1.56`, mínimo aceptado `1.40` | Testcontainers `1.19.3` no detecta el daemon; ver §5.2 |
+| **Cobertura** | Sin plugin JaCoCo en el módulo | No se puede medir la meta de ≥ 60 % todavía |
+
+### 5.2 Evidencia Real de Compilación y Ejecución de Pruebas
+
+```bash
+./gradlew :services:circleguard-promotion-service:compileJava
+# BUILD SUCCESSFUL in 1m 15s
+
+./gradlew :services:circleguard-promotion-service:test
+# 16 tests completed, 5 failed
+# BUILD FAILED in 24s
+```
+
+| Clase de prueba | Casos | Resultado |
+| :--- | :--- | :--- |
+| `HealthStatusControllerTest` | 4 | **2 fallan** (`resolve_WithPermission_CallsResolveStatus`, `confirmPositive_WithPermission_CallsUpdateStatus`): esperan `200` y reciben `403`. Los otros 2 esperan `403` y pasan |
+| `HealthStatusServiceTest` | — | Verde |
+| `StatusLifecycleTest` | — | Verde |
+| `FloorServiceTest` | — | Verde |
+| `SurveyListenerTest` | — | Verde |
+| `HealthStatusReevaluationTest` | — | **`initializationError`** por Testcontainers: la suite no llega a ejecutarse |
+| `AdministrativeCorrectionTest` | — | **`initializationError`** por Testcontainers |
+| `PromotionPerformanceTest` | — | **`initializationError`** por Testcontainers |
+
+**Causa 1 — dos tests del controlador devuelven `403`.** El controlador declara `@PreAuthorize("hasRole('HEALTH_CENTER')")`, y `hasRole` exige la autoridad `ROLE_HEALTH_CENTER`. Los tests usaban `@WithMockUser(authorities = "HEALTH_CENTER")` sin prefijo, así que la autorización fallaba siempre; los dos casos que esperan `403` pasaban por el motivo equivocado. Se corrigió en `HU-PROMO-02` con `@WithMockUser(authorities = "ROLE_HEALTH_CENTER")`.
+
+**Causa 2 — Testcontainers no encuentra Docker.**
+
+```text
+java.lang.IllegalStateException: Could not find a valid Docker environment.
+	at org.testcontainers.dockerclient.DockerClientProviderStrategy.getFirstValidStrategy
+```
+
+El daemon (Engine `29.9.3`, API `1.56`, mínimo `1.40`) no es detectado por el cliente de Testcontainers `1.19.3`; con `1.20.6` y `1.21.3` la detección es intermitente y el reaper `testcontainers/ryuk:0.6.0` es rechazado por el daemon. Verificado en Windows con *named pipes* (`docker_engine` y `dockerDesktopLinuxEngine`), con `DOCKER_HOST` explícito, con Ryuk deshabilitado y con daemon limpio. En Linux el cliente usa el socket `/var/run/docker.sock` y no aplica esta limitación.
+
+### 5.3 Estado de Preparación para `HU-PROMO-02`
+
+| Requisito de `HU-PROMO-02` | Estado actual |
+| :--- | :--- |
+| Pruebas unitarias de la cascada | Parciales (`StatusLifecycleTest`, `HealthStatusServiceTest` verdes) |
+| JaCoCo ≥ 60 % | **Ausente** — no hay plugin configurado |
+| Prueba de integración Kafka (Testcontainers) | **Bloqueada** por la versión de Testcontainers |
+| Estabilización del contexto para CI | **Resuelto en HU-PROMO-02** — la autoridad correcta es `ROLE_HEALTH_CENTER` |
+
+---
+
+## 6. Hoja de Ruta para `HU-PROMO-02` y `HU-PROMO-03`
+
+### 6.1 Preparación para `HU-PROMO-02` (pruebas y cobertura)
+
+1. Subir `org.testcontainers:*` de `1.19.3` a una versión compatible con Docker 29 (`1.21.x` o superior) y fijar `ryuk.container.image` a `0.14.0`.
+2. Corregir la autoridad de los tests del controlador a `ROLE_HEALTH_CENTER` (lo que exige `hasRole`); sin ese prefijo la autorización falla siempre.
+3. Agregar el plugin JaCoCo con `jacocoTestCoverageVerification` y umbral de líneas ≥ 0.60.
+4. Incorporar la prueba de integración `form-service` → Kafka → `promotion-service` con un broker en Testcontainers.
+
+### 6.2 Preparación para `HU-PROMO-03` (empaquetado y CI)
+
+1. Externalizar todas las propiedades listadas en §4.3 y eliminar los secretos de `application.yml`.
+2. Desactivar `ddl-auto: update` y dejar Flyway como única fuente de verdad del esquema.
+3. Restringir `spring.json.trusted.packages` a `com.circleguard.*`.
+4. Crear el `Dockerfile` multi-stage con usuario no root y `HEALTHCHECK` contra `/actuator/health` (requiere `spring-boot-starter-actuator`, hoy ausente).
+5. Integrar el módulo al `Jenkinsfile` compartido con SonarQube y quality gate bloqueante.
+6. Cerrar los huecos de autorización de §2: `@PreAuthorize` en `AdminController` y en los `DELETE` de topología.
