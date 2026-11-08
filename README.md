@@ -3,7 +3,7 @@
 #### **Integrantes:**
 * **Daniela Castaño Moreno**
 * **Santiago Alejandro Estrada**
-* **Faiber Piedrahita**
+* **Faiber Piedrahita Perlaza**
 * **Alejandro Quiñones Caicedo**
 
 
@@ -167,6 +167,78 @@ We maintain high system integrity via multi-level testing:
 - **Temporal Privacy**: All contact edges are automatically purged after 14 days.
 
 ---
+
+## Project Structure
+
+# Estructura del Proyecto - CircleGuard
+
+```text
+circleguard/
+│
+├── .github/
+│   └── pull_request_template.md      # [E1.7] Change Management (Plantilla de PR en inglés)
+│
+├── services/                         # [Código Base] 8 microservicios Spring Boot (NO se reescribe)
+│   ├── auth/
+│   ├── identity/
+│   ├── promotion/
+│   ├── form/
+│   ├── gateway/
+│   ├── notification/
+│   ├── file/
+│   └── dashboard/
+│
+├── mobile/                           # [Código Base] Cliente web Expo (NO se reescribe)
+│
+├── jenkins/                          # [E1.4] Pipeline y Shared Library
+│   ├── Jenkinsfile                   # Pipeline principal (Multibranch)
+│   ├── vars/                         # Shared Library (Funciones reutilizables)
+│   │   ├── buildService.groovy       # Compilación y pruebas unitarias
+│   │   ├── analyzeService.groovy     # SonarQube Quality Gate
+│   │   ├── dockerizeService.groovy   # Construcción y push a Nexus
+│   │   └── deployService.groovy      # Despliegue a los entornos
+│   └── docker-compose.tools.yml      # [E1.2] Compose para Instancia 1 (Jenkins, Sonar, Nexus)
+│
+├── infra/                            # [E1.2] Infraestructura como Código
+│   └── bootstrap/                    # Scripts Bash Idempotentes (Parte 1)
+│       ├── bootstrap-common.sh       # Funciones compartidas (instalar docker, idempotencia)
+│       ├── bootstrap-tools.sh        # Levanta las herramientas en la Instancia 1
+│       ├── bootstrap-envs.sh         # Levanta los 3 ambientes en la Instancia 2
+│       └── bootstrap-all.sh          # Script maestro (ejecuta todo)
+│
+├── deploy/                           # [E1.3] Empaquetamiento y Despliegue
+│   ├── compose/                      # Docker Compose por ambiente
+│   │   ├── docker-compose.base.yml   # Configuración común (redes, healthchecks)
+│   │   ├── docker-compose.dev.yml    # Entorno Dev (puertos/redes aisladas)
+│   │   ├── docker-compose.stage.yml  # Entorno Stage (puertos/redes aisladas)
+│   │   └── docker-compose.prod.yml   # Entorno Prod (puertos/redes aisladas)
+│   └── dockerfiles/                  # Dockerfiles centralizados (Multi-stage, no root)
+│       ├── Dockerfile.service        # Plantilla para los 8 microservicios (Java 21)
+│       └── Dockerfile.mobile         # Plantilla para el cliente web (Expo + Nginx)
+│
+├── tests/                            # [E1.6] Pruebas Automatizadas
+│   └── e2e-playwright/               # Pruebas E2E (Login, Cuestionario, Acceso)
+│       ├── package.json
+│       └── tests/
+│           ├── login.spec.js
+│           ├── health-form.spec.js
+│           └── access-validation.spec.js
+│
+├── docs/                             # [E1.8] Documentación del Proyecto
+│   ├── arquitectura/                 # Diagramas C4, flujo del pipeline
+│   ├── agil/                         # Documentación de Sprints (Jira)
+│   ├── release-notes/                # Historial de cambios (generado)
+│   └── imagenes/                     # Capturas para el PDF final
+│
+├── .githooks/                        # [E1.1] Validaciones locales (Git Hooks)
+│   ├── commit-msg                    # Valida Conventional Commits
+│   └── pre-push                      # Bloquea push directo a main
+│
+├── .gitignore                        # Ignorar .env, build/, node_modules/, etc.
+├── BRANCHING-STRATEGY.md             # [E1.1] Estrategia de ramas y commits
+├── CHANGELOG.md                      # [E1.7] Generado automáticamente por el pipeline
+├── README.md                         # [E1.8] Documentación principal y operativa (este archivo)
+└── IAG_REGISTRO.md                   # [E1.8] Bitácora de uso de IA (Nivel 3)
 
 ## CI/CD — Parte 1
 
