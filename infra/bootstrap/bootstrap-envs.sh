@@ -16,11 +16,19 @@ bootstrap_env() {
   ensure_env_file "${dir}/.env" <<EOF
 TAG=1.0.0-bootstrap
 NEXUS_REGISTRY=${NEXUS_REGISTRY}
+ENV_HOST_IP=$(private_ip)
+POSTGRES_PASSWORD=$(rand_secret)
+NEO4J_PASSWORD=$(rand_secret)
 QR_SECRET=$(rand_secret)
 JWT_SECRET=$(rand_secret)
 EOF
   ensure_env_kv "${dir}/.env" TAG "1.0.0-bootstrap"
   set_env_kv "${dir}/.env" NEXUS_REGISTRY "${NEXUS_REGISTRY}"
+  # La IP privada se refresca en cada bootstrap: si la instancia se recrea cambia,
+  # y Kafka anuncia esa dirección en su listener externo.
+  set_env_kv "${dir}/.env" ENV_HOST_IP "$(private_ip)"
+  ensure_env_kv "${dir}/.env" POSTGRES_PASSWORD "$(rand_secret)"
+  ensure_env_kv "${dir}/.env" NEO4J_PASSWORD "$(rand_secret)"
   ensure_env_kv "${dir}/.env" QR_SECRET "$(rand_secret)"
   ensure_env_kv "${dir}/.env" JWT_SECRET "$(rand_secret)"
   log_info "Environment ${env_name} ready: ${dir}/.env"

@@ -243,6 +243,13 @@ compose_up() {
   log_info "${project} listo."
 }
 
+# Dirección privada de la instancia: es la que Jenkins usa para desplegar y la que
+# Kafka anuncia en su listener externo, porque el tráfico entre hosts de la VPC
+# nunca sale a Internet.
+private_ip() {
+  hostname -I | awk '{print $1}'
+}
+
 host_ip() {
   local token ip
   token="$(curl -s -m 2 -X PUT http://169.254.169.254/latest/api/token \
