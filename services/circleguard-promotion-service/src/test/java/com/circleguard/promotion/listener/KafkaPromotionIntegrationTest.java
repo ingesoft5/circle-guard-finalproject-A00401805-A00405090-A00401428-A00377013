@@ -60,6 +60,7 @@ class KafkaPromotionIntegrationTest {
     @EnableAutoConfiguration(excludeName = {
             "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration",
             "org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration",
+            "org.springframework.boot.autoconfigure.data.neo4j.Neo4jReactiveDataAutoConfiguration",
             "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
             "org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration"
     })
@@ -92,7 +93,9 @@ class KafkaPromotionIntegrationTest {
         kafkaTemplate.send("survey.submitted", "user-2",
                 Map.of("anonymousId", "user-2", "hasSymptoms", false));
 
-        await().pollDelay(Duration.ofSeconds(5)).atMost(Duration.ofSeconds(60)).untilAsserted(() ->
+        // during() keeps asserting for the whole window: pollDelay() alone evaluates once,
+        // so a message arriving after the delay would still pass.
+        await().during(Duration.ofSeconds(5)).atMost(Duration.ofSeconds(15)).untilAsserted(() ->
                 verify(healthStatusService, never()).updateStatus("user-2", "SUSPECT"));
     }
 

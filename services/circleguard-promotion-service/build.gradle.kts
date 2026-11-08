@@ -7,6 +7,12 @@ plugins {
     id("jacoco")
 }
 
+// Spring Boot 3.2.4 manages Testcontainers 1.19.7, whose Docker client negotiates
+// API 1.32 while Docker Engine 29 rejects anything below 1.40. The Boot BOM exposes
+// this version as a property, so overriding it here keeps the whole Testcontainers
+// stack (core, jdbc, database-commons, junit-jupiter, kafka) on a supported release.
+extra["testcontainers.version"] = "1.21.4"
+
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
     testImplementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
@@ -27,10 +33,10 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
-    testImplementation("org.testcontainers:postgresql:1.21.3")
-    testImplementation("org.testcontainers:neo4j:1.21.3")
-    testImplementation("org.testcontainers:kafka:1.21.3")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.testcontainers:neo4j")
+    testImplementation("org.testcontainers:kafka")
 }
 
 jacoco {
