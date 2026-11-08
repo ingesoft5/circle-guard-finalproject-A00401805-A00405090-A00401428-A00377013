@@ -284,7 +284,7 @@ erDiagram
 | Punto | Observación | Impacto |
 | :--- | :--- | :--- |
 | **Toolchain** | La raíz fija `JavaLanguageVersion.of(21)`, pero el entorno local tiene JDK 17 | Gradle resuelve el 21 por `foojay-resolver-convention`; el primer build descarga el JDK |
-| **Wrapper** | `gradle/wrapper/gradle-wrapper.jar` **no está versionado** en `main` (lo absorbe `*.jar` del `.gitignore`) | `./gradlew` falla con `ClassNotFoundException: org.gradle.wrapper.GradleWrapperMain` hasta recuperar el jar |
+| **Wrapper** | `gradle/wrapper/gradle-wrapper.jar` **sí está versionado** en `main` desde la PR #15, con la excepción `!gradle/wrapper/gradle-wrapper.jar` en `.gitignore` | `./gradlew` funciona en un clon limpio; el defecto se detectó durante este diagnóstico y se corrigió en esa PR |
 | **Docker** | Engine `29.9.3`, API `1.56`, mínimo aceptado `1.40` | Testcontainers `1.19.3` no detecta el daemon; ver §5.2 |
 | **Cobertura** | Sin plugin JaCoCo en el módulo | No se puede medir la meta de ≥ 60 % todavía |
 
@@ -301,7 +301,7 @@ erDiagram
 
 | Clase de prueba | Casos | Resultado |
 | :--- | :--- | :--- |
-| `HealthStatusControllerTest` | 4 | **2 fallan** (`resolve_WithPermission_CallsResolveStatus`, `confirmPositive_WithPermission_CallsUpdateStatus`): esperan `200` y reciben `403`. Los otros 2 esperan `403` y pasan |
+| `HealthStatusControllerTest` | 4 | 2 casos esperan `200` y **fallan** con `403` (`resolve_WithPermission_CallsResolveStatus`, `confirmPositive_WithPermission_CallsUpdateStatus`). Los otros 2 esperan `403` y **pasan, pero no por lo que declaran**: como toda petición devolvía `403`, también pasarían con una autoridad válida |
 | `HealthStatusServiceTest` | — | Verde |
 | `StatusLifecycleTest` | — | Verde |
 | `FloorServiceTest` | — | Verde |
@@ -310,7 +310,7 @@ erDiagram
 | `AdministrativeCorrectionTest` | — | **`initializationError`** por Testcontainers |
 | `PromotionPerformanceTest` | — | **`initializationError`** por Testcontainers |
 
-**Causa 1 — dos tests del controlador devuelven `403`.** El controlador declara `@PreAuthorize("hasRole('HEALTH_CENTER')")`, y `hasRole` exige la autoridad `ROLE_HEALTH_CENTER`. Los tests usaban `@WithMockUser(authorities = "HEALTH_CENTER")` sin prefijo, así que la autorización fallaba siempre; los dos casos que esperan `403` pasaban por el motivo equivocado. Se corrigió en `HU-PROMO-02` con `@WithMockUser(authorities = "ROLE_HEALTH_CENTER")`.
+**Causa 1 — dos tests del controlador devuelven `403`.** El controlador declara `@PreAuthorize("hasRole('HEALTH_CENTER')")`, y `hasRole` exige la autoridad `ROLE_HEALTH_CENTER`. Los tests usaban `@WithMockUser(authorities = "HEALTH_CENTER")` sin prefijo, así que la autorización fallaba en los cuatro casos. La corrección de la autoridad corresponde a `HU-PROMO-02`.
 
 **Causa 2 — Testcontainers no encuentra Docker.**
 
@@ -319,7 +319,7 @@ java.lang.IllegalStateException: Could not find a valid Docker environment.
 	at org.testcontainers.dockerclient.DockerClientProviderStrategy.getFirstValidStrategy
 ```
 
-El daemon (Engine `29.9.3`, API `1.56`, mínimo `1.40`) no es detectado por el cliente de Testcontainers `1.19.3`; con `1.20.6` y `1.21.3` la detección es intermitente y el reaper `testcontainers/ryuk:0.6.0` es rechazado por el daemon. Verificado en Windows con *named pipes* (`docker_engine` y `dockerDesktopLinuxEngine`), con `DOCKER_HOST` explícito, con Ryuk deshabilitado y con daemon limpio. En Linux el cliente usa el socket `/var/run/docker.sock` y no aplica esta limitación.
+El daemon (Engine `29.9.3`, API `1.56`, mínimo `1.40`) no es detectado por el cliente de Testcontainers `1.19.3`; con `1.20.6` y `1.21.3` la detección es intermitente y el reaper `testcontainers/ryuk:0.6.0` es rechazado por el daemon. Verificado **solo sobre Windows**, con *named pipes* (`docker_engine` y `dockerDesktopLinuxEngine`), con `DOCKER_HOST` explícito, con Ryuk deshabilitado y con daemon limpio. En Linux el cliente usa el socket `/var/run/docker.sock`, un camino distinto que **no se probó** en este diagnóstico y que no se puede afirmar equivalente.
 
 ### 5.3 Estado de Preparación para `HU-PROMO-02`
 
@@ -328,7 +328,7 @@ El daemon (Engine `29.9.3`, API `1.56`, mínimo `1.40`) no es detectado por el c
 | Pruebas unitarias de la cascada | Parciales (`StatusLifecycleTest`, `HealthStatusServiceTest` verdes) |
 | JaCoCo ≥ 60 % | **Ausente** — no hay plugin configurado |
 | Prueba de integración Kafka (Testcontainers) | **Bloqueada** por la versión de Testcontainers |
-| Estabilización del contexto para CI | **Resuelto en HU-PROMO-02** — la autoridad correcta es `ROLE_HEALTH_CENTER` |
+| Estabilización del contexto para CI | **Pendiente** — los tests declaran la autoridad `HEALTH_CENTER` y `hasRole` exige `ROLE_HEALTH_CENTER` |
 
 ---
 
