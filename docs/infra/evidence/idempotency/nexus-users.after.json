@@ -1,0 +1,37 @@
+[
+  {
+    "roles": [
+      "nx-admin"
+    ],
+    "status": "active",
+    "userId": "admin"
+  },
+  {
+    "roles": [
+      "nx-anonymous"
+    ],
+    "status": "active",
+    "userId": "anonymous"
+  },
+  {
+    "roles": [
+      "jenkins-publisher"
+    ],
+    "status": "active",
+    "userId": "jenkins"
+  },
+  {
+    "roles": [
+      "jenkins-publisher"
+    ],
+    "status": "active",
+    "userId": "nexus"
+  },
+  {
+    "roles": [
+      "professor-read"
+    ],
+    "status": "active",
+    "userId": "professor"
+  }
+]

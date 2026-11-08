@@ -1,0 +1,141 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>E1.2 Idempotencia</title><style>
+@page { size: A4; margin: 17mm 16mm; }
+body { font-family: "DejaVu Sans", Arial, sans-serif; color:#20242a; font-size:10pt; line-height:1.42; }
+h1 { font-size:20pt; color:#0b3d6e; border-bottom:3px solid #0b3d6e; padding-bottom:6px; }
+h2 { font-size:14pt; color:#0b3d6e; margin-top:20px; border-bottom:1px solid #c8d6e5; padding-bottom:3px; }
+h3 { font-size:11.5pt; color:#174f82; margin-top:14px; }
+code { font-family:"DejaVu Sans Mono", monospace; font-size:8.8pt; background:#f2f5f8; padding:1px 3px; border-radius:3px; }
+pre { background:#f5f7fa; border:1px solid #d6dee8; border-left:4px solid #0b3d6e; padding:8px; font-size:8.3pt; white-space:pre-wrap; word-wrap:break-word; }
+table { width:100%; border-collapse:collapse; margin:8px 0; font-size:9pt; }
+th { background:#e8eef5; border:1px solid #b9c8d8; padding:5px; text-align:left; }
+td { border:1px solid #c9d5e2; padding:5px; vertical-align:top; }
+</style></head><body><p>&lt;!-- CG-DOC: Evidence report for idempotent CircleGuard infrastructure bootstrap. --&gt;</p>
+<h1>E1.2 - Informe de idempotencia</h1>
+<p><strong>Proyecto:</strong> CircleGuard<br />
+<strong>Rama de prueba:</strong> <code>test/HU-INFRA-01-idempotencia</code><br />
+<strong>Rama del PR:</strong> <code>feat/HU-GATEWAY-01-configurar-servidores</code><br />
+<strong>Región:</strong> <code>us-east-2</code><br />
+<strong>Fecha:</strong> 8 de noviembre de 2026</p>
+<h2>1. Objetivo</h2>
+<p>Demostrar que <code>./infra/bootstrap/bootstrap-all.sh</code> converge al mismo estado al ejecutarse dos veces, sin duplicar recursos AWS, rotar secretos, recrear contenedores ni duplicar usuarios o proyectos en Nexus y SonarQube.</p>
+<h2>2. Resultado</h2>
+<pre><code class="language-text">Segunda ejecución: exit=0
+Diferencia antes/después: 0 líneas
+</code></pre>
+<p>El archivo <code>diffs.txt</code> quedó vacío.</p>
+<h2>3. Invariantes verificados</h2>
+<table>
+<thead>
+<tr>
+  <th>Elemento</th>
+  <th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>IDs de EC2</td>
+  <td>Sin cambios</td>
+</tr>
+<tr>
+  <td>IPs privadas y públicas</td>
+  <td>Sin cambios</td>
+</tr>
+<tr>
+  <td>Elastic IP</td>
+  <td>Sin cambios</td>
+</tr>
+<tr>
+  <td>Security Groups y reglas</td>
+  <td>Sin cambios</td>
+</tr>
+<tr>
+  <td>Key pair</td>
+  <td>Sin cambios</td>
+</tr>
+<tr>
+  <td>Hash de <code>.env</code> local y remoto</td>
+  <td>Sin cambios</td>
+</tr>
+<tr>
+  <td>IDs e imágenes de contenedores</td>
+  <td>Sin cambios</td>
+</tr>
+<tr>
+  <td>Repositorios y usuarios Nexus</td>
+  <td>Sin cambios</td>
+</tr>
+<tr>
+  <td>Proyectos y usuarios SonarQube</td>
+  <td>Sin cambios</td>
+</tr>
+<tr>
+  <td>Jenkins recreado</td>
+  <td>No</td>
+</tr>
+</tbody>
+</table>
+<h2>4. Evidencia</h2>
+<pre><code class="language-text">docs/infra/evidence/idempotency/
+├── README.md
+├── diffs.txt
+├── files.before
+├── files.after
+├── remote-env.before
+├── remote-env.after
+├── instances.before.json
+├── instances.after.json
+├── eips.before.json
+├── eips.after.json
+├── sgs.before.json
+├── sgs.after.json
+├── keys.before.json
+├── keys.after.json
+├── tools.containers.before.txt
+├── tools.containers.after.txt
+├── dev.containers.before.txt
+├── dev.containers.after.txt
+├── stage.containers.before.txt
+├── stage.containers.after.txt
+├── prod.containers.before.txt
+├── prod.containers.after.txt
+├── nexus-repos.before.json
+├── nexus-repos.after.json
+├── nexus-users.before.json
+├── nexus-users.after.json
+├── sonar-projects.before.json
+├── sonar-projects.after.json
+├── sonar-users.before.json
+├── sonar-users.after.json
+├── bootstrap-final-run.log
+└── migration-run.log
+</code></pre>
+<h2>5. Bugs encontrados y corregidos</h2>
+<h3>5.1 El <code>.env</code> remoto no se copiaba completo al local</h3>
+<p><code>bootstrap-all.sh</code> copiaba el <code>.env</code> remoto solo a <code>infra/state/tools.env</code>, no a <code>deploy/compose/tools/.env</code>. Eso hacía que el <code>SONAR_TOKEN</code> y las contraseñas del profesor se regeneraran en cada corrida.</p>
+<p>Corrección:</p>
+<ul>
+<li>copiar <code>infra/state/tools.env</code> a <code>deploy/compose/tools/.env</code>;</li>
+<li>agregar <code>PROFESSOR_SONAR_PASSWORD</code> y <code>PROFESSOR_NEXUS_PASSWORD</code> al <code>.env</code> local.</li>
+</ul>
+<h3>5.2 Jenkins se reconstruía en cada corrida</h3>
+<p><code>compose_up</code> usaba <code>--build</code> siempre. Aunque el contenedor no se recreaba, la etiqueta de imagen apuntaba a una imagen nueva y el contenedor quedaba en una imagen vieja.</p>
+<p>Corrección:</p>
+<ul>
+<li>construir solo si la imagen <code>circleguard-tools-jenkins</code> no existe;</li>
+<li>ejecutar <code>compose up</code> sin <code>--build</code> cuando la imagen ya existe.</li>
+</ul>
+<h2>6. Cómo se validó</h2>
+<ol>
+<li>Verificar que PR-15 no estuviera construyendo.</li>
+<li>Crear <code>test/HU-INFRA-01-idempotencia</code> desde el HEAD actual.</li>
+<li>Capturar hashes de <code>.env</code>, recursos AWS, contenedores, Nexus y SonarQube.</li>
+<li>Ejecutar <code>./infra/bootstrap/bootstrap-all.sh</code>.</li>
+<li>Capturar el estado después.</li>
+<li>Comparar con <code>diff</code>.</li>
+<li>Confirmar <code>diffs.txt</code> vacío.</li>
+<li>Commitear la evidencia en la rama de prueba.</li>
+<li>Aplicar el fix al PR-15.</li>
+</ol>
+<h2>7. Conclusión</h2>
+<p>El bootstrap es idempotente para el alcance de E1.2. La segunda ejecución no cambió recursos, secretos, contenedores, repositorios ni usuarios. La evidencia queda separada en la rama de prueba y el fix de idempotencia está en el PR.</p>
+</body></html>

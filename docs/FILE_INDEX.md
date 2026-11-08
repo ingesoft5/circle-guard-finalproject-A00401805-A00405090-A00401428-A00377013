@@ -103,6 +103,12 @@ English purpose of every tracked repository file.
 
 - `docs/informe/E1.2-CircleGuard-Infraestructura.md` — E1.2 infrastructure report with AWS, CI/CD, idempotency, cost, and evidence.
 
+- `docs/informe/E1.2-Idempotencia.html` — Evidence report for idempotent CircleGuard infrastructure bootstrap. --&gt;</p>
+
+- `docs/informe/E1.2-Idempotencia.md` — Evidence report for idempotent CircleGuard infrastructure bootstrap.
+
+- `docs/informe/E1.2-Idempotencia.pdf` — Binary asset.
+
 - `docs/informe/E1.2-Informe-Final.html` — Repository file.
 
 - `docs/informe/E1.2-Informe-Final.md` — Repository file.
@@ -158,6 +164,66 @@ English purpose of every tracked repository file.
 - `docs/infra/environments.md` — Four-host topology and isolated dev, stage, and prod environments.
 
 - `docs/infra/evidence/README.md` — Checklist of CI/CD evidence required for the gateway delivery.
+
+- `docs/infra/evidence/idempotency/README.md` — Evidence that the CircleGuard bootstrap converges on repeated execution.
+
+- `docs/infra/evidence/idempotency/dev.containers.after.txt` — Repository file.
+
+- `docs/infra/evidence/idempotency/dev.containers.before.txt` — Repository file.
+
+- `docs/infra/evidence/idempotency/diffs.txt` — Repository file.
+
+- `docs/infra/evidence/idempotency/eips.after.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/eips.before.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/files.after` — Repository file.
+
+- `docs/infra/evidence/idempotency/files.before` — Repository file.
+
+- `docs/infra/evidence/idempotency/instances.after.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/instances.before.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/keys.after.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/keys.before.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/nexus-repos.after.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/nexus-repos.before.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/nexus-users.after.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/nexus-users.before.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/prod.containers.after.txt` — Repository file.
+
+- `docs/infra/evidence/idempotency/prod.containers.before.txt` — Repository file.
+
+- `docs/infra/evidence/idempotency/remote-env.after` — Repository file.
+
+- `docs/infra/evidence/idempotency/remote-env.before` — Repository file.
+
+- `docs/infra/evidence/idempotency/sgs.after.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/sgs.before.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/sonar-projects.after.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/sonar-projects.before.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/sonar-users.after.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/sonar-users.before.json` — JSON configuration or data file.
+
+- `docs/infra/evidence/idempotency/stage.containers.after.txt` — Repository file.
+
+- `docs/infra/evidence/idempotency/stage.containers.before.txt` — Repository file.
+
+- `docs/infra/evidence/idempotency/tools.containers.after.txt` — Repository file.
+
+- `docs/infra/evidence/idempotency/tools.containers.before.txt` — Repository file.
 
 - `docs/infra/runbook.md` — Operations runbook for four hosts, private deployment, and cost controls.
 

@@ -1,0 +1,42 @@
+[
+  {
+    "format": "docker",
+    "name": "circleguard-docker",
+    "type": "hosted"
+  },
+  {
+    "format": "maven2",
+    "name": "maven-central",
+    "type": "proxy"
+  },
+  {
+    "format": "maven2",
+    "name": "maven-public",
+    "type": "group"
+  },
+  {
+    "format": "maven2",
+    "name": "maven-releases",
+    "type": "hosted"
+  },
+  {
+    "format": "maven2",
+    "name": "maven-snapshots",
+    "type": "hosted"
+  },
+  {
+    "format": "nuget",
+    "name": "nuget-group",
+    "type": "group"
+  },
+  {
+    "format": "nuget",
+    "name": "nuget-hosted",
+    "type": "hosted"
+  },
+  {
+    "format": "nuget",
+    "name": "nuget.org-proxy",
+    "type": "proxy"
+  }
+]
