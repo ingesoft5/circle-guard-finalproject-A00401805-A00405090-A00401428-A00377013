@@ -35,9 +35,28 @@ Branches must follow this structure to preserve traceability with Jira user stor
 
 The project uses **Conventional Commits** to enable semantic versioning and release notes. Local commit messages **do not include the Jira ID**, because traceability is provided by the branch name and the pull request title.
 
-**Structure:** `<type>(<scope>): <description>`
+**Structure:** `<type> ( <scope> ) : <description>`
+
+**Breaking change:** `<type> ( <scope> ) !: <description>`
+
+**Scope:** mandatory in every commit.
 
 **Language:** all commit messages are written **in English**, even when repository documentation is written in Spanish.
+
+**Validation regex:**
+
+```text
+^(feat|fix|docs|ci|chore|test|refactor|build|perf|style)[[:space:]]+\([[:space:]]*[a-z-]+[[:space:]]*\)[[:space:]]+!?:[[:space:]]+.+$
+```
+
+**Examples:**
+
+```text
+feat ( gateway ) : add secure gate validation
+fix ( auth ) : correct QR expiration
+feat ( auth ) !: replace role schema
+```
+
 
 **Allowed types and SemVer impact:**
 
