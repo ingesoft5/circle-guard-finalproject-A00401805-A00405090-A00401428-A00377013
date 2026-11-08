@@ -150,10 +150,28 @@ def deploy(String environment, String tag) {
 }
 
 def e2e() {
+    if (!env.DEV_PRIVATE_IP) {
+        error 'Falta DEV_PRIVATE_IP: no se puede ejecutar el E2E contra dev.'
+    }
+    // Un identificador por build: promotion-service actualiza visitantes existentes y
+    // nunca los crea, así que cada corrida siembra los suyos. Con un id fijo, la
+    // segunda corrida mediría el estado que dejó la primera.
+    def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
+    sshagent(['cg-envs-ssh']) {
+        sh """
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${env.DEV_PRIVATE_IP} \
+              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose \
+                 ./deploy/scripts/seed-visitor.sh dev ${runId}-symptoms ${runId}-control'
+        """
+    }
     sh """
         cd tests/e2e
         npm install
         npx playwright install --with-deps chromium
-        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 npx playwright test
+        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
+        PROMOTION_URL=http://${env.DEV_PRIVATE_IP}:8088 \
+        KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:19092 \
+        E2E_ANONYMOUS_ID=${runId} \
+        npx playwright test
     """
 }
