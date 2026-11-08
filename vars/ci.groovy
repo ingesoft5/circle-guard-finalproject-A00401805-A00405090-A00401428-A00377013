@@ -1,6 +1,19 @@
 // CG-DOC: Shared Jenkins pipeline helpers for build, analysis, publish, deploy, and notify.
 def buildAndTest(String servicePath) {
-    sh "./gradlew ${servicePath}:clean ${servicePath}:test ${servicePath}:jacocoTestReport ${servicePath}:jacocoTestCoverageVerification"
+    try {
+        sh "./gradlew ${servicePath}:clean ${servicePath}:test ${servicePath}:jacocoTestReport ${servicePath}:jacocoTestCoverageVerification"
+    } finally {
+        publishReports(servicePath)
+    }
+}
+
+def publishReports(String serviceDir) {
+    junit testResults: "${serviceDir}/build/test-results/test/*.xml",
+            allowEmptyResults: true,
+            keepLongStdio: true
+    archiveArtifacts artifacts: "${serviceDir}/build/reports/jacoco/test/html/**,${serviceDir}/build/reports/tests/test/**,${serviceDir}/build/test-results/test/*.xml",
+            allowEmptyArchive: true,
+            fingerprint: true
 }
 
 def sonarScan() {
