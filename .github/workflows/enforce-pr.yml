@@ -11,9 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validar que el push proviene de un Pull Request
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          # Si el commit no contiene la firma de un Merge de PR, falla
-          if [[ "${{ github.event.head_commit.message }}" != *"Merge pull request"* ]] && [[ "${{ github.event.head_commit.message }}" != *"Squash and merge"* ]]; then
+          # Acepta merge commits, merge squash y squash con el formato "titulo (#N)".
+          if ! grep -Eq 'Merge pull request|Squash and merge|\(#[0-9]+\)' <<< "$COMMIT_MESSAGE"; then
             echo "ERROR: Se detectó un 'push' directo a la rama main."
             echo "En este repositorio los cambios deben realizarse a través de un Pull Request."
             exit 1
