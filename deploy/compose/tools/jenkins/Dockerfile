@@ -1,3 +1,4 @@
+# CG-DOC: Jenkins controller image with Docker CLI, Node, and Sonar scanner.
 FROM jenkins/jenkins:lts-jdk21
 
 USER root

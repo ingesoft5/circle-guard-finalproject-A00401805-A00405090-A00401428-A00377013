@@ -1,3 +1,4 @@
+# CG-DOC: File for the promotion service: application.
 spring:
   application:
     name: circleguard-promotion-service

@@ -1,3 +1,4 @@
+-- CG-DOC: File for the form service: V1__initial_survey_schema.
 -- Health Survey Schema
 
 CREATE TABLE health_surveys (

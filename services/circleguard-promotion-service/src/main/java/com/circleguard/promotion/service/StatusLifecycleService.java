@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the promotion service: Status Lifecycle Service.
+ */
 package com.circleguard.promotion.service;
 
 import com.circleguard.promotion.repository.jpa.SystemSettingsRepository;

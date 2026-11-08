@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the dashboard service: Analytics Controller.
+ */
 package com.circleguard.dashboard.controller;
 
 import com.circleguard.dashboard.service.AnalyticsService;

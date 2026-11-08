@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: persistence repository for the auth service: Local User Repository.
+ */
 package com.circleguard.auth.repository;
 
 import com.circleguard.auth.model.LocalUser;

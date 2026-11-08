@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the auth service: Qr Token Controller.
+ */
 package com.circleguard.auth.controller;
 
 import com.circleguard.auth.service.QrTokenService;

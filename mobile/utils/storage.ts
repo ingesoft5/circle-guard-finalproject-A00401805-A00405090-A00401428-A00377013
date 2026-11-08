@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Mobile utility module: storage.
+ */
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 

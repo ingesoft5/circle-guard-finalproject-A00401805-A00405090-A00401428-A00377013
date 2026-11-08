@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Java source for the file service: File Application.
+ */
 package com.circleguard.file;
 
 import org.springframework.boot.SpringApplication;

@@ -1,3 +1,4 @@
+# CG-DOC: File for the form service: application.
 spring:
   application:
     name: circleguard-form-service

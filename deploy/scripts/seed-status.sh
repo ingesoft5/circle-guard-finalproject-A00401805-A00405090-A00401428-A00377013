@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Seeds Redis with a visitor status for smoke and end-to-end tests.
 set -euo pipefail
 
 ENV="${1:?Uso: seed-status.sh <dev|stage|prod> <anonymousId> <status>}"

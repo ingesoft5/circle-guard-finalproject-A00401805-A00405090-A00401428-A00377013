@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: configuration for the promotion service: Data Layer Config.
+ */
 package com.circleguard.promotion.config;
 
 import org.springframework.context.annotation.Configuration;

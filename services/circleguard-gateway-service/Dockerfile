@@ -1,3 +1,4 @@
+# CG-DOC: Container image definition for the gateway service.
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
 COPY . .

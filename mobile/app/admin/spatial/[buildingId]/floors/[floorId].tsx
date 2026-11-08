@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: [floorId].
+ */
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Image, Pressable, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, PanResponder, Dimensions, LayoutChangeEvent, Platform } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';

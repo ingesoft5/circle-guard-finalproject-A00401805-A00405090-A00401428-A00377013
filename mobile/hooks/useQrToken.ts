@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React hook for the mobile app: use Qr Token.
+ */
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { AUTH_BASE_URL } from '@/constants/Config';

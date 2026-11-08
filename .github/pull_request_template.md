@@ -1,3 +1,4 @@
+<!-- CG-DOC: Pull request template with context, changes, and test instructions. -->
 ## Branch Name
 <!-- Example: CG-12-feat/implement-login -->
 - Branch: 

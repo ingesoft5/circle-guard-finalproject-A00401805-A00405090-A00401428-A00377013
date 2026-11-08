@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the notification service: Email Service.
+ */
 package com.circleguard.notification.service;
 
 import java.util.concurrent.CompletableFuture;

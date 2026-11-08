@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: End-to-end test configuration or scenario: access-validation.spec.
+ */
 import { test, expect } from '@playwright/test';
 
 test('el gateway está saludable', async ({ request }) => {

@@ -1,3 +1,4 @@
+// CG-DOC: Shared Jenkins pipeline helpers for build, analysis, publish, deploy, and notify.
 def buildAndTest(String servicePath) {
     sh "./gradlew ${servicePath}:clean ${servicePath}:test ${servicePath}:jacocoTestReport ${servicePath}:jacocoTestCoverageVerification"
 }

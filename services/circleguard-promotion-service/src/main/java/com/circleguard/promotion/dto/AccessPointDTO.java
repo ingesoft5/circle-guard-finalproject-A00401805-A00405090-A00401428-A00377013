@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: data transfer object for the promotion service: Access Point D T O.
+ */
 package com.circleguard.promotion.dto;
 
 import lombok.AllArgsConstructor;

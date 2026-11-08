@@ -1,3 +1,4 @@
+// CG-DOC: Neo4j seed or query script for the promotion service.
 // Seed mock users for the new faculties
 UNWIND [
   {name: 'Faculty of Administrative and Economic Sciences (Negocios y Economía)', healthy: 120, suspect: 15, probable: 5, confirmed: 2},

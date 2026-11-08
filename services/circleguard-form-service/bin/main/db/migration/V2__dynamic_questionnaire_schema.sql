@@ -1,3 +1,4 @@
+-- CG-DOC: File for the form service: V2__dynamic_questionnaire_schema.
 -- Dynamic Questionnaire Schema
 
 CREATE TABLE questionnaires (

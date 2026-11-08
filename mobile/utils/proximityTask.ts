@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Mobile utility module: proximity Task.
+ */
 import { Platform } from 'react-native';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';

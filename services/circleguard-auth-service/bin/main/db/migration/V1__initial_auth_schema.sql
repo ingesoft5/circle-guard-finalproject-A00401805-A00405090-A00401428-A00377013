@@ -1,3 +1,4 @@
+-- CG-DOC: File for the auth service: V1__initial_auth_schema.
 -- Dynamic RBAC Schema
 
 CREATE TABLE permissions (

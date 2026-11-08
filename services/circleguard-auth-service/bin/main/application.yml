@@ -1,3 +1,4 @@
+# CG-DOC: File for the auth service: application.
 spring:
   application:
     name: circleguard-auth-service

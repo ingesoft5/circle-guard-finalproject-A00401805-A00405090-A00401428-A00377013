@@ -1,4 +1,7 @@
 /**
+ * CG-DOC: Mobile constants module: Config.
+ */
+/**
  * Global Configuration for CircleGuard Mobile.
  */
 export const AUTH_BASE_URL = 'http://localhost:8180'; // Auth Service

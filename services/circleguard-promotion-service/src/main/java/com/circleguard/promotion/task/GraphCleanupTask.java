@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Java source for the promotion service: Graph Cleanup Task.
+ */
 package com.circleguard.promotion.task;
 
 import com.circleguard.promotion.repository.graph.UserNodeRepository;

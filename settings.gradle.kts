@@ -1,3 +1,4 @@
+// CG-DOC: Gradle multi-project settings and module registration.
 pluginManagement {
     repositories {
         gradlePluginPortal()

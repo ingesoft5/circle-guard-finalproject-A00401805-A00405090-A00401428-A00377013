@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: _layout.
+ */
 import React from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { usePermission } from '@/hooks/usePermission';

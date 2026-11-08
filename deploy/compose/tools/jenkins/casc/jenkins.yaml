@@ -1,3 +1,4 @@
+# CG-DOC: Jenkins Configuration as Code for security, credentials, library, and job.
 jenkins:
   systemMessage: "CircleGuard CI/CD - Gateway"
   numExecutors: 2

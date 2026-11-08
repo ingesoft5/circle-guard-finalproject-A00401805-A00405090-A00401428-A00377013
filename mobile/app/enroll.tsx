@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: enroll.
+ */
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { MeshBackground } from '@/components/MeshBackground';
 import { Shield, Smartphone, QrCode } from 'lucide-react-native';

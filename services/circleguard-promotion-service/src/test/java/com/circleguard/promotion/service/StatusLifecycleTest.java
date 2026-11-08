@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Status Lifecycle Test in the promotion service.
+ */
 package com.circleguard.promotion.service;
 
 import com.circleguard.promotion.model.jpa.SystemSettings;

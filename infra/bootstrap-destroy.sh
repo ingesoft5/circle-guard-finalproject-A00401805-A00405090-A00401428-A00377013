@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Destroys AWS resources created by the bootstrap.
 # bootstrap-destroy.sh - Destruye la infraestructura AWS creada por bootstrap-aws.sh.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/bootstrap-common.sh"

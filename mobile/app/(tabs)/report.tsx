@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: report.
+ */
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, useWindowDimensions } from 'react-native';
 import { MeshBackground } from '@/components/MeshBackground';

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React hook for the mobile app: use Qr Token.test.
+ */
 import { renderHook, act } from '@testing-library/react-native';
 import { useQrToken } from './useQrToken';
 

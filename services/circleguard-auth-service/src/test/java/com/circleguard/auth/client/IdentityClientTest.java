@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Identity Client Test in the auth service.
+ */
 package com.circleguard.auth.client;
 
 import org.junit.jupiter.api.Test;

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Java source for the auth service: Auth Service Application.
+ */
 package com.circleguard.auth;
 
 import org.springframework.boot.SpringApplication;

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the auth service: Login Controller.
+ */
 package com.circleguard.auth.controller;
 
 import com.circleguard.auth.service.JwtTokenService;

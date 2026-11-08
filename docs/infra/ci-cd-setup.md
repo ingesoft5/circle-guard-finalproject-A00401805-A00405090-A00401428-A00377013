@@ -1,12 +1,13 @@
-# Plataforma CI/CD — Jenkins, SonarQube y Nexus
+<!-- CG-DOC: Jenkins, SonarQube, Nexus, credentials, and gateway pipeline setup. -->
+# CI/CD Platform - Jenkins, SonarQube, and Nexus
 
-## Requisitos
+## Requirements
 
-- AWS CLI v2 con credenciales.
-- `jq`, `ssh`, `curl`, `openssl`.
-- `ADMIN_CIDR` de la IP administrativa.
-- Token de GitHub con permisos de repositorio y webhook (`GITHUB_TOKEN`).
-- Opcional: `TEACHER_CIDR` para habilitar el acceso del docente.
+- AWS CLI v2 with valid credentials.
+- `jq`, `ssh`, `curl`, and `openssl`.
+- `ADMIN_CIDR` for the administrator IP address.
+- GitHub token with repository and webhook permissions (`GITHUB_TOKEN`).
+- Optional `TEACHER_CIDR` for classroom access.
 
 ## Variables
 
@@ -17,31 +18,30 @@ export GITHUB_USER=...
 export GITHUB_TOKEN=...
 export GITHUB_OWNER=ingesoft5
 export GITHUB_REPO=circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013
-# Opcional: export TEACHER_CIDR="IP_DOCENTE/32"
 ```
 
-## Reconstrucción desde cero
+## Rebuild from scratch
 
 ```bash
 ./infra/bootstrap-all.sh
 ```
 
-El comando:
+The command:
 
-1. Crea 2 EC2, Security Groups, Elastic IPs y key pair.
-2. Prepara Docker, Java 21, swap y firewall en ambas instancias.
-3. Levanta Jenkins, SonarQube, PostgreSQL y Nexus.
-4. Configura SonarQube, Nexus y el repositorio Docker `circleguard-docker`.
-5. Prepara los archivos `.env` de `dev`, `stage` y `prod`.
+1. Creates two EC2 instances, security groups, elastic IPs, and the key pair.
+2. Installs Docker, Java 21, swap, and firewall rules on both hosts.
+3. Starts Jenkins, SonarQube, PostgreSQL, and Nexus.
+4. Configures SonarQube, Nexus, and the `circleguard-docker` registry.
+5. Creates the `.env` files for `dev`, `stage`, and `prod`.
 
-Solo herramientas o solo ambientes:
+Partial runs:
 
 ```bash
 ./infra/bootstrap-all.sh --tools-only
 ./infra/bootstrap-all.sh --envs-only
 ```
 
-Destrucción:
+Destroy:
 
 ```bash
 CONFIRM=yes ./infra/bootstrap-destroy.sh
@@ -50,70 +50,70 @@ CONFIRM=yes ./infra/bootstrap-destroy.sh
 ## Jenkins
 
 - URL: `http://<TOOLS_IP>:8080`
-- Usuario: `admin`
-- Contraseña: `infra/state/tools.env`
+- User: `admin`
+- Password: `infra/state/tools.env`
 - JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`
 - Plugins: `deploy/compose/tools/jenkins/plugins.txt`
-- Job multibranch: `circleguard-gateway`
-- Shared Library: `vars/ci.groovy`, rama `LIBRARY_BRANCH` (por defecto `dev`)
+- Multibranch job: `circleguard-gateway`
+- Shared Library: `vars/ci.groovy`, branch `LIBRARY_BRANCH` (default `dev`)
 - Webhook: `http://<TOOLS_IP>:8080/github-webhook/`
 
-Credenciales creadas automáticamente:
+Credentials created automatically:
 
-| ID | Tipo | Uso |
+| ID | Type | Purpose |
 |---|---|---|
-| `github-creds` | usuario/contraseña | Repositorio y webhook |
-| `sonar-token` | secret text | SonarQube |
-| `nexus-creds` | usuario/contraseña | Nexus |
-| `cg-envs-ssh` | SSH private key | Despliegue en cg-envs |
+| `github-creds` | username/password | Repository and webhook |
+| `sonar-token` | secret text | SonarQube analysis |
+| `nexus-creds` | username/password | Nexus publishing and registry |
+| `cg-envs-ssh` | SSH private key | Deployment to `cg-envs` |
 
-`cg-envs-ssh` se declara en JCasC y usa la llave copiada a `/opt/circleguard/jenkins_ssh/cg-envs-key`.
+`cg-envs-ssh` is declared in JCasC and uses the key copied to `/opt/circleguard/jenkins_ssh/cg-envs-key`.
 
 ## SonarQube
 
 - URL: `http://<TOOLS_IP>:9000`
-- Proyecto: `circleguard-gateway-service`
-- Quality gate: `Sonar way`, bloqueante en Jenkins.
-- Reporte: `services/circleguard-gateway-service/build/reports/jacoco/test/jacocoTestReport.xml`
+- Project: `circleguard-gateway-service`
+- Quality gate: `Sonar way`, blocking in Jenkins.
+- Report: `services/circleguard-gateway-service/build/reports/jacoco/test/jacocoTestReport.xml`
 
 ## Nexus
 
 - UI: `http://<TOOLS_IP>:8081`
 - Docker registry: `<TOOLS_IP>:8082`
-- Repositorios: `maven-releases`, `maven-snapshots`, `raw`, `circleguard-docker`.
-- Usuario de Jenkins: `jenkins`, rol `jenkins-publisher`.
+- Repositories: `maven-releases`, `maven-snapshots`, `raw`, `circleguard-docker`.
+- Jenkins user: `jenkins`, role `jenkins-publisher`.
 
-## Notificaciones
+## Notifications
 
-Definir `SLACK_WEBHOOK_URL` en `deploy/compose/tools/.env`. Si está vacío, el pipeline omite la notificación.
+Set `SLACK_WEBHOOK_URL` in `deploy/compose/tools/.env`. If empty, the pipeline skips notifications.
 
-## Pipeline del gateway
+## Gateway pipeline
 
-Etapas en `Jenkinsfile`:
+Stages in `Jenkinsfile`:
 
 1. Checkout.
-2. Build & Test con JaCoCo y verificación ≥ 60 %.
+2. Build & Test with JaCoCo and coverage verification at or above 60%.
 3. SonarQube.
-4. Quality gate bloqueante.
-5. Empaquetado `bootJar`.
-6. Publicación en Nexus.
-7. Build y push de imagen Docker a `circleguard-docker`.
-8. Despliegue a dev.
-9. E2E Playwright.
-10. Despliegue a stage.
-11. Aprobación manual.
-12. Despliegue a prod.
-13. Tag semver.
-14. Rollback con el parámetro `ROLLBACK_TAG`.
+4. Blocking quality gate.
+5. Package `bootJar`.
+6. Publish to Nexus.
+7. Build and push the Docker image to `circleguard-docker`.
+8. Deploy to dev.
+9. Playwright E2E.
+10. Deploy to stage.
+11. Manual approval.
+12. Deploy to prod.
+13. Semantic tag.
+14. Rollback through the `ROLLBACK_TAG` parameter.
 
-## Evidencias
+## Evidence
 
-Guardar en `docs/infra/evidence/`:
+Store in `docs/infra/evidence/`:
 
-- captura de Jenkins con el pipeline verde;
-- captura de SonarQube con quality gate;
-- captura de Nexus con jar e imagen;
-- salida de `docker ps` en `cg-envs`;
-- healthchecks de dev, stage y prod;
-- evidencia de rollback;
-- URLs y usuario de solo lectura para el docente.
+- Jenkins pipeline screenshot with a green build;
+- SonarQube quality gate screenshot;
+- Nexus screenshot with the JAR and image;
+- `docker ps` output on `cg-envs`;
+- health checks for dev, stage, and prod;
+- rollback evidence;
+- URLs and read-only user for the instructor.

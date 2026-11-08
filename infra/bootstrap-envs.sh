@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Prepares isolated dev, stage, and prod gateway environments.
 # bootstrap-envs.sh - Prepara dev, stage y prod (gateway + Redis) de forma aislada.
 # Se ejecuta en la EC2 de ambientes. Idempotente: conserva secretos existentes.
 set -euo pipefail

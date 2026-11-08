@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React context provider for the mobile app: Auth Context.
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage } from '../utils/storage';
 

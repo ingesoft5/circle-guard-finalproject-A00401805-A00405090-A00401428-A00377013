@@ -1,3 +1,4 @@
+-- CG-DOC: File for the dashboard service: V1__initial_dashboard_schema.
 -- Dashboard Analytics Schema
 
 CREATE TABLE entry_logs (

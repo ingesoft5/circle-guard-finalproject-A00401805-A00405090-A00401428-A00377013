@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the form service: Attachment Controller.
+ */
 package com.circleguard.form.controller;
 
 import com.circleguard.form.service.StorageService;

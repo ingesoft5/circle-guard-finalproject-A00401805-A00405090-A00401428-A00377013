@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: data model for the form service: Health Survey.
+ */
 package com.circleguard.form.model;
 
 import jakarta.persistence.*;

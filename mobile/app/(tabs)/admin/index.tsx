@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: index.
+ */
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';

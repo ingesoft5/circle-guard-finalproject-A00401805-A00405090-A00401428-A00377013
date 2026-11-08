@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: integration client for the auth service: Identity Client.
+ */
 package com.circleguard.auth.client;
 
 import org.springframework.beans.factory.annotation.Autowired;

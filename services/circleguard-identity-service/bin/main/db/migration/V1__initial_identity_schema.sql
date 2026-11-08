@@ -1,3 +1,4 @@
+-- CG-DOC: File for the identity service: V1__initial_identity_schema.
 -- Identity Vault Schema
 -- Stores the mapping between real and anonymous identities
 

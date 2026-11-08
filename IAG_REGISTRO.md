@@ -1,3 +1,4 @@
+<!-- CG-DOC: Registry of generative AI usage and human verification. -->
 # Registro de Uso de Inteligencia Artificial Generativa (IAG) — CircleGuard
 
 **Curso:** Ingeniería de Software V (09776 - TIC)  

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React hook for the mobile app: use Spatial.
+ */
 import { useState, useCallback } from 'react';
 import { PROMOTION_BASE_URL, FILE_BASE_URL } from '../constants/Config';
 const API_BASE = `${PROMOTION_BASE_URL}/api/v1`;

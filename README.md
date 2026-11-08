@@ -1,3 +1,4 @@
+<!-- CG-DOC: Project overview, setup guide, and architecture summary. -->
 # CircleGuard Monorepo
 
 #### **Integrantes:**
@@ -240,14 +241,14 @@ circleguard/
 ├── README.md                         # [E1.8] Documentación principal y operativa (este archivo)
 └── IAG_REGISTRO.md                   # [E1.8] Bitácora de uso de IA (Nivel 3)
 
-## CI/CD — Parte 1
+## CI/CD Platform
 
-La plataforma CI/CD del gateway se aprovisiona con dos instancias EC2:
+The gateway CI/CD platform is provisioned on two EC2 instances:
 
-- `cg-tools`: Jenkins, SonarQube, PostgreSQL y Nexus.
-- `cg-envs`: ambientes `dev`, `stage` y `prod` para gateway + Redis.
+- `cg-tools`: Jenkins, SonarQube, PostgreSQL, and Nexus.
+- `cg-envs`: isolated `dev`, `stage`, and `prod` gateway stacks with Redis.
 
-Reconstrucción desde cero:
+Rebuild from scratch:
 
 ```bash
 export AWS_REGION=us-east-1
@@ -257,11 +258,14 @@ export GITHUB_TOKEN=...
 ./infra/bootstrap-all.sh
 ```
 
-Documentación:
+Documentation:
 
-- [Validación AWS](docs/infra/aws-free-tier-validation.md)
-- [Ambientes](docs/infra/environments.md)
-- [Configuración CI/CD](docs/infra/ci-cd-setup.md)
+- [Documentation index](docs/README.md)
+- [File index](docs/FILE_INDEX.md)
+- [Documentation standard](docs/standards/documentation.md)
+- [AWS validation](docs/infra/aws-free-tier-validation.md)
+- [Environments](docs/infra/environments.md)
+- [CI/CD setup](docs/infra/ci-cd-setup.md)
 - [Runbook](docs/infra/runbook.md)
-- Pipeline: [`Jenkinsfile`](Jenkinsfile) y [`vars/ci.groovy`](vars/ci.groovy)
-- Correcciones de seguridad del gateway: `SecurityConfig`, `JwtAuthenticationFilter`, `QrValidationService`.
+- Pipeline: [`Jenkinsfile`](Jenkinsfile) and [`vars/ci.groovy`](vars/ci.groovy)
+- Gateway security fixes: `SecurityConfig`, `JwtAuthenticationFilter`, `QrValidationService`.

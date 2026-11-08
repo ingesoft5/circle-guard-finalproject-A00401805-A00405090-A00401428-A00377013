@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: data model for the promotion service: Access Point.
+ */
 package com.circleguard.promotion.model;
 
 import jakarta.persistence.*;

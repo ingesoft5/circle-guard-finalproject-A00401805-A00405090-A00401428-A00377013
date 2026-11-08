@@ -1,62 +1,73 @@
-# Estrategia de Branching y Control de Cambios - CircleGuard
+<!-- CG-DOC: Branching strategy, commit conventions, pull request rules, and validation hooks. -->
+# Branching Strategy and Change Control - CircleGuard
 
-Este documento define las reglas de ramificación, integración y control de cambios para el proyecto, asegurando la trazabilidad, la integración continua y las mejores prácticas de DevOps.
+This document defines the branching, integration, and change-control rules for the project, ensuring traceability, continuous integration, and DevOps best practices.
 
-## 1. Estrategia Elegida: GitHub Flow
-Para este proyecto, aplicamos estrictamente **GitHub Flow**, garantizando que la rama `main` siempre esté en un estado desplegable (pipeline en verde). Las reglas que rigen este flujo son:
+## 1. Chosen Strategy: GitHub Flow
 
-*   **Rama `main` protegida:** No se permiten push directos. Toda integración requiere un Pull Request (PR).
-*   **Ramas efímeras:** Se crean a partir de `dev` y tienen un ciclo de vida corto.
-*   **Auditoría y Limpieza:** Las ramas se configuran para **eliminarse automáticamente** tras el merge en GitHub (buena práctica DevOps). Sin embargo, toda la trazabilidad se conserva de forma inmutable en la sección de **Pull Requests Fusionados (Merged)**, donde queda el registro del código, las aprobaciones y los checks del pipeline.
-*   **Revisión por pares (Peer Review):** Se requiere mínimo **1 aprobación** de otro desarrollador para habilitar el merge.
-*   **Checks obligatorios:** El pipeline de CI (Jenkins) debe ejecutarse y aprobar antes de fusionar.
-*   **Estrategia de Fusión:** Se utilizará *Squash and Merge* para mantener un historial atómico y limpio en `dev` y `main`.
+The project applies **GitHub Flow** strictly, keeping `main` in a deployable state (green pipeline). The rules are:
 
-## 2. Nomenclatura de Ramas (Trazabilidad con Jira)
-Para mantener un orden estricto y trazabilidad con las Historias de Usuario (HU) gestionadas en Jira, las ramas deben seguir la siguiente estructura:
+- **Protected `main` branch:** direct pushes are not allowed. Every integration requires a Pull Request.
+- **Ephemeral branches:** created from `dev` and kept short-lived.
+- **Audit and cleanup:** branches are configured for automatic deletion after merge on GitHub. Traceability remains immutable in the **Merged Pull Requests** section, including code, approvals, and pipeline checks.
+- **Peer review:** at least **1 approval** from another developer is required before merging.
+- **Required checks:** the Jenkins CI pipeline must run and pass before merging.
+- **Merge strategy:** **Squash and Merge** keeps an atomic, clean history in `dev` and `main`.
 
-**Formato:** `[<tipo>/]HU-<MICROSERVICIO>-<número de HU>-<descripción corta de funcionalidad>`
+## 2. Branch Naming (Jira Traceability)
 
-*   **tipo (opcional):** Prefijo de Conventional Commits: `feat/`, `fix/`, `docs/`, `ci/`, `chore/`, `test/`, `refactor/`, `build/`, `perf/`, `style/`.
-*   **MICROSERVICIO:** Nombre del servicio afectado **en mayúsculas** (ej. `AUTH`, `GATEWAY`, `FRONTEND`, `INFRA`).
-*   **número de HU:** El ID numérico de la tarea en Jira.
-*   **descripción corta de funcionalidad:** Breve descripción en minúsculas y separada por guiones.
+Branches must follow this structure to preserve traceability with Jira user stories:
 
-**Ejemplos válidos:**
-*   `feat/HU-GATEWAY-01-configurar-servidores`
-*   `fix/HU-AUTH-03-corregir-expiracion-qr`
-*   `HU-GATEWAY-01-configurar-servidores`
+**Format:** `[<type>/]HU-<MICROSERVICE>-<story number>-<short feature description>`
 
-## 3. Convención de Commits (Conventional Commits)
-Usamos el estándar **Conventional Commits** para permitir el versionado semántico (SemVer) automático y la generación de *release notes*. Los mensajes de commit locales **no llevan el ID de Jira**, ya que la trazabilidad se garantiza por el nombre de la rama y el título del PR.
+- **type (optional):** Conventional Commits prefix: `feat/`, `fix/`, `docs/`, `ci/`, `chore/`, `test/`, `refactor/`, `build/`, `perf/`, `style/`.
+- **MICROSERVICE:** affected service name **in uppercase** (e.g. `AUTH`, `GATEWAY`, `FRONTEND`, `INFRA`).
+- **story number:** numeric Jira task ID.
+- **short feature description:** lowercase words separated by hyphens.
 
-**Estructura:** `<tipo>(<alcance>): <descripción>`
+**Valid examples:**
 
-**Idioma:** todos los mensajes de commit se escriben **en inglés**, aunque la documentación del repositorio esté en español.
+- `feat/HU-GATEWAY-01-configurar-servidores`
+- `fix/HU-AUTH-03-corregir-expiracion-qr`
+- `HU-GATEWAY-01-configurar-servidores`
 
-**Tipos permitidos e impacto en SemVer:**
-*   `feat`: Nueva funcionalidad (incrementa MINOR).
-*   `fix`: Corrección de bug (incrementa PATCH).
-*   `feat!` o `BREAKING CHANGE`: Cambio incompatible (incrementa MAJOR).
-*   `chore`, `ci`, `docs`, `test`, `refactor`, `build`, `perf`, `style`: No incrementan versión.
+## 3. Commit Convention (Conventional Commits)
 
-**Ejemplos válidos:**
-*   `feat(auth): agrega validacion de token JWT`
-*   `fix(gateway): corrige timestamp del QR`
-*   `ci(jenkins): agrega etapa de analisis con SonarQube`
-*   `chore: inicializa estructura de carpetas`
+The project uses **Conventional Commits** to enable semantic versioning and release notes. Local commit messages **do not include the Jira ID**, because traceability is provided by the branch name and the pull request title.
 
-## 4. Control de Calidad y Change Management en Pull Requests
-En GitHub Flow, el Pull Request es el corazón de la calidad. Para garantizar que no se fusione código incompleto:
-1.  **Plantilla Obligatoria:** Todo PR debe ser creado usando la plantilla `.github/pull_request_template.md` (campos: *Branch Name, Context, What changed, How to test it*).
-2.  **Título del PR (Trazabilidad):** El título del PR se escribe **en inglés** y debe incluir el nombre de la rama (la HU) al final. Gracias al *Squash & Merge*, este título se convierte en el mensaje del commit oficial en `main`.
-    *   *Ejemplo:* `feat(auth): add login endpoint (HU-AUTH-12-implement-login)`
-3.  **Resolución de Conversaciones:** La rama `main` tiene activada la regla *"Require conversation resolution before merging"*. Si un revisor pide contexto, el merge queda bloqueado hasta que se resuelva.
-4.  **Portero del Pipeline:** Ningún PR puede fusionarse si el pipeline de Jenkins no está en verde.
+**Structure:** `<type>(<scope>): <description>`
 
-## 5. Herramientas de Validación Local (Git Hooks)
-Para evitar errores humanos antes de llegar al repositorio remoto, el proyecto incluye hooks locales compartidos en la carpeta `.githooks/`:
-*   `commit-msg`: Valida que el mensaje siga el estándar Conventional Commits.
-*   `pre-push`: Bloquea intentos de push directo a `main` y advierte si el nombre de la rama no cumple el formato `HU-<nombre del microservicio>-<número de HU>-<descripción corta de funcionalidad>`.
+**Language:** all commit messages are written **in English**, even when repository documentation is written in Spanish.
 
-*(Nota para el equipo: Para activar estos hooks en cada máquina local, ejecutar una vez: `git config core.hooksPath .githooks`)*
+**Allowed types and SemVer impact:**
+
+- `feat`: new functionality (MINOR).
+- `fix`: bug fix (PATCH).
+- `feat!` or `BREAKING CHANGE`: incompatible change (MAJOR).
+- `chore`, `ci`, `docs`, `test`, `refactor`, `build`, `perf`, `style`: no version increment.
+
+**Valid examples:**
+
+- `feat(auth): add JWT token validation`
+- `fix(gateway): correct QR timestamp`
+- `ci(jenkins): add SonarQube analysis stage`
+- `chore: initialize folder structure`
+
+## 4. Quality Control and Change Management in Pull Requests
+
+In GitHub Flow, the Pull Request is the core quality gate. To prevent incomplete code from being merged:
+
+1. **Required template:** every PR must use `.github/pull_request_template.md` (fields: *Branch Name, Context, What changed, How to test it*).
+2. **PR title (traceability):** the PR title is written **in English** and must include the branch name at the end. With *Squash & Merge*, this title becomes the official commit message in `main`.
+   - *Example:* `feat(auth): add login endpoint (HU-AUTH-12-implement-login)`
+3. **Conversation resolution:** `main` requires *"Require conversation resolution before merging"*. If a reviewer requests context, merging stays blocked until it is resolved.
+4. **Pipeline gate:** no PR can be merged while the Jenkins pipeline is failing.
+
+## 5. Local Validation Tools (Git Hooks)
+
+To prevent human errors before reaching the remote repository, the project includes shared local hooks in `.githooks/`:
+
+- `commit-msg`: validates Conventional Commits and English commit messages.
+- `pre-push`: blocks direct pushes to `main` and `dev`, and validates the branch name against `[<type>/]HU-<MICROSERVICE>-<number>-<description>`.
+
+*(Team note: enable the hooks once per machine with `git config core.hooksPath .githooks`.)*

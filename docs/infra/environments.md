@@ -1,12 +1,13 @@
-# Ambientes dev, stage y prod
+<!-- CG-DOC: Isolated dev, stage, and prod gateway environment topology and commands. -->
+# Dev, Stage, and Prod Environments
 
-## Topología
+## Topology
 
 ```text
 cg-tools (t3.large)
 ├── Jenkins        :8080
 ├── SonarQube      :9000
-├── PostgreSQL     :5432 (interno)
+├── PostgreSQL     :5432 (internal)
 └── Nexus          :8081 / 8082 (circleguard-docker)
 
 cg-envs (t3.medium)
@@ -15,36 +16,36 @@ cg-envs (t3.medium)
 └── prod  → gateway :8089 + Redis
 ```
 
-## Aislamiento
+## Isolation
 
-Cada ambiente tiene:
+Each environment has:
 
-- `deploy/compose/<env>/docker-compose.yml`;
-- red Docker propia (`dev-net`, `stage-net`, `prod-net`);
-- volumen propio de Redis;
-- archivo `.env` propio;
-- puerto propio;
-- credenciales `QR_SECRET` y `JWT_SECRET` propias.
+- its own `deploy/compose/<env>/docker-compose.yml`;
+- its own Docker network (`dev-net`, `stage-net`, `prod-net`);
+- its own Redis volume;
+- its own `.env` file;
+- its own host port;
+- its own `QR_SECRET` and `JWT_SECRET`.
 
-Las herramientas CI/CD son compartidas; los ambientes de despliegue están aislados. El middleware (PostgreSQL, Neo4j, Kafka, OpenLDAP) queda fuera de esta HU.
+CI/CD tools are shared. Deployment environments are isolated. Middleware services (PostgreSQL, Neo4j, Kafka, OpenLDAP) are outside this user story.
 
-## Comandos
+## Commands
 
 ```bash
-# Desplegar
+# Deploy
 COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/deploy.sh dev 1.0.0-abc1234
 
 # Rollback
-COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod 1.0.0-anterior
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod 1.0.0-previous
 
-# Sembrar estado para una prueba
+# Seed state for a test
 COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/seed-status.sh dev <anonymousId> ACTIVE
 
 # Smoke test
 COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/smoke-test.sh dev 8087 <anonymousId>
 ```
 
-## Verificación de aislamiento
+## Isolation verification
 
 ```bash
 docker network ls | grep -E 'dev-net|stage-net|prod-net'
@@ -54,6 +55,6 @@ docker compose -p circleguard-stage ps
 docker compose -p circleguard-prod ps
 ```
 
-## Dependencia funcional
+## Functional dependency
 
-Gateway valida el QR contra `user:status:{anonymousId}` en Redis. Para el flujo E2E completo se requieren `auth-service` (emite el QR) y `promotion-service` (puebla Redis). Si no están desplegados, usar `seed-status.sh` y un token firmado con el mismo `QR_SECRET`.
+The gateway validates QR tokens against `user:status:{anonymousId}` in Redis. A complete end-to-end flow requires `auth-service` to issue the QR token and `promotion-service` to populate Redis. If they are not deployed, use `seed-status.sh` and a token signed with the same `QR_SECRET`.

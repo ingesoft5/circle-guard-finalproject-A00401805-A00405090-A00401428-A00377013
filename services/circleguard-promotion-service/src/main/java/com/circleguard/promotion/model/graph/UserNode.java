@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: data model for the promotion service: User Node.
+ */
 package com.circleguard.promotion.model.graph;
 
 import org.springframework.data.neo4j.core.schema.Id;

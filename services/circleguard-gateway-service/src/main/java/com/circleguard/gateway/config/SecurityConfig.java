@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: configuration for the gateway service: Security Config.
+ */
 package com.circleguard.gateway.config;
 
 import com.circleguard.gateway.security.JwtAuthenticationFilter;

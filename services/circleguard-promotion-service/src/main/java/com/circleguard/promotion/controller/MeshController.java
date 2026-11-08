@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the promotion service: Mesh Controller.
+ */
 package com.circleguard.promotion.controller;
 
 import com.circleguard.promotion.repository.graph.UserNodeRepository;

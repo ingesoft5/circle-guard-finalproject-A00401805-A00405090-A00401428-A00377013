@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the identity service: Identity Vault Controller.
+ */
 package com.circleguard.identity.controller;
 
 import com.circleguard.identity.service.IdentityVaultService;

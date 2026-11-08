@@ -1,40 +1,41 @@
-# Validación de recursos AWS — CircleGuard
+<!-- CG-DOC: AWS resource sizing, cost validation, and permission checklist. -->
+# AWS Resource Validation - CircleGuard
 
-## Objetivo
+## Objective
 
-Validar si la cuenta AWS permite crear la plataforma CI/CD de la Parte 1 con dos instancias EC2.
+Validate whether the AWS account can host the Part 1 CI/CD platform on two EC2 instances.
 
-## Topología aprobada
+## Approved topology
 
-| Instancia | Tipo | vCPU | RAM | Disco | Componentes |
+| Instance | Type | vCPU | RAM | Disk | Components |
 |---|---|---:|---:|---:|---|
 | `cg-tools` | `t3.large` | 2 | 8 GB | 60 GB gp3 | Jenkins, SonarQube, PostgreSQL, Nexus |
-| `cg-envs` | `t3.medium` | 2 | 4 GB | 40 GB gp3 | dev, stage y prod: gateway + Redis |
+| `cg-envs` | `t3.medium` | 2 | 4 GB | 40 GB gp3 | dev, stage, and prod: gateway + Redis |
 
 ## Checklist
 
-- [ ] Cuenta AWS activa y método de pago o créditos disponibles.
-- [ ] Región definida (`AWS_REGION`).
-- [ ] Capa gratuita vigente verificada en la consola.
-- [ ] Créditos AWS Academy/Educate o presupuesto aprobado.
-- [ ] Alarma de presupuesto creada en AWS Budgets.
-- [ ] Cuota de instancias `t3.large` y `t3.medium` disponible.
-- [ ] Key pair creado y almacenado fuera del repositorio.
-- [ ] CIDR administrativo definido (`ADMIN_CIDR`).
-- [ ] IP del docente identificada para los Security Groups.
+- [ ] Active AWS account with a payment method or available credits.
+- [ ] Region selected (`AWS_REGION`).
+- [ ] Free tier or credit status verified in the AWS console.
+- [ ] AWS Academy/Educate credits or an approved budget.
+- [ ] Budget alert created in AWS Budgets.
+- [ ] Quota available for `t3.large` and `t3.medium`.
+- [ ] Key pair stored outside the repository.
+- [ ] Administrative CIDR defined (`ADMIN_CIDR`).
+- [ ] Instructor IP available for security groups.
 
-## Estimación de costo
+## Cost estimate
 
-| Recurso | 24/7 | 12 h/día laboral |
+| Resource | 24/7 | 12 h/day |
 |---|---:|---:|
-| `cg-tools` t3.large | ~US$60/mes | ~US$22/mes |
-| `cg-envs` t3.medium | ~US$30/mes | ~US$11/mes |
-| EBS 100 GB gp3 | ~US$8/mes | ~US$8/mes |
-| **Total** | **~US$98/mes** | **~US$41/mes** |
+| `cg-tools` t3.large | ~US$60/month | ~US$22/month |
+| `cg-envs` t3.medium | ~US$30/month | ~US$11/month |
+| EBS 100 GB gp3 | ~US$8/month | ~US$8/month |
+| **Total** | **~US$98/month** | **~US$41/month** |
 
-> La capa gratuita estricta no alcanza: `t3.micro` tiene 1 GB de RAM y no soporta SonarQube + Nexus + Jenkins. Se requieren créditos o presupuesto.
+> Strict free tier is not enough: `t3.micro` has 1 GB of RAM and cannot host SonarQube, Nexus, and Jenkins together. Credits or a budget are required.
 
-## Comandos de verificación
+## Verification commands
 
 ```bash
 export AWS_REGION=us-east-1
@@ -42,9 +43,9 @@ export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
 ./infra/bootstrap-check.sh
 ```
 
-## Evidencia requerida
+## Required evidence
 
-- Salida de `aws sts get-caller-identity`.
-- Salida de `aws ec2 describe-instance-types`.
-- Captura de AWS Budgets.
-- Captura de la capa gratuita o créditos disponibles.
+- Output of `aws sts get-caller-identity`.
+- Output of `aws ec2 describe-instance-types`.
+- AWS Budgets screenshot.
+- Free tier or credit availability screenshot.

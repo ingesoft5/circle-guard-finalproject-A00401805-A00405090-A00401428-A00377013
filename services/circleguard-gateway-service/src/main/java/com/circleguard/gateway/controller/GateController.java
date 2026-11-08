@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the gateway service: Gate Controller.
+ */
 package com.circleguard.gateway.controller;
 
 import com.circleguard.gateway.service.QrValidationService;

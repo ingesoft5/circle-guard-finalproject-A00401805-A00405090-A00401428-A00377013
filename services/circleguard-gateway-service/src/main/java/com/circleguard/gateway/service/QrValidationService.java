@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the gateway service: Qr Validation Service.
+ */
 package com.circleguard.gateway.service;
 
 import io.jsonwebtoken.Claims;

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the promotion service: Building Service.
+ */
 package com.circleguard.promotion.service;
 
 import com.circleguard.promotion.model.Building;

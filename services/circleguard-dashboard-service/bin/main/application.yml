@@ -1,3 +1,4 @@
+# CG-DOC: File for the dashboard service: application.
 spring:
   application:
     name: circleguard-dashboard-service

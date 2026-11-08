@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: data model for the auth service: Role.
+ */
 package com.circleguard.auth.model;
 
 import jakarta.persistence.*;

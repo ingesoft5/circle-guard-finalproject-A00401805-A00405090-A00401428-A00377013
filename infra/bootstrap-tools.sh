@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Provisions and configures Jenkins, SonarQube, and Nexus on the tools host.
 # bootstrap-tools.sh - Jenkins + SonarQube + Nexus (registro Docker circleguard-docker).
 # Se ejecuta en la EC2 de herramientas. Idempotente.
 set -euo pipefail

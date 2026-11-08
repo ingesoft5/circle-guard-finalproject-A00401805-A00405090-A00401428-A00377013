@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: persistence repository for the promotion service: Access Point Repository.
+ */
 package com.circleguard.promotion.repository.jpa;
 
 import com.circleguard.promotion.model.AccessPoint;

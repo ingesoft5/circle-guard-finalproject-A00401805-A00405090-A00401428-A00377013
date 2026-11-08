@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Orchestrates AWS provisioning, tool setup, and environment preparation.
 # bootstrap-all.sh - Reconstruye la plataforma CI/CD del gateway desde cero.
 # Uso: ./infra/bootstrap-all.sh [--tools-only | --envs-only]
 set -euo pipefail

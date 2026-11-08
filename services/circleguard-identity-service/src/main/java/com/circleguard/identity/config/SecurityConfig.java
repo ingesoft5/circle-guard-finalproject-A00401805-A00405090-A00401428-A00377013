@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: configuration for the identity service: Security Config.
+ */
 package com.circleguard.identity.config;
 
 import lombok.RequiredArgsConstructor;

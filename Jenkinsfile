@@ -1,3 +1,4 @@
+// CG-DOC: Jenkins multibranch pipeline for the gateway service lifecycle.
 @Library('circleguard') _
 
 pipeline {

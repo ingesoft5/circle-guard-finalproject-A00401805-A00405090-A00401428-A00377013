@@ -1,3 +1,4 @@
+<#-- CG-DOC: Notification template for the notification service. -->
 <!DOCTYPE html>
 <html>
 <head>

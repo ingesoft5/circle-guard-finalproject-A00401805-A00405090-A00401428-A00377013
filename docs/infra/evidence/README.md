@@ -1,13 +1,14 @@
-# Evidencias de la plataforma CI/CD
+<!-- CG-DOC: Checklist of CI/CD evidence required for the gateway delivery. -->
+# CI/CD Evidence
 
-Guardar aquí las capturas y salidas solicitadas:
+Store screenshots and command outputs in this directory:
 
-- [ ] Pipeline del gateway en verde.
-- [ ] SonarQube con quality gate aprobado.
-- [ ] Nexus con el jar y la imagen en `circleguard-docker`.
-- [ ] `docker ps` en `cg-tools` y `cg-envs`.
-- [ ] Healthchecks de `dev`, `stage` y `prod`.
-- [ ] Rollback ejecutado con `ROLLBACK_TAG`.
-- [ ] URLs y usuario de solo lectura para el docente.
+- [ ] Gateway pipeline with a green build.
+- [ ] SonarQube quality gate approved.
+- [ ] Nexus containing the JAR and the image in `circleguard-docker`.
+- [ ] `docker ps` output on `cg-tools` and `cg-envs`.
+- [ ] Health checks for `dev`, `stage`, and `prod`.
+- [ ] Rollback executed through `ROLLBACK_TAG`.
+- [ ] URLs and read-only user for the instructor.
 
-Los archivos de evidencia no deben contener contraseñas ni llaves privadas.
+Evidence files must not contain passwords or private keys.

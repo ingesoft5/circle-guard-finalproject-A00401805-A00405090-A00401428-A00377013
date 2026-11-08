@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Runs health and authorization smoke checks against an environment.
 set -euo pipefail
 
 ENV="${1:?Uso: smoke-test.sh <dev|stage|prod> <puerto> <anonymousId> [status]}"

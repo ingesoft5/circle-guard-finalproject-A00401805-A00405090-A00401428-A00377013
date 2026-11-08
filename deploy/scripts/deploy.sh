@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Deploys a gateway image tag to an isolated environment and waits for health.
 set -euo pipefail
 
 ENV="${1:?Uso: deploy.sh <dev|stage|prod> <tag>}"

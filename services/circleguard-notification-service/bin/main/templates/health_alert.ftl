@@ -1,3 +1,4 @@
+<#-- CG-DOC: File for the notification service: health_alert. -->
 <!DOCTYPE html>
 <html>
 <head>

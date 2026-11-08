@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V2__seed_test_users for the auth service.
 -- Seed test users for development
 -- BCrypt hash for "password"
 INSERT INTO local_users (username, password_hash, email, is_active) VALUES 

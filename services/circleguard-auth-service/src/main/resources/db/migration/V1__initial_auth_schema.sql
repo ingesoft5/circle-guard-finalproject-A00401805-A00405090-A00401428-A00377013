@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V1__initial_auth_schema for the auth service.
 -- Dynamic RBAC Schema
 
 CREATE TABLE permissions (

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: configuration for the promotion service: Neo4j Config.
+ */
 package com.circleguard.promotion.config;
 
 import org.neo4j.driver.Driver;

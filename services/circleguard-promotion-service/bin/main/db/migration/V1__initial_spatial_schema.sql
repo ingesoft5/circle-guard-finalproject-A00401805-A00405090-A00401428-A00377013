@@ -1,3 +1,4 @@
+-- CG-DOC: File for the promotion service: V1__initial_spatial_schema.
 -- Initial Spatial Hierarchy Schema
 
 CREATE TABLE buildings (

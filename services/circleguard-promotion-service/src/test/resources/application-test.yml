@@ -1,3 +1,4 @@
+# CG-DOC: Unit or integration tests for application-test in the promotion service.
 spring:
   flyway:
     enabled: false

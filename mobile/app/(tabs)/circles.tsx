@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: circles.
+ */
 import React, { useEffect, useState } from 'react';
 import { 
   StyleSheet, 

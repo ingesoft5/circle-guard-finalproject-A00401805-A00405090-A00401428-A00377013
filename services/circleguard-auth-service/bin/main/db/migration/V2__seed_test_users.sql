@@ -1,3 +1,4 @@
+-- CG-DOC: File for the auth service: V2__seed_test_users.
 -- Seed test users for development
 -- BCrypt hash for "password"
 INSERT INTO local_users (username, password_hash, email, is_active) VALUES 

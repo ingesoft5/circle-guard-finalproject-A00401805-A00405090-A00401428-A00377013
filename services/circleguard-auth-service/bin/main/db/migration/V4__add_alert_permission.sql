@@ -1,3 +1,4 @@
+-- CG-DOC: File for the auth service: V4__add_alert_permission.
 -- Add priority alerting permission
 INSERT INTO permissions (name, description) VALUES 
 ('alert:receive_priority', 'Receive priority alerts for large outbreaks or new confirmed cases');

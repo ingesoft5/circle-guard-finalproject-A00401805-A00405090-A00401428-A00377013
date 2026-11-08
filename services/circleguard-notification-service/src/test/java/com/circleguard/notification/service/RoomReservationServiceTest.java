@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Room Reservation Service Test in the notification service.
+ */
 package com.circleguard.notification.service;
 
 import org.junit.jupiter.api.Test;

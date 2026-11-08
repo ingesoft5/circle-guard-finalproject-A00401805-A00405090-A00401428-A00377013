@@ -1,3 +1,4 @@
+# CG-DOC: File for the file service: application.
 spring:
   application:
     name: circleguard-file-service

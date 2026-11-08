@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Provisions AWS EC2 instances, security groups, elastic IPs, and the SSH key pair.
 # bootstrap-aws.sh - Aprovisiona las EC2, Security Groups, Elastic IPs y key pair.
 # Idempotente: describe antes de crear y tolera recursos ya existentes.
 set -euo pipefail

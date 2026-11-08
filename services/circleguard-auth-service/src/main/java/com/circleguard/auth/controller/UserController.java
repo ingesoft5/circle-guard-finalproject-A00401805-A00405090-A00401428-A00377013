@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the auth service: User Controller.
+ */
 package com.circleguard.auth.controller;
 
 import com.circleguard.auth.model.LocalUser;

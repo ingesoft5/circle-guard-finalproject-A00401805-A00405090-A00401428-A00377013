@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: configuration for the promotion service: Jpa Config.
+ */
 package com.circleguard.promotion.config;
 
 import jakarta.persistence.EntityManagerFactory;

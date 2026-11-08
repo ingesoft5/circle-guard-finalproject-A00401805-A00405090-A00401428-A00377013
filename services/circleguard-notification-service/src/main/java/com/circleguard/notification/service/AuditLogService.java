@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the notification service: Audit Log Service.
+ */
 package com.circleguard.notification.service;
 
 import lombok.RequiredArgsConstructor;

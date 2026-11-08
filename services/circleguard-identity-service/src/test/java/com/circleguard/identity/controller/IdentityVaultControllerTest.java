@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Identity Vault Controller Test in the identity service.
+ */
 package com.circleguard.identity.controller;
 
 import com.circleguard.identity.service.IdentityVaultService;

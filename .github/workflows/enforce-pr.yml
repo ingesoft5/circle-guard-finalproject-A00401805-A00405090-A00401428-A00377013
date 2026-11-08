@@ -1,3 +1,4 @@
+# CG-DOC: GitHub Actions workflow: enforce-pr.
 name: Enforce Pull Request
 
 on:

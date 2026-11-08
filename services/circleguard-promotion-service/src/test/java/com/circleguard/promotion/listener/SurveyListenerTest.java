@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Survey Listener Test in the promotion service.
+ */
 package com.circleguard.promotion.listener;
 
 import com.circleguard.promotion.service.HealthStatusService;

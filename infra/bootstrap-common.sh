@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Shared idempotent helpers for logging, Docker, secrets, SSH, and Compose.
 # bootstrap-common.sh - Utilidades idempotentes para aprovisionamiento y despliegue.
 # Se usa con `source`; no define `set -e` para no alterar al script que lo invoca.
 [ -n "${CG_COMMON_LOADED:-}" ] && return 0

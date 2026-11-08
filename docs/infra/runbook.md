@@ -1,6 +1,7 @@
-# Runbook operativo
+<!-- CG-DOC: Operational runbook for platform checks, restarts, rollback, and troubleshooting. -->
+# Operations Runbook
 
-## Verificar plataforma
+## Verify the platform
 
 ```bash
 source infra/state/aws.env
@@ -12,14 +13,14 @@ curl -f "http://${ENVS_IP}:8088/actuator/health"
 curl -f "http://${ENVS_IP}:8089/actuator/health"
 ```
 
-## Reejecutar bootstrap (idempotente)
+## Re-run the idempotent bootstrap
 
 ```bash
 export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
 ./infra/bootstrap-all.sh
 ```
 
-## Reiniciar herramientas
+## Restart tools
 
 ```bash
 ssh -i infra/state/circleguard-key.pem ubuntu@${TOOLS_IP}
@@ -28,7 +29,7 @@ docker compose --env-file .env -p circleguard-tools restart jenkins
 docker compose --env-file .env -p circleguard-tools logs -f jenkins
 ```
 
-## Reiniciar un ambiente
+## Restart an environment
 
 ```bash
 ssh -i infra/state/circleguard-key.pem ubuntu@${ENVS_IP}
@@ -40,24 +41,24 @@ docker compose logs -f gateway
 ## Rollback
 
 ```bash
-COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod <tag-anterior>
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod <previous-tag>
 ```
 
-## Destruir todo
+## Destroy everything
 
 ```bash
 CONFIRM=yes ./infra/bootstrap-destroy.sh
 ```
 
-## Problemas comunes
+## Common issues
 
-| Síntoma | Causa probable | Acción |
+| Symptom | Likely cause | Action |
 |---|---|---|
-| Jenkins no abre | Contenedor iniciando o poca RAM | `docker compose logs jenkins`; revisar swap. |
-| SonarQube no pasa de `STARTING` | PostgreSQL o memoria | Revisar `docker compose logs sonarqube`; aumentar swap. |
-| Nexus no abre | Puerto 8081 o memoria | Revisar logs; `mem_limit` 2g. |
-| Gateway no descarga imagen | Registro HTTP no confiable | Verificar `insecure-registries` en `cg-envs`. |
-| Gateway responde 401 | Falta el JWT del empleado | Enviar `Authorization: Bearer <jwt>`. |
-| Gateway responde 403 | JWT sin `gate:scan` | Asignar permiso en auth-service. |
-| Gateway responde 503 | Redis no disponible | Revisar `docker compose logs redis`. |
-| Pipeline falla en `@Library` | Rama de librería incorrecta | Revisar `LIBRARY_BRANCH` en `deploy/compose/tools/.env`. |
+| Jenkins does not open | Container starting or low memory | Check `docker compose logs jenkins`; review swap. |
+| SonarQube stays in `STARTING` | PostgreSQL or memory | Check `docker compose logs sonarqube`; increase swap. |
+| Nexus does not open | Port 8081 or memory | Check logs; memory limit is 2 GB. |
+| Gateway cannot pull the image | Untrusted HTTP registry | Verify `insecure-registries` on `cg-envs`. |
+| Gateway returns 401 | Missing staff JWT | Send `Authorization: Bearer <jwt>`. |
+| Gateway returns 403 | JWT lacks `gate:scan` | Assign the permission in `auth-service`. |
+| Gateway returns 503 | Redis unavailable | Check `docker compose logs redis`. |
+| Pipeline fails at `@Library` | Wrong library branch | Review `LIBRARY_BRANCH` in `deploy/compose/tools/.env`. |

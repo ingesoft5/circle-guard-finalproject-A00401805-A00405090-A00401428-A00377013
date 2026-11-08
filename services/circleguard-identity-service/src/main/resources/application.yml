@@ -1,3 +1,4 @@
+# CG-DOC: Runtime resource for the identity service: application.yml.
 spring:
   application:
     name: circleguard-identity-service

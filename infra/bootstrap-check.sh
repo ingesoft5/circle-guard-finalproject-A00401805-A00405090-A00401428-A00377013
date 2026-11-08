@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Validates AWS and local prerequisites without creating resources.
 # bootstrap-check.sh - Verifica prerequisitos sin crear recursos.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/bootstrap-common.sh"

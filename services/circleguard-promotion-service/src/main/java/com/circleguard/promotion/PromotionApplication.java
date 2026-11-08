@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Java source for the promotion service: Promotion Application.
+ */
 package com.circleguard.promotion;
 
 import org.springframework.boot.SpringApplication;

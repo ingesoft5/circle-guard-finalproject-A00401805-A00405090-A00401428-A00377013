@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Form Promotion Kafka Integration Test in the form service.
+ */
 package com.circleguard.form.integration;
 
 import com.circleguard.form.model.HealthSurvey;

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Qr Validation Service Test in the gateway service.
+ */
 package com.circleguard.gateway.service;
 
 import io.jsonwebtoken.Jwts;

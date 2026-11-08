@@ -1,3 +1,4 @@
+-- CG-DOC: File for the promotion service: V2__add_status_timing_settings.
 ALTER TABLE system_settings 
 ADD COLUMN mandatory_fence_days INTEGER NOT NULL DEFAULT 14,
 ADD COLUMN encounter_window_days INTEGER NOT NULL DEFAULT 14;

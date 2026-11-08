@@ -1,3 +1,4 @@
+# CG-DOC: Docker Compose definition for the dev environment.
 services:
   redis:
     image: redis:7.2-alpine

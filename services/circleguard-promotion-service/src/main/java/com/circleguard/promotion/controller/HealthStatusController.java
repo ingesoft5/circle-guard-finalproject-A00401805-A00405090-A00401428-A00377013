@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the promotion service: Health Status Controller.
+ */
 package com.circleguard.promotion.controller;
 
 import com.circleguard.promotion.service.HealthStatusService;

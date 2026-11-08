@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Gate Controller Test in the gateway service.
+ */
 package com.circleguard.gateway.controller;
 
 import com.circleguard.gateway.service.QrValidationService;

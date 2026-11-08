@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Mobile application file: babel.config.
+ */
 module.exports = function (api) {
   api.cache(true);
   return {

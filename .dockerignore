@@ -1,3 +1,4 @@
+# CG-DOC: Docker build context exclusions.
 .git
 .gradle
 **/build

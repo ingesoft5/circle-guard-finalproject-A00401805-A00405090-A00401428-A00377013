@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: security component for the gateway service: Jwt Authentication Filter.
+ */
 package com.circleguard.gateway.security;
 
 import io.jsonwebtoken.Claims;
