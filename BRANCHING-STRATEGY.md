@@ -6,11 +6,11 @@ Este documento define las reglas de ramificación, integración y control de cam
 Para este proyecto, aplicamos estrictamente **GitHub Flow**, garantizando que la rama `main` siempre esté en un estado desplegable (pipeline en verde). Las reglas que rigen este flujo son:
 
 *   **Rama `main` protegida:** No se permiten push directos. Toda integración requiere un Pull Request (PR).
-*   **Ramas efímeras:** Se crean a partir de `main` y tienen un ciclo de vida corto.
+*   **Ramas efímeras:** Se crean a partir de `dev` y tienen un ciclo de vida corto.
 *   **Auditoría y Limpieza:** Las ramas se configuran para **eliminarse automáticamente** tras el merge en GitHub (buena práctica DevOps). Sin embargo, toda la trazabilidad se conserva de forma inmutable en la sección de **Pull Requests Fusionados (Merged)**, donde queda el registro del código, las aprobaciones y los checks del pipeline.
 *   **Revisión por pares (Peer Review):** Se requiere mínimo **1 aprobación** de otro desarrollador para habilitar el merge.
 *   **Checks obligatorios:** El pipeline de CI (Jenkins) debe ejecutarse y aprobar antes de fusionar.
-*   **Estrategia de Fusión:** Se utilizará *Squash and Merge* para mantener un historial atómico y limpio en `main`.
+*   **Estrategia de Fusión:** Se utilizará *Squash and Merge* para mantener un historial atómico y limpio en `dev` y `main`.
 
 ## 2. Nomenclatura de Ramas (Trazabilidad con Jira)
 Para mantener un orden estricto y trazabilidad con las Historias de Usuario (HU) gestionadas en Jira, las ramas deben seguir la siguiente estructura:
