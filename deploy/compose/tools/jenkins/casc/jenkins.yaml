@@ -87,6 +87,14 @@ jobs:
                 credentialsId('github-creds')
                 repositoryUrl('${GITHUB_REPO_URL}')
                 configuredByUrl(true)
+                traits {
+                  gitHubBranchDiscovery {
+                    strategyId(1)
+                  }
+                  gitHubPullRequestDiscovery {
+                    strategyId(1)
+                  }
+                }
               }
             }
           }

@@ -64,44 +64,44 @@ pipeline {
         }
 
         stage('Publish') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
             steps { ci.publish(env.SERVICE_PATH) }
         }
 
         stage('Docker') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
             steps { ci.dockerBuildPush(env.SERVICE_DIR, 'gateway', env.TAG) }
         }
 
         stage('Deploy dev') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
             steps { ci.deploy('dev', env.TAG) }
         }
 
         stage('E2E') {
-            when { expression { !params.SKIP_E2E && !params.ROLLBACK_TAG?.trim() } }
+            when { allOf { branch 'main'; expression { !params.SKIP_E2E && !params.ROLLBACK_TAG?.trim() } } }
             steps { ci.e2e() }
         }
 
         stage('Deploy stage') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
             steps { ci.deploy('stage', env.TAG) }
         }
 
         stage('Approval prod') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
             steps {
                 input message: 'Aprobar despliegue a producción', ok: 'Desplegar'
             }
         }
 
         stage('Deploy prod') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
             steps { ci.deploy('prod', env.TAG) }
         }
 
         stage('Tag') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'github-creds',
                         usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
@@ -112,7 +112,7 @@ pipeline {
         }
 
         stage('Rollback prod') {
-            when { expression { params.ROLLBACK_TAG?.trim() } }
+            when { allOf { branch 'main'; expression { params.ROLLBACK_TAG?.trim() } } }
             steps { ci.deploy('prod', params.ROLLBACK_TAG) }
         }
 
