@@ -49,6 +49,10 @@ public class AdministrativeCorrectionTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        // application-test.yml disables Flyway and Hibernate DDL, which is right for
+        // unit tests but leaves the container database empty. Let the migrations build
+        // the schema instead, so the real V1-V3 path is what these tests exercise.
+        registry.add("spring.flyway.enabled", () -> "true");
         // This class starts no broker; without this the listener retries localhost:9092
         // for the whole run and floods the log.
         registry.add("spring.kafka.listener.auto-startup", () -> "false");
