@@ -21,7 +21,9 @@ is_ipv4_cidr() {
 
 for cidr in ${ADMIN_CIDR} ${TEACHER_CIDR}; do
   is_ipv4_cidr "${cidr}" || die "CIDR inválido: ${cidr}"
-  [[ "${cidr}" == "0.0.0.0/0" ]] && die "0.0.0.0/0 no está permitido para acceso administrativo o docente."
+  if [[ "${cidr}" == "0.0.0.0/0" ]]; then
+    die "0.0.0.0/0 no está permitido para acceso administrativo o docente."
+  fi
 done
 
 require_cmd aws jq ssh curl openssl
@@ -86,15 +88,21 @@ reconcile_cidr() {
   local sg="$1" port="$2"; shift 2
   local allowed=("$@") cidr keep allowed_cidr
   for cidr in "${allowed[@]}"; do
-    [[ -n "${cidr}" ]] && allow_cidr "${sg}" "${port}" "${cidr}"
+    if [[ -n "${cidr}" ]]; then
+      allow_cidr "${sg}" "${port}" "${cidr}"
+    fi
   done
   while IFS= read -r cidr; do
     [[ -z "${cidr}" ]] && continue
     keep="no"
     for allowed_cidr in "${allowed[@]}"; do
-      [[ "${cidr}" == "${allowed_cidr}" ]] && keep="yes"
+      if [[ "${cidr}" == "${allowed_cidr}" ]]; then
+        keep="yes"
+      fi
     done
-    [[ "${keep}" == "no" ]] && revoke_cidr "${sg}" "${port}" "${cidr}"
+    if [[ "${keep}" == "no" ]]; then
+      revoke_cidr "${sg}" "${port}" "${cidr}"
+    fi
   done < <(current_cidrs "${sg}" "${port}")
 }
 
