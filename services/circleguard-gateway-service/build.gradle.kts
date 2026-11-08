@@ -1,4 +1,6 @@
 // CG-DOC: Build configuration for the gateway service.
+import java.time.Duration
+
 plugins {
     id("org.springframework.boot")
     id("io.spring.dependency-management")
@@ -35,7 +37,26 @@ jacoco {
 
 tasks.test {
     useJUnitPlatform()
+    // GW-CI-02: las pruebas de integracion viven en su propia tarea para no exigir Docker en cada build.
+    exclude("**/integration/**")
     finalizedBy(tasks.jacocoTestReport)
+}
+
+// GW-CI-02: tarea dedicada para las pruebas contra un Redis real con Testcontainers.
+val integrationTest by tasks.registering(Test::class) {
+    description = "Ejecuta las pruebas de integracion del gateway contra un Redis real (Testcontainers)."
+    group = "verification"
+    useJUnitPlatform()
+    include("**/integration/**")
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    shouldRunAfter(tasks.test)
+    timeout.set(Duration.ofMinutes(3))
+    outputs.upToDateWhen { false }
+    reports {
+        junitXml.required.set(true)
+        html.required.set(true)
+    }
 }
 
 tasks.jacocoTestReport {
