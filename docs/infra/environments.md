@@ -4,7 +4,7 @@
 ## Topology
 
 ```text
-cg-tools (t3.large)
+cg-tools (m7i-flex.xlarge)
 ├── Jenkins        :8080
 ├── SonarQube      :9000
 ├── PostgreSQL     :5432 (internal)

@@ -18,7 +18,16 @@ The `infra/` directory provisions and destroys the AWS platform used by the Circ
 | `bootstrap-tools.sh` | Installs Docker and starts Jenkins, SonarQube, Nexus, and the Docker registry. |
 | `bootstrap-envs.sh` | Creates isolated environment files and authenticates Docker against Nexus. |
 | `bootstrap-all.sh` | Runs AWS, tools, and environment bootstrap in order. |
+| `bootstrap-start.sh` | Starts the provisioned instances after a cost-saving stop. |
+| `bootstrap-stop.sh` | Stops the provisioned instances to reduce compute cost. |
 | `bootstrap-destroy.sh` | Terminates instances and removes AWS resources created by the bootstrap. |
+
+## Instance sizing
+
+- `TOOLS_TYPE` defaults to `m7i-flex.xlarge` (4 vCPU, 16 GB) for Jenkins, SonarQube, Nexus, and PostgreSQL.
+- `ENVS_TYPE` defaults to `t3.medium` (2 vCPU, 4 GB) for the isolated gateway environments.
+- Override either value before running `bootstrap-aws.sh` when a different budget is required.
+- Free Tier only covers `t3.micro` and `t2.micro`, which are not sufficient for the CI/CD tools.
 
 ## Prerequisites
 

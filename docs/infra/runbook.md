@@ -38,6 +38,15 @@ docker compose restart gateway
 docker compose logs -f gateway
 ```
 
+## Stop and start instances
+
+```bash
+./infra/bootstrap-stop.sh
+./infra/bootstrap-start.sh
+```
+
+Stopping removes compute charges. EBS volumes and Elastic IP addresses remain billable.
+
 ## Rollback
 
 ```bash

@@ -101,7 +101,7 @@ English purpose of every tracked repository file.
 
 - `docs/custom_components_design_mesh_bg_1773957718048.png` — Binary asset.
 
-- `docs/infra/aws-free-tier-validation.md` — AWS resource sizing, cost validation, and permission checklist.
+- `docs/infra/aws-free-tier-validation.md` — AWS instance sizing, cost validation, and budget guidance for one week.
 
 - `docs/infra/ci-cd-setup.md` — Jenkins, SonarQube, Nexus, credentials, and gateway pipeline setup.
 
@@ -164,6 +164,10 @@ English purpose of every tracked repository file.
 - `infra/bootstrap-destroy.sh` — Destroys AWS resources created by the bootstrap.
 
 - `infra/bootstrap-envs.sh` — Prepares isolated dev, stage, and prod gateway environments.
+
+- `infra/bootstrap-start.sh` — Starts the provisioned EC2 instances and waits until they are running.
+
+- `infra/bootstrap-stop.sh` — Stops the provisioned EC2 instances to reduce compute cost.
 
 - `infra/bootstrap-tools.sh` — Provisions and configures Jenkins, SonarQube, and Nexus on the tools host.
 
