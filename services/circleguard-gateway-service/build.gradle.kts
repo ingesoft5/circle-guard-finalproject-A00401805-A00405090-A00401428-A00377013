@@ -7,6 +7,9 @@ plugins {
     `maven-publish`
 }
 
+// En Jenkins el TAG llega como variable de entorno; en local se mantiene SNAPSHOT.
+version = System.getenv("TAG") ?: "1.0.0-SNAPSHOT"
+
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
     testImplementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
@@ -72,7 +75,9 @@ publishing {
     repositories {
         maven {
             name = "nexus"
-            url = uri(System.getenv("NEXUS_URL") ?: "http://localhost:8081/repository/maven-releases/")
+            val nexusBase = (System.getenv("NEXUS_URL") ?: "http://localhost:8081").trimEnd('/')
+            val repo = if (version.toString().endsWith("SNAPSHOT")) "maven-snapshots" else "maven-releases"
+            url = uri("${nexusBase}/repository/${repo}/")
             isAllowInsecureProtocol = true
             credentials {
                 username = System.getenv("NEXUS_USER") ?: "jenkins"

@@ -8,15 +8,20 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    triggers {
+        cron('H/5 * * * *')
+    }
+
     parameters {
         string(name: 'TAG', defaultValue: '', description: 'Tag semver. Vacío = calcular con el commit.')
-        string(name: 'ROLLBACK_TAG', defaultValue: '', description: 'Si se indica, despliega ese tag en prod.')
+        string(name: 'ROLLBACK_TAG', defaultValue: '', description: 'Si se indica, despliega ese tag en prod sin reconstruir.')
         booleanParam(name: 'SKIP_E2E', defaultValue: false, description: 'Omitir E2E (solo para diagnóstico).')
     }
 
     environment {
         SERVICE = 'circleguard-gateway-service'
         SERVICE_DIR = 'services/circleguard-gateway-service'
+        SERVICE_PATH = ':services:circleguard-gateway-service'
     }
 
     stages {
@@ -27,60 +32,75 @@ pipeline {
         stage('Prepare') {
             steps {
                 script {
-                    env.TAG = params.TAG?.trim() ?: "1.0.0-${(env.GIT_COMMIT ?: 'local').take(7)}"
+                    if (params.ROLLBACK_TAG?.trim()) {
+                        env.TAG = params.ROLLBACK_TAG.trim()
+                    } else {
+                        env.TAG = params.TAG?.trim() ?: "1.0.0-${(env.GIT_COMMIT ?: 'local').take(7)}"
+                    }
                     echo "Tag de build: ${env.TAG}"
                 }
             }
         }
 
         stage('Build & Test') {
-            steps { ci.buildAndTest(env.SERVICE_DIR) }
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            steps { ci.buildAndTest(env.SERVICE_PATH) }
         }
 
         stage('SonarQube') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps { ci.sonarScan() }
         }
 
         stage('Quality Gate') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps { ci.qualityGate() }
         }
 
         stage('Package') {
-            steps { sh "./gradlew :${env.SERVICE_DIR}:bootJar" }
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            steps { sh "./gradlew ${env.SERVICE_PATH}:bootJar" }
         }
 
         stage('Publish') {
-            steps { ci.publish(env.SERVICE_DIR) }
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            steps { ci.publish(env.SERVICE_PATH) }
         }
 
         stage('Docker') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps { ci.dockerBuildPush(env.SERVICE_DIR, 'gateway', env.TAG) }
         }
 
         stage('Deploy dev') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps { ci.deploy('dev', env.TAG) }
         }
 
         stage('E2E') {
-            when { expression { !params.SKIP_E2E } }
+            when { expression { !params.SKIP_E2E && !params.ROLLBACK_TAG?.trim() } }
             steps { ci.e2e() }
         }
 
         stage('Deploy stage') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps { ci.deploy('stage', env.TAG) }
         }
 
         stage('Approval prod') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps {
                 input message: 'Aprobar despliegue a producción', ok: 'Desplegar'
             }
         }
 
         stage('Deploy prod') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps { ci.deploy('prod', env.TAG) }
         }
 
         stage('Tag') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'github-creds',
                         usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
@@ -90,7 +110,7 @@ pipeline {
             }
         }
 
-        stage('Rollback') {
+        stage('Rollback prod') {
             when { expression { params.ROLLBACK_TAG?.trim() } }
             steps { ci.deploy('prod', params.ROLLBACK_TAG) }
         }

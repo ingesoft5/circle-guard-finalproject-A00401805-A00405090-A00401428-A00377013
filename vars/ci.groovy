@@ -1,5 +1,5 @@
-def buildAndTest(String serviceDir) {
-    sh "./gradlew :${serviceDir}:clean test jacocoTestReport jacocoTestCoverageVerification"
+def buildAndTest(String servicePath) {
+    sh "./gradlew ${servicePath}:clean ${servicePath}:test ${servicePath}:jacocoTestReport ${servicePath}:jacocoTestCoverageVerification"
 }
 
 def sonarScan() {
@@ -16,14 +16,14 @@ def qualityGate() {
     }
 }
 
-def publish(String serviceDir) {
+def publish(String servicePath) {
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh """
             NEXUS_URL=${env.NEXUS_URL} \
             NEXUS_USER=${NEXUS_USER} \
             NEXUS_PASSWORD=${NEXUS_PASSWORD} \
-            ./gradlew :${serviceDir}:publish
+            ./gradlew ${servicePath}:publish
         """
     }
 }
@@ -32,16 +32,16 @@ def dockerBuildPush(String serviceDir, String image, String tag) {
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
-        sh "docker build -t ${env.NEXUS_REGISTRY}/circleguard/${image}:${tag} -f ${serviceDir}/Dockerfile ."
-        sh "docker push ${env.NEXUS_REGISTRY}/circleguard/${image}:${tag}"
+        sh "docker build -t ${env.NEXUS_REGISTRY}/circleguard-docker/${image}:${tag} -f ${serviceDir}/Dockerfile ."
+        sh "docker push ${env.NEXUS_REGISTRY}/circleguard-docker/${image}:${tag}"
     }
 }
 
 def deploy(String environment, String tag) {
     sshagent(['cg-envs-ssh']) {
         sh """
-            ssh -o StrictHostKeyChecking=no ubuntu@${env.ENVS_IP} \
-              'cd /opt/circleguard/compose/${environment} && TAG=${tag} docker compose up -d --remove-orphans'
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${env.ENVS_IP} \
+              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose TAG=${tag} ./deploy/scripts/deploy.sh ${environment} ${tag}'
         """
     }
 }

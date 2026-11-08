@@ -12,20 +12,27 @@ curl -f "http://${ENVS_IP}:8088/actuator/health"
 curl -f "http://${ENVS_IP}:8089/actuator/health"
 ```
 
+## Reejecutar bootstrap (idempotente)
+
+```bash
+export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
+./infra/bootstrap-all.sh
+```
+
 ## Reiniciar herramientas
 
 ```bash
 ssh -i infra/state/circleguard-key.pem ubuntu@${TOOLS_IP}
-cd /opt/circleguard/tools
-docker compose restart jenkins
-docker compose logs -f jenkins
+cd /opt/circleguard/deploy/compose/tools
+docker compose --env-file .env -p circleguard-tools restart jenkins
+docker compose --env-file .env -p circleguard-tools logs -f jenkins
 ```
 
 ## Reiniciar un ambiente
 
 ```bash
 ssh -i infra/state/circleguard-key.pem ubuntu@${ENVS_IP}
-cd /opt/circleguard/compose/dev
+cd /opt/circleguard/deploy/compose/dev
 docker compose restart gateway
 docker compose logs -f gateway
 ```
@@ -33,13 +40,13 @@ docker compose logs -f gateway
 ## Rollback
 
 ```bash
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/rollback.sh prod <tag-anterior>
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod <tag-anterior>
 ```
 
 ## Destruir todo
 
 ```bash
-CONFIRM=yes ./infra/bootstrap/99-destroy.sh
+CONFIRM=yes ./infra/bootstrap-destroy.sh
 ```
 
 ## Problemas comunes
@@ -53,3 +60,4 @@ CONFIRM=yes ./infra/bootstrap/99-destroy.sh
 | Gateway responde 401 | Falta el JWT del empleado | Enviar `Authorization: Bearer <jwt>`. |
 | Gateway responde 403 | JWT sin `gate:scan` | Asignar permiso en auth-service. |
 | Gateway responde 503 | Redis no disponible | Revisar `docker compose logs redis`. |
+| Pipeline falla en `@Library` | Rama de librería incorrecta | Revisar `LIBRARY_BRANCH` en `deploy/compose/tools/.env`. |

@@ -252,7 +252,9 @@ Reconstrucción desde cero:
 ```bash
 export AWS_REGION=us-east-1
 export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
-./infra/bootstrap/all.sh
+export GITHUB_USER=...
+export GITHUB_TOKEN=...
+./infra/bootstrap-all.sh
 ```
 
 Documentación:

@@ -7,7 +7,7 @@ cg-tools (t3.large)
 ├── Jenkins        :8080
 ├── SonarQube      :9000
 ├── PostgreSQL     :5432 (interno)
-└── Nexus          :8081 / 8082
+└── Nexus          :8081 / 8082 (circleguard-docker)
 
 cg-envs (t3.medium)
 ├── dev   → gateway :8087 + Redis
@@ -26,22 +26,22 @@ Cada ambiente tiene:
 - puerto propio;
 - credenciales `QR_SECRET` y `JWT_SECRET` propias.
 
-Las herramientas CI/CD son compartidas; los ambientes de despliegue están aislados.
+Las herramientas CI/CD son compartidas; los ambientes de despliegue están aislados. El middleware (PostgreSQL, Neo4j, Kafka, OpenLDAP) queda fuera de esta HU.
 
 ## Comandos
 
 ```bash
 # Desplegar
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/deploy.sh dev 1.0.0-abc1234
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/deploy.sh dev 1.0.0-abc1234
 
 # Rollback
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/rollback.sh prod 1.0.0-anterior
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod 1.0.0-anterior
 
 # Sembrar estado para una prueba
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/seed-status.sh dev <anonymousId> ACTIVE
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/seed-status.sh dev <anonymousId> ACTIVE
 
 # Smoke test
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/smoke-test.sh dev 8087 <anonymousId>
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/smoke-test.sh dev 8087 <anonymousId>
 ```
 
 ## Verificación de aislamiento

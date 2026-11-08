@@ -32,6 +32,14 @@ credentials:
               username: ${NEXUS_USER}
               password: ${NEXUS_PASSWORD}
               description: Nexus
+          - basicSSHUserPrivateKey:
+              scope: GLOBAL
+              id: cg-envs-ssh
+              username: ubuntu
+              description: CircleGuard environments
+              privateKeySource:
+                fileOnMaster:
+                  keyFile: /var/jenkins_home/.ssh/cg-envs-key
 
 unclassified:
   sonarGlobalConfiguration:
@@ -43,7 +51,7 @@ unclassified:
   globalLibraries:
     libraries:
       - name: circleguard
-        defaultVersion: main
+        defaultVersion: ${LIBRARY_BRANCH}
         retriever:
           modernSCM:
             scm:

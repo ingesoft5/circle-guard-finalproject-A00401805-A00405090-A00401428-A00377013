@@ -39,7 +39,7 @@ Validar si la cuenta AWS permite crear la plataforma CI/CD de la Parte 1 con dos
 ```bash
 export AWS_REGION=us-east-1
 export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
-./infra/bootstrap/00-check-prerequisites.sh
+./infra/bootstrap-check.sh
 ```
 
 ## Evidencia requerida

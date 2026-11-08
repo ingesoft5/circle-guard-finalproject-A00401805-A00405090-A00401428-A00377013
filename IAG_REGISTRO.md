@@ -172,8 +172,6 @@ Con base en este diseño previo y el archivo `Proyecto_Final_CircleGuard.pdf` ad
 El diseño previo caso por caso a partir del diagnóstico de `HU-AUTH-01` permitió orientar a la IAG con precisión sobre qué escenarios de borde probar (como el fallback de LDAP a PostgreSQL cuando `LdapAuthenticationProvider` lanza `AuthenticationException`, el bloqueo de cuentas con `isActive = false`, y la limpieza del `SecurityContextHolder` ante tokens malformados). Además, el ajuste de constructores en `IdentityClient` con `@Value` y `RestTemplate` no solo desbloqueó las pruebas unitarias con `MockRestServiceServer`, sino que dejó listo el cliente para su contenerización en `HU-AUTH-03`.
 
 
-# Registro de uso de IAG
-
 ## HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway
 
 - **Nivel de uso:** 3 (colaboración con IAG).
@@ -184,5 +182,7 @@ El diseño previo caso por caso a partir del diagnóstico de `HU-AUTH-01` permit
   - Validar el plan de la HU contra el PDF del proyecto.
   - Ajustar la HU a la Parte 1 / Sprint 1 y al microservicio gateway.
   - Generar scripts Bash idempotentes, Docker Compose y pipeline de Jenkins.
-- **Resultado:** scripts de infraestructura, compose de herramientas y ambientes, Jenkinsfile, Shared Library, correcciones de seguridad del gateway, pruebas y documentación.
+- **Resultado:** integración de `e12-bootstrap` (idempotencia) con el aprovisionamiento AWS y el pipeline del gateway; scripts `infra/bootstrap-*.sh`, compose de herramientas y ambientes, Jenkinsfile, Shared Library, correcciones de seguridad del gateway, pruebas y documentación.
 - **Verificación humana:** el equipo debe revisar y ejecutar cada script, validar las credenciales y estar en capacidad de explicar la configuración en la sustentación.
+
+https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6

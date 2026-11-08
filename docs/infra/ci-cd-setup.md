@@ -2,11 +2,11 @@
 
 ## Requisitos
 
-- AWS CLI v2 configurado.
-- `jq`, `ssh`, `curl`, Docker local para validar compose.
-- IP administrativa y IP del docente.
-- Token de GitHub con permisos de webhook.
-- Llave SSH para el agente de Jenkins.
+- AWS CLI v2 con credenciales.
+- `jq`, `ssh`, `curl`, `openssl`.
+- `ADMIN_CIDR` de la IP administrativa.
+- Token de GitHub con permisos de repositorio y webhook (`GITHUB_TOKEN`).
+- Opcional: `TEACHER_CIDR` para habilitar el acceso del docente.
 
 ## Variables
 
@@ -17,27 +17,34 @@ export GITHUB_USER=...
 export GITHUB_TOKEN=...
 export GITHUB_OWNER=ingesoft5
 export GITHUB_REPO=circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013
+# Opcional: export TEACHER_CIDR="IP_DOCENTE/32"
 ```
 
 ## Reconstrucción desde cero
 
 ```bash
-./infra/bootstrap/all.sh
+./infra/bootstrap-all.sh
 ```
 
 El comando:
 
-1. Verifica AWS.
-2. Crea 2 EC2, Security Groups, Elastic IPs y key pair.
-3. Prepara Docker, Java 21, swap y firewall.
-4. Levanta Jenkins, SonarQube, PostgreSQL y Nexus.
-5. Configura SonarQube y Nexus.
-6. Crea los archivos de los ambientes `dev`, `stage` y `prod`.
+1. Crea 2 EC2, Security Groups, Elastic IPs y key pair.
+2. Prepara Docker, Java 21, swap y firewall en ambas instancias.
+3. Levanta Jenkins, SonarQube, PostgreSQL y Nexus.
+4. Configura SonarQube, Nexus y el repositorio Docker `circleguard-docker`.
+5. Prepara los archivos `.env` de `dev`, `stage` y `prod`.
+
+Solo herramientas o solo ambientes:
+
+```bash
+./infra/bootstrap-all.sh --tools-only
+./infra/bootstrap-all.sh --envs-only
+```
 
 Destrucción:
 
 ```bash
-CONFIRM=yes ./infra/bootstrap/99-destroy.sh
+CONFIRM=yes ./infra/bootstrap-destroy.sh
 ```
 
 ## Jenkins
@@ -48,9 +55,10 @@ CONFIRM=yes ./infra/bootstrap/99-destroy.sh
 - JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`
 - Plugins: `deploy/compose/tools/jenkins/plugins.txt`
 - Job multibranch: `circleguard-gateway`
+- Shared Library: `vars/ci.groovy`, rama `LIBRARY_BRANCH` (por defecto `dev`)
 - Webhook: `http://<TOOLS_IP>:8080/github-webhook/`
 
-Credenciales necesarias en Jenkins:
+Credenciales creadas automáticamente:
 
 | ID | Tipo | Uso |
 |---|---|---|
@@ -59,7 +67,7 @@ Credenciales necesarias en Jenkins:
 | `nexus-creds` | usuario/contraseña | Nexus |
 | `cg-envs-ssh` | SSH private key | Despliegue en cg-envs |
 
-Crear `cg-envs-ssh` en Jenkins con la llave privada `infra/state/circleguard-key.pem` (tipo *SSH Username with private key*, usuario `ubuntu`).
+`cg-envs-ssh` se declara en JCasC y usa la llave copiada a `/opt/circleguard/jenkins_ssh/cg-envs-key`.
 
 ## SonarQube
 
@@ -72,16 +80,16 @@ Crear `cg-envs-ssh` en Jenkins con la llave privada `infra/state/circleguard-key
 
 - UI: `http://<TOOLS_IP>:8081`
 - Docker registry: `<TOOLS_IP>:8082`
-- Repositorios: `maven-releases`, `maven-snapshots`, `raw`, `docker-hosted`.
+- Repositorios: `maven-releases`, `maven-snapshots`, `raw`, `circleguard-docker`.
 - Usuario de Jenkins: `jenkins`, rol `jenkins-publisher`.
 
 ## Notificaciones
 
-Definir `SLACK_WEBHOOK_URL` en `deploy/compose/tools/.env`. Si está vacío, el pipeline omite la notificación y deja el mensaje en el log de Jenkins.
+Definir `SLACK_WEBHOOK_URL` en `deploy/compose/tools/.env`. Si está vacío, el pipeline omite la notificación.
 
 ## Pipeline del gateway
 
-Etapas implementadas en `Jenkinsfile`:
+Etapas en `Jenkinsfile`:
 
 1. Checkout.
 2. Build & Test con JaCoCo y verificación ≥ 60 %.
@@ -89,14 +97,14 @@ Etapas implementadas en `Jenkinsfile`:
 4. Quality gate bloqueante.
 5. Empaquetado `bootJar`.
 6. Publicación en Nexus.
-7. Build y push de imagen Docker.
+7. Build y push de imagen Docker a `circleguard-docker`.
 8. Despliegue a dev.
 9. E2E Playwright.
 10. Despliegue a stage.
 11. Aprobación manual.
 12. Despliegue a prod.
 13. Tag semver.
-14. Rollback por parámetro `ROLLBACK_TAG`.
+14. Rollback con el parámetro `ROLLBACK_TAG`.
 
 ## Evidencias
 

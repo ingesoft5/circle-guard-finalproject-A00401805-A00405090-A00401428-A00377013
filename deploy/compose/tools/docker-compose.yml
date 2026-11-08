@@ -20,10 +20,12 @@ services:
       NEXUS_REGISTRY: ${NEXUS_REGISTRY}
       SONAR_HOST_URL: ${SONAR_HOST_URL}
       ENVS_IP: ${ENVS_IP}
+      LIBRARY_BRANCH: ${LIBRARY_BRANCH:-dev}
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./jenkins/casc:/var/jenkins_home/casc:ro
+      - ${TOOLS_HOME:-/opt/circleguard}/jenkins_ssh:/var/jenkins_home/.ssh:ro
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8080:8080"
