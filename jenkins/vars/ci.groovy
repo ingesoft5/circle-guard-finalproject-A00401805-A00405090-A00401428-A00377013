@@ -94,6 +94,9 @@ def dockerBuildPush(Map service, String tag) {
     if (!service.docker) {
         return ''
     }
+    if (!env.NEXUS_REGISTRY) {
+        error 'Falta NEXUS_REGISTRY: sin registro no se puede publicar la imagen.'
+    }
     def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${tag}"
     def digest = ''
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
@@ -105,7 +108,9 @@ def dockerBuildPush(Map service, String tag) {
         if (!digest || digest == '<no value>') {
             digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
         }
-        writeFile file: 'image-digest.txt', text: "${image}\n${digest}\n"
+        // Append instead of write: the pipeline now publishes more than one image per
+        // build, and a plain write would leave only the digest of the last service.
+        sh "printf '%s\\n%s\\n' '${image}' '${digest}' >> image-digest.txt"
     }
     return digest
 }
@@ -133,6 +138,9 @@ def archive(List services) {
 
 def deploy(String environment, String tag) {
     def ip = env."${environment.toUpperCase()}_PRIVATE_IP"
+    if (!ip) {
+        error "Falta ${environment.toUpperCase()}_PRIVATE_IP: no se puede desplegar a ${environment}."
+    }
     sshagent(['cg-envs-ssh']) {
         sh """
             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${ip} \

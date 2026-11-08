@@ -5,6 +5,33 @@
 
 def services = []
 
+// The Jenkins container carries the environment addresses and the registry in its
+// process environment (deploy/compose/tools/.env), but a pipeline does not see those
+// in `env`. They are read here, in the file that ships with the branch, instead of in
+// the shared library: the library is loaded from main, so a new library method would
+// only exist after the change had already merged.
+def loadEnvironment(String... names) {
+    def output = sh(
+            script: "printenv | grep -E '^(${names.join('|')})=' || true",
+            returnStdout: true
+    ).trim()
+    def found = [:]
+    output.readLines().each { line ->
+        def separator = line.indexOf('=')
+        if (separator > 0) {
+            found[line.substring(0, separator)] = line.substring(separator + 1)
+        }
+    }
+    names.each { name ->
+        def value = found[name]
+        if (value) {
+            env."${name}" = value
+        } else {
+            echo "Variable de entorno no definida en el contenedor: ${name}"
+        }
+    }
+}
+
 pipeline {
     agent any
 
@@ -47,6 +74,8 @@ pipeline {
         stage('Resolve services') {
             steps {
                 script {
+                    loadEnvironment('NEXUS_REGISTRY', 'TOOLS_IP', 'DEV_PRIVATE_IP',
+                            'STAGE_PRIVATE_IP', 'PROD_PRIVATE_IP', 'GITHUB_OWNER', 'GITHUB_REPO')
                     if (params.ROLLBACK_TAG?.trim()) {
                         env.TAG = params.ROLLBACK_TAG.trim()
                         services = []
@@ -159,10 +188,16 @@ pipeline {
             }
             steps {
                 script {
-                    def gateway = services.find { it.short == 'gateway' }
-                    if (gateway) {
-                        def digest = ci.dockerBuildPush(gateway, env.TAG)
-                        echo "Digest publicado: ${digest}"
+                    // Todo servicio con Dockerfile se empaqueta, no solo el gateway: el
+                    // despliegue a dev levanta la pila completa y cada imagen tiene que
+                    // existir en el registro con el tag que el pipeline va a desplegar.
+                    def images = services.findAll { it.docker }
+                    if (!images) {
+                        echo 'Ningún servicio seleccionado publica imagen.'
+                    }
+                    images.each { service ->
+                        def digest = ci.dockerBuildPush(service, env.TAG)
+                        echo "Digest publicado (${service.short}): ${digest}"
                     }
                 }
             }
