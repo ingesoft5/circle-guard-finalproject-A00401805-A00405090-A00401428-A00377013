@@ -1,4 +1,6 @@
 // CG-DOC: Build configuration for the promotion service.
+import java.util.concurrent.TimeUnit
+
 plugins {
     id("org.springframework.boot")
     id("io.spring.dependency-management")
@@ -44,6 +46,16 @@ jacoco {
     toolVersion = "0.8.12"
 }
 
+// Docker availability is not an input of a Test task, so Gradle happily reuses results from
+// a previous run: with Docker gone, `test` reports UP-TO-DATE and the guards would read
+// stale XML where nothing was skipped. Declaring it as an input forces a re-execution.
+val dockerAvailable: Boolean = runCatching {
+    val probe = ProcessBuilder("docker", "info", "--format", "{{.ServerVersion}}")
+        .redirectErrorStream(true)
+        .start()
+    probe.waitFor(10, TimeUnit.SECONDS) && probe.exitValue() == 0
+}.getOrDefault(false)
+
 tasks.test {
     useJUnitPlatform {
         // PromotionPerformanceTest asserts a 1 s wall-clock budget against a Neo4j
@@ -51,6 +63,7 @@ tasks.test {
         // host load and fails intermittently at ~2.2 s. Run it with `performanceTest`.
         excludeTags("performance")
     }
+    inputs.property("dockerAvailable", dockerAvailable)
     finalizedBy(tasks.jacocoTestReport)
 }
 
@@ -62,6 +75,7 @@ tasks.register<Test>("performanceTest") {
     useJUnitPlatform {
         includeTags("performance")
     }
+    inputs.property("dockerAvailable", dockerAvailable)
     shouldRunAfter(tasks.test)
 }
 
@@ -92,22 +106,46 @@ tasks.jacocoTestCoverageVerification {
 }
 
 // The coverage threshold is a proxy: if the unit suite ever covers more than 70 % on its
-// own, a Docker-less run would pass while the container classes were skipped. This task
-// checks the surefire results directly, so a skipped container class always fails `check`.
-val containerBackedTestClasses = listOf(
-    "com.circleguard.promotion.listener.KafkaPromotionIntegrationTest",
-    "com.circleguard.promotion.service.AdministrativeCorrectionTest",
-    "com.circleguard.promotion.service.HealthStatusReevaluationTest",
-)
+// own, a Docker-less run would pass while the container classes were skipped. These guards
+// read the surefire results directly, so a skipped container class always fails the build.
+//
+// The class list is discovered from the sources instead of hardcoded, so a new test
+// annotated with @Testcontainers cannot silently escape the guard. Classes tagged
+// "performance" run under `performanceTest`, the rest under `test`.
+val containerBackedSources: List<Pair<String, Boolean>> = run {
+    val root = layout.projectDirectory.dir("src/test/java").asFile
+    val performanceTag = Regex("""@(?:org\.junit\.jupiter\.api\.)?Tag\(\s*"performance"\s*\)""")
+    root.walkTopDown()
+        .filter { it.isFile && it.name.endsWith(".java") }
+        .map { it to it.readText() }
+        .filter { (_, text) -> text.contains("@Testcontainers") }
+        .map { (file, text) ->
+            val className = file.relativeTo(root).invariantSeparatorsPath
+                .removeSuffix(".java")
+                .replace('/', '.')
+            className to performanceTag.containsMatchIn(text)
+        }
+        .toList()
+}
+val containerTestClasses: Set<String> =
+    containerBackedSources.filterNot { (_, isPerformance) -> isPerformance }.map { it.first }.toSet()
+val containerPerformanceClasses: Set<String> =
+    containerBackedSources.filter { (_, isPerformance) -> isPerformance }.map { it.first }.toSet()
 
-val verifyContainerTestsRan by tasks.registering {
+fun containerGuard(
+    taskName: String,
+    resultsPath: String,
+    testedTask: TaskProvider<Test>,
+    descriptionText: String,
+    classes: Set<String>,
+) = tasks.register(taskName) {
     group = "verification"
-    description = "Fails when a container-backed test class was skipped instead of executed."
-    dependsOn(tasks.test)
-    val resultsDir = layout.buildDirectory.dir("test-results/test")
+    description = descriptionText
+    dependsOn(testedTask)
+    val resultsDir = layout.buildDirectory.dir(resultsPath)
     doLast {
         val problems = mutableListOf<String>()
-        containerBackedTestClasses.forEach { className ->
+        classes.forEach { className ->
             val report = resultsDir.get().file("TEST-$className.xml").asFile
             if (!report.isFile) {
                 problems += "$className (no result file)"
@@ -121,11 +159,27 @@ val verifyContainerTestsRan by tasks.registering {
         if (problems.isNotEmpty()) {
             throw GradleException(
                 "Container-backed tests did not execute: ${problems.joinToString(", ")}. " +
-                    "Start Docker and run the suite again; these tests are not optional."
+                    "Start Docker and run the task again; these tests are not optional."
             )
         }
     }
 }
+
+val verifyContainerTestsRan = containerGuard(
+    taskName = "verifyContainerTestsRan",
+    resultsPath = "test-results/test",
+    testedTask = tasks.test,
+    descriptionText = "Fails when a container-backed test class was skipped instead of executed.",
+    classes = containerTestClasses,
+)
+
+val verifyPerformanceTestsRan = containerGuard(
+    taskName = "verifyPerformanceTestsRan",
+    resultsPath = "test-results/performanceTest",
+    testedTask = tasks.named<Test>("performanceTest"),
+    descriptionText = "Fails when the performance benchmark was skipped instead of executed.",
+    classes = containerPerformanceClasses,
+)
 
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification, verifyContainerTestsRan)
