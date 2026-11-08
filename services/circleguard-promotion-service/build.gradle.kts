@@ -1,4 +1,6 @@
 // CG-DOC: Build configuration for the promotion service.
+import org.gradle.api.provider.ValueSource
+import org.gradle.api.provider.ValueSourceParameters
 import java.util.concurrent.TimeUnit
 
 plugins {
@@ -49,25 +51,35 @@ jacoco {
 // Docker availability is not an input of a Test task, so Gradle happily reuses results from
 // a previous run: with Docker gone, `test` reports UP-TO-DATE and the guards would read
 // stale XML where nothing was skipped. Declaring it as an input forces a re-execution.
-val dockerAvailable: Boolean = runCatching {
-    val probe = ProcessBuilder("docker", "info", "--format", "{{.ServerVersion}}")
-        .redirectErrorStream(true)
-        .start()
-    probe.waitFor(10, TimeUnit.SECONDS) && probe.exitValue() == 0
-}.getOrDefault(false)
+// A ValueSource keeps the probe out of configuration time, so the configuration cache
+// stays usable.
+abstract class DockerProbe : ValueSource<Boolean, ValueSourceParameters.None> {
+    override fun obtain(): Boolean = runCatching {
+        val probe = ProcessBuilder("docker", "info", "--format", "{{.ServerVersion}}")
+            .redirectErrorStream(true)
+            .start()
+        try {
+            probe.waitFor(10, TimeUnit.SECONDS) && probe.exitValue() == 0
+        } finally {
+            probe.destroyForcibly()
+        }
+    }.getOrDefault(false)
+}
+
+val dockerAvailable = providers.of(DockerProbe::class) {}
 
 tasks.test {
     useJUnitPlatform {
         // PromotionPerformanceTest asserts a 1 s wall-clock budget against a Neo4j
-        // container with 10k nodes. That is a benchmark, not a unit test: it varies with
-        // host load and fails intermittently at ~2.2 s. Run it with `performanceTest`.
+        // container. That is a benchmark, not a unit test: it varies with host load and
+        // fails at ~2 s on slower machines. Run it with `performanceTest`.
         excludeTags("performance")
     }
     inputs.property("dockerAvailable", dockerAvailable)
     finalizedBy(tasks.jacocoTestReport)
 }
 
-tasks.register<Test>("performanceTest") {
+val performanceTest = tasks.register<Test>("performanceTest") {
     group = "verification"
     description = "Runs the NFR-1 wall-clock benchmark against a real Neo4j container."
     testClassesDirs = sourceSets["test"].output.classesDirs
@@ -94,92 +106,74 @@ tasks.jacocoTestCoverageVerification {
             limit {
                 counter = "LINE"
                 value = "COVEREDRATIO"
-                // 0.70, not 0.60: the container classes use
-                // @Testcontainers(disabledWithoutDocker = true), so a run without Docker
-                // skips them and still builds green at 65.8 % line coverage. This threshold
-                // is above that skipped-run figure on purpose, so the gate fails unless the
-                // container tests actually executed.
+                // 0.70, not 0.60: a Docker-less run skips the container classes and still
+                // reaches 65.8 % line coverage. This threshold sits above that figure, so
+                // the gate fails unless those tests actually executed.
                 minimum = "0.70".toBigDecimal()
             }
         }
     }
 }
 
-// The coverage threshold is a proxy: if the unit suite ever covers more than 70 % on its
+// The coverage threshold is a proxy: if the unit suite ever covered more than 70 % on its
 // own, a Docker-less run would pass while the container classes were skipped. These guards
-// read the surefire results directly, so a skipped container class always fails the build.
-//
-// The class list is discovered from the sources instead of hardcoded, so a new test
-// annotated with @Testcontainers cannot silently escape the guard. Classes tagged
-// "performance" run under `performanceTest`, the rest under `test`.
-val containerBackedSources: List<Pair<String, Boolean>> = run {
-    val root = layout.projectDirectory.dir("src/test/java").asFile
-    val performanceTag = Regex("""@(?:org\.junit\.jupiter\.api\.)?Tag\(\s*"performance"\s*\)""")
-    root.walkTopDown()
-        .filter { it.isFile && it.name.endsWith(".java") }
-        .map { it to it.readText() }
-        .filter { (_, text) -> text.contains("@Testcontainers") }
-        .map { (file, text) ->
-            val className = file.relativeTo(root).invariantSeparatorsPath
-                .removeSuffix(".java")
-                .replace('/', '.')
-            className to performanceTag.containsMatchIn(text)
-        }
-        .toList()
-}
-val containerTestClasses: Set<String> =
-    containerBackedSources.filterNot { (_, isPerformance) -> isPerformance }.map { it.first }.toSet()
-val containerPerformanceClasses: Set<String> =
-    containerBackedSources.filter { (_, isPerformance) -> isPerformance }.map { it.first }.toSet()
-
-fun containerGuard(
+// read the surefire results instead and fail on ANY skipped test, so nothing can escape by
+// being absent from a list. A module whose tests need Docker fails without it, which is the
+// intended behaviour: a skipped test is a silent hole, not a pass.
+fun registerNoSkipGuard(
     taskName: String,
     resultsPath: String,
     testedTask: TaskProvider<Test>,
     descriptionText: String,
-    classes: Set<String>,
 ) = tasks.register(taskName) {
     group = "verification"
     description = descriptionText
     dependsOn(testedTask)
     val resultsDir = layout.buildDirectory.dir(resultsPath)
     doLast {
-        val problems = mutableListOf<String>()
-        classes.forEach { className ->
-            val report = resultsDir.get().file("TEST-$className.xml").asFile
-            if (!report.isFile) {
-                problems += "$className (no result file)"
-                return@forEach
-            }
-            val suiteTag = Regex("""<testsuite[^>]*>""").find(report.readText())?.value ?: ""
-            val skipped = Regex("""\bskipped="(\d+)"""")
-                .find(suiteTag)?.groupValues?.get(1)?.toInt() ?: 0
-            if (skipped > 0) problems += "$className ($skipped skipped)"
-        }
-        if (problems.isNotEmpty()) {
+        val reports = resultsDir.get().asFile
+            .listFiles { file -> file.isFile && file.name.startsWith("TEST-") && file.name.endsWith(".xml") }
+            ?: emptyArray()
+        if (reports.isEmpty()) {
             throw GradleException(
-                "Container-backed tests did not execute: ${problems.joinToString(", ")}. " +
-                    "Start Docker and run the task again; these tests are not optional."
+                "No test reports under $resultsPath. The suite did not run, so nothing is verified."
+            )
+        }
+        val skipped = reports.mapNotNull { report ->
+            val suiteTag = Regex("""<testsuite[^>]*>""").find(report.readText())?.value ?: ""
+            val count = Regex("""\bskipped="(\d+)"""").find(suiteTag)?.groupValues?.get(1)?.toInt() ?: 0
+            if (count > 0) {
+                "${report.name.removePrefix("TEST-").removeSuffix(".xml")} ($count skipped)"
+            } else {
+                null
+            }
+        }
+        if (skipped.isNotEmpty()) {
+            throw GradleException(
+                "Tests were skipped: ${skipped.joinToString(", ")}. This module requires Docker; " +
+                    "start it and run the task again."
             )
         }
     }
 }
 
-val verifyContainerTestsRan = containerGuard(
+val verifyContainerTestsRan = registerNoSkipGuard(
     taskName = "verifyContainerTestsRan",
     resultsPath = "test-results/test",
     testedTask = tasks.test,
-    descriptionText = "Fails when a container-backed test class was skipped instead of executed.",
-    classes = containerTestClasses,
+    descriptionText = "Fails when any test in the default suite was skipped instead of executed.",
 )
 
-val verifyPerformanceTestsRan = containerGuard(
+val verifyPerformanceTestsRan = registerNoSkipGuard(
     taskName = "verifyPerformanceTestsRan",
     resultsPath = "test-results/performanceTest",
-    testedTask = tasks.named<Test>("performanceTest"),
+    testedTask = performanceTest,
     descriptionText = "Fails when the performance benchmark was skipped instead of executed.",
-    classes = containerPerformanceClasses,
 )
+
+// The benchmark is deliberately outside `check` because it is host-dependent, so its guard
+// rides along with the task itself: running the benchmark always verifies it really ran.
+performanceTest { finalizedBy(verifyPerformanceTestsRan) }
 
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification, verifyContainerTestsRan)
