@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.security.Key;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 class JwtAuthenticationFilterTest {
 
-    private static final String SECRET = "my-super-secret-dev-key-32-chars-long-12345678";
+    private static final String SECRET = UUID.randomUUID().toString() + UUID.randomUUID().toString();
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
     private final JwtAuthenticationFilter filter = new JwtAuthenticationFilter(SECRET);
 
