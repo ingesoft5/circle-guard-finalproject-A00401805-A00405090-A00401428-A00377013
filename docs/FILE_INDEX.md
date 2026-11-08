@@ -103,7 +103,9 @@ English purpose of every tracked repository file.
 
 - `docs/informe/E1.2-CircleGuard-Infraestructura.md` — E1.2 infrastructure report with AWS, CI/CD, idempotency, cost, and evidence.
 
-- `docs/informe/E1.2-Idempotencia.html` — Evidence report for idempotent CircleGuard infrastructure bootstrap. --&gt;</p>
+- `docs/informe/E1.2-Idempotencia.docx` — Binary asset.
+
+- `docs/informe/E1.2-Idempotencia.html` — Evidence report for idempotent CircleGuard infrastructure bootstrap.
 
 - `docs/informe/E1.2-Idempotencia.md` — Evidence report for idempotent CircleGuard infrastructure bootstrap.
 
@@ -141,7 +143,9 @@ English purpose of every tracked repository file.
 
 - `docs/informe/evidencia/github/github-ruleset-main.png` — Binary asset.
 
-- `docs/informe/evidencia/idempotencia-summary.png` — Binary asset.
+- `docs/informe/evidencia/idempotencia-cli.png` — Binary asset.
+
+- `docs/informe/evidencia/jenkins-pr15.png` — Binary asset.
 
 - `docs/informe/evidencia/jenkins-professor.png` — Binary asset.
 
@@ -157,7 +161,11 @@ English purpose of every tracked repository file.
 
 - `docs/informe/evidencia/nexus-professor.png` — Binary asset.
 
+- `docs/informe/evidencia/nexus-repositories.png` — Binary asset.
+
 - `docs/informe/evidencia/sonarqube-professor.png` — Binary asset.
+
+- `docs/informe/evidencia/sonarqube-quality-gate.png` — Binary asset.
 
 - `docs/infra/aws-free-tier-validation.md` — AWS four-host sizing, exposure, and one-week cost validation.
 

@@ -9,7 +9,8 @@ pre { background:#f5f7fa; border:1px solid #d6dee8; border-left:4px solid #0b3d6
 table { width:100%; border-collapse:collapse; margin:8px 0; font-size:9pt; }
 th { background:#e8eef5; border:1px solid #b9c8d8; padding:5px; text-align:left; }
 td { border:1px solid #c9d5e2; padding:5px; vertical-align:top; }
-img { max-width:100%; border:1px solid #c9d5e2; margin:10px 0; }
+img { max-width:100%; max-height:150mm; border:1px solid #c9d5e2; margin:10px 0; }
+p:has(img) { text-align:center; }
 </style></head><body><p>&lt;!-- CG-DOC: Evidence report for idempotent CircleGuard infrastructure bootstrap. --&gt;</p>
 <h1>E1.2 - Informe de idempotencia</h1>
 <p><strong>Proyecto:</strong> CircleGuard
@@ -24,7 +25,6 @@ img { max-width:100%; border:1px solid #c9d5e2; margin:10px 0; }
 Diferencia antes/después: 0 líneas
 </code></pre>
 <p>El archivo <code>diffs.txt</code> quedó vacío.</p>
-<p><img src="evidencia/idempotencia-summary.png" alt="Resumen de idempotencia" /></p>
 <h2>3. Invariantes verificados</h2>
 <table>
 <thead>
@@ -76,7 +76,20 @@ Diferencia antes/después: 0 líneas
 </tr>
 </tbody>
 </table>
-<h2>4. Evidencia</h2>
+<h2>4. Evidencia gráfica</h2>
+<h3>4.1 Salida real de la validación</h3>
+<p>Comparación antes/después con <code>diffs.txt</code> vacío, estado de las instancias EC2, Elastic IP, hashes de <code>.env</code> y contenedores en ejecución.</p>
+<p><img src="evidencia/idempotencia-cli.png" alt="Validación de idempotencia por CLI" /></p>
+<h3>4.2 Jenkins: PR-15 en verde</h3>
+<p>Pipeline multibranch con PR-15 construido y aprobado. El PR ejecuta CI; el CD queda reservado para <code>main</code>.</p>
+<p><img src="evidencia/jenkins-pr15.png" alt="PR-15 en Jenkins" /></p>
+<h3>4.3 SonarQube: Quality Gate aprobado</h3>
+<p>Proyecto <code>CircleGuard Gateway</code> con Quality Gate <strong>Passed</strong>: 0 bugs, 0 vulnerabilidades, 0 code smells y cobertura de 88.7 %.</p>
+<p><img src="evidencia/sonarqube-quality-gate.png" alt="Quality Gate de SonarQube" /></p>
+<h3>4.4 Nexus: repositorios aprovisionados</h3>
+<p>Repositorios <code>circleguard-docker</code>, <code>maven-central</code>, <code>maven-public</code>, <code>maven-releases</code>, <code>maven-snapshots</code>, <code>nuget-group</code>, <code>nuget-hosted</code> y <code>nuget.org-proxy</code> en estado Online.</p>
+<p><img src="evidencia/nexus-repositories.png" alt="Repositorios de Nexus" /></p>
+<h2>5. Evidencia de archivos</h2>
 <pre><code class="language-text">docs/infra/evidence/idempotency/
 ├── README.md
 ├── diffs.txt
@@ -111,22 +124,30 @@ Diferencia antes/después: 0 líneas
 ├── bootstrap-final-run.log
 └── migration-run.log
 </code></pre>
-<h2>5. Bugs encontrados y corregidos</h2>
-<h3>5.1 El <code>.env</code> remoto no se copiaba completo al local</h3>
+<h2>6. Bugs encontrados y corregidos</h2>
+<h3>6.1 El <code>.env</code> remoto no se copiaba completo al local</h3>
 <p><code>bootstrap-all.sh</code> copiaba el <code>.env</code> remoto solo a <code>infra/state/tools.env</code>, no a <code>deploy/compose/tools/.env</code>. Eso hacía que el <code>SONAR_TOKEN</code> y las contraseñas del profesor se regeneraran en cada corrida.</p>
 <p>Corrección:</p>
 <ul>
 <li>copiar <code>infra/state/tools.env</code> a <code>deploy/compose/tools/.env</code>;</li>
 <li>agregar <code>PROFESSOR_SONAR_PASSWORD</code> y <code>PROFESSOR_NEXUS_PASSWORD</code> al <code>.env</code> local.</li>
 </ul>
-<h3>5.2 Jenkins se reconstruía en cada corrida</h3>
+<h3>6.2 Jenkins se reconstruía en cada corrida</h3>
 <p><code>compose_up</code> usaba <code>--build</code> siempre. Aunque el contenedor no se recreaba, la etiqueta de imagen apuntaba a una imagen nueva y el contenedor quedaba en una imagen vieja.</p>
 <p>Corrección:</p>
 <ul>
 <li>construir solo si la imagen <code>circleguard-tools-jenkins</code> no existe;</li>
 <li>ejecutar <code>compose up</code> sin <code>--build</code> cuando la imagen ya existe.</li>
 </ul>
-<h2>6. Cómo se validó</h2>
+<h3>6.3 Las contraseñas del profesor no se sincronizaban</h3>
+<p>En SonarQube el usuario <code>professor</code> se creaba con <code>|| true</code>: si ya existía, la contraseña del <code>.env</code> nunca se aplicaba. En Nexus el <code>PUT</code> del usuario devolvía 204 pero no actualizaba la contraseña. El resultado era un usuario existente que no podía autenticarse.</p>
+<p>Corrección:</p>
+<ul>
+<li>en SonarQube, validar <code>professor</code> y usar <code>api/users/change_password</code> si la autenticación falla;</li>
+<li>en Nexus, validar <code>professor</code> y usar <code>security/users/professor/change-password</code> si la autenticación falla;</li>
+<li>ambas operaciones son condicionales, por lo que una corrida posterior no cambia nada.</li>
+</ul>
+<h2>7. Cómo se validó</h2>
 <ol>
 <li>Verificar que PR-15 no estuviera construyendo.</li>
 <li>Crear <code>test/HU-INFRA-01-idempotencia</code> desde el HEAD actual.</li>
@@ -136,8 +157,8 @@ Diferencia antes/después: 0 líneas
 <li>Comparar con <code>diff</code>.</li>
 <li>Confirmar <code>diffs.txt</code> vacío.</li>
 <li>Commitear la evidencia en la rama de prueba.</li>
-<li>Aplicar el fix al PR-15.</li>
+<li>Aplicar los fixes al PR-15.</li>
 </ol>
-<h2>7. Conclusión</h2>
-<p>El bootstrap es idempotente para el alcance de E1.2. La segunda ejecución no cambió recursos, secretos, contenedores, repositorios ni usuarios. La evidencia queda separada en la rama de prueba y el fix de idempotencia está en el PR.</p>
+<h2>8. Conclusión</h2>
+<p>El bootstrap es idempotente para el alcance de E1.2. La segunda ejecución no cambió recursos, secretos, contenedores, repositorios ni usuarios. La evidencia queda separada en la rama de prueba y los fixes de idempotencia están en el PR.</p>
 </body></html>
