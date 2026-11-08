@@ -117,11 +117,16 @@ Reglas reales de propagación, tal como las ejecuta el Cypher de `HealthStatusSe
 | `SUSPECT` | `survey.submitted` con `hasSymptoms = true`; expira a `ACTIVE` |
 | `PROBABLE` | Contacto directo de un `SUSPECT`; segundo salto de un `CONFIRMED`; expira a `ACTIVE` |
 | `CONFIRMED` | Explícito por el endpoint de actualización de estado |
-| `ACTIVE` | `certificate.validated` con `status = APPROVED`; expiración desde `SUSPECT`/`PROBABLE` |
+| `ACTIVE` | `certificate.validated` con `status = APPROVED` — **intento** sujeto a la ventana obligatoria; expiración desde `SUSPECT`/`PROBABLE` |
 | `RECOVERED` | Presente en el modelo; sin transición automática en el código revisado |
 
 > [!NOTE]
 > `StatusLifecycleService#processAutomaticTransitions` corre cada hora y solo aplica la expiración: usuarios `SUSPECT`/`PROBABLE` con `statusUpdatedAt` anterior a `mandatory_fence_days` vuelven a `ACTIVE`, actualizan Redis y emiten `promotion.status.changed`. No llama a `HealthStatusService` ni a `GraphService`.
+
+> [!WARNING]
+> **Un certificado aprobado no garantiza la transición a `ACTIVE`.** `SurveyListener#onCertificateValidated` invoca `updateStatus(anonymousId, "ACTIVE")` mediante la sobrecarga de dos argumentos, es decir con `adminOverride = false`. `HealthStatusService#updateStatus` solo ejecuta `checkFenceWindow` cuando el estado destino es `ACTIVE` y no hay override; si el usuario está en `SUSPECT` o `PROBABLE` y `now - statusUpdatedAt < mandatoryFenceDays`, `checkFenceWindow` lanza `FenceException` y la transición **no ocurre**. El listener captura esa excepción y únicamente registra `log.error`, sin reintento ni DLQ: el evento `certificate.validated` se descarta en silencio y el usuario permanece en su estado previo. La ventana por defecto es de 14 días, tanto en `AdminController` como en el fallback de `HealthStatusService`.
+>
+> Consecuencias que `HU-PROMO-02` debe cubrir: (a) el único camino que salta la ventana es `POST /api/v1/health/report` con `adminOverride: true` en el cuerpo, y ese flag **no tiene autorización propia** — cualquier portador de `ROLE_HEALTH_CENTER` puede eludir la cuarentena obligatoria; (b) no existe `@ControllerAdvice` que traduzca `FenceException`, así que por HTTP se propaga como `500`; (c) el descarte silencioso en el listener hace indistinguible "certificado rechazado" de "certificado aprobado pero bloqueado por la ventana".
 
 ---
 
@@ -310,9 +315,20 @@ erDiagram
 | `AdministrativeCorrectionTest` | — | **`initializationError`** por Testcontainers |
 | `PromotionPerformanceTest` | — | **`initializationError`** por Testcontainers |
 
-**Causa 1 — dos tests del controlador devuelven `403`.** El controlador declara `@PreAuthorize("hasRole('HEALTH_CENTER')")`, y `hasRole` exige la autoridad `ROLE_HEALTH_CENTER`. Los tests usaban `@WithMockUser(authorities = "HEALTH_CENTER")` sin prefijo, así que la autorización fallaba en los cuatro casos. La corrección de la autoridad corresponde a `HU-PROMO-02`.
+**Causa 1 — dos tests positivos del controlador devuelven `403` por el prefijo de autoridad.** El controlador declara `@PreAuthorize("hasRole('HEALTH_CENTER')")`, y `hasRole` exige la autoridad `ROLE_HEALTH_CENTER`. Los tests usaban `@WithMockUser(authorities = "HEALTH_CENTER")` sin prefijo, así que la evaluación fallaba. La corrección de la autoridad corresponde a `HU-PROMO-02`.
 
-**Causa 2 — Testcontainers no encuentra Docker.**
+**Causa 2 — el cuarto `403` no comparte ese origen.** Los cuatro casos de `HealthStatusControllerTest` devuelven `403`, pero por dos mecanismos y con significados distintos:
+
+| Caso | Autoridad declarada | `403` viene de | Resultado esperado | Veredicto |
+| :--- | :--- | :--- | :--- | :--- |
+| `confirmPositive_WithPermission_CallsUpdateStatus` | `HEALTH_CENTER` | `hasRole` (Causa 1) | `200` | **Falla** |
+| `resolve_WithPermission_CallsResolveStatus` | `HEALTH_CENTER` | `hasRole` (Causa 1) | `200` | **Falla** |
+| `resolve_WithoutPermission_Returns403` | `STUDENT` | `hasRole` (Causa 1) | `403` | Pasa |
+| `resolve_Unauthenticated_Returns403` | ninguna | `SecurityConfig:37` — `.requestMatchers("/api/v1/health/**").authenticated()` | `403` | Pasa |
+
+En el caso no autenticado el `403` lo produce la regla de URL de la cadena de filtros, **antes** de la seguridad method-level: ese test pasaría igual con el prefijo `ROLE_` corregido, porque nunca llega a evaluar `@PreAuthorize`. El defecto del prefijo explica tres de los cuatro `403` —los dos positivos y el de `STUDENT`— y es el mismo mecanismo que hace pasar a `STUDENT`, que verifica esa regla desde el lado de la denegación. El cuarto `403`, el no autenticado, pertenece a la cadena de filtros y no guarda relación con el prefijo. Los dos fallos reales comparten causa; los cuatro `403` no. Ninguno de los cuatro cubre el camino positivo con `ROLE_HEALTH_CENTER`, que es justamente el que la corrección debe habilitar.
+
+**Causa 3 — Testcontainers no encuentra Docker.**
 
 ```text
 java.lang.IllegalStateException: Could not find a valid Docker environment.
