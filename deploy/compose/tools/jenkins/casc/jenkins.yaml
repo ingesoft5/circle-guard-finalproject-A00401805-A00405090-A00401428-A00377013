@@ -11,12 +11,18 @@ jenkins:
         - id: professor
           password: ${PROFESSOR_PASSWORD}
   authorizationStrategy:
-    matrix:
-      permissions:
-        - "Overall/Administer:admin"
-        - "Overall/Read:professor"
-        - "Job/Read:professor"
-        - "View/Read:professor"
+    globalMatrix:
+      entries:
+        - user:
+            name: admin
+            permissions:
+              - "Overall/Administer"
+        - user:
+            name: professor
+            permissions:
+              - "Overall/Read"
+              - "Job/Read"
+              - "View/Read"
 
 credentials:
   system:
@@ -45,8 +51,8 @@ credentials:
               username: ubuntu
               description: CircleGuard environments
               privateKeySource:
-                fileOnMaster:
-                  keyFile: /var/jenkins_home/.ssh/cg-envs-key
+                directEntry:
+                  privateKey: "${readFile:/var/jenkins_home/.ssh/cg-envs-key}"
 
 unclassified:
   location:
