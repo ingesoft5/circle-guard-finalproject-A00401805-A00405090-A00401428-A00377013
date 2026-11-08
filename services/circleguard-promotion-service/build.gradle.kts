@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.spring")
     kotlin("plugin.jpa")
+    id("jacoco")
 }
 
 dependencies {
@@ -26,7 +27,42 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.testcontainers:junit-jupiter:1.19.3")
-    testImplementation("org.testcontainers:postgresql:1.19.3")
-    testImplementation("org.testcontainers:neo4j:1.19.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    testImplementation("org.testcontainers:postgresql:1.21.3")
+    testImplementation("org.testcontainers:neo4j:1.21.3")
+    testImplementation("org.testcontainers:kafka:1.21.3")
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+tasks.test {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.test)
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.60".toBigDecimal()
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
