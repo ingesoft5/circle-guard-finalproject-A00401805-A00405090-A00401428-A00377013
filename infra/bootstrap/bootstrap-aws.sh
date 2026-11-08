@@ -106,14 +106,6 @@ reconcile_cidr() {
   done < <(current_cidrs "${sg}" "${port}")
 }
 
-github_hook_cidrs() {
-  local cidrs
-  cidrs="$(curl -fsS --max-time 20 https://api.github.com/meta | jq -r '.hooks[]?')" \
-    || die "No se pudieron obtener los rangos de GitHub (api.github.com/meta)."
-  [[ -n "${cidrs}" ]] || die "GitHub no devolvió rangos de webhook."
-  printf '%s\n' "${cidrs}"
-}
-
 ensure_instance() {
   local name="$1" type="$2" disk="$3" sg="$4" public_ip="$5" id state
   id="$(aws ec2 describe-instances \
@@ -163,10 +155,9 @@ allow_sg "${ENVS_SG}" 22 "${TOOLS_SG}"
 reconcile_cidr "${TOOLS_SG}" 80 "0.0.0.0/0"
 reconcile_cidr "${TOOLS_SG}" 443
 
-# 8080: UI de Jenkins y webhook de GitHub (admin, docente y hooks de GitHub).
-mapfile -t HOOK_CIDRS < <(github_hook_cidrs)
+# 8080: UI de Jenkins (solo admin y docente).
 read -r -a TEACHER_CIDRS <<< "${TEACHER_CIDR}"
-reconcile_cidr "${TOOLS_SG}" 8080 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}" "${HOOK_CIDRS[@]}"
+reconcile_cidr "${TOOLS_SG}" 8080 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}"
 
 # 9000 y 8081: SonarQube y Nexus (solo admin y docente).
 reconcile_cidr "${TOOLS_SG}" 9000 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}"
