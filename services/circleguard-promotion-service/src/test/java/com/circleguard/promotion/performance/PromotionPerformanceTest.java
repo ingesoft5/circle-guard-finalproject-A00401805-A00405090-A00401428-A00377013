@@ -5,6 +5,7 @@ package com.circleguard.promotion.performance;
 
 import com.circleguard.promotion.service.HealthStatusService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Testcontainers(disabledWithoutDocker = true)
-@org.junit.jupiter.api.Tag("performance")
+@Tag("performance")
 public class PromotionPerformanceTest {
 
     @Container
@@ -47,6 +48,9 @@ public class PromotionPerformanceTest {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", redis::getFirstMappedPort);
+        // This benchmark starts no broker; without this the listener retries
+        // localhost:9092 for the whole run and floods the log.
+        registry.add("spring.kafka.listener.auto-startup", () -> "false");
     }
 
     @Autowired

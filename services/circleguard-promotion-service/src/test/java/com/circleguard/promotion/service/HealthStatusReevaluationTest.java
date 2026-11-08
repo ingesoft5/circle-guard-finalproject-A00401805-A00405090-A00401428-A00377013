@@ -46,6 +46,9 @@ public class HealthStatusReevaluationTest {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", redis::getFirstMappedPort);
+        // This class starts no broker; without this the listener retries localhost:9092
+        // for the whole run and floods the log.
+        registry.add("spring.kafka.listener.auto-startup", () -> "false");
     }
 
     @Autowired
