@@ -105,12 +105,6 @@ English purpose of every tracked repository file.
 
 - `docs/informe/E1.2-Idempotencia.docx` — Binary asset.
 
-- `docs/informe/E1.2-Idempotencia.html` — Evidence report for idempotent CircleGuard infrastructure bootstrap.
-
-- `docs/informe/E1.2-Idempotencia.md` — Evidence report for idempotent CircleGuard infrastructure bootstrap.
-
-- `docs/informe/E1.2-Idempotencia.pdf` — Binary asset.
-
 - `docs/informe/E1.2-Informe-Final.html` — Repository file.
 
 - `docs/informe/E1.2-Informe-Final.md` — Repository file.
