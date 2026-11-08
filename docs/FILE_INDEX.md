@@ -141,6 +141,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/evidencia/github/github-ruleset-main.png` — Binary asset.
 
+- `docs/informe/evidencia/idempotencia-summary.png` — Binary asset.
+
 - `docs/informe/evidencia/jenkins-professor.png` — Binary asset.
 
 - `docs/informe/evidencia/jira/jira-backlog.png` — Binary asset.

@@ -9,12 +9,13 @@ pre { background:#f5f7fa; border:1px solid #d6dee8; border-left:4px solid #0b3d6
 table { width:100%; border-collapse:collapse; margin:8px 0; font-size:9pt; }
 th { background:#e8eef5; border:1px solid #b9c8d8; padding:5px; text-align:left; }
 td { border:1px solid #c9d5e2; padding:5px; vertical-align:top; }
+img { max-width:100%; border:1px solid #c9d5e2; margin:10px 0; }
 </style></head><body><p>&lt;!-- CG-DOC: Evidence report for idempotent CircleGuard infrastructure bootstrap. --&gt;</p>
 <h1>E1.2 - Informe de idempotencia</h1>
-<p><strong>Proyecto:</strong> CircleGuard<br />
-<strong>Rama de prueba:</strong> <code>test/HU-INFRA-01-idempotencia</code><br />
-<strong>Rama del PR:</strong> <code>feat/HU-GATEWAY-01-configurar-servidores</code><br />
-<strong>Región:</strong> <code>us-east-2</code><br />
+<p><strong>Proyecto:</strong> CircleGuard
+<strong>Rama de prueba:</strong> <code>test/HU-INFRA-01-idempotencia</code>
+<strong>Rama del PR:</strong> <code>feat/HU-GATEWAY-01-configurar-servidores</code>
+<strong>Región:</strong> <code>us-east-2</code>
 <strong>Fecha:</strong> 8 de noviembre de 2026</p>
 <h2>1. Objetivo</h2>
 <p>Demostrar que <code>./infra/bootstrap/bootstrap-all.sh</code> converge al mismo estado al ejecutarse dos veces, sin duplicar recursos AWS, rotar secretos, recrear contenedores ni duplicar usuarios o proyectos en Nexus y SonarQube.</p>
@@ -23,6 +24,7 @@ td { border:1px solid #c9d5e2; padding:5px; vertical-align:top; }
 Diferencia antes/después: 0 líneas
 </code></pre>
 <p>El archivo <code>diffs.txt</code> quedó vacío.</p>
+<p><img src="evidencia/idempotencia-summary.png" alt="Resumen de idempotencia" /></p>
 <h2>3. Invariantes verificados</h2>
 <table>
 <thead>
