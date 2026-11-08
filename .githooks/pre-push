@@ -24,17 +24,17 @@ done
 # =====================================================================
 # 2. VALIDAR EL FORMATO DEL NOMBRE DE LA RAMA
 # =====================================================================
-# Formato esperado: HU-<microservicio>-<numero>-<descripcion>
-# Ejemplo: HU-auth-12-implementar-login
+# Formato esperado: [<tipo>/]HU-<MICROSERVICIO>-<numero>-<descripcion>
+# Ejemplo: feat/HU-GATEWAY-01-configurar-servidores
 # Nota: Si estás en main o dev (por ejemplo, para traer cambios), no validamos el nombre.
 if [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "dev" ]; then
-    if ! echo "$CURRENT_BRANCH" | grep -qE "^HU-[a-z]+-[0-9]+(-[a-z0-9-]+)?$"; then
+    if ! echo "$CURRENT_BRANCH" | grep -qE "^((feat|fix|docs|ci|chore|test|refactor|build|perf|style)/)?HU-[A-Z]+-[0-9]+(-[a-z0-9-]+)?$"; then
         echo "======================================================"
         echo "⚠️ ADVERTENCIA: El nombre de tu rama no sigue la convención."
         echo "======================================================"
         echo "Tu rama actual es: $CURRENT_BRANCH"
-        echo "Formato esperado: HU-<microservicio>-<numero>-<descripcion>"
-        echo "Ejemplo: HU-auth-12-implementar-login"
+        echo "Formato esperado: [<tipo>/]HU-<MICROSERVICIO>-<numero>-<descripcion>"
+        echo "Ejemplo: feat/HU-GATEWAY-01-configurar-servidores"
         echo ""
         echo "El push se cancelará en 5 segundos. Presiona Ctrl+C para abortar y renombrar tu rama."
         echo "======================================================"
