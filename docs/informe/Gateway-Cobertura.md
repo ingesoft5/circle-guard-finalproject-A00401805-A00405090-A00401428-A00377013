@@ -26,13 +26,14 @@ Current result:
 
 ## Integration test
 
-`GatewayRedisIntegrationTest` validates:
+`GatewayRedisIntegrationTest` runs against a real `redis:7.2-alpine` container started by Testcontainers (no mocks). It validates:
 
-- `ACTIVE` status -> access allowed.
-- `SUSPECT` status -> access denied.
-- Missing status -> access denied.
+- `ACTIVE` and `RECOVERED` -> access allowed (`GREEN`).
+- `SUSPECT`, `CONTAGIED`, `PROBABLE`, `CONFIRMED`, and `POTENTIAL` -> access denied (`RED`).
+- Missing status -> access denied (`RED`).
+- Expired token -> access denied (`RED`, `Invalid or Expired Token`).
 
-![Integration test](evidencia/gateway-integration.png)
+The dedicated Gradle task is `:services:circleguard-gateway-service:integrationTest`; the `Integration Test` Jenkins stage publishes the JUnit report and archives the Redis container log. See [`GW-CI-02-Integracion-Redis.md`](GW-CI-02-Integracion-Redis.md) and [`evidencia/gw-ci-02/`](evidencia/gw-ci-02/) for results and evidence.
 
 ## E2E tests
 

@@ -111,6 +111,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/E1.2-Informe-Final.pdf` — Binary asset.
 
+- `docs/informe/GW-CI-02-Integracion-Redis.md` — GW-CI-02 report on gateway-Redis integration testing with Testcontainers.
+
 - `docs/informe/Gateway-Cobertura.md` — Gateway coverage, integration, E2E, and quality evidence report.
 
 - `docs/informe/P1.1-Branching-GitHub-Flow.html` — Repository file.
@@ -136,6 +138,12 @@ English purpose of every tracked repository file.
 - `docs/informe/evidencia/github/github-pr-template.png` — Binary asset.
 
 - `docs/informe/evidencia/github/github-ruleset-main.png` — Binary asset.
+
+- `docs/informe/evidencia/gw-ci-02/3-runs.txt` — Output of three consecutive gateway integration test runs.
+
+- `docs/informe/evidencia/gw-ci-02/junit-integrationTest.xml` — JUnit XML report for the gateway Redis integration tests.
+
+- `docs/informe/evidencia/gw-ci-02/redis-container.log.txt` — Log of the ephemeral Redis container used by the gateway integration tests.
 
 - `docs/informe/evidencia/idempotencia-cli.png` — Binary asset.
 
@@ -679,11 +687,15 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/controller/GateControllerTest.java` — Unit or integration tests for Gate Controller Test in the gateway service.
 
+- `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/integration/AbstractRedisIntegrationTest.java` — Base class that starts an ephemeral Redis container for gateway integration tests.
+
 - `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/integration/GatewayRedisIntegrationTest.java` — Integration test for gateway QR validation against a real Redis container.
 
 - `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/security/JwtAuthenticationFilterTest.java` — Unit or integration tests for Jwt Authentication Filter Test in the gateway service.
 
 - `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/service/QrValidationServiceTest.java` — Unit or integration tests for Qr Validation Service Test in the gateway service.
+
+- `services/circleguard-gateway-service/src/test/resources/application-test.yml` — Test profile for gateway integration tests backed by an ephemeral Redis container.
 
 - `services/circleguard-gateway-service/src/test/resources/docker-java.properties` — Docker Java API version required by Testcontainers on modern Docker engines.
 
