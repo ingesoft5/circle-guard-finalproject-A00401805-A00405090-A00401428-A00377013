@@ -103,6 +103,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/E1.2-CircleGuard-Infraestructura.md` — E1.2 infrastructure report with AWS, CI/CD, idempotency, cost, and evidence.
 
+- `docs/informe/Gateway-Cobertura.md` — Gateway coverage, integration, E2E, and quality evidence report.
+
 - `docs/informe/evidencia/README.md` — Evidence screenshots for the E1.2 Markdown report.
 
 - `docs/infra/aws-free-tier-validation.md` — AWS four-host sizing, exposure, and one-week cost validation.
@@ -561,9 +563,13 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/controller/GateControllerTest.java` — Unit or integration tests for Gate Controller Test in the gateway service.
 
+- `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/integration/GatewayRedisIntegrationTest.java` — Integration test for gateway QR validation against a real Redis container.
+
 - `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/security/JwtAuthenticationFilterTest.java` — Unit or integration tests for Jwt Authentication Filter Test in the gateway service.
 
 - `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/service/QrValidationServiceTest.java` — Unit or integration tests for Qr Validation Service Test in the gateway service.
+
+- `services/circleguard-gateway-service/src/test/resources/docker-java.properties` — Docker Java API version required by Testcontainers on modern Docker engines.
 
 - `services/circleguard-identity-service/build.gradle.kts` — Build configuration for the identity service.
 
@@ -838,6 +844,8 @@ English purpose of every tracked repository file.
 - `tests/README.md` — Test suites, end-to-end execution, and required environment variables.
 
 - `tests/e2e/access-validation.spec.ts` — End-to-end test configuration or scenario: access-validation.spec.
+
+- `tests/e2e/capture-evidence.sh` — Captures public evidence screenshots with Playwright when URLs are available.
 
 - `tests/e2e/package.json` — JSON configuration or data file.
 

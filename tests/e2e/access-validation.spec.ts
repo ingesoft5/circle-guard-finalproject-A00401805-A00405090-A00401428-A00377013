@@ -15,3 +15,11 @@ test('el gateway rechaza una petición sin token de personal', async ({ request 
   });
   expect([401, 403]).toContain(response.status());
 });
+
+test('el gateway rechaza un JWT de personal malformado', async ({ request }) => {
+  const response = await request.post('/api/v1/gate/validate', {
+    headers: { Authorization: 'Bearer not-a-valid-jwt' },
+    data: { token: 'invalid' },
+  });
+  expect([401, 403]).toContain(response.status());
+});
