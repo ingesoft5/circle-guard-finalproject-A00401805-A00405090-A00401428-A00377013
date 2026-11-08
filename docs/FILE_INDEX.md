@@ -117,6 +117,8 @@ English purpose of every tracked repository file.
 
 - `docs/infra/runbook.md` — Operations runbook for four hosts, private deployment, and cost controls.
 
+- `docs/infra/tutorial-e1.2.md` — Step-by-step tutorial to clean, provision, verify, and operate the four-host gateway platform.
+
 - `docs/map_editor_ui_mockup_1773983148035.png` — Binary asset.
 
 - `docs/media__1773957579350.png` — Binary asset.
