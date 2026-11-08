@@ -24,6 +24,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
 public class AdministrativeCorrectionTest {
 

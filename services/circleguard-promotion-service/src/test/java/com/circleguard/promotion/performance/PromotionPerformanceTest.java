@@ -23,6 +23,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
 @Tag("performance")
 public class PromotionPerformanceTest {

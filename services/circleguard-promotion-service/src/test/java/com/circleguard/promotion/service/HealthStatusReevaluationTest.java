@@ -22,6 +22,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
 public class HealthStatusReevaluationTest {
 
