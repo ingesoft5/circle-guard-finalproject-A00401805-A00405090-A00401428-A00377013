@@ -147,6 +147,18 @@ English purpose of every tracked repository file.
 
 - `docs/informe/evidencia/gw-ci-02/redis-container.log.txt` — Log of the ephemeral Redis container used by the gateway integration tests.
 
+- `docs/informe/evidencia/gw-ci-02/post-rebase/3-runs.txt` — Output of the three post-rebase integration runs.
+
+- `docs/informe/evidencia/gw-ci-02/post-rebase/junit-integrationTest.xml` — JUnit XML report of the post-rebase verification.
+
+- `docs/informe/evidencia/gw-ci-02/post-rebase/redis-container.log.txt` — Redis container log of the post-rebase verification.
+
+- `docs/informe/evidencia/gw-ci-02/post-rebase/run1.log.txt` — Full Gradle log of the first post-rebase run.
+
+- `docs/informe/evidencia/gw-ci-02/post-rebase/run2.log.txt` — Full Gradle log of the second post-rebase run.
+
+- `docs/informe/evidencia/gw-ci-02/post-rebase/run3.log.txt` — Full Gradle log of the third post-rebase run.
+
 - `docs/informe/evidencia/gw-ci-02/validacion/00-portada.png` — Cover image of the GW-CI-02 validation report.
 
 - `docs/informe/evidencia/gw-ci-02/validacion/01-dependencias.png` — Capture of the Testcontainers dependencies in build.gradle.kts.
@@ -176,6 +188,14 @@ English purpose of every tracked repository file.
 - `docs/informe/evidencia/gw-ci-02/validacion/13-ciclo-contenedor.png` — Diagram of the Redis container lifecycle.
 
 - `docs/informe/evidencia/gw-ci-02/validacion/14-pipeline.png` — Diagram of the pipeline stage position.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/15-tres-corridas-post-rebase.png` — Capture of the three consecutive post-rebase integration runs.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/16-reporte-junit-html.png` — Capture of the JUnit HTML report (9 tests, 0 failures).
+
+- `docs/informe/evidencia/gw-ci-02/validacion/17-detalle-pruebas-junit.png` — Capture of the nine integration test cases.
+
+- `docs/informe/evidencia/gw-ci-02/validacion/18-corrida-integrationtest.png` — Capture of a complete integrationTest run.
 
 - `docs/informe/evidencia/idempotencia-cli.png` — Binary asset.
 

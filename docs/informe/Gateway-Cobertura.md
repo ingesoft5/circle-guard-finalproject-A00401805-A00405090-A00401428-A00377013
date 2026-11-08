@@ -35,6 +35,18 @@ Current result:
 
 The dedicated Gradle task is `:services:circleguard-gateway-service:integrationTest`; the `Integration Test` Jenkins stage publishes the JUnit report and archives the Redis container log. See [`GW-CI-02-Integracion-Redis.md`](GW-CI-02-Integracion-Redis.md) and [`evidencia/gw-ci-02/`](evidencia/gw-ci-02/) for results and evidence.
 
+### Post-rebase verification (8 November 2026)
+
+The suite was re-run three consecutive times after rebasing the feature branch onto `main` (PR #22):
+
+- Runs: 24 s, 25 s and 24 s; JUnit time 3.541 s, 3.628 s and 3.496 s.
+- 9 tests per run, 0 failures, 0 errors, 0 skipped.
+- 0 Testcontainers containers left after the Ryuk cleanup window.
+
+![Three consecutive post-rebase runs](evidencia/gw-ci-02/validacion/15-tres-corridas-post-rebase.png)
+
+![JUnit HTML report](evidencia/gw-ci-02/validacion/16-reporte-junit-html.png)
+
 ## E2E tests
 
 Playwright validates:
