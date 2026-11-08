@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Testcontainers(disabledWithoutDocker = true)
+@org.junit.jupiter.api.Tag("performance")
 public class PromotionPerformanceTest {
 
     @Container
