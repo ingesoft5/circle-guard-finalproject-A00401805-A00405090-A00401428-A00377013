@@ -39,7 +39,7 @@ STAGE_PRIVATE_IP=${STAGE_PRIVATE_IP:-}
 PROD_PRIVATE_IP=${PROD_PRIVATE_IP:-}
 SONAR_HOST_URL=http://sonarqube:9000
 JENKINS_URL=http://${TOOLS_IP}:8080/
-LIBRARY_BRANCH=${LIBRARY_BRANCH:-dev}
+LIBRARY_BRANCH=${LIBRARY_BRANCH:-main}
 SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
 EOF
   ensure_secret "${TOOLS_ENV}" JENKINS_ADMIN_PASSWORD
@@ -63,7 +63,7 @@ EOF
   set_env_kv "${TOOLS_ENV}" PROD_PRIVATE_IP "${PROD_PRIVATE_IP:-}"
   set_env_kv "${TOOLS_ENV}" JENKINS_URL "http://${TOOLS_IP}:8080/"
   ensure_env_kv "${TOOLS_ENV}" SONAR_HOST_URL "http://sonarqube:9000"
-  ensure_env_kv "${TOOLS_ENV}" LIBRARY_BRANCH "dev"
+  ensure_env_kv "${TOOLS_ENV}" LIBRARY_BRANCH "main"
   ensure_env_kv "${TOOLS_ENV}" SLACK_WEBHOOK_URL ""
   set -a; source "${TOOLS_ENV}"; set +a
 }

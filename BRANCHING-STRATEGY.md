@@ -8,11 +8,11 @@ This document defines the branching, integration, and change-control rules for t
 The project applies **GitHub Flow** strictly, keeping `main` in a deployable state (green pipeline). The rules are:
 
 - **Protected `main` branch:** direct pushes are not allowed. Every integration requires a Pull Request.
-- **Ephemeral branches:** created from `dev` and kept short-lived.
+- **Ephemeral branches:** created from `main` and kept short-lived.
 - **Audit and cleanup:** branches are configured for automatic deletion after merge on GitHub. Traceability remains immutable in the **Merged Pull Requests** section, including code, approvals, and pipeline checks.
 - **Peer review:** at least **1 approval** from another developer is required before merging.
 - **Required checks:** the Jenkins CI pipeline must run and pass before merging.
-- **Merge strategy:** **Squash and Merge** keeps an atomic, clean history in `dev` and `main`.
+- **Merge strategy:** **Squash and Merge** keeps an atomic, clean history in `main`.
 
 ## 2. Branch Naming (Jira Traceability)
 
@@ -87,6 +87,6 @@ In GitHub Flow, the Pull Request is the core quality gate. To prevent incomplete
 To prevent human errors before reaching the remote repository, the project includes shared local hooks in `.githooks/`:
 
 - `commit-msg`: validates Conventional Commits and English commit messages.
-- `pre-push`: blocks direct pushes to `main` and `dev`, and validates the branch name against `[<type>/]HU-<MICROSERVICE>-<number>-<description>`.
+- `pre-push`: blocks direct pushes to `main`, and validates the branch name against `[<type>/]HU-<MICROSERVICE>-<number>-<description>`.
 
 *(Team note: enable the hooks once per machine with `git config core.hooksPath .githooks`.)*
