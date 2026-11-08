@@ -281,7 +281,7 @@ Tras revisar manualmente `services/circleguard-promotion-service/`, levanté com
 2. **Controladores:** 11 clases (`AccessPoint`, `Admin`, `Building`, `Circle`, `Encounter`, `Floor`, `HealthStats`, `HealthStatus`, `LocationSignal`, `Mesh`, `SessionHandshake`) con 35 rutas.
 3. **Dependencias:** PostgreSQL (`circleguard_promotion`), Neo4j (`bolt://localhost:7687`), Redis (`localhost:6379`), Kafka (`localhost:9092`, grupo `promotion-service-group`).
 4. **Migraciones:** `V1` (topología y `system_settings`), `V2` (parámetros de tiempos), `V3` (coordenadas del edificio).
-5. **Pruebas:** 8 clases de prueba; al ejecutar la suite, 16 casos con 5 fallos.
+5. **Pruebas:** 8 clases de prueba; al ejecutar la suite, 16 reportados (13 ejecutados + 3 `initializationError`), con 5 fallos.
 
 #### B. Prompt empleado
 

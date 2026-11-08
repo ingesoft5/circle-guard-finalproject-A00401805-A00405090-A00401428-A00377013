@@ -168,7 +168,7 @@ Reglas reales de propagación, tal como las ejecuta el Cypher de `HealthStatusSe
 | `DELETE` | `/api/v1/sessions/{macAddress}` | `SessionHandshakeController` | Abierta |
 
 > [!WARNING]
-> **Hallazgo de seguridad (`DCG-322`):** las reglas por URL de `SecurityConfig` terminan en `.anyRequest().permitAll()` y solo exigen autenticación para `/api/v1/health/**`; el resto de la autorización vive en `@PreAuthorize`. Eso deja **sin protección** `AdminController` (lectura y escritura de los parámetros globales de la cascada), los `DELETE` de `buildings` y `floors`, y los endpoints de reporte de encuentros, señal de ubicación, malla y sesiones. Además, `hasRole('HEALTH_CENTER')` exige la autoridad `ROLE_HEALTH_CENTER`, mientras que `JwtAuthenticationFilter` copia los permisos del claim sin prefijo: un token con `HEALTH_CENTER` a secas no autoriza.
+> **Hallazgo de seguridad (`DCG-322`):** las reglas por URL de `SecurityConfig` terminan en `.anyRequest().permitAll()` y solo exigen autenticación para `/api/v1/health/**`; el resto de la autorización vive en `@PreAuthorize`. Eso deja **sin protección** `AdminController` (lectura y escritura de los parámetros globales de la cascada), los `DELETE` de `buildings` y `floors`, y los endpoints de reporte de encuentros, señal de ubicación, malla y sesiones. Además, `hasRole('HEALTH_CENTER')` exige la autoridad `ROLE_HEALTH_CENTER`, mientras que `JwtAuthenticationFilter` copia los permisos del claim sin prefijo: un token con `HEALTH_CENTER` a secas no autoriza. En `CircleController`, `POST /api/v1/circles`, `POST /join/{code}/user/{anonymousId}`, `POST /{id}/members/{anonymousId}` y `GET /user/{anonymousId}` tampoco tienen regla: crear y unirse a un círculo puede ser público por diseño para el cliente móvil, pero `addMember` y `getUserCircles` operan sobre cualquier `anonymousId` y quedan abiertos sin decisión documentada.
 
 ---
 
@@ -301,7 +301,7 @@ erDiagram
 
 | Clase de prueba | Casos | Resultado |
 | :--- | :--- | :--- |
-| `HealthStatusControllerTest` | 4 | 2 casos esperan `200` y **fallan** con `403` (`resolve_WithPermission_CallsResolveStatus`, `confirmPositive_WithPermission_CallsUpdateStatus`). Los otros 2 esperan `403` y **pasan, pero no por lo que declaran**: como toda petición devolvía `403`, también pasarían con una autoridad válida |
+| `HealthStatusControllerTest` | 4 | 2 casos esperan `200` y **fallan** con `403` (`resolve_WithPermission_CallsResolveStatus`, `confirmPositive_WithPermission_CallsUpdateStatus`). Los 2 casos negativos pasan, pero solo el de `STUDENT` verifica la denegación method-level; el no autenticado verifica la regla de URL `.authenticated()`. **Ninguno cubre el camino positivo con `ROLE_HEALTH_CENTER`** |
 | `HealthStatusServiceTest` | — | Verde |
 | `StatusLifecycleTest` | — | Verde |
 | `FloorServiceTest` | — | Verde |
@@ -319,7 +319,7 @@ java.lang.IllegalStateException: Could not find a valid Docker environment.
 	at org.testcontainers.dockerclient.DockerClientProviderStrategy.getFirstValidStrategy
 ```
 
-El daemon (Engine `29.9.3`, API `1.56`, mínimo `1.40`) no es detectado por el cliente de Testcontainers `1.19.3`; con `1.20.6` y `1.21.3` la detección es intermitente y el reaper `testcontainers/ryuk:0.6.0` es rechazado por el daemon. Verificado **solo sobre Windows**, con *named pipes* (`docker_engine` y `dockerDesktopLinuxEngine`), con `DOCKER_HOST` explícito, con Ryuk deshabilitado y con daemon limpio. En Linux el cliente usa el socket `/var/run/docker.sock`, un camino distinto que **no se probó** en este diagnóstico y que no se puede afirmar equivalente.
+El daemon (Engine `29.9.3`, API `1.56`, mínimo `1.40`) no es detectado por el cliente de Testcontainers `1.19.3`; con `1.20.6` y `1.21.3` la detección es intermitente y el reaper `testcontainers/ryuk:0.6.0` es rechazado por el daemon. Verificado en Windows con *named pipes* (`docker_engine` y `dockerDesktopLinuxEngine`), con `DOCKER_HOST` explícito, con Ryuk deshabilitado y con daemon limpio. **El mismo fallo se reproduce en Linux** con Docker `29.9.3` / API `1.56`: Testcontainers `1.19.3` negocia API `1.32`, por debajo del mínimo `1.40` que exige el daemon, así que no es un problema exclusivo de Windows sino de la versión del cliente.
 
 ### 5.3 Estado de Preparación para `HU-PROMO-02`
 
