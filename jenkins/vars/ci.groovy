@@ -8,13 +8,17 @@ def build(Map service) {
     sh "./gradlew ${service.path}:classes --console=plain"
 }
 
+// `check` is the contract: each module decides what belongs in it (tests, coverage
+// threshold, container-execution guard), so the pipeline does not need to know which
+// tasks a service defines. Naming the tasks here skipped verifyContainerTestsRan, which
+// meant Jenkins enforced the coverage number but never proved the container tests ran.
 def unitTest(Map service) {
     if (service.jacoco) {
-        sh "./gradlew ${service.path}:test ${service.path}:jacocoTestReport ${service.path}:jacocoTestCoverageVerification --console=plain"
+        echo "JaCoCo: ${service.short} corre check (pruebas + umbral de cobertura)."
     } else {
-        echo "JaCoCo: ${service.short} no tiene cobertura configurada; se ejecutan solo las pruebas."
-        sh "./gradlew ${service.path}:test --console=plain"
+        echo "JaCoCo: ${service.short} no tiene cobertura configurada; check ejecuta solo las pruebas."
     }
+    sh "./gradlew ${service.path}:clean ${service.path}:check --console=plain"
 }
 
 def sonarScan(Map service) {
