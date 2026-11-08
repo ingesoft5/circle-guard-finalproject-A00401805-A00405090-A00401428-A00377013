@@ -103,6 +103,10 @@ English purpose of every tracked repository file.
 
 - `docs/informe/E1.2-CircleGuard-Infraestructura.md` — E1.2 infrastructure report with AWS, CI/CD, idempotency, cost, and evidence.
 
+- `docs/informe/E1.2-Paso-a-Paso.html` — Repository file.
+
+- `docs/informe/E1.2-Paso-a-Paso.pdf` — Binary asset.
+
 - `docs/informe/Gateway-Cobertura.md` — Gateway coverage, integration, E2E, and quality evidence report.
 
 - `docs/informe/evidencia/README.md` — Evidence screenshots for the E1.2 Markdown report.
