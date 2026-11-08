@@ -12,7 +12,17 @@ export TOOLS_TYPE="${TOOLS_TYPE:-m7i-flex.large}"
 export ENVS_TYPE="${ENVS_TYPE:-m7i-flex.large}"
 export TOOLS_DISK="${TOOLS_DISK:-40}"
 export ENVS_DISK="${ENVS_DISK:-30}"
-export TEACHER_CIDR="${TEACHER_CIDR:-}"
+TEACHER_CIDR="${TEACHER_CIDR:-${ADMIN_CIDR}}"
+export TEACHER_CIDR
+
+is_ipv4_cidr() {
+  [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$ ]]
+}
+
+for cidr in ${ADMIN_CIDR} ${TEACHER_CIDR}; do
+  is_ipv4_cidr "${cidr}" || die "CIDR inválido: ${cidr}"
+  [[ "${cidr}" == "0.0.0.0/0" ]] && die "0.0.0.0/0 no está permitido para acceso administrativo o docente."
+done
 
 require_cmd aws jq ssh curl openssl
 aws sts get-caller-identity >/dev/null || die "AWS CLI sin credenciales válidas"
@@ -55,6 +65,45 @@ allow_sg() {
   aws ec2 authorize-security-group-ingress --group-id "${sg}" \
     --ip-permissions "IpProtocol=tcp,FromPort=${port},ToPort=${port},UserIdGroupPairs=[{GroupId=${source_sg}}]" \
     >/dev/null 2>&1 || true
+}
+
+revoke_cidr() {
+  local sg="$1" port="$2" cidr="$3"
+  aws ec2 revoke-security-group-ingress --group-id "${sg}" \
+    --ip-permissions "IpProtocol=tcp,FromPort=${port},ToPort=${port},IpRanges=[{CidrIp=${cidr}}]" \
+    >/dev/null 2>&1 || true
+}
+
+current_cidrs() {
+  local sg="$1" port="$2"
+  aws ec2 describe-security-groups --group-ids "${sg}" --output json 2>/dev/null \
+    | jq -r --argjson port "${port}" \
+      '.SecurityGroups[0].IpPermissions[]? | select(.FromPort == $port) | .IpRanges[]?.CidrIp' \
+    | sort -u
+}
+
+reconcile_cidr() {
+  local sg="$1" port="$2"; shift 2
+  local allowed=("$@") cidr keep allowed_cidr
+  for cidr in "${allowed[@]}"; do
+    [[ -n "${cidr}" ]] && allow_cidr "${sg}" "${port}" "${cidr}"
+  done
+  while IFS= read -r cidr; do
+    [[ -z "${cidr}" ]] && continue
+    keep="no"
+    for allowed_cidr in "${allowed[@]}"; do
+      [[ "${cidr}" == "${allowed_cidr}" ]] && keep="yes"
+    done
+    [[ "${keep}" == "no" ]] && revoke_cidr "${sg}" "${port}" "${cidr}"
+  done < <(current_cidrs "${sg}" "${port}")
+}
+
+github_hook_cidrs() {
+  local cidrs
+  cidrs="$(curl -fsS --max-time 20 https://api.github.com/meta | jq -r '.hooks[]?')" \
+    || die "No se pudieron obtener los rangos de GitHub (api.github.com/meta)."
+  [[ -n "${cidrs}" ]] || die "GitHub no devolvió rangos de webhook."
+  printf '%s\n' "${cidrs}"
 }
 
 ensure_instance() {
@@ -102,15 +151,18 @@ allow_cidr "${ENVS_SG}" 22 "${ADMIN_CIDR}"
 allow_sg "${ENVS_SG}" 22 "${TOOLS_SG}"
 
 # Herramientas de entrada.
-allow_cidr "${TOOLS_SG}" 8080 "0.0.0.0/0"
-allow_cidr "${TOOLS_SG}" 80 "0.0.0.0/0"
-allow_cidr "${TOOLS_SG}" 443 "0.0.0.0/0"
-allow_cidr "${TOOLS_SG}" 9000 "${ADMIN_CIDR}"
-allow_cidr "${TOOLS_SG}" 8081 "${ADMIN_CIDR}"
-for cidr in ${TEACHER_CIDR:-}; do
-  allow_cidr "${TOOLS_SG}" 9000 "${cidr}"
-  allow_cidr "${TOOLS_SG}" 8081 "${cidr}"
-done
+# 80: gateway de dev, público. 443: sin listener, no se expone.
+reconcile_cidr "${TOOLS_SG}" 80 "0.0.0.0/0"
+reconcile_cidr "${TOOLS_SG}" 443
+
+# 8080: UI de Jenkins y webhook de GitHub (admin, docente y hooks de GitHub).
+mapfile -t HOOK_CIDRS < <(github_hook_cidrs)
+read -r -a TEACHER_CIDRS <<< "${TEACHER_CIDR}"
+reconcile_cidr "${TOOLS_SG}" 8080 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}" "${HOOK_CIDRS[@]}"
+
+# 9000 y 8081: SonarQube y Nexus (solo admin y docente).
+reconcile_cidr "${TOOLS_SG}" 9000 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}"
+reconcile_cidr "${TOOLS_SG}" 8081 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}"
 
 # Registro y gateway privados.
 allow_sg "${TOOLS_SG}" 5000 "${ENVS_SG}"
