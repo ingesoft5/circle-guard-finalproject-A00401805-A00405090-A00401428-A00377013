@@ -45,8 +45,6 @@ English purpose of every tracked repository file.
 
 - `build.gradle.kts` — Root Gradle build configuration for all microservices.
 
-- `dashboard_test_output.txt` — Generated test output; not a source file.
-
 ## deploy
 
 - `deploy/README.md` — Deployment layout for CI/CD tools, isolated gateway environments, and operational scripts.
@@ -159,43 +157,25 @@ English purpose of every tracked repository file.
 
 - `infra/README.md` — Four-host AWS bootstrap, private registry, ingress, and cost controls.
 
-- `infra/bootstrap-all.sh` — Orchestrates four-host provisioning, tools setup, and per-environment preparation.
+- `infra/bootstrap/bootstrap-all.sh` — Orchestrates four-host provisioning, tools setup, and per-environment preparation.
 
-- `infra/bootstrap-aws.sh` — Provisions four EC2 hosts, two security groups, one tools Elastic IP, and the SSH key pair.
+- `infra/bootstrap/bootstrap-aws.sh` — Provisions four EC2 hosts, two security groups, one tools Elastic IP, and the SSH key pair.
 
-- `infra/bootstrap-check.sh` — Validates AWS and local prerequisites without creating resources.
+- `infra/bootstrap/bootstrap-check.sh` — Validates AWS and local prerequisites without creating resources.
 
-- `infra/bootstrap-common.sh` — Shared idempotent helpers for logging, Docker, secrets, SSH, and Compose.
+- `infra/bootstrap/bootstrap-common.sh` — Shared idempotent helpers for logging, Docker, secrets, SSH, and Compose.
 
-- `infra/bootstrap-destroy.sh` — Destroys the four hosts, tools Elastic IP, security groups, key pair, and local state.
+- `infra/bootstrap/bootstrap-destroy.sh` — Destroys the four hosts, tools Elastic IP, security groups, key pair, and local state.
 
-- `infra/bootstrap-envs.sh` — Prepares one isolated environment host (dev, stage, or prod).
+- `infra/bootstrap/bootstrap-envs.sh` — Prepares one isolated environment host (dev, stage, or prod).
 
-- `infra/bootstrap-ips.sh` — Prints private and public IPs and public tool URLs.
+- `infra/bootstrap/bootstrap-ips.sh` — Prints private and public IPs and public tool URLs.
 
-- `infra/bootstrap-start.sh` — Starts the four provisioned instances and refreshes ephemeral public IPs.
+- `infra/bootstrap/bootstrap-start.sh` — Starts the four provisioned instances and refreshes ephemeral public IPs.
 
-- `infra/bootstrap-stop.sh` — Stops the four provisioned instances to reduce compute cost.
+- `infra/bootstrap/bootstrap-stop.sh` — Stops the four provisioned instances to reduce compute cost.
 
-- `infra/bootstrap-tools.sh` — Provisions Jenkins, SonarQube, Nexus, the private registry, and the ingress on cg-tools.
-
-- `infra/bootstrap/bootstrap-all.sh` — Compatibility wrapper for infra/bootstrap-all.sh.
-
-- `infra/bootstrap/bootstrap-aws.sh` — Compatibility wrapper for infra/bootstrap-aws.sh.
-
-- `infra/bootstrap/bootstrap-check.sh` — Compatibility wrapper for infra/bootstrap-check.sh.
-
-- `infra/bootstrap/bootstrap-destroy.sh` — Compatibility wrapper for infra/bootstrap-destroy.sh.
-
-- `infra/bootstrap/bootstrap-envs.sh` — Compatibility wrapper for infra/bootstrap-envs.sh.
-
-- `infra/bootstrap/bootstrap-ips.sh` — Compatibility wrapper for infra/bootstrap-ips.sh.
-
-- `infra/bootstrap/bootstrap-start.sh` — Compatibility wrapper for infra/bootstrap-start.sh.
-
-- `infra/bootstrap/bootstrap-stop.sh` — Compatibility wrapper for infra/bootstrap-stop.sh.
-
-- `infra/bootstrap/bootstrap-tools.sh` — Compatibility wrapper for infra/bootstrap-tools.sh.
+- `infra/bootstrap/bootstrap-tools.sh` — Provisions Jenkins, SonarQube, Nexus, the private registry, and the ingress on cg-tools.
 
 ## (root)
 
@@ -331,8 +311,6 @@ English purpose of every tracked repository file.
 
 - `mobile/tailwind.config.js` — Mobile application file: tailwind.config.
 
-- `mobile/test-output.txt` — Generated test output; not a source file.
-
 - `mobile/tsconfig.json` — JSON configuration or data file.
 
 - `mobile/utils/proximityScanner.ts` — Mobile utility module: proximity Scanner.
@@ -350,20 +328,6 @@ English purpose of every tracked repository file.
 ## services
 
 - `services/README.md` — Overview of CircleGuard microservices, build commands, and documentation conventions.
-
-- `services/circleguard-auth-service/bin/main/application.yml` — Generated IDE output; not a source file.
-
-- `services/circleguard-auth-service/bin/main/db/migration/V1__initial_auth_schema.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-auth-service/bin/main/db/migration/V2__seed_test_users.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-auth-service/bin/main/db/migration/V3__fix_user_passwords.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-auth-service/bin/main/db/migration/V4__add_alert_permission.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-auth-service/bin/main/db/migration/V5__add_dashboard_permission.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-auth-service/bin/test/application.yml` — Generated IDE output; not a source file.
 
 - `services/circleguard-auth-service/build.gradle.kts` — Build configuration for the auth service.
 
@@ -445,10 +409,6 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-auth-service/src/test/resources/application.yml` — Unit or integration tests for application in the auth service.
 
-- `services/circleguard-dashboard-service/bin/main/application.yml` — Generated IDE output; not a source file.
-
-- `services/circleguard-dashboard-service/bin/main/db/migration/V1__initial_dashboard_schema.sql` — Generated IDE output; not a source file.
-
 - `services/circleguard-dashboard-service/build.gradle.kts` — Build configuration for the dashboard service.
 
 - `services/circleguard-dashboard-service/src/main/java/com/circleguard/dashboard/DashboardApplication.java` — Java source for the dashboard service: Dashboard Application.
@@ -475,8 +435,6 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-dashboard-service/src/test/java/com/circleguard/dashboard/controller/AnalyticsControllerTest.java` — Unit or integration tests for Analytics Controller Test in the dashboard service.
 
-- `services/circleguard-file-service/bin/main/application.yml` — Generated IDE output; not a source file.
-
 - `services/circleguard-file-service/build.gradle.kts` — Build configuration for the file service.
 
 - `services/circleguard-file-service/src/main/java/com/circleguard/file/FileApplication.java` — Java source for the file service: File Application.
@@ -496,18 +454,6 @@ English purpose of every tracked repository file.
 - `services/circleguard-file-service/src/test/java/com/circleguard/file/controller/FileUploadControllerTest.java` — Unit or integration tests for File Upload Controller Test in the file service.
 
 - `services/circleguard-form-service/README.md` — Service documentation for form.
-
-- `services/circleguard-form-service/bin/main/application.yml` — Generated IDE output; not a source file.
-
-- `services/circleguard-form-service/bin/main/db/migration/V1__initial_survey_schema.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-form-service/bin/main/db/migration/V2__dynamic_questionnaire_schema.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-form-service/bin/main/db/migration/V3__add_responses_to_survey.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-form-service/bin/main/db/migration/V4__add_attachment_to_survey.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-form-service/bin/main/db/migration/V5__add_validation_status_to_survey.sql` — Generated IDE output; not a source file.
 
 - `services/circleguard-form-service/build.gradle.kts` — Build configuration for the form service.
 
@@ -619,12 +565,6 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-gateway-service/src/test/java/com/circleguard/gateway/service/QrValidationServiceTest.java` — Unit or integration tests for Qr Validation Service Test in the gateway service.
 
-- `services/circleguard-identity-service/bin/main/application.yml` — Generated IDE output; not a source file.
-
-- `services/circleguard-identity-service/bin/main/db/migration/V1__initial_identity_schema.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-identity-service/bin/test/application.yml` — Generated IDE output; not a source file.
-
 - `services/circleguard-identity-service/build.gradle.kts` — Build configuration for the identity service.
 
 - `services/circleguard-identity-service/src/main/java/com/circleguard/identity/IdentityServiceApplication.java` — Java source for the identity service: Identity Service Application.
@@ -672,10 +612,6 @@ English purpose of every tracked repository file.
 - `services/circleguard-identity-service/src/test/java/com/circleguard/identity/util/IdentityEncryptionConverterTest.java` — Unit or integration tests for Identity Encryption Converter Test in the identity service.
 
 - `services/circleguard-identity-service/src/test/resources/application.yml` — Unit or integration tests for application in the identity service.
-
-- `services/circleguard-notification-service/bin/main/application.yml` — Generated IDE output; not a source file.
-
-- `services/circleguard-notification-service/bin/main/templates/health_alert.ftl` — Generated IDE output; not a source file.
 
 - `services/circleguard-notification-service/build.gradle.kts` — Build configuration for the notification service.
 
@@ -734,18 +670,6 @@ English purpose of every tracked repository file.
 - `services/circleguard-notification-service/src/test/java/com/circleguard/notification/service/RoomReservationServiceTest.java` — Unit or integration tests for Room Reservation Service Test in the notification service.
 
 - `services/circleguard-notification-service/src/test/java/com/circleguard/notification/service/TemplateServiceTest.java` — Unit or integration tests for Template Service Test in the notification service.
-
-- `services/circleguard-promotion-service/bin/main/application.yml` — Generated IDE output; not a source file.
-
-- `services/circleguard-promotion-service/bin/main/db/migration/V1__initial_spatial_schema.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-promotion-service/bin/main/db/migration/V2__add_status_timing_settings.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-promotion-service/bin/main/db/migration/V3__extend_building_coordinates.sql` — Generated IDE output; not a source file.
-
-- `services/circleguard-promotion-service/bin/main/seed_faculties.cypher` — Generated IDE output; not a source file.
-
-- `services/circleguard-promotion-service/bin/test/application-test.yml` — Generated IDE output; not a source file.
 
 - `services/circleguard-promotion-service/build.gradle.kts` — Build configuration for the promotion service.
 

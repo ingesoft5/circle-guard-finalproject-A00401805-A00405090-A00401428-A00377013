@@ -251,7 +251,7 @@ The gateway CI/CD platform is provisioned on four EC2 instances:
 Rebuild from scratch:
 
 ```bash
-export AWS_REGION=us-east-1
+export AWS_REGION=us-east-2
 export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
 export GITHUB_USER=...
 export GITHUB_TOKEN=...

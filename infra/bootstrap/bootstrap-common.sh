@@ -12,7 +12,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 die()       { log_error "$*"; exit 1; }
 
 BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${BOOTSTRAP_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${BOOTSTRAP_DIR}/../.." && pwd)"
 STATE_DIR="${REPO_ROOT}/infra/state"
 STATE_FILE="${STATE_DIR}/aws.env"
 export DEBIAN_FRONTEND=noninteractive
@@ -33,7 +33,7 @@ rand_secret() { openssl rand -hex 24; }
 dk() { if docker info >/dev/null 2>&1; then docker "$@"; else sudo docker "$@"; fi; }
 
 load_state() {
-  [[ -f "${STATE_FILE}" ]] || die "Falta ${STATE_FILE}. Ejecuta primero infra/bootstrap-aws.sh"
+  [[ -f "${STATE_FILE}" ]] || die "Falta ${STATE_FILE}. Ejecuta primero infra/bootstrap/bootstrap-aws.sh"
   # shellcheck disable=SC1090
   source "${STATE_FILE}"
 }
