@@ -58,6 +58,12 @@ pipeline {
             steps { script { ci.qualityGate() } }
         }
 
+        stage('Integration Test') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            options { timeout(time: 5, unit: 'MINUTES') }
+            steps { script { ci.integrationTest(env.SERVICE_PATH, env.SERVICE_DIR) } }
+        }
+
         stage('Package') {
             when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps { sh "./gradlew ${env.SERVICE_PATH}:bootJar" }

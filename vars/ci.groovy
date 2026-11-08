@@ -3,6 +3,15 @@ def buildAndTest(String servicePath) {
     sh "./gradlew ${servicePath}:clean ${servicePath}:test ${servicePath}:jacocoTestReport ${servicePath}:jacocoTestCoverageVerification"
 }
 
+// GW-CI-02: runs Testcontainers integration tests and publishes their report plus the Redis log.
+def integrationTest(String servicePath, String serviceDir) {
+    sh "./gradlew ${servicePath}:integrationTest"
+    junit testResults: "${serviceDir}/build/test-results/integrationTest/*.xml",
+          allowEmptyResults: false
+    archiveArtifacts artifacts: "${serviceDir}/build/reports/tests/integrationTest/**,${serviceDir}/build/integration-test/redis-container.log",
+                     allowEmptyArchive: true
+}
+
 def sonarScan() {
     withSonarQubeEnv('SonarQube') {
         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
