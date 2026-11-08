@@ -337,9 +337,6 @@
         "IpRanges": [
           {
             "CidrIp": "191.95.166.160/32"
-          },
-          {
-            "CidrIp": "0.0.0.0/0"
           }
         ],
         "Ipv6Ranges": [],
@@ -352,7 +349,7 @@
         "IpProtocol": "tcp",
         "IpRanges": [
           {
-            "CidrIp": "0.0.0.0/0"
+            "CidrIp": "191.95.166.160/32"
           }
         ],
         "Ipv6Ranges": [],
@@ -392,27 +389,11 @@
         ]
       },
       {
-        "FromPort": 443,
-        "IpProtocol": "tcp",
-        "IpRanges": [
-          {
-            "CidrIp": "0.0.0.0/0"
-          }
-        ],
-        "Ipv6Ranges": [],
-        "PrefixListIds": [],
-        "ToPort": 443,
-        "UserIdGroupPairs": []
-      },
-      {
         "FromPort": 8081,
         "IpProtocol": "tcp",
         "IpRanges": [
           {
             "CidrIp": "191.95.166.160/32"
-          },
-          {
-            "CidrIp": "0.0.0.0/0"
           }
         ],
         "Ipv6Ranges": [],

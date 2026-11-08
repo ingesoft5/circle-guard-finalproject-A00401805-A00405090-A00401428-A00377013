@@ -1,0 +1,92 @@
+Infraestructura lista:
+  cg-tools: i-0f39bae4a25328be1 privada=172.31.20.46 publica=77.112.223.174
+  cg-dev  : i-0168db88a32069ccf privada=172.31.19.75 publica=3.140.191.217
+  cg-stage: i-0a65406c7c44c52ec privada=172.31.29.207 publica=13.58.139.230
+  cg-prod : i-05084037bd8177db7 privada=172.31.20.75 publica=3.140.253.184
+  estado  : /run/media/danielacm/Datos/DANNIE/UNIVERSIDAD_ICESI_GRACIAS_A_DIOS/2026-2/INGENIERIA_DE_SOFTWARE_V/PROYECTO-FINAL/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/infra/state/aws.env
+[0;32m[INFO][0m /run/media/danielacm/Datos/DANNIE/UNIVERSIDAD_ICESI_GRACIAS_A_DIOS/2026-2/INGENIERIA_DE_SOFTWARE_V/PROYECTO-FINAL/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/deploy/compose/tools/.env ya existe: se conserva.
+Warning: Permanently added '77.112.223.174' (ED25519) to the list of known hosts.
+Warning: Permanently added '77.112.223.174' (ED25519) to the list of known hosts.
+Warning: Permanently added '77.112.223.174' (ED25519) to the list of known hosts.
+Warning: Permanently added '77.112.223.174' (ED25519) to the list of known hosts.
+Warning: Permanently added '77.112.223.174' (ED25519) to the list of known hosts.
+Warning: Permanently added '77.112.223.174' (ED25519) to the list of known hosts.
+[0;32m[INFO][0m Docker y Compose ya instalados.
+Synchronizing state of docker.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable docker
+[0;32m[INFO][0m Registro 172.31.20.46:5000 ya permitido en Docker.
+[0;32m[INFO][0m Swap ya activo.
+[0;32m[INFO][0m /opt/circleguard/deploy/compose/tools/.env ya existe: se conserva.
+[0;32m[INFO][0m Levantando circleguard-tools desde /opt/circleguard/deploy/compose/tools/docker-compose.yml ...
+ Container cg-nexus Running 
+ Container cg-ingress Running 
+ Container cg-jenkins Running 
+ Container cg-sonar-db Running 
+ Container cg-sonarqube Running 
+ Container cg-sonar-db Waiting 
+ Container cg-sonar-db Healthy 
+ Container cg-sonarqube Waiting 
+ Container cg-nexus Waiting 
+ Container cg-ingress Waiting 
+ Container cg-jenkins Waiting 
+ Container cg-sonar-db Waiting 
+ Container cg-jenkins Healthy 
+ Container cg-sonarqube Healthy 
+ Container cg-ingress Healthy 
+ Container cg-sonar-db Healthy 
+ Container cg-nexus Healthy 
+[0;32m[INFO][0m circleguard-tools listo.
+[0;32m[INFO][0m SonarQube: admin already configured.
+curl: (22) The requested URL returned error: 500
+curl: (22) The requested URL returned error: 500
+[0;32m[INFO][0m Tools ready: http://77.112.223.174:8080  registry 172.31.20.46:5000
+Warning: Permanently added '77.112.223.174' (ED25519) to the list of known hosts.
+[0;32m[INFO][0m Synchronizing dev on 3.140.191.217
+Warning: Permanently added '3.140.191.217' (ED25519) to the list of known hosts.
+Warning: Permanently added '3.140.191.217' (ED25519) to the list of known hosts.
+Warning: Permanently added '3.140.191.217' (ED25519) to the list of known hosts.
+Warning: Permanently added '3.140.191.217' (ED25519) to the list of known hosts.
+[0;32m[INFO][0m Docker y Compose ya instalados.
+Synchronizing state of docker.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable docker
+[0;32m[INFO][0m Registro 172.31.20.46:5000 ya permitido en Docker.
+
+WARNING! Your credentials are stored unencrypted in '/home/ubuntu/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
+[0;32m[INFO][0m /opt/circleguard/deploy/compose/dev/.env ya existe: se conserva.
+[0;32m[INFO][0m Environment dev ready: /opt/circleguard/deploy/compose/dev/.env
+[0;32m[INFO][0m Synchronizing stage on 13.58.139.230
+Warning: Permanently added '13.58.139.230' (ED25519) to the list of known hosts.
+Warning: Permanently added '13.58.139.230' (ED25519) to the list of known hosts.
+Warning: Permanently added '13.58.139.230' (ED25519) to the list of known hosts.
+Warning: Permanently added '13.58.139.230' (ED25519) to the list of known hosts.
+[0;32m[INFO][0m Docker y Compose ya instalados.
+Synchronizing state of docker.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable docker
+[0;32m[INFO][0m Registro 172.31.20.46:5000 ya permitido en Docker.
+
+WARNING! Your credentials are stored unencrypted in '/home/ubuntu/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
+[0;32m[INFO][0m /opt/circleguard/deploy/compose/stage/.env ya existe: se conserva.
+[0;32m[INFO][0m Environment stage ready: /opt/circleguard/deploy/compose/stage/.env
+[0;32m[INFO][0m Synchronizing prod on 3.140.253.184
+Warning: Permanently added '3.140.253.184' (ED25519) to the list of known hosts.
+Warning: Permanently added '3.140.253.184' (ED25519) to the list of known hosts.
+Warning: Permanently added '3.140.253.184' (ED25519) to the list of known hosts.
+Warning: Permanently added '3.140.253.184' (ED25519) to the list of known hosts.
+[0;32m[INFO][0m Docker y Compose ya instalados.
+Synchronizing state of docker.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable docker
+[0;32m[INFO][0m Registro 172.31.20.46:5000 ya permitido en Docker.
+
+WARNING! Your credentials are stored unencrypted in '/home/ubuntu/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
+[0;32m[INFO][0m /opt/circleguard/deploy/compose/prod/.env ya existe: se conserva.
+[0;32m[INFO][0m Environment prod ready: /opt/circleguard/deploy/compose/prod/.env
+[0;32m[INFO][0m Platform ready. Credentials: /run/media/danielacm/Datos/DANNIE/UNIVERSIDAD_ICESI_GRACIAS_A_DIOS/2026-2/INGENIERIA_DE_SOFTWARE_V/PROYECTO-FINAL/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/infra/state/tools.env
