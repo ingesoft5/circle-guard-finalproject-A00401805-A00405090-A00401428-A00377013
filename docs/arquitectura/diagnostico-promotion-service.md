@@ -124,9 +124,14 @@ Reglas reales de propagación, tal como las ejecuta el Cypher de `HealthStatusSe
 > `StatusLifecycleService#processAutomaticTransitions` corre cada hora y solo aplica la expiración: usuarios `SUSPECT`/`PROBABLE` con `statusUpdatedAt` anterior a `mandatory_fence_days` vuelven a `ACTIVE`, actualizan Redis y emiten `promotion.status.changed`. No llama a `HealthStatusService` ni a `GraphService`.
 
 > [!WARNING]
-> **Un certificado aprobado no garantiza la transición a `ACTIVE`.** `SurveyListener#onCertificateValidated` invoca `updateStatus(anonymousId, "ACTIVE")` mediante la sobrecarga de dos argumentos, es decir con `adminOverride = false`. `HealthStatusService#updateStatus` solo ejecuta `checkFenceWindow` cuando el estado destino es `ACTIVE` y no hay override; si el usuario está en `SUSPECT` o `PROBABLE` y `now - statusUpdatedAt < mandatoryFenceDays`, `checkFenceWindow` lanza `FenceException` y la transición **no ocurre**. El listener captura esa excepción y únicamente registra `log.error`, sin reintento ni DLQ: el evento `certificate.validated` se descarta en silencio y el usuario permanece en su estado previo. La ventana por defecto es de 14 días, tanto en `AdminController` como en el fallback de `HealthStatusService`.
+> **Un certificado aprobado no garantiza la transición a `ACTIVE`.** `SurveyListener#onCertificateValidated` invoca `updateStatus(anonymousId, "ACTIVE")` mediante la sobrecarga de dos argumentos, es decir con `adminOverride = false`. `HealthStatusService#updateStatus` solo ejecuta `checkFenceWindow` cuando el estado destino es `ACTIVE` y no hay override; si el usuario está en `SUSPECT` o `PROBABLE`, con `statusUpdatedAt` no nulo y `now - statusUpdatedAt < mandatoryFenceDays`, `checkFenceWindow` lanza `FenceException` y la transición **no ocurre**. El listener captura esa excepción y únicamente registra `log.error`, sin reintento ni DLQ: el evento `certificate.validated` se descarta en silencio y el usuario permanece en su estado previo. El valor por defecto de la ventana es de 14 días, fijado por la migración `V2__add_status_timing_settings.sql`; `checkFenceWindow` lo lee con `orElseThrow`, así que si la fila de configuración no existe lanza `IllegalStateException` en lugar de usar el fallback que `updateStatus` sí define para otros cálculos.
 >
-> Consecuencias que `HU-PROMO-02` debe cubrir: (a) el único camino que salta la ventana es `POST /api/v1/health/report` con `adminOverride: true` en el cuerpo, y ese flag **no tiene autorización propia** — cualquier portador de `ROLE_HEALTH_CENTER` puede eludir la cuarentena obligatoria; (b) no existe `@ControllerAdvice` que traduzca `FenceException`, así que por HTTP se propaga como `500`; (c) el descarte silencioso en el listener hace indistinguible "certificado rechazado" de "certificado aprobado pero bloqueado por la ventana".
+> Consecuencias que `HU-PROMO-02` debe cubrir:
+>
+> - **El bloqueo se comunica como `403`.** `FenceException` está anotada con `@ResponseStatus(HttpStatus.FORBIDDEN)`, así que sale como `403` sin intervención de ningún `@ControllerAdvice` (el servicio no declara ninguno). Ese código es indistinguible de una denegación de autorización: el cliente no puede separar "no tenés permiso" de "estás en cuarentena".
+> - **Hay dos caminos de override, no uno.** `POST /api/v1/health/report` y `POST /api/v1/health/resolve` aceptan `adminOverride` en el cuerpo y lo propagan a `updateStatus`/`resolveStatus`. El flag **no tiene autorización propia**: la única regla es `@PreAuthorize("hasRole('HEALTH_CENTER')")` sobre el endpoint, de modo que cualquier portador de ese rol elude la cuarentena obligatoria.
+> - **La cuarentena se puede anular sin autenticación.** `AdminController` no declara ningún `@PreAuthorize` y `SecurityConfig` cierra con `.anyRequest().permitAll()`: `POST /api/v1/admin/settings` con `{"mandatoryFenceDays": 0}` desactiva la ventana para todo el sistema desde un cliente anónimo.
+> - **Alcance real del bloqueo.** Solo se evalúan `SUSPECT` y `PROBABLE`; un usuario `CONFIRMED` pasa a `ACTIVE` de inmediato y un `statusUpdatedAt` nulo también evita el bloqueo. Además `promoteToRecovered` delega en `resolveStatus(anonymousId)` sin override, así que un usuario en ventana tampoco puede pasar a `RECOVERED` y `POST /api/v1/health/recovery/{id}` responde `403`.
 
 ---
 
@@ -319,14 +324,14 @@ erDiagram
 
 **Causa 2 — el cuarto `403` no comparte ese origen.** Los cuatro casos de `HealthStatusControllerTest` devuelven `403`, pero por dos mecanismos y con significados distintos:
 
-| Caso | Autoridad declarada | `403` viene de | Resultado esperado | Veredicto |
+| Caso | Autoridad declarada | Mecanismo que produce el `403` | Espera | Veredicto |
 | :--- | :--- | :--- | :--- | :--- |
-| `confirmPositive_WithPermission_CallsUpdateStatus` | `HEALTH_CENTER` | `hasRole` (Causa 1) | `200` | **Falla** |
-| `resolve_WithPermission_CallsResolveStatus` | `HEALTH_CENTER` | `hasRole` (Causa 1) | `200` | **Falla** |
-| `resolve_WithoutPermission_Returns403` | `STUDENT` | `hasRole` (Causa 1) | `403` | Pasa |
+| `confirmPositive_WithPermission_CallsUpdateStatus` | `HEALTH_CENTER` | `@PreAuthorize` — falta el prefijo `ROLE_` (Causa 1) | `200` | **Falla** |
+| `resolve_WithPermission_CallsResolveStatus` | `HEALTH_CENTER` | `@PreAuthorize` — falta el prefijo `ROLE_` (Causa 1) | `200` | **Falla** |
+| `resolve_WithoutPermission_Returns403` | `STUDENT` | `@PreAuthorize` — denegación correcta; la Causa 1 no incide | `403` | Pasa |
 | `resolve_Unauthenticated_Returns403` | ninguna | `SecurityConfig:37` — `.requestMatchers("/api/v1/health/**").authenticated()` | `403` | Pasa |
 
-En el caso no autenticado el `403` lo produce la regla de URL de la cadena de filtros, **antes** de la seguridad method-level: ese test pasaría igual con el prefijo `ROLE_` corregido, porque nunca llega a evaluar `@PreAuthorize`. El defecto del prefijo explica tres de los cuatro `403` —los dos positivos y el de `STUDENT`— y es el mismo mecanismo que hace pasar a `STUDENT`, que verifica esa regla desde el lado de la denegación. El cuarto `403`, el no autenticado, pertenece a la cadena de filtros y no guarda relación con el prefijo. Los dos fallos reales comparten causa; los cuatro `403` no. Ninguno de los cuatro cubre el camino positivo con `ROLE_HEALTH_CENTER`, que es justamente el que la corrección debe habilitar.
+En el caso no autenticado el `403` lo produce la regla de URL de la cadena de filtros, **antes** de la seguridad method-level: ese test pasaría igual con el prefijo `ROLE_` corregido, porque nunca llega a evaluar `@PreAuthorize`. Los otros tres casos sí pasan por `@PreAuthorize`, pero el defecto del prefijo explica solo **dos**: los dos positivos, que esperan `200`. El caso `STUDENT` deniega correctamente y seguiría devolviendo `403` después de corregir el prefijo, porque esa autoridad no es `ROLE_HEALTH_CENTER` en ningún escenario. Los dos fallos reales comparten causa; los cuatro `403` no. Ninguno de los cuatro cubre el camino positivo con `ROLE_HEALTH_CENTER`, que es justamente el que la corrección debe habilitar.
 
 **Causa 3 — Testcontainers no encuentra Docker.**
 
