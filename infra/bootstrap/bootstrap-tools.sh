@@ -198,9 +198,12 @@ main() {
   fi
 
   ensure_tools_env
-  local before after
+  local before after build_flag="no"
+  if ! dk image inspect circleguard-tools-jenkins >/dev/null 2>&1; then
+    build_flag="yes"
+  fi
   before="$(sha256sum "${TOOLS_ENV}" | cut -d' ' -f1)"
-  compose_up "${TOOLS_COMPOSE}" circleguard-tools "${TOOLS_ENV}"
+  compose_up "${TOOLS_COMPOSE}" circleguard-tools "${TOOLS_ENV}" "${build_flag}"
   configure_sonar
   configure_nexus
   cp "${TOOLS_ENV}" "${TOOLS_ENV}.tmp"

@@ -230,15 +230,16 @@ wait_http() {
 }
 
 compose_up() {
-  local file="$1" project="$2" env_file="${3:-}"
+  local file="$1" project="$2" env_file="${3:-}" build="${4:-no}"
   [ -f "$file" ] || die "No existe $file"
   local args=(-f "$file" -p "$project")
   if [ -n "$env_file" ]; then
     [ -f "$env_file" ] || die "No existe $env_file"
     args=(--env-file "$env_file" "${args[@]}")
   fi
+  [ "$build" = "yes" ] && args+=(--build)
   log_info "Levantando ${project} desde ${file} ..."
-  dk compose "${args[@]}" up -d --build --remove-orphans --wait --wait-timeout 600
+  dk compose "${args[@]}" up -d --remove-orphans --wait --wait-timeout 600
   log_info "${project} listo."
 }
 

@@ -39,6 +39,8 @@ EOF
     val="${!key:-}"
     [ -n "${val}" ] && set_env_kv "${TOOLS_ENV_LOCAL}" "${key}" "${val}"
   done
+  ensure_env_kv "${TOOLS_ENV_LOCAL}" PROFESSOR_SONAR_PASSWORD "$(rand_secret)"
+  ensure_env_kv "${TOOLS_ENV_LOCAL}" PROFESSOR_NEXUS_PASSWORD "$(rand_secret)"
   set_env_kv "${TOOLS_ENV_LOCAL}" NEXUS_REGISTRY "${TOOLS_PRIVATE_IP}:${REGISTRY_PORT}"
   set_env_kv "${TOOLS_ENV_LOCAL}" TOOLS_IP "${TOOLS_IP}"
   set_env_kv "${TOOLS_ENV_LOCAL}" TOOLS_PRIVATE_IP "${TOOLS_PRIVATE_IP}"
@@ -68,8 +70,9 @@ bootstrap_tools() {
     scp_to "${TOOLS_ENV_LOCAL}" "/opt/circleguard/deploy/compose/tools/.env" "${TOOLS_IP}"
     ssh_host "${TOOLS_IP}" "cd /opt/circleguard && env ${env_args[*]} CG_ENVS_KEY_PATH=/opt/circleguard/cg-envs-key bash infra/bootstrap/bootstrap-tools.sh"
     scp_from "/opt/circleguard/deploy/compose/tools/.env" "${STATE_DIR}/tools.env" "${TOOLS_IP}"
+    cp "${STATE_DIR}/tools.env" "${TOOLS_ENV_LOCAL}"
   fi
-  chmod 600 "${STATE_DIR}/tools.env"
+  chmod 600 "${STATE_DIR}/tools.env" "${TOOLS_ENV_LOCAL}"
 }
 
 bootstrap_env() {
