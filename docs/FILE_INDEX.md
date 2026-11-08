@@ -73,11 +73,13 @@ English purpose of every tracked repository file.
 
 - `deploy/compose/tools/jenkins/plugins.txt` — Repository file.
 
-- `deploy/scripts/deploy.sh` — Deploys a gateway image tag to an isolated environment and waits for health.
+- `deploy/scripts/deploy.sh` — Deploys one image tag to an isolated environment and waits for the whole stack.
 
-- `deploy/scripts/rollback.sh` — Rolls back an environment to a previous gateway image tag.
+- `deploy/scripts/rollback.sh` — Rolls back an environment to a previous image tag.
 
 - `deploy/scripts/seed-status.sh` — Seeds Redis with a visitor status for smoke and end-to-end tests.
+
+- `deploy/scripts/seed-visitor.sh` — Seeds Neo4j with the visitors an end-to-end run is going to promote.
 
 - `deploy/scripts/smoke-test.sh` — Runs health and authorization smoke checks against an environment.
 
@@ -124,6 +126,8 @@ English purpose of every tracked repository file.
 - `docs/informe/P1.1-Branching-GitHub-Flow.pdf` — Binary asset.
 
 - `docs/informe/evidencia/README.md` — Evidence screenshots for the E1.2 Markdown report.
+
+- `docs/informe/evidencia/HU-PROMO-04/README.md` — Evidence index for the promotion deployment, end-to-end run, and rollback.
 
 - `docs/informe/evidencia/github/github-branches.png` — Binary asset.
 
@@ -1034,6 +1038,8 @@ English purpose of every tracked repository file.
 - `tests/e2e/package.json` — JSON configuration or data file.
 
 - `tests/e2e/playwright.config.ts` — End-to-end test configuration or scenario: playwright.config.
+
+- `tests/e2e/promotion-flow.spec.ts` — End-to-end scenario: questionnaire event through Kafka into the promotion status.
 
 ## jenkins
 
