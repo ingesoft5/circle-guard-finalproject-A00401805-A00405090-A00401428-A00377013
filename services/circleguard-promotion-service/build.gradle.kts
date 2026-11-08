@@ -64,7 +64,12 @@ tasks.jacocoTestCoverageVerification {
             limit {
                 counter = "LINE"
                 value = "COVEREDRATIO"
-                minimum = "0.60".toBigDecimal()
+                // 0.70, not 0.60: the container classes use
+                // @Testcontainers(disabledWithoutDocker = true), so a run without Docker
+                // skips them and still builds green at 65.8 % line coverage. This threshold
+                // is above that skipped-run figure on purpose, so the gate fails unless the
+                // container tests actually executed.
+                minimum = "0.70".toBigDecimal()
             }
         }
     }
