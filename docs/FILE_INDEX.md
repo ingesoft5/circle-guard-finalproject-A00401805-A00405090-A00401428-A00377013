@@ -111,9 +111,41 @@ English purpose of every tracked repository file.
 
 - `docs/informe/Gateway-Cobertura.md` — Gateway coverage, integration, E2E, and quality evidence report.
 
+- `docs/informe/P1.1-Branching-GitHub-Flow.html` — Repository file.
+
+- `docs/informe/P1.1-Branching-GitHub-Flow.md` — Repository file.
+
+- `docs/informe/P1.1-Branching-GitHub-Flow.pdf` — Binary asset.
+
 - `docs/informe/evidencia/README.md` — Evidence screenshots for the E1.2 Markdown report.
 
+- `docs/informe/evidencia/github/github-branches.png` — Binary asset.
+
+- `docs/informe/evidencia/github/github-commit-history.png` — Binary asset.
+
+- `docs/informe/evidencia/github/github-network-graph.png` — Binary asset.
+
+- `docs/informe/evidencia/github/github-pr-approval.png` — Binary asset.
+
+- `docs/informe/evidencia/github/github-pr-checks.png` — Binary asset.
+
+- `docs/informe/evidencia/github/github-pr-conversation.png` — Binary asset.
+
+- `docs/informe/evidencia/github/github-pr-template.png` — Binary asset.
+
+- `docs/informe/evidencia/github/github-ruleset-main.png` — Binary asset.
+
 - `docs/informe/evidencia/jenkins-professor.png` — Binary asset.
+
+- `docs/informe/evidencia/jira/jira-backlog.png` — Binary asset.
+
+- `docs/informe/evidencia/jira/jira-historias.png` — Binary asset.
+
+- `docs/informe/evidencia/jira/jira-retrospectiva.png` — Binary asset.
+
+- `docs/informe/evidencia/jira/jira-sprint-0.png` — Binary asset.
+
+- `docs/informe/evidencia/jira/jira-sprint-1.png` — Binary asset.
 
 - `docs/informe/evidencia/nexus-professor.png` — Binary asset.
 
