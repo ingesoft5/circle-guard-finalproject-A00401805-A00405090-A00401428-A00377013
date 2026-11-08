@@ -13,7 +13,7 @@
 ```bash
 export AWS_REGION=us-east-2
 export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
-export TEACHER_CIDR=0.0.0.0/0
+export TEACHER_CIDR="${ADMIN_CIDR}"
 export GITHUB_USER=your_github_user
 export GITHUB_TOKEN=your_github_token
 export GITHUB_OWNER=ingesoft5
@@ -22,6 +22,8 @@ export LIBRARY_BRANCH=feat/HU-GATEWAY-01-configurar-servidores
 ```
 
 Do not print the token.
+
+`ADMIN_CIDR` and `TEACHER_CIDR` restrict SSH, Jenkins, SonarQube, and Nexus. For now `TEACHER_CIDR` uses the administrator IP; replace it with the teacher CIDR when available. The bootstrap rejects `0.0.0.0/0` for both values. Jenkins also allows the current GitHub `hooks` CIDRs so webhooks keep working.
 
 ## 3. Clean Old Resources
 

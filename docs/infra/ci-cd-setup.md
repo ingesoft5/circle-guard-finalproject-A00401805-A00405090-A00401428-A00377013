@@ -13,10 +13,19 @@
 ```bash
 export AWS_REGION=us-east-2
 export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
-export TEACHER_CIDR=...
+export TEACHER_CIDR="${ADMIN_CIDR}"
 export GITHUB_USER=...
 export GITHUB_TOKEN=...
 ```
+
+## Exposure
+
+- `80`: public ingress to the dev gateway.
+- `8080`: Jenkins, restricted to `ADMIN_CIDR`, `TEACHER_CIDR`, and the current GitHub `hooks` CIDRs from `https://api.github.com/meta`.
+- `9000` and `8081`: SonarQube and Nexus, restricted to `ADMIN_CIDR` and `TEACHER_CIDR`.
+- `443`: closed; there is no TLS listener.
+- The bootstrap rejects `0.0.0.0/0` for `ADMIN_CIDR` and `TEACHER_CIDR`.
+- GitHub hook ranges are refreshed on every bootstrap. If `api.github.com/meta` is unreachable, the bootstrap aborts instead of breaking webhooks.
 
 ## Bootstrap
 
