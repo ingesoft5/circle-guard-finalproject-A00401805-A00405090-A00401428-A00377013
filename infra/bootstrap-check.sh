@@ -7,13 +7,14 @@ source "$(dirname "${BASH_SOURCE[0]}")/bootstrap-common.sh"
 require_cmd aws jq ssh curl openssl
 aws sts get-caller-identity >/dev/null || die "AWS CLI sin credenciales válidas"
 
-export AWS_REGION="${AWS_REGION:-us-east-1}"
-export TOOLS_TYPE="${TOOLS_TYPE:-m7i-flex.xlarge}"
-export ENVS_TYPE="${ENVS_TYPE:-t3.medium}"
+export AWS_REGION="${AWS_REGION:-us-east-2}"
+export TOOLS_TYPE="${TOOLS_TYPE:-m7i-flex.large}"
+export ENVS_TYPE="${ENVS_TYPE:-m7i-flex.large}"
 
 log_info "Cuenta AWS: $(aws sts get-caller-identity --query Account --output text)"
 log_info "Región: ${AWS_REGION}"
 log_info "CIDR administrativo: ${ADMIN_CIDR:-no definido}"
+log_info "CIDR docente: ${TEACHER_CIDR:-no definido}"
 log_info "Tipos: ${TOOLS_TYPE} / ${ENVS_TYPE}"
 
 if available="$(aws ec2 describe-instance-types \

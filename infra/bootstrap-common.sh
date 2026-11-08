@@ -42,14 +42,41 @@ save_state() {
   {
     echo "AWS_REGION=${AWS_REGION}"
     echo "TOOLS_INSTANCE_ID=${TOOLS_INSTANCE_ID}"
-    echo "ENVS_INSTANCE_ID=${ENVS_INSTANCE_ID}"
+    echo "DEV_INSTANCE_ID=${DEV_INSTANCE_ID}"
+    echo "STAGE_INSTANCE_ID=${STAGE_INSTANCE_ID}"
+    echo "PROD_INSTANCE_ID=${PROD_INSTANCE_ID}"
+    echo "TOOLS_PRIVATE_IP=${TOOLS_PRIVATE_IP}"
     echo "TOOLS_IP=${TOOLS_IP}"
-    echo "ENVS_IP=${ENVS_IP}"
+    echo "DEV_PRIVATE_IP=${DEV_PRIVATE_IP}"
+    echo "DEV_PUBLIC_IP=${DEV_PUBLIC_IP}"
+    echo "STAGE_PRIVATE_IP=${STAGE_PRIVATE_IP}"
+    echo "STAGE_PUBLIC_IP=${STAGE_PUBLIC_IP}"
+    echo "PROD_PRIVATE_IP=${PROD_PRIVATE_IP}"
+    echo "PROD_PUBLIC_IP=${PROD_PUBLIC_IP}"
     echo "TOOLS_SG=${TOOLS_SG}"
     echo "ENVS_SG=${ENVS_SG}"
+    echo "KEY_NAME=${KEY_NAME}"
     echo "KEY_PATH=${KEY_PATH}"
   } > "${STATE_FILE}"
   chmod 600 "${STATE_FILE}"
+}
+
+instance_ids() {
+  printf '%s\n' "${TOOLS_INSTANCE_ID}" "${DEV_INSTANCE_ID}" "${STAGE_INSTANCE_ID}" "${PROD_INSTANCE_ID}"
+}
+
+refresh_public_ips() {
+  local env_name id
+  for env_name in dev stage prod; do
+    id="${env_name^^}_INSTANCE_ID"
+    id="${!id}"
+    [ -n "${id}" ] || continue
+    local public private
+    read -r public private < <(aws ec2 describe-instances --instance-ids "${id}" \
+      --query 'Reservations[0].Instances[0].[PublicIpAddress,PrivateIpAddress]' --output text)
+    set_env_kv "${STATE_FILE}" "${env_name^^}_PUBLIC_IP" "${public:-}"
+    set_env_kv "${STATE_FILE}" "${env_name^^}_PRIVATE_IP" "${private:-}"
+  done
 }
 
 ssh_host() {

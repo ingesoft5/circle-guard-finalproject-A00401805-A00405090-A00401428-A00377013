@@ -63,9 +63,11 @@ English purpose of every tracked repository file.
 
 - `deploy/compose/stage/docker-compose.yml` — Docker Compose definition for the stage environment.
 
-- `deploy/compose/tools/.env.example` — Environment variable template for the tools stack.
+- `deploy/compose/tools/.env.example` — Repository file.
 
 - `deploy/compose/tools/docker-compose.yml` — Docker Compose definition for the tools environment.
+
+- `deploy/compose/tools/ingress/default.conf.template` — Nginx ingress template that exposes the dev gateway as the application entry point.
 
 - `deploy/compose/tools/jenkins/Dockerfile` — Jenkins controller image with Docker CLI, Node, and Sonar scanner.
 
@@ -101,15 +103,19 @@ English purpose of every tracked repository file.
 
 - `docs/custom_components_design_mesh_bg_1773957718048.png` — Binary asset.
 
-- `docs/infra/aws-free-tier-validation.md` — AWS instance sizing, cost validation, and budget guidance for one week.
+- `docs/informe/E1.2-CircleGuard-Infraestructura.md` — E1.2 infrastructure report with AWS, CI/CD, idempotency, cost, and evidence.
 
-- `docs/infra/ci-cd-setup.md` — Jenkins, SonarQube, Nexus, credentials, and gateway pipeline setup.
+- `docs/informe/evidencia/README.md` — Evidence screenshots for the E1.2 Markdown report.
 
-- `docs/infra/environments.md` — Isolated dev, stage, and prod gateway environment topology and commands.
+- `docs/infra/aws-free-tier-validation.md` — AWS four-host sizing, exposure, and one-week cost validation.
+
+- `docs/infra/ci-cd-setup.md` — Four-host CI/CD setup, exposure, credentials, and gateway pipeline.
+
+- `docs/infra/environments.md` — Four-host topology and isolated dev, stage, and prod environments.
 
 - `docs/infra/evidence/README.md` — Checklist of CI/CD evidence required for the gateway delivery.
 
-- `docs/infra/runbook.md` — Operational runbook for platform checks, restarts, rollback, and troubleshooting.
+- `docs/infra/runbook.md` — Operations runbook for four hosts, private deployment, and cost controls.
 
 - `docs/map_editor_ui_mockup_1773983148035.png` — Binary asset.
 
@@ -151,25 +157,45 @@ English purpose of every tracked repository file.
 
 ## infra
 
-- `infra/README.md` — Infrastructure bootstrap entry point, AWS topology, and operational notes.
+- `infra/README.md` — Four-host AWS bootstrap, private registry, ingress, and cost controls.
 
-- `infra/bootstrap-all.sh` — Orchestrates AWS provisioning, tool setup, and environment preparation.
+- `infra/bootstrap-all.sh` — Orchestrates four-host provisioning, tools setup, and per-environment preparation.
 
-- `infra/bootstrap-aws.sh` — Provisions AWS EC2 instances, security groups, elastic IPs, and the SSH key pair.
+- `infra/bootstrap-aws.sh` — Provisions four EC2 hosts, two security groups, one tools Elastic IP, and the SSH key pair.
 
 - `infra/bootstrap-check.sh` — Validates AWS and local prerequisites without creating resources.
 
 - `infra/bootstrap-common.sh` — Shared idempotent helpers for logging, Docker, secrets, SSH, and Compose.
 
-- `infra/bootstrap-destroy.sh` — Destroys AWS resources created by the bootstrap.
+- `infra/bootstrap-destroy.sh` — Destroys the four hosts, tools Elastic IP, security groups, key pair, and local state.
 
-- `infra/bootstrap-envs.sh` — Prepares isolated dev, stage, and prod gateway environments.
+- `infra/bootstrap-envs.sh` — Prepares one isolated environment host (dev, stage, or prod).
 
-- `infra/bootstrap-start.sh` — Starts the provisioned EC2 instances and waits until they are running.
+- `infra/bootstrap-ips.sh` — Prints private and public IPs and public tool URLs.
 
-- `infra/bootstrap-stop.sh` — Stops the provisioned EC2 instances to reduce compute cost.
+- `infra/bootstrap-start.sh` — Starts the four provisioned instances and refreshes ephemeral public IPs.
 
-- `infra/bootstrap-tools.sh` — Provisions and configures Jenkins, SonarQube, and Nexus on the tools host.
+- `infra/bootstrap-stop.sh` — Stops the four provisioned instances to reduce compute cost.
+
+- `infra/bootstrap-tools.sh` — Provisions Jenkins, SonarQube, Nexus, the private registry, and the ingress on cg-tools.
+
+- `infra/bootstrap/bootstrap-all.sh` — Compatibility wrapper for infra/bootstrap-all.sh.
+
+- `infra/bootstrap/bootstrap-aws.sh` — Compatibility wrapper for infra/bootstrap-aws.sh.
+
+- `infra/bootstrap/bootstrap-check.sh` — Compatibility wrapper for infra/bootstrap-check.sh.
+
+- `infra/bootstrap/bootstrap-destroy.sh` — Compatibility wrapper for infra/bootstrap-destroy.sh.
+
+- `infra/bootstrap/bootstrap-envs.sh` — Compatibility wrapper for infra/bootstrap-envs.sh.
+
+- `infra/bootstrap/bootstrap-ips.sh` — Compatibility wrapper for infra/bootstrap-ips.sh.
+
+- `infra/bootstrap/bootstrap-start.sh` — Compatibility wrapper for infra/bootstrap-start.sh.
+
+- `infra/bootstrap/bootstrap-stop.sh` — Compatibility wrapper for infra/bootstrap-stop.sh.
+
+- `infra/bootstrap/bootstrap-tools.sh` — Compatibility wrapper for infra/bootstrap-tools.sh.
 
 ## (root)
 

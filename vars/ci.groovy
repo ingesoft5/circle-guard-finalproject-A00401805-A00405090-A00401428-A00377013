@@ -39,9 +39,10 @@ def dockerBuildPush(String serviceDir, String image, String tag) {
 }
 
 def deploy(String environment, String tag) {
+    def ip = env."${environment.toUpperCase()}_PRIVATE_IP"
     sshagent(['cg-envs-ssh']) {
         sh """
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${env.ENVS_IP} \
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${ip} \
               'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose TAG=${tag} ./deploy/scripts/deploy.sh ${environment} ${tag}'
         """
     }
@@ -52,7 +53,7 @@ def e2e() {
         cd tests/e2e
         npm install
         npx playwright install --with-deps chromium
-        GATEWAY_URL=http://${env.ENVS_IP}:8087 npx playwright test
+        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 npx playwright test
     """
 }
 

@@ -1,80 +1,62 @@
-<!-- CG-DOC: AWS instance sizing, cost validation, and budget guidance for one week. -->
+<!-- CG-DOC: AWS four-host sizing, exposure, and one-week cost validation. -->
 # AWS Resource Validation - CircleGuard
 
-## Objective
+## Topology
 
-Validate the AWS resources required to run the Part 1 CI/CD platform for one week with a USD 120 credit budget.
+| Host | Type | RAM | Disk | Public IP |
+|---|---|---:|---:|---|
+| `cg-tools` | `m7i-flex.large` | 8 GB | 40 GB | Elastic IP |
+| `cg-dev` | `m7i-flex.large` | 8 GB | 30 GB | ephemeral |
+| `cg-stage` | `m7i-flex.large` | 8 GB | 30 GB | ephemeral |
+| `cg-prod` | `m7i-flex.large` | 8 GB | 30 GB | ephemeral |
 
-## Approved topology
+Region: `us-east-2`. Ubuntu 24.04. Architecture: x86_64.
 
-| Instance | Type | vCPU | RAM | Disk | Components |
-|---|---|---:|---:|---:|---|
-| `cg-tools` | `m7i-flex.xlarge` | 4 | 16 GB | 60 GB gp3 | Jenkins, SonarQube, PostgreSQL, Nexus |
-| `cg-envs` | `t3.medium` | 2 | 4 GB | 40 GB gp3 | dev, stage, and prod: gateway + Redis |
+## Exposure
 
-`m7i-flex.xlarge` is the default for `cg-tools` because SonarQube, Nexus, and Jenkins together need more than 8 GB of memory for stable builds.
+| Port | Source | Service |
+|---:|---|---|
+| 22 | `ADMIN_CIDR` and `SG-tools` | SSH |
+| 8080 | Internet | Jenkins, authenticated |
+| 9000 | `TEACHER_CIDR` and admin | SonarQube |
+| 8081 | `TEACHER_CIDR` and admin | Nexus UI |
+| 80/443 | Internet | Application ingress |
+| 5000 | `SG-envs` | Private Docker registry |
+| 8087 | `SG-tools` | Gateway |
+| Middleware | `SG-tools` and admin | PostgreSQL, Neo4j, Kafka, Redis, LDAP |
 
-## Free Tier clarification
+## Free Tier
 
-- Free Tier covers `t3.micro` and `t2.micro`, not `t3.medium` or `m7i-flex.xlarge`.
-- `t3.micro` has 1 GB of RAM and cannot run SonarQube, Nexus, and Jenkins together.
-- The USD 120 credit is the real budget for this deployment.
+Free Tier covers `t3.micro` and `t2.micro`, which cannot run Jenkins, SonarQube, and Nexus together. The USD 120 credit is the real budget.
 
-## Cost estimate
+## Cost
 
-Assumptions: `us-east-1`, Linux, On-Demand, 168 hours, 100 GB gp3, and two public IPv4 addresses.
-
-| Resource | Rate | Weekly cost |
-|---|---:|---:|
-| `m7i-flex.xlarge` | ~USD 0.192/hour | ~USD 32.30 |
-| `t3.medium` | ~USD 0.0416/hour | ~USD 7.00 |
-| EBS 100 GB gp3 | ~USD 0.08/GB-month | ~USD 1.85 |
-| 2 public IPv4 | ~USD 0.005/hour each | ~USD 1.70 |
-| **Total** | | **~USD 42.85** |
-
-Remaining budget from USD 120: **~USD 77**.
-
-Cheaper alternatives:
-
-| Configuration | Weekly compute | Weekly total |
-|---|---:|---:|
-| `m7i-flex.large` + `t3.medium` | ~USD 23.10 | ~USD 26.65 |
-| `t3.large` + `t3.medium` | ~USD 21.00 | ~USD 24.55 |
-
-The cheaper configurations use 8 GB for the tools host and rely on swap during Jenkins and SonarQube workloads.
-
-## Checklist
-
-- [ ] Active AWS account with credits.
-- [ ] Region set to `us-east-1`.
-- [ ] AWS Budget alert created (recommended: USD 60).
-- [ ] `ADMIN_CIDR` defined.
-- [ ] Optional `TEACHER_CIDR` defined.
-- [ ] Key pair stored outside the repository.
-- [ ] `m7i-flex.xlarge` and `t3.medium` available in the region.
-
-## Verification commands
-
-```bash
-export AWS_REGION=us-east-1
-export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
-./infra/bootstrap-check.sh
+```text
+4 × m7i-flex.large × 0.096 × 180 h = 69.12
+EBS 130 GB gp3 proportional         =  2.56
+4 public IPv4 × 0.005 × 180 h       =  3.60
+------------------------------------------------
+Total 180 h                          = 75.28 USD
 ```
 
-## Required evidence
+Monthly 24/7 estimate: ~305.32 USD.
+USD 120 covers ~16 days 24/7 or more than one month at 8 h/day.
 
-- Output of `aws sts get-caller-identity`.
-- Output of `aws ec2 describe-instance-types`.
-- AWS Budgets screenshot.
-- Credit availability screenshot.
+## Verification
+
+```bash
+export AWS_REGION=us-east-2
+export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
+export TEACHER_CIDR=...
+./infra/bootstrap/bootstrap-check.sh
+```
 
 ## Cost controls
 
-Stop the instances outside working hours:
-
 ```bash
-./infra/bootstrap-stop.sh
-./infra/bootstrap-start.sh
+./infra/bootstrap/bootstrap-stop.sh
+./infra/bootstrap/bootstrap-start.sh
+./infra/bootstrap/bootstrap-ips.sh
 ```
 
-Stopping instances stops compute charges. EBS volumes and allocated Elastic IP addresses continue to incur charges.
+Stopping removes compute charges. EBS and the tools Elastic IP remain billable.

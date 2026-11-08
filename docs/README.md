@@ -16,6 +16,7 @@ This directory contains the written documentation for CircleGuard.
 | `infra/environments.md` | Isolated `dev`, `stage`, and `prod` topology. |
 | `infra/runbook.md` | Operational checks, restarts, rollback, and troubleshooting. |
 | `infra/evidence/` | Required CI/CD evidence checklist. |
+| `informe/E1.2-CircleGuard-Infraestructura.md` | E1.2 report with Markdown screenshots. |
 | `arquitectura/diagnostico-auth-service.md` | Auth service architecture diagnosis. |
 
 ## Standards

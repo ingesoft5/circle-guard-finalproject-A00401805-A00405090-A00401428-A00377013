@@ -18,18 +18,18 @@ Each environment has its own Compose project, Docker network, Redis volume, `.en
 | Environment | Host port | Network | Redis volume |
 |---|---:|---|---|
 | `dev` | 8087 | `dev-net` | `redis_dev` |
-| `stage` | 8088 | `stage-net` | `redis_stage` |
-| `prod` | 8089 | `prod-net` | `redis_prod` |
+| `stage` | 8087 | `stage-net` | `redis_stage` |
+| `prod` | 8087 | `prod-net` | `redis_prod` |
 
 ## Gateway image
 
 The pipeline publishes and deploys:
 
 ```text
-<TOOLS_IP>:8082/circleguard-docker/gateway:<TAG>
+<TOOLS_PRIVATE_IP>:5000/circleguard-docker/gateway:<TAG>
 ```
 
-Nexus hosts the `circleguard-docker` repository on port `8082`.
+Nexus hosts the `circleguard-docker` repository on port `5000`.
 
 ## Scripts
 
@@ -43,7 +43,7 @@ Nexus hosts the `circleguard-docker` repository on port `8082`.
 ## Required environment variables
 
 - `TAG`: gateway image tag.
-- `NEXUS_REGISTRY`: `<TOOLS_IP>:8082`.
+- `NEXUS_REGISTRY`: `<TOOLS_PRIVATE_IP>:5000`.
 - `QR_SECRET` and `JWT_SECRET`: per-environment secrets.
 
 ## Jenkins interface
@@ -51,7 +51,7 @@ Nexus hosts the `circleguard-docker` repository on port `8082`.
 The pipeline calls:
 
 ```bash
-ssh ubuntu@<ENVS_IP> \
+ssh ubuntu@<ENV_PRIVATE_IP> \
   'cd /opt/circleguard && \
    COMPOSE_ROOT=/opt/circleguard/deploy/compose \
    TAG=<TAG> ./deploy/scripts/deploy.sh <environment> <TAG>'

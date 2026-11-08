@@ -1,119 +1,80 @@
-<!-- CG-DOC: Jenkins, SonarQube, Nexus, credentials, and gateway pipeline setup. -->
+<!-- CG-DOC: Four-host CI/CD setup, exposure, credentials, and gateway pipeline. -->
 # CI/CD Platform - Jenkins, SonarQube, and Nexus
 
 ## Requirements
 
-- AWS CLI v2 with valid credentials.
+- AWS CLI v2 with EC2 and SSM permissions.
 - `jq`, `ssh`, `curl`, and `openssl`.
-- `ADMIN_CIDR` for the administrator IP address.
-- GitHub token with repository and webhook permissions (`GITHUB_TOKEN`).
-- Optional `TEACHER_CIDR` for classroom access.
+- `ADMIN_CIDR` and `TEACHER_CIDR`.
+- GitHub token with repository and webhook permissions.
 
 ## Variables
 
 ```bash
-export AWS_REGION=us-east-1
+export AWS_REGION=us-east-2
 export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
+export TEACHER_CIDR=...
 export GITHUB_USER=...
 export GITHUB_TOKEN=...
-export GITHUB_OWNER=ingesoft5
-export GITHUB_REPO=circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013
 ```
 
-## Rebuild from scratch
+## Bootstrap
 
 ```bash
-./infra/bootstrap-all.sh
+./infra/bootstrap/bootstrap-check.sh
+./infra/bootstrap/bootstrap-all.sh
 ```
 
-The command:
-
-1. Creates two EC2 instances, security groups, elastic IPs, and the key pair.
-2. Installs Docker, Java 21, swap, and firewall rules on both hosts.
-3. Starts Jenkins, SonarQube, PostgreSQL, and Nexus.
-4. Configures SonarQube, Nexus, and the `circleguard-docker` registry.
-5. Creates the `.env` files for `dev`, `stage`, and `prod`.
-
-Partial runs:
+Tools only:
 
 ```bash
-./infra/bootstrap-all.sh --tools-only
-./infra/bootstrap-all.sh --envs-only
+./infra/bootstrap/bootstrap-tools.sh
 ```
 
-Destroy:
+Each environment host:
 
 ```bash
-CONFIRM=yes ./infra/bootstrap-destroy.sh
+REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 ```
 
 ## Jenkins
 
-- URL: `http://<TOOLS_IP>:8080`
-- User: `admin`
-- Password: `infra/state/tools.env`
+- URL: `http://<TOOLS_EIP>:8080`
+- Admin credentials: `infra/state/tools.env`
 - JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`
-- Plugins: `deploy/compose/tools/jenkins/plugins.txt`
 - Multibranch job: `circleguard-gateway`
-- Shared Library: `vars/ci.groovy`, branch `LIBRARY_BRANCH` (default `dev`)
-- Webhook: `http://<TOOLS_IP>:8080/github-webhook/`
+- Webhook: `http://<TOOLS_EIP>:8080/github-webhook/`
+- `professor` user: read-only.
+- `cg-envs-ssh`: declared in JCasC.
 
-Credentials created automatically:
+## SonarQube and Nexus
 
-| ID | Type | Purpose |
-|---|---|---|
-| `github-creds` | username/password | Repository and webhook |
-| `sonar-token` | secret text | SonarQube analysis |
-| `nexus-creds` | username/password | Nexus publishing and registry |
-| `cg-envs-ssh` | SSH private key | Deployment to `cg-envs` |
+- SonarQube: `http://<TOOLS_EIP>:9000`, teacher/admin only.
+- Nexus UI: `http://<TOOLS_EIP>:8081`, teacher/admin only.
+- Registry: `<TOOLS_PRIVATE_IP>:5000`, private.
+- Repository: `circleguard-docker`.
 
-`cg-envs-ssh` is declared in JCasC and uses the key copied to `/opt/circleguard/jenkins_ssh/cg-envs-key`.
+## Application ingress
 
-## SonarQube
+- URL: `http://<TOOLS_EIP>/`
+- Nginx proxies to the dev gateway private IP on `8087`.
+- Port `80` is public; `443` is reserved for a future domain/TLS.
 
-- URL: `http://<TOOLS_IP>:9000`
-- Project: `circleguard-gateway-service`
-- Quality gate: `Sonar way`, blocking in Jenkins.
-- Report: `services/circleguard-gateway-service/build/reports/jacoco/test/jacocoTestReport.xml`
-
-## Nexus
-
-- UI: `http://<TOOLS_IP>:8081`
-- Docker registry: `<TOOLS_IP>:8082`
-- Repositories: `maven-releases`, `maven-snapshots`, `raw`, `circleguard-docker`.
-- Jenkins user: `jenkins`, role `jenkins-publisher`.
-
-## Notifications
-
-Set `SLACK_WEBHOOK_URL` in `deploy/compose/tools/.env`. If empty, the pipeline skips notifications.
-
-## Gateway pipeline
-
-Stages in `Jenkinsfile`:
+## Pipeline
 
 1. Checkout.
-2. Build & Test with JaCoCo and coverage verification at or above 60%.
-3. SonarQube.
-4. Blocking quality gate.
-5. Package `bootJar`.
-6. Publish to Nexus.
-7. Build and push the Docker image to `circleguard-docker`.
-8. Deploy to dev.
-9. Playwright E2E.
-10. Deploy to stage.
-11. Manual approval.
-12. Deploy to prod.
-13. Semantic tag.
-14. Rollback through the `ROLLBACK_TAG` parameter.
+2. Build and test with JaCoCo.
+3. SonarQube and blocking quality gate.
+4. Package and publish.
+5. Docker build/push to `5000`.
+6. Deploy dev.
+7. E2E.
+8. Deploy stage.
+9. Manual production approval.
+10. Deploy prod.
+11. Tag and notify.
+12. Rollback with `ROLLBACK_TAG`.
 
 ## Evidence
 
-Store in `docs/infra/evidence/`:
-
-- Jenkins pipeline screenshot with a green build;
-- SonarQube quality gate screenshot;
-- Nexus screenshot with the JAR and image;
-- `docker ps` output on `cg-envs`;
-- health checks for dev, stage, and prod;
-- rollback evidence;
-- URLs and read-only user for the instructor.
+Store screenshots in `docs/infra/evidence/` and the Markdown report in `docs/informe/`. Never include passwords, tokens, or private keys.

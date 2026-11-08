@@ -7,6 +7,7 @@ job-dsl
 sonar
 jacoco
 credentials-binding
+matrix-auth
 docker-workflow
 pipeline-stage-view
 ssh-agent

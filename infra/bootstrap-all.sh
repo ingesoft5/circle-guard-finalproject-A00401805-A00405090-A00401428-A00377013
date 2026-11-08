@@ -1,18 +1,16 @@
 #!/usr/bin/env bash
-# CG-DOC: Orchestrates AWS provisioning, tool setup, and environment preparation.
-# bootstrap-all.sh - Reconstruye la plataforma CI/CD del gateway desde cero.
-# Uso: ./infra/bootstrap-all.sh [--tools-only | --envs-only]
+# CG-DOC: Orchestrates four-host provisioning, tools setup, and per-environment preparation.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/bootstrap-common.sh"
 
 TOOLS_ENV_LOCAL="${REPO_ROOT}/deploy/compose/tools/.env"
-REGISTRY_PORT="8082"
+REGISTRY_PORT="5000"
 MODE="${1:-all}"
 
 prepare_tools_env() {
-  mkdir -p "$(dirname "${TOOLS_ENV_LOCAL}")"
   ensure_env_file "${TOOLS_ENV_LOCAL}" <<EOF
 JENKINS_ADMIN_PASSWORD=$(rand_secret)
+PROFESSOR_PASSWORD=$(rand_secret)
 GITHUB_USER=${GITHUB_USER:-change-me}
 GITHUB_TOKEN=${GITHUB_TOKEN:-change-me}
 GITHUB_OWNER=${GITHUB_OWNER:-ingesoft5}
@@ -24,51 +22,69 @@ SONAR_TOKEN=change-me
 NEXUS_USER=jenkins
 NEXUS_PASSWORD=$(rand_secret)
 NEXUS_URL=http://nexus:8081
-NEXUS_REGISTRY=${TOOLS_IP}:${REGISTRY_PORT}
+NEXUS_REGISTRY=${TOOLS_PRIVATE_IP}:${REGISTRY_PORT}
+TOOLS_IP=${TOOLS_IP}
+TOOLS_PRIVATE_IP=${TOOLS_PRIVATE_IP}
+DEV_PRIVATE_IP=${DEV_PRIVATE_IP}
+STAGE_PRIVATE_IP=${STAGE_PRIVATE_IP}
+PROD_PRIVATE_IP=${PROD_PRIVATE_IP}
 SONAR_HOST_URL=http://sonarqube:9000
-ENVS_IP=${ENVS_IP}
-LIBRARY_BRANCH=dev
+JENKINS_URL=http://${TOOLS_IP}:8080/
+LIBRARY_BRANCH=${LIBRARY_BRANCH:-dev}
 SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
 EOF
-  if [ -n "${GITHUB_USER:-}" ]; then set_env_kv "${TOOLS_ENV_LOCAL}" GITHUB_USER "${GITHUB_USER}"; fi
-  if [ -n "${GITHUB_TOKEN:-}" ]; then set_env_kv "${TOOLS_ENV_LOCAL}" GITHUB_TOKEN "${GITHUB_TOKEN}"; fi
-  if [ -n "${GITHUB_OWNER:-}" ]; then set_env_kv "${TOOLS_ENV_LOCAL}" GITHUB_OWNER "${GITHUB_OWNER}"; fi
-  if [ -n "${GITHUB_REPO:-}" ]; then set_env_kv "${TOOLS_ENV_LOCAL}" GITHUB_REPO "${GITHUB_REPO}"; fi
-  if [ -n "${GITHUB_REPO_URL:-}" ]; then set_env_kv "${TOOLS_ENV_LOCAL}" GITHUB_REPO_URL "${GITHUB_REPO_URL}"; fi
-  set_env_kv "${TOOLS_ENV_LOCAL}" NEXUS_REGISTRY "${TOOLS_IP}:${REGISTRY_PORT}"
-  set_env_kv "${TOOLS_ENV_LOCAL}" ENVS_IP "${ENVS_IP}"
+  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL LIBRARY_BRANCH SLACK_WEBHOOK_URL; do
+    val="${!key:-}"
+    [ -n "${val}" ] && set_env_kv "${TOOLS_ENV_LOCAL}" "${key}" "${val}"
+  done
+  set_env_kv "${TOOLS_ENV_LOCAL}" NEXUS_REGISTRY "${TOOLS_PRIVATE_IP}:${REGISTRY_PORT}"
+  set_env_kv "${TOOLS_ENV_LOCAL}" TOOLS_IP "${TOOLS_IP}"
+  set_env_kv "${TOOLS_ENV_LOCAL}" TOOLS_PRIVATE_IP "${TOOLS_PRIVATE_IP}"
+  set_env_kv "${TOOLS_ENV_LOCAL}" DEV_PRIVATE_IP "${DEV_PRIVATE_IP}"
+  set_env_kv "${TOOLS_ENV_LOCAL}" STAGE_PRIVATE_IP "${STAGE_PRIVATE_IP}"
+  set_env_kv "${TOOLS_ENV_LOCAL}" PROD_PRIVATE_IP "${PROD_PRIVATE_IP}"
+  set_env_kv "${TOOLS_ENV_LOCAL}" JENKINS_URL "http://${TOOLS_IP}:8080/"
 }
 
 bootstrap_tools() {
-  log_info "Sincronizando herramientas en ${TOOLS_IP}"
-  sync_repo "${TOOLS_IP}"
-  scp_to "${KEY_PATH}" "/opt/circleguard/cg-envs-key" "${TOOLS_IP}"
-  ssh_host "${TOOLS_IP}" "chmod 600 /opt/circleguard/cg-envs-key"
-  scp_to "${TOOLS_ENV_LOCAL}" "/opt/circleguard/deploy/compose/tools/.env" "${TOOLS_IP}"
-  ssh_host "${TOOLS_IP}" "cd /opt/circleguard && \
-    TOOLS_IP='${TOOLS_IP}' ENVS_IP='${ENVS_IP}' \
-    NEXUS_REGISTRY='${TOOLS_IP}:${REGISTRY_PORT}' \
-    CG_ENVS_KEY_PATH=/opt/circleguard/cg-envs-key \
-    bash infra/bootstrap-tools.sh"
-
-  scp_from "/opt/circleguard/deploy/compose/tools/.env" "${STATE_DIR}/tools.env" "${TOOLS_IP}"
+  local env_args=(
+    "TOOLS_IP=${TOOLS_IP}"
+    "TOOLS_PRIVATE_IP=${TOOLS_PRIVATE_IP}"
+    "DEV_PRIVATE_IP=${DEV_PRIVATE_IP}"
+    "STAGE_PRIVATE_IP=${STAGE_PRIVATE_IP}"
+    "PROD_PRIVATE_IP=${PROD_PRIVATE_IP}"
+    "NEXUS_REGISTRY=${TOOLS_PRIVATE_IP}:${REGISTRY_PORT}"
+    "LIBRARY_BRANCH=${LIBRARY_BRANCH:-dev}"
+  )
+  if hostname -I | tr ' ' '\n' | grep -qx "${TOOLS_PRIVATE_IP}"; then
+    env "${env_args[@]}" CG_ENVS_KEY_PATH=/opt/circleguard/cg-envs-key bash "${BOOTSTRAP_DIR}/bootstrap-tools.sh"
+    cp "${TOOLS_ENV_LOCAL}" "${STATE_DIR}/tools.env"
+  else
+    sync_repo "${TOOLS_IP}"
+    scp_to "${KEY_PATH}" "/opt/circleguard/cg-envs-key" "${TOOLS_IP}"
+    ssh_host "${TOOLS_IP}" "chmod 600 /opt/circleguard/cg-envs-key"
+    scp_to "${TOOLS_ENV_LOCAL}" "/opt/circleguard/deploy/compose/tools/.env" "${TOOLS_IP}"
+    ssh_host "${TOOLS_IP}" "cd /opt/circleguard && env ${env_args[*]} CG_ENVS_KEY_PATH=/opt/circleguard/cg-envs-key bash infra/bootstrap-tools.sh"
+    scp_from "/opt/circleguard/deploy/compose/tools/.env" "${STATE_DIR}/tools.env" "${TOOLS_IP}"
+  fi
   chmod 600 "${STATE_DIR}/tools.env"
 }
 
-bootstrap_envs() {
-  log_info "Sincronizando ambientes en ${ENVS_IP}"
-  sync_repo "${ENVS_IP}"
+bootstrap_env() {
+  local env_name="$1" ip="$2"
+  log_info "Synchronizing ${env_name} on ${ip}"
+  sync_repo "${ip}"
   {
     echo "NEXUS_USER=$(get_env_kv "${STATE_DIR}/tools.env" NEXUS_USER)"
     echo "NEXUS_PASSWORD=$(get_env_kv "${STATE_DIR}/tools.env" NEXUS_PASSWORD)"
   } > "${STATE_DIR}/registry.env"
   chmod 600 "${STATE_DIR}/registry.env"
-  scp_to "${STATE_DIR}/registry.env" "/opt/circleguard/registry.env" "${ENVS_IP}"
-  ssh_host "${ENVS_IP}" "cd /opt/circleguard && \
+  scp_to "${STATE_DIR}/registry.env" "/opt/circleguard/registry.env" "${ip}"
+  ssh_host "${ip}" "cd /opt/circleguard && \
     COMPOSE_ROOT=/opt/circleguard/deploy/compose \
-    NEXUS_REGISTRY='${TOOLS_IP}:${REGISTRY_PORT}' \
+    REGISTRY_HOST='${TOOLS_PRIVATE_IP}:${REGISTRY_PORT}' \
     REGISTRY_ENV=/opt/circleguard/registry.env \
-    bash infra/bootstrap-envs.sh"
+    bash infra/bootstrap-envs.sh ${env_name}"
 }
 
 case "${MODE}" in
@@ -77,7 +93,9 @@ case "${MODE}" in
     load_state
     prepare_tools_env
     bootstrap_tools
-    bootstrap_envs
+    bootstrap_env dev "${DEV_PUBLIC_IP}"
+    bootstrap_env stage "${STAGE_PUBLIC_IP}"
+    bootstrap_env prod "${PROD_PUBLIC_IP}"
     ;;
   --tools-only)
     load_state
@@ -86,12 +104,11 @@ case "${MODE}" in
     ;;
   --envs-only)
     load_state
-    bootstrap_envs
+    bootstrap_env dev "${DEV_PUBLIC_IP}"
+    bootstrap_env stage "${STAGE_PUBLIC_IP}"
+    bootstrap_env prod "${PROD_PUBLIC_IP}"
     ;;
-  *)
-    die "Uso: $0 [--tools-only | --envs-only]"
-    ;;
+  *) die "Uso: $0 [--tools-only | --envs-only]" ;;
 esac
 
-log_info "Plataforma lista. Credenciales: ${STATE_DIR}/tools.env"
-echo "Ejecuta el pipeline de Jenkins para construir y desplegar el gateway."
+log_info "Platform ready. Credentials: ${STATE_DIR}/tools.env"

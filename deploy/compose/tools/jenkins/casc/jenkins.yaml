@@ -8,9 +8,15 @@ jenkins:
       users:
         - id: admin
           password: ${JENKINS_ADMIN_PASSWORD}
+        - id: professor
+          password: ${PROFESSOR_PASSWORD}
   authorizationStrategy:
-    loggedInUsersCanDoAnything:
-      allowAnonymousRead: false
+    matrix:
+      permissions:
+        - "Overall/Administer:admin"
+        - "Overall/Read:professor"
+        - "Job/Read:professor"
+        - "View/Read:professor"
 
 credentials:
   system:
@@ -43,6 +49,8 @@ credentials:
                   keyFile: /var/jenkins_home/.ssh/cg-envs-key
 
 unclassified:
+  location:
+    url: ${JENKINS_URL}
   sonarGlobalConfiguration:
     buildWrapperEnabled: false
     installations:

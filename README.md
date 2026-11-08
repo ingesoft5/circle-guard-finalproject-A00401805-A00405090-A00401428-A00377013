@@ -243,10 +243,10 @@ circleguard/
 
 ## CI/CD Platform
 
-The gateway CI/CD platform is provisioned on two EC2 instances:
+The gateway CI/CD platform is provisioned on four EC2 instances:
 
-- `cg-tools`: Jenkins, SonarQube, PostgreSQL, and Nexus.
-- `cg-envs`: isolated `dev`, `stage`, and `prod` gateway stacks with Redis.
+- `cg-tools`: Jenkins, SonarQube, Nexus, private registry, and ingress.
+- `cg-dev`, `cg-stage`, `cg-prod`: isolated gateway stacks with Redis.
 
 Rebuild from scratch:
 
@@ -255,7 +255,7 @@ export AWS_REGION=us-east-1
 export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
 export GITHUB_USER=...
 export GITHUB_TOKEN=...
-./infra/bootstrap-all.sh
+./infra/bootstrap/bootstrap-all.sh
 ```
 
 Documentation:

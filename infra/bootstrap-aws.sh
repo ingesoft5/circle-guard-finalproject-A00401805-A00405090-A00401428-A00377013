@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
-# CG-DOC: Provisions AWS EC2 instances, security groups, elastic IPs, and the SSH key pair.
-# bootstrap-aws.sh - Aprovisiona las EC2, Security Groups, Elastic IPs y key pair.
-# Idempotente: describe antes de crear y tolera recursos ya existentes.
+# CG-DOC: Provisions four EC2 hosts, two security groups, one tools Elastic IP, and the SSH key pair.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/bootstrap-common.sh"
 
 : "${ADMIN_CIDR:?Define ADMIN_CIDR, por ejemplo 190.1.2.3/32}"
-export AWS_REGION="${AWS_REGION:-us-east-1}"
+export AWS_REGION="${AWS_REGION:-us-east-2}"
 export PROJECT="${PROJECT:-circleguard}"
-export KEY_NAME="${KEY_NAME:-circleguard-key}"
+export KEY_NAME="${KEY_NAME:-circleguard-e12-key}"
 export KEY_PATH="${KEY_PATH:-${STATE_DIR}/${KEY_NAME}.pem}"
-export TOOLS_TYPE="${TOOLS_TYPE:-m7i-flex.xlarge}"
-export ENVS_TYPE="${ENVS_TYPE:-t3.medium}"
-export TOOLS_DISK="${TOOLS_DISK:-60}"
-export ENVS_DISK="${ENVS_DISK:-40}"
+export TOOLS_TYPE="${TOOLS_TYPE:-m7i-flex.large}"
+export ENVS_TYPE="${ENVS_TYPE:-m7i-flex.large}"
+export TOOLS_DISK="${TOOLS_DISK:-40}"
+export ENVS_DISK="${ENVS_DISK:-30}"
+export TEACHER_CIDR="${TEACHER_CIDR:-}"
 
 require_cmd aws jq ssh curl openssl
 aws sts get-caller-identity >/dev/null || die "AWS CLI sin credenciales válidas"
@@ -30,7 +29,7 @@ if ! aws ec2 describe-key-pairs --key-names "${KEY_NAME}" >/dev/null 2>&1; then
   aws ec2 create-key-pair --key-name "${KEY_NAME}" --query 'KeyMaterial' --output text > "${KEY_PATH}"
   chmod 600 "${KEY_PATH}"
 fi
-[[ -f "${KEY_PATH}" ]] || die "Falta la llave privada ${KEY_PATH}"
+[[ -f "${KEY_PATH}" ]] || die "La llave ${KEY_PATH} no existe. Define KEY_PATH con la llave privada."
 
 ensure_sg() {
   local name="$1" desc="$2" id
@@ -40,9 +39,7 @@ ensure_sg() {
   if [[ -z "${id}" || "${id}" == "None" ]]; then
     id="$(aws ec2 create-security-group --group-name "${name}" --description "${desc}" \
       --vpc-id "${VPC_ID}" --query 'GroupId' --output text)"
-    log_info "Security Group creado: ${name}"
   fi
-  aws ec2 create-tags --resources "${id}" --tags "Key=Project,Value=${PROJECT}" >/dev/null 2>&1 || true
   echo "${id}"
 }
 
@@ -61,25 +58,24 @@ allow_sg() {
 }
 
 ensure_instance() {
-  local name="$1" type="$2" disk="$3" sg="$4" id state
+  local name="$1" type="$2" disk="$3" sg="$4" public_ip="$5" id state
   id="$(aws ec2 describe-instances \
     --filters "Name=tag:Name,Values=${name}" "Name=instance-state-name,Values=pending,running,stopped" \
     --query 'Reservations[0].Instances[0].InstanceId' --output text 2>/dev/null || true)"
   if [[ -z "${id}" || "${id}" == "None" ]]; then
+    local public_args=()
+    [[ "${public_ip}" == "yes" ]] && public_args=(--associate-public-ip-address)
     log_info "Creando instancia ${name} (${type})"
     id="$(aws ec2 run-instances \
       --image-id "${AMI_ID}" --instance-type "${type}" --key-name "${KEY_NAME}" \
-      --security-group-ids "${sg}" \
+      --security-group-ids "${sg}" "${public_args[@]}" \
       --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=${disk},VolumeType=gp3,DeleteOnTermination=true}" \
       --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${name}},{Key=Project,Value=${PROJECT}},{Key=Component,Value=${name}}]" \
       --query 'Instances[0].InstanceId' --output text)"
   else
     state="$(aws ec2 describe-instances --instance-ids "${id}" \
       --query 'Reservations[0].Instances[0].State.Name' --output text)"
-    if [[ "${state}" == "stopped" ]]; then
-      log_info "Iniciando instancia existente ${name}"
-      aws ec2 start-instances --instance-ids "${id}" >/dev/null
-    fi
+    [[ "${state}" == "stopped" ]] && aws ec2 start-instances --instance-ids "${id}" >/dev/null
   fi
   aws ec2 wait instance-running --instance-ids "${id}"
   echo "${id}"
@@ -100,31 +96,58 @@ ensure_eip() {
 TOOLS_SG="$(ensure_sg circleguard-tools-sg "CircleGuard CI/CD tools")"
 ENVS_SG="$(ensure_sg circleguard-envs-sg "CircleGuard environments")"
 
-# Acceso administrativo (y docente si se define).
-for cidr in "${ADMIN_CIDR}" ${TEACHER_CIDR:-}; do
-  for port in 22 8080 9000 8081 8082; do allow_cidr "${TOOLS_SG}" "${port}" "${cidr}"; done
-  for port in 22 8087 8088 8089; do allow_cidr "${ENVS_SG}" "${port}" "${cidr}"; done
+# SSH solo para administración y tools.
+allow_cidr "${TOOLS_SG}" 22 "${ADMIN_CIDR}"
+allow_cidr "${ENVS_SG}" 22 "${ADMIN_CIDR}"
+allow_sg "${ENVS_SG}" 22 "${TOOLS_SG}"
+
+# Herramientas de entrada.
+allow_cidr "${TOOLS_SG}" 8080 "0.0.0.0/0"
+allow_cidr "${TOOLS_SG}" 80 "0.0.0.0/0"
+allow_cidr "${TOOLS_SG}" 443 "0.0.0.0/0"
+allow_cidr "${TOOLS_SG}" 9000 "${ADMIN_CIDR}"
+allow_cidr "${TOOLS_SG}" 8081 "${ADMIN_CIDR}"
+for cidr in ${TEACHER_CIDR:-}; do
+  allow_cidr "${TOOLS_SG}" 9000 "${cidr}"
+  allow_cidr "${TOOLS_SG}" 8081 "${cidr}"
 done
 
-# Tráfico interno por referencia de Security Group (no por IP pública).
-for port in 8081 8082; do
-  allow_sg "${TOOLS_SG}" "${port}" "${TOOLS_SG}"
-  allow_sg "${TOOLS_SG}" "${port}" "${ENVS_SG}"
-done
-for port in 22 8087 8088 8089; do
+# Registro y gateway privados.
+allow_sg "${TOOLS_SG}" 5000 "${ENVS_SG}"
+allow_sg "${TOOLS_SG}" 5000 "${TOOLS_SG}"
+allow_sg "${ENVS_SG}" 8087 "${TOOLS_SG}"
+
+# Middleware solo desde tools y administración.
+for port in 8180 8082 8083 8084 8085 8086 5432 7474 7687 9092 29092 6379 389 1389; do
   allow_sg "${ENVS_SG}" "${port}" "${TOOLS_SG}"
+  allow_cidr "${ENVS_SG}" "${port}" "${ADMIN_CIDR}"
 done
 
-TOOLS_INSTANCE_ID="$(ensure_instance cg-tools "${TOOLS_TYPE}" "${TOOLS_DISK}" "${TOOLS_SG}")"
-ENVS_INSTANCE_ID="$(ensure_instance cg-envs "${ENVS_TYPE}" "${ENVS_DISK}" "${ENVS_SG}")"
+TOOLS_INSTANCE_ID="$(ensure_instance cg-tools "${TOOLS_TYPE}" "${TOOLS_DISK}" "${TOOLS_SG}" no)"
+DEV_INSTANCE_ID="$(ensure_instance cg-dev "${ENVS_TYPE}" "${ENVS_DISK}" "${ENVS_SG}" yes)"
+STAGE_INSTANCE_ID="$(ensure_instance cg-stage "${ENVS_TYPE}" "${ENVS_DISK}" "${ENVS_SG}" yes)"
+PROD_INSTANCE_ID="$(ensure_instance cg-prod "${ENVS_TYPE}" "${ENVS_DISK}" "${ENVS_SG}" yes)"
 TOOLS_IP="$(ensure_eip cg-tools-eip "${TOOLS_INSTANCE_ID}")"
-ENVS_IP="$(ensure_eip cg-envs-eip "${ENVS_INSTANCE_ID}")"
+
+read -r TOOLS_PRIVATE_IP _ < <(aws ec2 describe-instances --instance-ids "${TOOLS_INSTANCE_ID}" \
+  --query 'Reservations[0].Instances[0].[PrivateIpAddress,PublicIpAddress]' --output text)
+for env_name in dev stage prod; do
+  id_var="${env_name^^}_INSTANCE_ID"
+  id="${!id_var}"
+  read -r public private < <(aws ec2 describe-instances --instance-ids "${id}" \
+    --query 'Reservations[0].Instances[0].[PublicIpAddress,PrivateIpAddress]' --output text)
+  printf -v "${env_name^^}_PUBLIC_IP" '%s' "${public:-}"
+  printf -v "${env_name^^}_PRIVATE_IP" '%s' "${private:-}"
+  export "${env_name^^}_PUBLIC_IP" "${env_name^^}_PRIVATE_IP"
+done
+export TOOLS_PRIVATE_IP
 
 save_state
-
 cat <<EOF
 Infraestructura lista:
-  cg-tools: ${TOOLS_INSTANCE_ID} -> ${TOOLS_IP}
-  cg-envs : ${ENVS_INSTANCE_ID} -> ${ENVS_IP}
+  cg-tools: ${TOOLS_INSTANCE_ID} privada=${TOOLS_PRIVATE_IP} publica=${TOOLS_IP}
+  cg-dev  : ${DEV_INSTANCE_ID} privada=${DEV_PRIVATE_IP} publica=${DEV_PUBLIC_IP}
+  cg-stage: ${STAGE_INSTANCE_ID} privada=${STAGE_PRIVATE_IP} publica=${STAGE_PUBLIC_IP}
+  cg-prod : ${PROD_INSTANCE_ID} privada=${PROD_PRIVATE_IP} publica=${PROD_PUBLIC_IP}
   estado  : ${STATE_FILE}
 EOF

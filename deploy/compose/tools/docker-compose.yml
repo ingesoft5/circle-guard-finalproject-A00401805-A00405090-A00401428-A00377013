@@ -9,6 +9,7 @@ services:
       CASC_JENKINS_CONFIG: /var/jenkins_home/casc/jenkins.yaml
       JAVA_OPTS: "-Xms512m -Xmx1536m"
       JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
+      PROFESSOR_PASSWORD: ${PROFESSOR_PASSWORD}
       GITHUB_USER: ${GITHUB_USER}
       GITHUB_TOKEN: ${GITHUB_TOKEN}
       GITHUB_OWNER: ${GITHUB_OWNER}
@@ -20,7 +21,12 @@ services:
       NEXUS_URL: ${NEXUS_URL}
       NEXUS_REGISTRY: ${NEXUS_REGISTRY}
       SONAR_HOST_URL: ${SONAR_HOST_URL}
-      ENVS_IP: ${ENVS_IP}
+      JENKINS_URL: ${JENKINS_URL}
+      TOOLS_IP: ${TOOLS_IP}
+      TOOLS_PRIVATE_IP: ${TOOLS_PRIVATE_IP}
+      DEV_PRIVATE_IP: ${DEV_PRIVATE_IP}
+      STAGE_PRIVATE_IP: ${STAGE_PRIVATE_IP}
+      PROD_PRIVATE_IP: ${PROD_PRIVATE_IP}
       LIBRARY_BRANCH: ${LIBRARY_BRANCH:-dev}
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
     volumes:
@@ -94,13 +100,25 @@ services:
       - nexus_data:/nexus-data
     ports:
       - "8081:8081"
-      - "8082:8082"
+      - "5000:5000"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8081/service/rest/v1/status >/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 20
     mem_limit: 2g
+    networks: [tools-net]
+
+  ingress:
+    image: nginx:1.27-alpine
+    container_name: cg-ingress
+    restart: unless-stopped
+    environment:
+      DEV_PRIVATE_IP: ${DEV_PRIVATE_IP}
+    volumes:
+      - ./ingress/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    ports:
+      - "80:80"
     networks: [tools-net]
 
 volumes:
