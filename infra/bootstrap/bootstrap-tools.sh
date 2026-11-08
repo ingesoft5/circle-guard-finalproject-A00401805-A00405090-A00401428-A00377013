@@ -91,6 +91,13 @@ configure_sonar() {
   curl -fsS -u "${auth}" -X POST "${base}/api/users/create" \
     --data-urlencode "login=professor" --data-urlencode "name=Professor" \
     --data-urlencode "password=${PROFESSOR_SONAR_PASSWORD}" --data-urlencode "local=true" >/dev/null 2>&1 || true
+  if ! curl -fsS -u "professor:${PROFESSOR_SONAR_PASSWORD}" \
+       "${base}/api/authentication/validate" | jq -e '.valid' >/dev/null 2>&1; then
+    curl -fsS -u "${auth}" -X POST "${base}/api/users/change_password" \
+      --data-urlencode "login=professor" \
+      --data-urlencode "password=${PROFESSOR_SONAR_PASSWORD}" >/dev/null \
+      || die "SonarQube professor password sync failed."
+  fi
   curl -fsS -u "${auth}" -X POST "${base}/api/permissions/add_user" \
     --data-urlencode "login=professor" --data-urlencode "permission=user" \
     --data-urlencode "projectKey=circleguard-gateway-service" >/dev/null 2>&1 || true
@@ -177,6 +184,13 @@ configure_nexus() {
   else
     curl -fsS -u "${auth}" -X POST -H 'Content-Type: application/json' -d "${prof_user}" \
       "${base}/service/rest/v1/security/users" >/dev/null || true
+  fi
+  if ! curl -fsS -u "professor:${PROFESSOR_NEXUS_PASSWORD}" -o /dev/null \
+       "${base}/service/rest/v1/repositories" 2>/dev/null; then
+    curl -fsS -u "${auth}" -X PUT -H 'Content-Type: text/plain' \
+      --data "${PROFESSOR_NEXUS_PASSWORD}" \
+      "${base}/service/rest/v1/security/users/professor/change-password" >/dev/null \
+      || die "Nexus professor password sync failed."
   fi
 }
 
