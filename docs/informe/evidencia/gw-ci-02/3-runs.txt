@@ -1,0 +1,23 @@
+Nota: containers_after cuenta el contenedor Ryuk mientras espera su cierre; el Redis efimero ya fue eliminado. Tras ~30 s Ryuk tambien desaparece (ver FINAL).
+
+=== RUN 1 start=2026-11-08T16:59:41-05:00 ===
+> Task :services:circleguard-gateway-service:integrationTest
+BUILD SUCCESSFUL in 27s
+RUN 1 rc=0 duration=28s
+containers_after=1
+
+=== RUN 2 start=2026-11-08T17:00:12-05:00 ===
+> Task :services:circleguard-gateway-service:integrationTest
+BUILD SUCCESSFUL in 24s
+RUN 2 rc=0 duration=25s
+containers_after=1
+
+=== RUN 3 start=2026-11-08T17:00:40-05:00 ===
+> Task :services:circleguard-gateway-service:integrationTest
+BUILD SUCCESSFUL in 24s
+RUN 3 rc=0 duration=26s
+containers_after=1
+
+=== FINAL docker ps -a (despues de esperar la limpieza de Ryuk) ===
+sin contenedores Testcontainers
+count=0
