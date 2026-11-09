@@ -34,8 +34,21 @@ jacoco {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
     finalizedBy(tasks.jacocoTestReport)
+}
+
+val integrationTest by tasks.registering(Test::class) {
+    description = "Runs the gateway integration tests (Testcontainers)."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("integration")
+    }
+    shouldRunAfter(tasks.test)
 }
 
 tasks.jacocoTestReport {
@@ -60,11 +73,18 @@ tasks.jacocoTestCoverageVerification {
     )
     violationRules {
         rule {
+            element = "BUNDLE"
             limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
                 minimum = "0.60".toBigDecimal()
             }
         }
     }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
 publishing {

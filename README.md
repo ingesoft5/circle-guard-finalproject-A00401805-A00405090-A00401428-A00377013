@@ -191,14 +191,13 @@ circleguard/
 │
 ├── mobile/                           # [Código Base] Cliente web Expo (NO se reescribe)
 │
-├── jenkins/                          # [E1.4] Pipeline y Shared Library
-│   ├── Jenkinsfile                   # Pipeline principal (Multibranch)
-│   ├── vars/                         # Shared Library (Funciones reutilizables)
-│   │   ├── buildService.groovy       # Compilación y pruebas unitarias
-│   │   ├── analyzeService.groovy     # SonarQube Quality Gate
-│   │   ├── dockerizeService.groovy   # Construcción y push a Nexus
-│   │   └── deployService.groovy      # Despliegue a los entornos
-│   └── docker-compose.tools.yml      # [E1.2] Compose para Instancia 1 (Jenkins, Sonar, Nexus)
+├── Jenkinsfile                       # Pipeline multibranch (raíz del repositorio)
+├── jenkins/                          # Shared Library `circleguard`
+│   ├── README.md                     # Uso de la librería
+│   └── vars/                         # Funciones reutilizables
+│       ├── ci.groovy                 # Build, pruebas, JaCoCo, Sonar, gate, publicación
+│       ├── ciServices.groovy         # Catálogo y ejecución selectiva por servicio
+│       └── ciNotify.groovy           # Notificación en GitHub y Slack
 │
 ├── infra/                            # [E1.2] Infraestructura como Código
 │   └── bootstrap/                    # Scripts Bash Idempotentes (Parte 1)
@@ -267,5 +266,5 @@ Documentation:
 - [Environments](docs/infra/environments.md)
 - [CI/CD setup](docs/infra/ci-cd-setup.md)
 - [Runbook](docs/infra/runbook.md)
-- Pipeline: [`Jenkinsfile`](Jenkinsfile) and [`vars/ci.groovy`](vars/ci.groovy)
+- Pipeline: [`Jenkinsfile`](Jenkinsfile) and [`jenkins/vars/ci.groovy`](jenkins/vars/ci.groovy)
 - Gateway security fixes: `SecurityConfig`, `JwtAuthenticationFilter`, `QrValidationService`.
