@@ -29,7 +29,7 @@ pipeline {
                         'circleguard-notification-service',
                         'circleguard-promotion-service'
                 ],
-                description: 'auto = solo servicios modificados; all = servicios con JaCoCo.'
+                description: 'auto = solo servicios modificados; all = todos los servicios.'
         )
         string(name: 'TAG', defaultValue: '', description: 'Tag semver. Vacío = calcular con el commit.')
         booleanParam(name: 'SKIP_INTEGRATION', defaultValue: false, description: 'Omitir pruebas de integración.')

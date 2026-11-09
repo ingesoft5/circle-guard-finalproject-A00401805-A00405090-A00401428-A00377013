@@ -9,7 +9,7 @@ plugins {
 
 allprojects {
     group = "com.circleguard"
-    version = "1.0.0-SNAPSHOT"
+    version = System.getenv("TAG") ?: "1.0.0-SNAPSHOT"
 
     repositories {
         mavenCentral()

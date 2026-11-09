@@ -22,6 +22,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -69,6 +70,7 @@ import static org.mockito.Mockito.when;
                 "spring.kafka.consumer.properties.spring.json.trusted.packages=*"
         }
 )
+@Tag("integration")
 class FormPromotionKafkaIntegrationTest {
 
     private static final String TOPIC = "survey.submitted";
