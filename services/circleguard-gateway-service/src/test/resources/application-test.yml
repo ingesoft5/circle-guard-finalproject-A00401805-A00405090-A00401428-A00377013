@@ -1,0 +1,20 @@
+# CG-DOC: Test profile for gateway integration tests backed by an ephemeral Redis container.
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 10s
+      connect-timeout: 10s
+
+qr:
+  secret: ${QR_SECRET:my-super-secret-test-key-32-chars-long}
+
+jwt:
+  secret: ${JWT_SECRET:my-super-secret-jwt-key-32-chars-long-123}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
