@@ -133,6 +133,36 @@ def createSemverTag(String version) {
     }
 }
 
+def writeReleaseNotes(String version) {
+    // Se genera desde los commits convencionales; el tag previo define el rango.
+    def previous = sh(
+            script: "git tag --list 'v[0-9]*' --sort=-v:refname | grep -v '^v${version}\$' | head -n1",
+            returnStdout: true
+    ).trim()
+    def range = previous ? "${previous}..HEAD" : 'HEAD'
+    def changes = sh(
+            script: "git log --pretty=format:'- %s (%h)' ${range}",
+            returnStdout: true
+    ).trim()
+    def date = sh(script: 'date -u +%Y-%m-%d', returnStdout: true).trim()
+    def notes = """# CircleGuard v${version}
+
+Fecha: ${date}
+
+## Cambios
+
+${changes ?: '- Sin cambios registrados.'}
+
+## Artefactos
+
+- Imágenes Docker inmutables con tag \`v${version}\`.
+- JARs publicados en Nexus.
+- Cobertura y quality gate disponibles en SonarQube.
+"""
+    writeFile file: "docs/release-notes/v${version}.md", text: notes
+    archiveArtifacts artifacts: "docs/release-notes/v${version}.md", fingerprint: true
+}
+
 pipeline {
     agent any
 
@@ -278,6 +308,18 @@ pipeline {
             }
             steps {
                 script { createSemverTag(env.TAG) }
+            }
+        }
+
+        stage('Release notes') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script { writeReleaseNotes(env.TAG) }
             }
         }
 

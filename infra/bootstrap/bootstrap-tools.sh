@@ -58,6 +58,13 @@ EOF
   ensure_env_kv "${TOOLS_ENV}" GITHUB_OWNER "${GITHUB_OWNER:-ingesoft5}"
   ensure_env_kv "${TOOLS_ENV}" GITHUB_REPO "${GITHUB_REPO:-circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013}"
   ensure_env_kv "${TOOLS_ENV}" GITHUB_REPO_URL "${GITHUB_REPO_URL:-https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git}"
+  # Las credenciales mutables sí se actualizan cuando llegan por entorno; así una
+  # rotación de token no queda pisada por el valor viejo del .env.
+  local key value
+  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL SLACK_WEBHOOK_URL; do
+    value="${!key:-}"
+    [[ -n "${value}" ]] && set_env_kv "${TOOLS_ENV}" "${key}" "${value}"
+  done
   ensure_env_kv "${TOOLS_ENV}" SONAR_TOKEN "change-me"
   ensure_env_kv "${TOOLS_ENV}" NEXUS_USER "jenkins"
   set_env_kv "${TOOLS_ENV}" NEXUS_URL "http://nexus:8081"
@@ -92,7 +99,8 @@ configure_sonar() {
     "circleguard-gateway-service|CircleGuard Gateway" \
     "circleguard-auth-service|CircleGuard Auth" \
     "circleguard-form-service|CircleGuard Form" \
-    "circleguard-identity-service|CircleGuard Identity"; do
+    "circleguard-identity-service|CircleGuard Identity" \
+    "circleguard-promotion-service|CircleGuard Promotion"; do
     project_key="${entry%%|*}"
     project_name="${entry#*|}"
     curl -fsS -u "${auth}" -X POST "${base}/api/projects/create" \
@@ -114,7 +122,8 @@ configure_sonar() {
     "circleguard-gateway-service" \
     "circleguard-auth-service" \
     "circleguard-form-service" \
-    "circleguard-identity-service"; do
+    "circleguard-identity-service" \
+    "circleguard-promotion-service"; do
     for permission in user codeviewer; do
       curl -fsS -u "${auth}" -X POST "${base}/api/permissions/add_user" \
         --data-urlencode "login=professor" --data-urlencode "permission=${permission}" \
@@ -151,7 +160,7 @@ configure_sonar() {
   curl -fsS -u "${auth}" -X POST "${base}/api/qualitygates/select" \
     --data-urlencode "gateId=${gateway_gate}" \
     --data-urlencode "projectKey=circleguard-gateway-service" >/dev/null 2>&1 || true
-  for project_key in circleguard-auth-service circleguard-form-service circleguard-identity-service; do
+  for project_key in circleguard-auth-service circleguard-form-service circleguard-identity-service circleguard-promotion-service; do
     curl -fsS -u "${auth}" -X POST "${base}/api/qualitygates/select" \
       --data-urlencode "gateId=${services_gate}" \
       --data-urlencode "projectKey=${project_key}" >/dev/null 2>&1 || true

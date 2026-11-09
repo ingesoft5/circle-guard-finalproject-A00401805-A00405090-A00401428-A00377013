@@ -30,7 +30,7 @@ services:
       DEV_PRIVATE_IP: ${DEV_PRIVATE_IP}
       STAGE_PRIVATE_IP: ${STAGE_PRIVATE_IP}
       PROD_PRIVATE_IP: ${PROD_PRIVATE_IP}
-      LIBRARY_BRANCH: ${LIBRARY_BRANCH:-dev}
+      LIBRARY_BRANCH: ${LIBRARY_BRANCH:-main}
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
     volumes:
       - jenkins_home:/var/jenkins_home

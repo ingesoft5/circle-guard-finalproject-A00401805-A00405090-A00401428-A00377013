@@ -179,83 +179,55 @@ We maintain high system integrity via multi-level testing:
 
 ## Project Structure
 
-# Estructura del Proyecto - CircleGuard
-
 ```text
 circleguard/
-│
 ├── .github/
-│   └── pull_request_template.md      # [E1.7] Change Management (Plantilla de PR en inglés)
-│
-├── services/                         # [Código Base] 8 microservicios Spring Boot (NO se reescribe)
-│   ├── auth/
-│   ├── identity/
-│   ├── promotion/
-│   ├── form/
-│   ├── gateway/
-│   ├── notification/
-│   ├── file/
-│   └── dashboard/
-│
-├── mobile/                           # [Código Base] Cliente web Expo (NO se reescribe)
-│
-├── Jenkinsfile                       # Pipeline multibranch (raíz del repositorio)
-├── jenkins/                          # Shared Library `circleguard`
-│   ├── README.md                     # Uso de la librería
-│   └── vars/                         # Funciones reutilizables
-│       ├── ci.groovy                 # Build, pruebas, JaCoCo, Sonar, gate, publicación
-│       ├── ciServices.groovy         # Catálogo y ejecución selectiva por servicio
-│       └── ciNotify.groovy           # Notificación en GitHub y Slack
-│
-├── infra/                            # [E1.2] Infraestructura como Código
-│   └── bootstrap/                    # Scripts Bash Idempotentes (Parte 1)
-│       ├── bootstrap-common.sh       # Funciones compartidas (instalar docker, idempotencia)
-│       ├── bootstrap-tools.sh        # Levanta las herramientas en la Instancia 1
-│       ├── bootstrap-envs.sh         # Levanta los 3 ambientes en la Instancia 2
-│       └── bootstrap-all.sh          # Script maestro (ejecuta todo)
-│
-├── deploy/                           # [E1.3] Empaquetamiento y Despliegue
-│   ├── compose/                      # Docker Compose por ambiente
-│   │   ├── docker-compose.base.yml   # Configuración común (redes, healthchecks)
-│   │   ├── docker-compose.dev.yml    # Entorno Dev (puertos/redes aisladas)
-│   │   ├── docker-compose.stage.yml  # Entorno Stage (puertos/redes aisladas)
-│   │   └── docker-compose.prod.yml   # Entorno Prod (puertos/redes aisladas)
-│   └── dockerfiles/                  # Dockerfiles centralizados (Multi-stage, no root)
-│       ├── Dockerfile.service        # Plantilla para los 8 microservicios (Java 21)
-│       └── Dockerfile.mobile         # Plantilla para el cliente web (Expo + Nginx)
-│
-├── tests/                            # [E1.6] Pruebas Automatizadas
-│   └── e2e-playwright/               # Pruebas E2E (Login, Cuestionario, Acceso)
-│       ├── package.json
-│       └── tests/
-│           ├── login.spec.js
-│           ├── health-form.spec.js
-│           └── access-validation.spec.js
-│
-├── docs/                             # [E1.8] Documentación del Proyecto
-│   ├── arquitectura/                 # Diagramas C4, flujo del pipeline
-│   ├── agil/                         # Documentación de Sprints (Jira)
-│   ├── release-notes/                # Historial de cambios (generado)
-│   └── imagenes/                     # Capturas para el PDF final
-│
-├── .githooks/                        # [E1.1] Validaciones locales (Git Hooks)
-│   ├── commit-msg                    # Valida Conventional Commits
-│   └── pre-push                      # Bloquea push directo a main
-│
-├── .gitignore                        # Ignorar .env, build/, node_modules/, etc.
-├── BRANCHING-STRATEGY.md             # [E1.1] Estrategia de ramas y commits
-├── CHANGELOG.md                      # [E1.7] Generado automáticamente por el pipeline
-├── README.md                         # [E1.8] Documentación principal y operativa (este archivo)
-└── IAG_REGISTRO.md                   # [E1.8] Bitácora de uso de IA (Nivel 3)
+│   ├── pull_request_template.md      # Plantilla de cambio y revisión
+│   └── workflows/enforce-pr.yml      # Bloquea pushes directos a main
+├── services/                         # 8 microservicios Spring Boot/Kotlin
+│   ├── circleguard-auth-service/     # Dockerfile multi-stage no-root
+│   ├── circleguard-identity-service/
+│   ├── circleguard-promotion-service/
+│   ├── circleguard-form-service/
+│   ├── circleguard-gateway-service/
+│   ├── circleguard-notification-service/
+│   ├── circleguard-file-service/
+│   └── circleguard-dashboard-service/
+├── mobile/                           # Cliente Expo + Dockerfile Nginx no-root
+├── Jenkinsfile                       # Pipeline multibranch
+├── jenkins/vars/                     # Shared Library circleguard
+│   ├── ci.groovy
+│   ├── ciServices.groovy
+│   ├── ciNotify.groovy
+│   └── ciVersion.groovy
+├── infra/bootstrap/                  # AWS, tools, entornos y credenciales
+├── deploy/
+│   ├── compose/{tools,dev,stage,prod}/docker-compose.yml
+│   ├── compose/postgres/init-databases.sh
+│   └── scripts/{deploy,rollback,smoke-test,seed-visitor}.sh
+├── tests/e2e/                        # Playwright: login, formulario, acceso
+├── docs/
+│   ├── agil/                         # Sprint 0, Sprint 1, backlog
+│   ├── arquitectura/                 # Arquitectura y pipeline
+│   ├── infra/                        # Entornos, CI/CD, runbook
+│   ├── informe/                      # Informe y evidencias
+│   └── release-notes/                # Notas generadas por versión
+├── .githooks/                        # commit-msg y pre-push
+├── BRANCHING-STRATEGY.md
+├── CHANGELOG.md
+├── README.md
+└── IAG_REGISTRO.md
+```
 
 ## CI/CD Platform
 
-The gateway CI/CD platform is provisioned on four EC2 instances:
+La plataforma corre en cuatro instancias EC2:
 
-- `cg-tools`: Jenkins, SonarQube, Nexus, private registry, and ingress.
-- `cg-dev`, `cg-stage`, `cg-prod`: isolated gateway stacks with Redis.
+- `cg-tools`: Jenkins, SonarQube, Nexus, registro privado e ingress.
+- `cg-dev`, `cg-stage`, `cg-prod`: stack aislado con PostgreSQL, Neo4j, Kafka, Redis,
+  OpenLDAP, los cinco servicios núcleo y el cliente web.
 
-Rebuild from scratch:
+Reconstruir desde cero:
 
 ```bash
 export AWS_REGION=us-east-2
@@ -265,14 +237,22 @@ export GITHUB_TOKEN=...
 ./infra/bootstrap/bootstrap-all.sh
 ```
 
-Documentation:
+Rotar credenciales de GitHub y sincronizar `tools.env`:
 
-- [Documentation index](docs/README.md)
-- [File index](docs/FILE_INDEX.md)
-- [Documentation standard](docs/standards/documentation.md)
-- [AWS validation](docs/infra/aws-free-tier-validation.md)
-- [Environments](docs/infra/environments.md)
+```bash
+./infra/bootstrap/update-credentials.sh --apply
+```
+
+Documentación:
+
+- [Gestión ágil](docs/agil/README.md)
+- [Arquitectura](docs/arquitectura/README.md)
+- [Pipeline](docs/arquitectura/pipeline.md)
+- [Entornos](docs/infra/environments.md)
 - [CI/CD setup](docs/infra/ci-cd-setup.md)
 - [Runbook](docs/infra/runbook.md)
-- Pipeline: [`Jenkinsfile`](Jenkinsfile) and [`jenkins/vars/ci.groovy`](jenkins/vars/ci.groovy)
-- Gateway security fixes: `SecurityConfig`, `JwtAuthenticationFilter`, `QrValidationService`.
+- [Change management](docs/change-management.md)
+- [Release notes](docs/release-notes/README.md)
+- [Índice de documentación](docs/README.md)
+- [Índice de archivos](docs/FILE_INDEX.md)
+- Pipeline: [`Jenkinsfile`](Jenkinsfile) y [`jenkins/vars/ci.groovy`](jenkins/vars/ci.groovy)

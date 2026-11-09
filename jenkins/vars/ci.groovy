@@ -146,7 +146,8 @@ def dockerBuildPushClient(String tag) {
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
-        sh "docker build -t ${image} -f mobile/Dockerfile ."
+        def source = env.GITHUB_REPO_URL ?: 'unknown'
+        sh "docker build --build-arg VERSION=${tag} --build-arg GIT_COMMIT=${commit} --build-arg SOURCE_URL=${source} -t ${image} -f mobile/Dockerfile mobile"
         sh "docker push ${image}"
         digest = sh(script: "docker inspect --format='{{index .RepoDigests 0}}' ${image}", returnStdout: true).trim()
         if (!digest || digest == '<no value>') {

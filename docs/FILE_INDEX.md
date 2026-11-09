@@ -97,6 +97,28 @@ English purpose of every tracked repository file.
 
 - `docs/README.md` — Documentation index for architecture, infrastructure, standards, and evidence.
 
+- `docs/agil/README.md` — Agile artifacts index and working agreements.
+
+- `docs/agil/backlog.md` — Product backlog with acceptance criteria, estimates, and sprint status.
+
+- `docs/agil/sprint-0/planning.md` — Sprint 0 goal, capacity, committed items, and risks.
+
+- `docs/agil/sprint-0/retrospective.md` — Sprint 0 retrospective and improvement actions.
+
+- `docs/agil/sprint-1/planning.md` — Sprint 1 goal, capacity, committed items, and risks.
+
+- `docs/agil/sprint-1/review.md` — Sprint 1 review, demonstrated increment, and pending work.
+
+- `docs/agil/sprint-1/retrospective.md` — Sprint 1 retrospective and improvement actions.
+
+- `docs/arquitectura/README.md` — Container architecture, ports, environments, and design decisions.
+
+- `docs/arquitectura/pipeline.md` — CI/CD pipeline architecture and dev-to-prod promotion flow.
+
+- `docs/change-management.md` — Change request, approval, release, and rollback policy.
+
+- `docs/release-notes/README.md` — Release note template and semver publishing rules.
+
 - `docs/arquitectura/diagnostico-auth-service.md` — Documentation file: diagnostico-auth-service.
 
 - `docs/circleguard_visual_foundation_options_1773955992819.png` — Binary asset.
@@ -601,6 +623,8 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-dashboard-service/build.gradle.kts` — Build configuration for the dashboard service.
 
+- `services/circleguard-dashboard-service/Dockerfile` — Multi-stage, non-root dashboard image with healthcheck.
+
 - `services/circleguard-dashboard-service/src/main/java/com/circleguard/dashboard/DashboardApplication.java` — Java source for the dashboard service: Dashboard Application.
 
 - `services/circleguard-dashboard-service/src/main/java/com/circleguard/dashboard/client/PromotionClient.java` — integration client for the dashboard service: Promotion Client.
@@ -626,6 +650,8 @@ English purpose of every tracked repository file.
 - `services/circleguard-dashboard-service/src/test/java/com/circleguard/dashboard/controller/AnalyticsControllerTest.java` — Unit or integration tests for Analytics Controller Test in the dashboard service.
 
 - `services/circleguard-file-service/build.gradle.kts` — Build configuration for the file service.
+
+- `services/circleguard-file-service/Dockerfile` — Multi-stage, non-root file image with healthcheck.
 
 - `services/circleguard-file-service/src/main/java/com/circleguard/file/FileApplication.java` — Java source for the file service: File Application.
 
@@ -819,6 +845,8 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-notification-service/build.gradle.kts` — Build configuration for the notification service.
 
+- `services/circleguard-notification-service/Dockerfile` — Multi-stage, non-root notification image with healthcheck.
+
 - `services/circleguard-notification-service/src/main/java/com/circleguard/notification/NotificationApplication.java` — Java source for the notification service: Notification Application.
 
 - `services/circleguard-notification-service/src/main/java/com/circleguard/notification/package-info.java` — Package com.circleguard.notification for the notification service (notification layer).
@@ -876,6 +904,10 @@ English purpose of every tracked repository file.
 - `services/circleguard-notification-service/src/test/java/com/circleguard/notification/service/TemplateServiceTest.java` — Unit or integration tests for Template Service Test in the notification service.
 
 - `services/circleguard-promotion-service/build.gradle.kts` — Build configuration for the promotion service.
+
+- `services/circleguard-promotion-service/Dockerfile` — Multi-stage, non-root promotion image with healthcheck.
+
+- `services/circleguard-promotion-service/sonar-project.properties` — SonarQube project settings and JaCoCo coverage path for promotion.
 
 - `services/circleguard-promotion-service/src/main/java/com/circleguard/promotion/PromotionApplication.java` — Java source for the promotion service: Promotion Application.
 

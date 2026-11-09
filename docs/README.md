@@ -19,6 +19,15 @@ This directory contains the written documentation for CircleGuard.
 | `informe/E1.2-CircleGuard-Infraestructura.md` | E1.2 report with Markdown screenshots. |
 | `informe/Gateway-Cobertura.md` | Gateway unit, integration, E2E, JaCoCo, and quality report. |
 | `arquitectura/diagnostico-auth-service.md` | Auth service architecture diagnosis. |
+| `agil/README.md` | Agile artifacts index and working agreements. |
+| `agil/backlog.md` | Product backlog with acceptance criteria and sprint status. |
+| `agil/sprint-0/` | Sprint 0 planning and retrospective. |
+| `agil/sprint-1/` | Sprint 1 planning, review, and retrospective. |
+| `change-management.md` | Change request, approval, release, and rollback policy. |
+| `release-notes/README.md` | Release note template and semver rules. |
+| `arquitectura/README.md` | Container architecture and isolated environments. |
+| `arquitectura/pipeline.md` | CI/CD pipeline architecture and promotion flow. |
+| `informe/P1.1-Branching-GitHub-Flow.md` | Branching strategy, real branch status, and P1.1 evidence. |
 
 ## Standards
 
