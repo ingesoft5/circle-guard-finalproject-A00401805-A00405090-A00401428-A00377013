@@ -2,6 +2,7 @@ package com.circleguard.promotion.listener;
 
 import com.circleguard.promotion.service.HealthStatusService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -45,6 +46,7 @@ import static org.mockito.Mockito.verify;
                 "spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer"
         })
 @Testcontainers(disabledWithoutDocker = true)
+@Tag("integration")
 class KafkaPromotionIntegrationTest {
 
     @Container

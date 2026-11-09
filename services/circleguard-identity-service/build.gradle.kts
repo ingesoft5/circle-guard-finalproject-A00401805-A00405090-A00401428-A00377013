@@ -5,6 +5,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.spring")
     kotlin("plugin.jpa")
+    `maven-publish`
 }
 
 dependencies {
@@ -24,4 +25,39 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.springframework.security:spring-security-test")
+}
+
+// Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
+val integrationTest by tasks.registering(Test::class) {
+    description = "Runs the ${project.name} integration tests."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("integration")
+    }
+    shouldRunAfter(tasks.test)
+}
+
+// Publicación del artefacto en Nexus (snapshots o releases según la versión/TAG).
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            artifact(tasks.bootJar)
+        }
+    }
+    repositories {
+        maven {
+            name = "nexus"
+            val nexusBase = (System.getenv("NEXUS_URL") ?: "http://localhost:8081").trimEnd('/')
+            val repo = if (version.toString().endsWith("SNAPSHOT")) "maven-snapshots" else "maven-releases"
+            url = uri("${nexusBase}/repository/${repo}/")
+            isAllowInsecureProtocol = true
+            credentials {
+                username = System.getenv("NEXUS_USER") ?: "jenkins"
+                password = System.getenv("NEXUS_PASSWORD") ?: "change-me"
+            }
+        }
+    }
 }
