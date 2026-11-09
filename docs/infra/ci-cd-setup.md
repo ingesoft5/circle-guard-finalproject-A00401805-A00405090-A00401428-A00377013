@@ -74,7 +74,7 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 `infra/bootstrap/bootstrap-github.sh` protects the default branch (`main`) with:
 
 - Pull request required before merging.
-- One approving review.
+- Two approving reviews.
 - Required status check: `continuous-integration/jenkins/pr-merge`.
 - Conversation resolution required.
 - Force pushes and branch deletion disabled.

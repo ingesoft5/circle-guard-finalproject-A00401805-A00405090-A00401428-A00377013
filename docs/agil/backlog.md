@@ -38,7 +38,7 @@ criterios de aceptación y el estado que soporta la entrega.
 
 Una historia se considera Done cuando:
 
-1. El código está integrado en `main` mediante PR con al menos una aprobación.
+1. El código está integrado en `main` mediante PR con al menos dos aprobaciones.
 2. Los checks de Jenkins (build, pruebas, Sonar, quality gate) están verdes.
 3. La imagen, si aplica, está publicada en Nexus con tag semver y usuario no root.
 4. El despliegue en dev está sano y el flujo E2E correspondiente pasa.

@@ -10,7 +10,7 @@ The project applies **GitHub Flow** strictly, keeping `main` in a deployable sta
 - **Protected `main` branch:** direct pushes are not allowed. Every integration requires a Pull Request.
 - **Ephemeral branches:** created from `main` and kept short-lived.
 - **Audit and cleanup:** branches are configured for automatic deletion after merge on GitHub. Traceability remains immutable in the **Merged Pull Requests** section, including code, approvals, and pipeline checks.
-- **Peer review:** at least **1 approval** from another developer is required before merging.
+- **Peer review:** at least **2 approvals** from other developers are required before merging.
 - **Required checks:** the Jenkins CI pipeline must run and pass before merging.
 - **Merge strategy:** **Squash and Merge** keeps an atomic, clean history in `main`.
 

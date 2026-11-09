@@ -18,7 +18,7 @@
 ## Reglas de trabajo
 
 - Cada historia tiene criterios de aceptación medibles y subtareas en Jira.
-- Cada cambio entra por PR con al menos una aprobación y checks verdes.
+- Cada cambio entra por PR con al menos dos aprobaciones y checks verdes.
 - El merge es squash y la rama se elimina después.
 - La evidencia se captura al cerrar la historia, no al final del sprint.
 - La retrospectiva produce acciones con responsable y fecha.
