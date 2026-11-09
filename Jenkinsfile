@@ -159,10 +159,11 @@ pipeline {
             }
             steps {
                 script {
-                    def gateway = services.find { it.short == 'gateway' }
-                    if (gateway) {
-                        def digest = ci.dockerBuildPush(gateway, env.TAG)
-                        echo "Digest publicado: ${digest}"
+                    services.each { service ->
+                        if (service.docker) {
+                            def digest = ci.dockerBuildPush(service, env.TAG)
+                            echo "Digest publicado (${service.short}): ${digest}"
+                        }
                     }
                 }
             }

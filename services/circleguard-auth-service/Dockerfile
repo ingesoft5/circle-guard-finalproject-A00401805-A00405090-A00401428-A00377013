@@ -1,3 +1,4 @@
+# CG-DOC: Container image definition for the auth service.
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
 COPY . .
@@ -8,6 +9,7 @@ RUN addgroup -S circleguard && adduser -S circleguard -G circleguard
 WORKDIR /app
 COPY --from=build /workspace/services/circleguard-auth-service/build/libs/ /tmp/libs/
 RUN cp "$(find /tmp/libs -name '*.jar' ! -name '*-plain.jar' | head -n 1)" /app/app.jar \
+    && rm -rf /tmp/libs \
     && chown -R circleguard:circleguard /app
 USER circleguard
 EXPOSE 8180

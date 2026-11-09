@@ -16,6 +16,7 @@
    - [1.1 HU-AUTH-01 (DCG-77) — Diagnóstico de estructura y dependencias de `auth-service`](#11-hu-auth-01-dcg-77--diagnóstico-de-estructura-y-dependencias-de-auth-service)
    - [1.2 HU-AUTH-02 (DCG-78) — Automatizar las pruebas unitarias y de integración de `auth-service`](#12-hu-auth-02-dcg-78--automatizar-las-pruebas-unitarias-y-de-integración-de-auth-service)
    - [1.3 HU-AUTH-03 (DCG-79) — Empaquetar `auth-service` e integrarlo al pipeline de CI](#13-hu-auth-03-dcg-79--empaquetar-auth-service-e-integrarlo-al-pipeline-de-ci)
+   - [1.4 HU-AUTH-04 (DCG-80) — Desplegar `auth-service` en `dev`, `stage` y `prod` y validar flujo E2E de autenticación](#14-hu-auth-04-dcg-80--desplegar-auth-service-en-dev-stage-y-prod-y-validar-flujo-e2e-de-autenticación)
 2. [Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)](#2-módulo-circleguard-gateway-service-e-infraestructura-cicd-daniela-castaño)
    - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
    - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
@@ -260,6 +261,77 @@ Con base en este diseño previo y el archivo `Proyecto_Final_CircleGuard.pdf` ad
 #### D. Reflexión crítica
 
 La integración entre las ramas del equipo (`origin/feature/HU-GATEWAY-CICD-01` y `feature/HU-AUTH-03`) demostró la importancia de haber documentado previamente en `HU-AUTH-01` el doble quemado de configuración en `SecurityConfig.java`: externalizar únicamente `application.yml` no habría bastado sin inyectar `@Value` en `contextSource()` y `corsConfigurationSource()`. Asimismo, la verificación del `HEALTHCHECK` de Actuator en las pruebas de integración asegura que el contenedor no entre en estado `unhealthy` cuando se despliegue en `dev`, `stage` y `prod`.
+
+---
+
+### 1.4 HU-AUTH-04 (DCG-80) — Desplegar `auth-service` en `dev`, `stage` y `prod` y validar flujo E2E de autenticación
+
+- **Fecha:** 8 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Historia / Subtareas en Jira:** `DCG-80` (`DCG-98`, `DCG-99`, `DCG-100`, `DCG-101`)
+- **Objetivo de la interacción:** Configurar los manifiestos de Docker Compose de `auth-service` y su base de datos `postgres-auth` con healthchecks para los ambientes aislados `dev`, `stage` y `prod` (`DCG-98`), integrar el flujo de despliegue automático a `dev`, promoción a `stage` tras superar las pruebas E2E y compuerta de aprobación manual hacia `prod` (`DCG-99`), automatizar y ejecutar la validación E2E con Playwright cubriendo login RBAC, emisión de QR y validación cruzada con el gateway (`DCG-100`), y demostrar el rollback hacia una versión semántica previa documentando las evidencias (`DCG-101`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Tras configurar mi usuario IAM (`Faiber`) con AWS CLI v2, verificar la conectividad SSH hacia las 4 instancias EC2 del equipo (`cg-tools` en `172.31.20.46` / `77.112.223.174`, `cg-dev` en `172.31.19.75` / `3.140.191.217`, `cg-stage` en `172.31.29.207` / `13.58.139.230` y `cg-prod` en `172.31.20.75` / `3.140.253.184`) y revisar la estructura consolidada en `origin/main` (`Jenkinsfile`, `jenkins/vars/ci.groovy`, `jenkins/vars/ciServices.groovy`, `deploy/compose/{dev,stage,prod}/docker-compose.yml`, `deploy/scripts/` y `tests/e2e/`), definí previamente el siguiente diseño técnico:
+
+1. **Sincronización con `origin/main` y catálogo de servicios (`jenkins/vars/ciServices.groovy`):**
+   - Habilitar `publish: true` y `docker: true` en la entrada `auth` (`circleguard-auth-service`) de `jenkins/vars/ciServices.groovy` y generalizar la etapa `stage('Docker')` del `Jenkinsfile` para iterar sobre todos los servicios con `service.docker == true` en lugar de filtrar únicamente `gateway`.
+2. **Orquestación multi-ambiente con Docker Compose (`DCG-98`):**
+   - Añadir en `deploy/compose/{dev,stage,prod}/docker-compose.yml` el servicio `postgres-auth` (`postgres:15-alpine`) con volumen persistente por ambiente y `healthcheck` mediante `pg_isready -U admin -d circleguard_auth`.
+   - Añadir el servicio `auth` (`${NEXUS_REGISTRY}/circleguard-docker/auth:${TAG}`) en el puerto `8180:8180` con `depends_on: postgres-auth (condition: service_healthy)`, inyectando `SPRING_PROFILES_ACTIVE`, `SPRING_DATASOURCE_*`, `SPRING_FLYWAY_ENABLED=true`, `MANAGEMENT_HEALTH_LDAP_ENABLED=false`, `IDENTITY_SERVICE_URL`, `JWT_SECRET` y `QR_SECRET`, y `healthcheck` contra `http://localhost:8180/actuator/health`.
+3. **Flujo de promoción y scripts de despliegue/rollback (`DCG-99` y `DCG-101`):**
+   - Actualizar `deploy/scripts/deploy.sh`, `deploy/scripts/rollback.sh` y `deploy/scripts/smoke-test.sh` para que descarguen, levanten y verifiquen el estado `UP` de `gateway` (`:8087`) y `auth` (`:8180`), y sincronizar automáticamente los manifiestos desde `jenkins/vars/ci.groovy` (`deploy`).
+4. **Pruebas E2E con Playwright (`DCG-100`):**
+   - Ampliar `tests/e2e/access-validation.spec.ts` para verificar salud de `auth-service` (`:8180/actuator/health`), rechazo `401` ante credenciales inválidas, login exitoso de `staff_guard`, generación de QR firmado (`/api/v1/auth/qr/generate`), consulta de permisos RBAC (`/api/v1/users/permissions/alert:receive_priority`) y validación cruzada del QR en `gateway-service` (`POST :8087/api/v1/gate/validate`).
+
+#### B. Prompt empleado
+
+```text
+Estoy desarrollando la historia de usuario HU-AUTH-04 (DCG-80): Desplegar `auth-service` en `dev`, `stage` y `prod` y validar flujo E2E de autenticación del proyecto CircleGuard ubicado en:
+`/home/faiber/Desktop/IngesoftV/final/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`
+Actualmente ya me encuentro en la rama `feat/HU-AUTH-04`.
+
+Tras verificar la conectividad SSH/AWS hacia nuestras 4 instancias EC2 (`cg-tools` en `172.31.20.46` / `77.112.223.174`, `cg-dev` en `172.31.19.75`, `cg-stage` en `172.31.29.207` y `cg-prod` en `172.31.20.75`) y revisar los archivos consolidados por el equipo en `origin/main` (`Jenkinsfile`, `jenkins/vars/ci.groovy`, `jenkins/vars/ciServices.groovy`, `deploy/compose/{dev,stage,prod}/docker-compose.yml`, `deploy/scripts/deploy.sh`, `deploy/scripts/rollback.sh` y `tests/e2e/`), definí el siguiente diseño técnico previo para completar las 4 subtareas de HU-AUTH-04 (`DCG-98`, `DCG-99`, `DCG-100`, `DCG-101`):
+
+1. Sincronización con `origin/main` y catálogo de servicios (`jenkins/vars/ciServices.groovy`):
+   - Integrar los últimos cambios de `origin/main` en `feat/HU-AUTH-04` conservando intactos `docs/arquitectura/diagnostico-auth-service.md`, `IAG_REGISTRO.md` y todo el trabajo de `services/circleguard-auth-service/`.
+   - En `jenkins/vars/ciServices.groovy`, actualizar la entrada de `circleguard-auth-service` (`short: 'auth'`) habilitando `publish: true` y `docker: true` (además de `jacoco: true`), y crear `services/circleguard-auth-service/sonar-project.properties` para que el pipeline multibranch construya, analice en SonarQube, publique en Nexus Maven y suba la imagen `${NEXUS_REGISTRY}/circleguard-docker/auth:${TAG}` al registro Docker de Nexus (`172.31.20.46:5000`).
+
+2. Subtarea `DCG-98` — Configurar Docker Compose de `auth-service` para `dev`, `stage` y `prod` con healthchecks:
+   - En `deploy/compose/dev/docker-compose.yml`, `deploy/compose/stage/docker-compose.yml` y `deploy/compose/prod/docker-compose.yml` (y sus respectivos `.env.example`):
+     - Añadir el contenedor `postgres-auth` (`postgres:15-alpine`) con volumen persistente por ambiente, variables `POSTGRES_DB=circleguard_auth`, `POSTGRES_USER`, `POSTGRES_PASSWORD` y `healthcheck` con `pg_isready -U admin -d circleguard_auth`.
+     - Añadir el contenedor `auth` (`${NEXUS_REGISTRY}/circleguard-docker/auth:${TAG}`) en el puerto `8180:8180`, dependiendo de `postgres-auth` (`condition: service_healthy`), inyectando por variables de entorno `SPRING_PROFILES_ACTIVE` (`dev`, `stage`, `prod`), `SERVER_PORT=8180`, `SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth:5432/circleguard_auth`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `SPRING_JPA_HIBERNATE_DDL_AUTO=update`, `MANAGEMENT_HEALTH_LDAP_ENABLED=false`, `IDENTITY_SERVICE_URL`, `JWT_SECRET`, `QR_SECRET` y `CORS_ALLOWED_ORIGINS`.
+     - Configurar el `healthcheck` de `auth` contra `http://localhost:8180/actuator/health` verificando `"status":"UP"`.
+
+3. Subtarea `DCG-99` — Integrar despliegue automático a `dev`, promoción a `stage` tras E2E y aprobación manual a `prod`:
+   - Actualizar `deploy/scripts/deploy.sh`, `deploy/scripts/rollback.sh` y `deploy/scripts/smoke-test.sh` para que desplieguen y verifiquen tanto `gateway` (`:8087/actuator/health`) como `auth` (`:8180/actuator/health`) en cada ambiente aislado (`cg-dev`, `cg-stage`, `cg-prod`), sincronizando los archivos compose actualizados hacia `/opt/circleguard/deploy/compose/{dev,stage,prod}` en las instancias EC2.
+   - Asegurar que el `Jenkinsfile` y `jenkins/vars/ci.groovy` ejecuten el flujo continuo: `Deploy to Dev` -> `E2E Tests (Playwright)` -> `Promote & Deploy to Stage` -> `Smoke Test Stage` -> `Manual Approval for Prod` (`input` manual registrado) -> `Deploy to Prod` + `Smoke Test Prod`.
+
+4. Subtarea `DCG-100` — Validar flujo E2E de inicio de sesión y generación de QR con Playwright:
+   - En `tests/e2e/access-validation.spec.ts` (y configuración de `playwright.config.ts`), ampliar las pruebas E2E para validar contra el entorno desplegado (`AUTH_URL` en `:8180` y `GATEWAY_URL` en `:8087`):
+     - Healthcheck de `auth-service` (`GET /actuator/health` == `UP`).
+     - Flujo de autenticación y emisión de JWT (`POST /api/v1/auth/login` o `/api/v1/auth/visitor/handoff` con rechazo `401` ante credenciales inválidas y emisión de token válido `200`).
+     - Generación de token QR firmado (`GET /api/v1/auth/qr/generate` con `Authorization: Bearer <jwt>`) y validación cruzada de ese QR en el gateway (`POST /api/v1/gate/validate`), verificando además la consulta de permisos RBAC (`GET /api/v1/users/permissions/alert:receive_priority`).
+
+5. Subtarea `DCG-101` — Demostrar rollback de `auth-service` hacia una versión semántica anterior y documentar evidencias:
+   - Publicar dos versiones semánticas en el registro de Nexus (por ejemplo `1.0.0-<sha1>` y `1.0.1-<sha2>`), desplegar en los ambientes EC2 y ejecutar `deploy/scripts/rollback.sh` hacia el tag anterior verificando el restablecimiento del servicio con `/actuator/health` en `UP`.
+   - Documentar las evidencias verificables del despliegue en `dev`, `stage` y `prod`, las pruebas E2E con Playwright y el procedimiento/ejecución de rollback en `docs/arquitectura/despliegue-auth-service.md` (o actualizando `docs/infra/runbook.md`), y registrar esta interacción en la sección `1.4 HU-AUTH-04 (DCG-80)` de `IAG_REGISTRO.md` manteniendo el estándar de Nivel 3 de la Universidad Icesi.
+```
+
+#### C. Validación humana y ajustes realizados
+
+- **Hallazgo crítico de integración RBAC entre `auth-service` y `gateway-service` (`V6__map_gate_staff_permission.sql`):** Al contrastar `services/circleguard-gateway-service/src/main/java/com/circleguard/gateway/config/SecurityConfig.java` con las migraciones Flyway de `auth-service`, se detectó que `POST /api/v1/gate/validate` exige `.hasAuthority("gate:scan")`, pero `V1__initial_auth_schema.sql` solo había asociado permisos al rol `HEALTH_CENTER` y había omitido asociar `gate:scan` al rol `GATE_STAFF` (`staff_guard`). Se creó la migración `V6__map_gate_staff_permission.sql` para vincular `GATE_STAFF` $\rightarrow$ `gate:scan`, permitiendo que el JWT emitido para `staff_guard` autorice directamente la validación de QR en `gateway-service`.
+- **Resiliencia controlada en `IdentityClient.java` (`identity.service.fallback-enabled`):** Dado que `identity-service` se despliega en una historia independiente, se añadió la propiedad opcional `identity.service.fallback-enabled` (por defecto `false` para no alterar las pruebas unitarias de fallo, y `true` en Compose mientras `identity-service` no esté activo) que genera un UUID determinístico (`UUID.nameUUIDFromBytes`) cuando `identity-service` no es alcanzable, junto con dos nuevos tests unitarios en `IdentityClientTest.java` manteniendo el `100%` de cobertura en `IdentityClient`.
+- **Verificación real sobre AWS EC2 (`cg-tools`, `cg-dev`, `cg-stage`, `cg-prod`):**
+  - Se publicaron en el registro Docker de Nexus (`172.31.20.46:5000/circleguard-docker/auth`) las versiones semánticas `1.0.0-ab8c930` (digest `sha256:9833b5734f9af98505959b7e48c62684ccb5ac4e7c713775117122809a79d15f`) y `1.0.1-064ba7b` (digest `sha256:3090800eee615b5dfda3802e870a5556797c30679501e5d9ccdac4a88c3bdc9e`).
+  - Se desplegó `1.0.1-064ba7b` en `cg-dev` (`3.140.191.217`), `cg-stage` (`13.58.139.230`) y `cg-prod` (`3.140.253.184`), verificando `Health OK (gateway)` (`:8087`) y `Health OK (auth)` (`:8180`).
+  - Se ejecutó la suite E2E de Playwright (`6 tests`) contra los tres ambientes, obteniendo **`6 passed` en `dev` (`8.6s`), `6 passed` en `stage` (`8.6s`) y `6 passed` en `prod` (`8.7s`)**.
+  - Se ejecutó `./deploy/scripts/rollback.sh prod 1.0.0-ab8c930` en `cg-prod` y `./deploy/scripts/smoke-test.sh`, comprobando la reversión inmediata al tag `1.0.0-ab8c930` con estado `UP` en ambos servicios.
+
+#### D. Reflexión crítica
+
+La validación E2E real sobre las instancias EC2 demostró por qué las pruebas unitarias aisladas por microservicio no sustituyen a las pruebas de sistema en un entorno tipo producción: aunque `auth-service` y `gateway-service` pasaban sus suites unitarias por separado, el flujo cruzado `POST /api/v1/auth/login` $\rightarrow$ `GET /api/v1/auth/qr/generate` $\rightarrow$ `POST /api/v1/gate/validate` habría fallado con `403 Forbidden` sin la migración `V6__map_gate_staff_permission.sql` que asigna el permiso `gate:scan` al rol `GATE_STAFF`, y habría requerido sincronizar explícitamente `JWT_SECRET` y `QR_SECRET` en el `.env` de cada ambiente.
 
 ---
 

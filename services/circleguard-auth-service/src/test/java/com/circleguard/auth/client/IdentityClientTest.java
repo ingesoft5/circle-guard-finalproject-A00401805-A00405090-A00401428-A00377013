@@ -42,4 +42,42 @@ public class IdentityClientTest {
         IdentityClient client = new IdentityClient("http://localhost:8083/api/v1/identities/map");
         assertNotNull(client);
     }
+
+    @Test
+    void shouldFallbackToDeterministicUuidWhenFallbackEnabledAndRemoteFails() {
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://identity-service:8083/api/v1/identities/map";
+        MockRestServiceServer mockServer = MockRestServiceServer.createServer(restTemplate);
+
+        mockServer.expect(requestTo(url))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators.withServerError());
+
+        IdentityClient identityClient = new IdentityClient(restTemplate, url, true);
+        UUID fallbackUuid = identityClient.getAnonymousId("staff_guard");
+
+        assertEquals(
+                UUID.nameUUIDFromBytes("circleguard:staff_guard".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                fallbackUuid
+        );
+        mockServer.verify();
+    }
+
+    @Test
+    void shouldThrowWhenFallbackDisabledAndRemoteFails() {
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://identity-service:8083/api/v1/identities/map";
+        MockRestServiceServer mockServer = MockRestServiceServer.createServer(restTemplate);
+
+        mockServer.expect(requestTo(url))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators.withServerError());
+
+        IdentityClient identityClient = new IdentityClient(restTemplate, url, false);
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> identityClient.getAnonymousId("staff_guard")
+        );
+        mockServer.verify();
+    }
 }

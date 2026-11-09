@@ -24,8 +24,8 @@ def catalog() {
                     sonarSettings : 'services/circleguard-auth-service/sonar-project.properties',
                     jacoco        : true,
                     integration   : false,
-                    publish       : false,
-                    docker        : false
+                    publish       : true,
+                    docker        : true
             ],
             [
                     short         : 'form',

@@ -101,7 +101,7 @@ def dockerBuildPush(Map service, String tag) {
         if (!digest || digest == '<no value>') {
             digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
         }
-        writeFile file: 'image-digest.txt', text: "${image}\n${digest}\n"
+        sh "printf '%s\\n%s\\n' '${image}' '${digest}' >> image-digest.txt"
     }
     return digest
 }
@@ -131,8 +131,14 @@ def deploy(String environment, String tag) {
     def ip = env."${environment.toUpperCase()}_PRIVATE_IP"
     sshagent(['cg-envs-ssh']) {
         sh """
+            scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+              deploy/compose/${environment}/docker-compose.yml \
+              ubuntu@${ip}:/opt/circleguard/deploy/compose/${environment}/docker-compose.yml
+            scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+              deploy/scripts/deploy.sh deploy/scripts/rollback.sh deploy/scripts/smoke-test.sh deploy/scripts/seed-status.sh \
+              ubuntu@${ip}:/opt/circleguard/deploy/scripts/
             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${ip} \
-              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose TAG=${tag} ./deploy/scripts/deploy.sh ${environment} ${tag}'
+              'chmod +x /opt/circleguard/deploy/scripts/*.sh && cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose TAG=${tag} ./deploy/scripts/deploy.sh ${environment} ${tag}'
         """
     }
 }
@@ -142,6 +148,6 @@ def e2e() {
         cd tests/e2e
         npm install
         npx playwright install --with-deps chromium
-        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 npx playwright test
+        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 AUTH_URL=http://${env.DEV_PRIVATE_IP}:8180 npx playwright test
     """
 }

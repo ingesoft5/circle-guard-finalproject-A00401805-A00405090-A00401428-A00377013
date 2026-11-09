@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CG-DOC: Deploys a gateway image tag to an isolated environment and waits for health.
+# CG-DOC: Deploys gateway and auth service image tags to an isolated environment and waits for health.
 set -euo pipefail
 
 ENV="${1:?Uso: deploy.sh <dev|stage|prod> <tag>}"
@@ -12,20 +12,25 @@ DIR="${COMPOSE_ROOT}/${ENV}"
 
 cd "${DIR}"
 export TAG
-docker compose pull gateway
+docker compose pull gateway auth
 docker compose up -d --remove-orphans
 
-PORT="$(sed -n 's/.*"\([0-9][0-9]*\):[0-9][0-9]*".*/\1/p' docker-compose.yml | head -n1)"
-PORT="${PORT:-8087}"
+check_health() {
+  local name="$1"
+  local port="$2"
+  for _ in $(seq 1 40); do
+    if curl -fsS "http://localhost:${port}/actuator/health" | grep -q UP; then
+      echo "Health OK (${name}): ${ENV} tag=${TAG} puerto=${port}"
+      return 0
+    fi
+    sleep 3
+  done
+  echo "Healthcheck falló (${name}) para ${ENV} tag=${TAG} puerto=${port}"
+  docker compose logs --tail=80 "${name}" || true
+  return 1
+}
 
-for _ in $(seq 1 30); do
-  if curl -fsS "http://localhost:${PORT}/actuator/health" | grep -q UP; then
-    echo "Despliegue OK: ${ENV} tag=${TAG} puerto=${PORT}"
-    exit 0
-  fi
-  sleep 3
-done
+check_health "gateway" "8087"
+check_health "auth" "8180"
 
-echo "Healthcheck falló para ${ENV} tag=${TAG}"
-docker compose logs --tail=80 gateway
-exit 1
+echo "Despliegue OK: ${ENV} tag=${TAG} servicios=gateway(8087),auth(8180)"

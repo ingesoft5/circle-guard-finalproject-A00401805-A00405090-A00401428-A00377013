@@ -13,6 +13,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: ${SPRING_FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
   ldap:
     urls: ${SPRING_LDAP_URLS:ldap://localhost:389}
     base: ${SPRING_LDAP_BASE:dc=circleguard,dc=edu}
@@ -22,6 +25,7 @@ spring:
 identity:
   service:
     url: ${IDENTITY_SERVICE_URL:http://localhost:8083/api/v1/identities/map}
+    fallback-enabled: ${IDENTITY_SERVICE_FALLBACK_ENABLED:false}
 
 jwt:
   secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}

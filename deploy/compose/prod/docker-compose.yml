@@ -10,6 +10,55 @@ services:
     networks: [prod-net]
     mem_limit: 128m
 
+  postgres-auth:
+    image: postgres:15-alpine
+    container_name: cg-postgres-auth-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_AUTH_DB:-circleguard_auth}
+      POSTGRES_USER: ${POSTGRES_AUTH_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_AUTH_PASSWORD:-password}
+    volumes:
+      - postgres_auth_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_AUTH_USER:-admin} -d ${POSTGRES_AUTH_DB:-circleguard_auth}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [prod-net]
+    mem_limit: 192m
+
+  auth:
+    image: ${NEXUS_REGISTRY}/circleguard-docker/auth:${TAG}
+    container_name: cg-auth-prod
+    restart: unless-stopped
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8180
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx320m"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/${POSTGRES_AUTH_DB:-circleguard_auth}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_AUTH_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_AUTH_PASSWORD:-password}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_FLYWAY_ENABLED: "true"
+      MANAGEMENT_HEALTH_LDAP_ENABLED: "false"
+      IDENTITY_SERVICE_URL: ${IDENTITY_SERVICE_URL:-http://identity:8083/api/v1/identities/map}
+      IDENTITY_SERVICE_FALLBACK_ENABLED: ${IDENTITY_SERVICE_FALLBACK_ENABLED:-true}
+      QR_SECRET: ${QR_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8180:8180"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8180/actuator/health | grep -q UP || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 12
+    networks: [prod-net]
+    mem_limit: 448m
+
   gateway:
     image: ${NEXUS_REGISTRY}/circleguard-docker/gateway:${TAG}
     container_name: cg-gateway-prod
@@ -17,6 +66,7 @@ services:
     depends_on: [redis]
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx320m"
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SERVER_PORT: 8087
@@ -30,10 +80,11 @@ services:
       timeout: 10s
       retries: 10
     networks: [prod-net]
-    mem_limit: 512m
+    mem_limit: 448m
 
 volumes:
   redis_prod:
+  postgres_auth_prod:
 
 networks:
   prod-net:
