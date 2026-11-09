@@ -288,6 +288,10 @@ La rama `main` exige el check `continuous-integration/jenkins/pr-merge`,
 borrado. El PR #23 se fusionó como squash `c3ac704` después de que el check
 quedara en verde.
 
+> **Nota de actualización:** este apartado describe la protección vigente cuando se
+> cerró el PR #23. La política actual de `main` exige **dos aprobaciones**; se
+> conserva el registro histórico sin reescribirlo.
+
 ![Protección de main](evidencia/HU-GATEWAY-04/06-branch-protection.png)
 
 ### 5.8 Notificación de fallo

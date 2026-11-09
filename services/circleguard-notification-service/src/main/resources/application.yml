@@ -31,5 +31,12 @@ qr:
   secret: "my-qr-secret-key-for-dev-1234567890"
   expiration: 300
 
+management:
+  health:
+    # El SMTP es externo y puede no estar disponible durante el arranque; el
+    # healthcheck del contenedor debe medir el proceso, no la dependencia de correo.
+    mail:
+      enabled: false
+
 server:
   port: 8082

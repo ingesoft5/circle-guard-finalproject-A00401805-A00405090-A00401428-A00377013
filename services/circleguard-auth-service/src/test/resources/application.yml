@@ -5,11 +5,23 @@ jwt:
 
 qr:
   secret: "my-super-secret-qr-test-key-32-chars-long"
-  expiration: 60
+  expiration: 300
 
 identity:
   service:
     url: "http://localhost:8083/api/v1/identities/map"
+
+cors:
+  allowed-origins: "http://localhost:8081,http://localhost:8080"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    ldap:
+      enabled: false
 
 spring:
   main:

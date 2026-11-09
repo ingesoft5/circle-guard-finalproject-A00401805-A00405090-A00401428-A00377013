@@ -78,7 +78,7 @@ grep -E 'JENKINS_ADMIN_PASSWORD|PROFESSOR_PASSWORD|SONAR_ADMIN_PASSWORD|NEXUS_PA
 ## 6. Pipeline
 
 - Open `http://<TOOLS_IP>:8080`.
-- Job: `circleguard`.
+- Job: `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`.
 - Run `Scan Multibranch Pipeline Now` if no branch appears.
 - Trigger with a push or `Build with Parameters`.
 - Approve production manually when requested.

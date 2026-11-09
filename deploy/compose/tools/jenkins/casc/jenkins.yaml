@@ -93,12 +93,12 @@ unclassified:
 
 jobs:
   - script: |
-      multibranchPipelineJob('circleguard') {
+      multibranchPipelineJob('circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013') {
         branchSources {
           branchSource {
             source {
               github {
-                id('circleguard')
+                id('circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013')
                 repoOwner('${GITHUB_OWNER}')
                 repository('${GITHUB_REPO}')
                 credentialsId('github-creds')

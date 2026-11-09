@@ -33,6 +33,79 @@ def loadEnvironment(String... names) {
     }
 }
 
+// La Shared Library pinneada a main puede ir un commit por detrás de este Jenkinsfile
+// (el PR no ve sus propios cambios de library). El catálogo local corrige los flags
+// que necesita la entrega sin bloquear el build del PR.
+def enrichServices(List services) {
+    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form']
+    def covered = ['gateway', 'auth', 'identity', 'promotion', 'form']
+    services.each { service ->
+        service.docker = true
+        service.deploy = deployable.contains(service.short)
+        if (covered.contains(service.short)) {
+            service.jacoco = true
+        }
+        if (['auth', 'identity', 'promotion', 'form'].contains(service.short)) {
+            service.healthcheck = true
+        }
+        if (service.short == 'promotion') {
+            service.sonarSettings = 'services/circleguard-promotion-service/sonar-project.properties'
+        }
+    }
+    return services
+}
+
+// El cliente Expo no es un módulo Gradle; se construye aparte y se publica con el
+// mismo tag semántico que las imágenes Java.
+def dockerBuildPushClientLocal(String tag) {
+    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/web:${tag}"
+    def commit = env.GIT_COMMIT ?: 'unknown'
+    def source = env.GITHUB_REPO_URL ?: 'unknown'
+    def digest = ''
+    withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+            usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+        sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
+        sh """
+            docker build \
+              --build-arg VERSION=${tag} \
+              --build-arg GIT_COMMIT=${commit} \
+              --build-arg SOURCE_URL=${source} \
+              -t ${image} -f mobile/Dockerfile mobile
+        """
+        sh "docker push ${image}"
+        digest = sh(script: "docker inspect --format='{{index .RepoDigests 0}}' ${image}", returnStdout: true).trim()
+        if (!digest || digest == '<no value>') {
+            digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
+        }
+        sh "printf '%s\\n%s\\ncommit=%s\\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
+    }
+    return digest
+}
+
+// Los tres flujos UI (login, cuestionario y acceso) viven en tests/e2e. Se ejecutan
+// aquí para no depender de la versión de ci.e2e() que esté publicada en main.
+def runE2E() {
+    def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
+    sshagent(['cg-envs-ssh']) {
+        sh """
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${env.DEV_PRIVATE_IP} \
+              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose \
+                 ./deploy/scripts/seed-visitor.sh dev ${runId}-symptoms ${runId}-control'
+        """
+    }
+    sh """
+        cd tests/e2e
+        npm install
+        npx playwright install --with-deps chromium
+        WEB_URL=http://${env.DEV_PRIVATE_IP}:8081 \
+        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
+        PROMOTION_URL=http://${env.DEV_PRIVATE_IP}:8088 \
+        KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:29092 \
+        E2E_ANONYMOUS_ID=${runId} \
+        npx playwright test
+    """
+}
+
 // Shared library vars added in the same PR are not visible to that PR build:
 // @Library loads from LIBRARY_BRANCH, not from the checked-out PR branch.
 // Keep the semver helpers here so the pipeline can validate itself.
@@ -133,6 +206,70 @@ def createSemverTag(String version) {
     }
 }
 
+def writeReleaseNotes(String version) {
+    // Se genera desde los commits convencionales; el tag previo define el rango.
+    def previous = sh(
+            script: "git tag --list 'v[0-9]*' --sort=-v:refname | grep -v '^v${version}\$' | head -n1",
+            returnStdout: true
+    ).trim()
+    def range = previous ? "${previous}..HEAD" : 'HEAD'
+    def changes = sh(
+            script: "git log --pretty=format:'- %s (%h)' ${range}",
+            returnStdout: true
+    ).trim()
+    def date = sh(script: 'date -u +%Y-%m-%d', returnStdout: true).trim()
+    def notes = """# CircleGuard v${version}
+
+Fecha: ${date}
+
+## Cambios
+
+${changes ?: '- Sin cambios registrados.'}
+
+## Artefactos
+
+- Imágenes Docker inmutables con tag `v${version}`.
+- JARs publicados en Nexus.
+- Cobertura y quality gate disponibles en SonarQube.
+"""
+    writeFile file: "docs/release-notes/v${version}.md", text: notes
+    archiveArtifacts artifacts: "docs/release-notes/v${version}.md", fingerprint: true
+}
+
+def publishGitHubRelease(String version) {
+    // Publica las notas como GitHub Release. Si ya existe una release para el tag,
+    // actualiza el cuerpo para que un reintento del pipeline sea idempotente.
+    withCredentials([usernamePassword(credentialsId: 'github-creds',
+            usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+        sh """
+            set -eu
+            notes="docs/release-notes/v${version}.md"
+            if [ ! -f "\$notes" ]; then
+                echo "No hay notas para v${version}; se omite la release."
+                exit 0
+            fi
+            payload=\$(jq -n \
+                --arg tag "v${version}" \
+                --arg name "CircleGuard v${version}" \
+                --rawfile body "\$notes" \
+                '{tag_name: \$tag, name: \$name, body: \$body, draft: false, prerelease: false}')
+            api="https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/releases"
+            existing=\$(curl -fsS -H "Authorization: token \$GH_TOKEN" \
+                "\$api/tags/v${version}" 2>/dev/null || true)
+            if [ -n "\$existing" ]; then
+                id=\$(printf '%s' "\$existing" | jq -r '.id')
+                curl -fsS -X PATCH -H "Authorization: token \$GH_TOKEN" \
+                    -H 'Content-Type: application/json' "\$api/\$id" -d "\$payload" >/dev/null
+                echo "GitHub Release v${version} actualizada (id=\$id)."
+            else
+                curl -fsS -X POST -H "Authorization: token \$GH_TOKEN" \
+                    -H 'Content-Type: application/json' "\$api" -d "\$payload" >/dev/null
+                echo "GitHub Release v${version} publicada."
+            fi
+        """
+    }
+}
+
 pipeline {
     agent any
 
@@ -183,7 +320,7 @@ pipeline {
                         echo "Rollback solicitado: ${env.TAG}"
                     } else {
                         env.TAG = resolveSemver(params.TAG ?: '')
-                        services = ciServices.resolve(params.SERVICE ?: 'auto')
+                        services = enrichServices(ciServices.resolve(params.SERVICE ?: 'auto'))
                         env.SERVICES = services.collect { it.short }.join(',')
                         echo "Versión semántica: ${env.TAG}"
                         echo "Servicios a construir: ${env.SERVICES ?: 'ninguno'}"
@@ -281,6 +418,30 @@ pipeline {
             }
         }
 
+        stage('Release notes') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script { writeReleaseNotes(env.TAG) }
+            }
+        }
+
+        stage('GitHub Release') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script { publishGitHubRelease(env.TAG) }
+            }
+        }
+
         stage('Publish') {
             when {
                 allOf {
@@ -326,7 +487,7 @@ pipeline {
             }
             steps {
                 script {
-                    def digest = ci.dockerBuildPushClient(env.TAG)
+                    def digest = dockerBuildPushClientLocal(env.TAG)
                     echo "Digest publicado (web): ${digest}"
                 }
             }
@@ -349,7 +510,7 @@ pipeline {
                     expression { params.DEPLOY && services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
                 }
             }
-            steps { script { ci.e2e() } }
+            steps { script { runE2E() } }
         }
 
         stage('Deploy stage') {
