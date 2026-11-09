@@ -1,3 +1,4 @@
+# CG-DOC: Multi-stage, non-root image for the form service.
 #BUILD
 # El digest fija la imagen base exacta utilizada para compilar.
 FROM gradle:8.14-jdk21@sha256:930141cf2b9d472f3fd024b2e711856bede114ce116e49fcdfb64427b875982d AS build
