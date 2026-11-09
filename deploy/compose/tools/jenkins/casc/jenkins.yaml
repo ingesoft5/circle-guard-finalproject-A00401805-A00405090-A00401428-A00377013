@@ -1,6 +1,6 @@
 # CG-DOC: Jenkins Configuration as Code for security, credentials, library, and job.
 jenkins:
-  systemMessage: "CircleGuard CI/CD - Gateway"
+  systemMessage: "CircleGuard CI/CD"
   numExecutors: 2
   securityRealm:
     local:
@@ -93,12 +93,12 @@ unclassified:
 
 jobs:
   - script: |
-      multibranchPipelineJob('circleguard-gateway') {
+      multibranchPipelineJob('circleguard') {
         branchSources {
           branchSource {
             source {
               github {
-                id('circleguard-gateway')
+                id('circleguard')
                 repoOwner('${GITHUB_OWNER}')
                 repository('${GITHUB_REPO}')
                 credentialsId('github-creds')

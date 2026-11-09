@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CG-DOC: Deploys one image tag to an isolated environment and waits for the whole stack.
+# CG-DOC: Deploys a gateway image tag to an isolated environment and waits for health.
 set -euo pipefail
 
 ENV="${1:?Uso: deploy.sh <dev|stage|prod> <tag>}"
@@ -12,17 +12,30 @@ DIR="${COMPOSE_ROOT}/${ENV}"
 
 cd "${DIR}"
 export TAG
+docker compose pull auth identity promotion form gateway web
+docker compose up -d --remove-orphans
 
-# Only the images this repository publishes are pulled by name: their tag is what
-# the pipeline changes. The public middleware images are pinned to fixed versions
-# in the compose file and `up` fetches them once if they are missing, so a Docker
-# Hub outage cannot block a redeploy that only ships a new application tag.
-docker compose pull --quiet gateway promotion
+check_health() {
+  local name="$1"
+  local port="$2"
+  local path="${3:-/actuator/health}"
+  for _ in $(seq 1 40); do
+    if curl -fsS "http://localhost:${port}${path}" | grep -Eq 'UP|html'; then
+      echo "Health OK (${name}): ${ENV} tag=${TAG} puerto=${port}"
+      return 0
+    fi
+    sleep 3
+  done
+  echo "Healthcheck falló (${name}) para ${ENV} tag=${TAG} puerto=${port}"
+  docker compose logs --tail=80 "${name}" || true
+  return 1
+}
 
-# `--wait` blocks until every service with a healthcheck reports healthy, which is
-# the same contract the old port-scanning loop enforced, but for the whole stack
-# instead of the first published port it found.
-docker compose up -d --remove-orphans --wait --wait-timeout 300
+check_health gateway 8087
+check_health auth 8180
+check_health identity 8083
+check_health promotion 8088
+check_health form 8086
+check_health web 8081 "/"
 
-echo "Despliegue OK: ${ENV} tag=${TAG}"
-docker compose ps --format 'table {{.Service}}\t{{.Status}}'
+echo "Despliegue OK: ${ENV} tag=${TAG} servicios=5 núcleo + web"
