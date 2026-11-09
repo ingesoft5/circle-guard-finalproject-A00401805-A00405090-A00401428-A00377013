@@ -9,12 +9,19 @@ services:
       - redis_prod:/data
     networks: [prod-net]
     mem_limit: 128m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   gateway:
     image: ${NEXUS_REGISTRY}/circleguard-docker/gateway:${TAG}
     container_name: cg-gateway-prod
     restart: unless-stopped
-    depends_on: [redis]
+    depends_on:
+      redis:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
       REDIS_HOST: redis
@@ -25,10 +32,11 @@ services:
     ports:
       - "8087:8087"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health | grep -q UP || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 10
+      start_period: 60s
     networks: [prod-net]
     mem_limit: 512m
 

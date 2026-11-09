@@ -32,11 +32,20 @@ def publish(String servicePath) {
 }
 
 def dockerBuildPush(String serviceDir, String image, String tag) {
+    if (tag == 'latest' || !(tag ==~ /^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/)) {
+        error "Invalid image tag '${tag}'. Use vX.Y.Z or vX.Y.Z-<sha>; latest is forbidden."
+    }
+    def fullImage = "${env.NEXUS_REGISTRY}/circleguard-docker/${image}:${tag}"
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
-        sh "docker build -t ${env.NEXUS_REGISTRY}/circleguard-docker/${image}:${tag} -f ${serviceDir}/Dockerfile ."
-        sh "docker push ${env.NEXUS_REGISTRY}/circleguard-docker/${image}:${tag}"
+        sh "docker build --build-arg VERSION=${tag} -t ${fullImage} -f ${serviceDir}/Dockerfile ."
+        sh "docker push ${fullImage}"
+        sh """
+            mkdir -p build
+            docker inspect --format='{{index .RepoDigests 0}}' ${fullImage} | tee build/image-digest.txt
+        """
+        archiveArtifacts artifacts: 'build/image-digest.txt', fingerprint: true
     }
 }
 

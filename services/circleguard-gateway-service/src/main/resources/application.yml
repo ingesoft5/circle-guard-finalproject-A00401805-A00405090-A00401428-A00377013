@@ -10,10 +10,10 @@ spring:
       connect-timeout: 2s
 
 jwt:
-  secret: ${JWT_SECRET:my-super-secret-dev-key-32-chars-long-12345678}
+  secret: ${JWT_SECRET}
 
 qr:
-  secret: ${QR_SECRET:my-qr-secret-key-for-dev-1234567890}
+  secret: ${QR_SECRET}
 
 server:
   port: ${SERVER_PORT:8087}

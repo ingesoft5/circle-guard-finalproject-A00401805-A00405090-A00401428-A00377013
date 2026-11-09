@@ -33,11 +33,15 @@ pipeline {
         stage('Prepare') {
             steps {
                 script {
-                    if (params.ROLLBACK_TAG?.trim()) {
-                        env.TAG = params.ROLLBACK_TAG.trim()
-                    } else {
-                        env.TAG = params.TAG?.trim() ?: "1.0.0-${(env.GIT_COMMIT ?: 'local').take(7)}"
+                    def rawTag = params.ROLLBACK_TAG?.trim() ?: params.TAG?.trim()
+                    if (!rawTag) {
+                        rawTag = "1.0.0-${(env.GIT_COMMIT ?: 'local').take(7)}"
                     }
+                    def normalizedTag = rawTag.startsWith('v') ? rawTag : "v${rawTag}"
+                    if (!(normalizedTag ==~ /^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/)) {
+                        error "TAG inválido: ${normalizedTag}. Use vX.Y.Z o vX.Y.Z-<sha>; latest está prohibido."
+                    }
+                    env.TAG = normalizedTag
                     echo "Tag de build: ${env.TAG}"
                 }
             }
@@ -105,8 +109,8 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'github-creds',
                         usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
-                    sh 'git tag -f v${TAG}'
-                    sh 'git push -f https://${GH_USER}:${GH_TOKEN}@github.com/${GITHUB_OWNER}/${GITHUB_REPO}.git v${TAG}'
+                    sh 'git tag -f "${TAG}"'
+                    sh 'git push -f https://${GH_USER}:${GH_TOKEN}@github.com/${GITHUB_OWNER}/${GITHUB_REPO}.git "${TAG}"'
                 }
             }
         }
