@@ -36,6 +36,11 @@ credentials:
               description: GitHub
           - string:
               scope: GLOBAL
+              id: github-webhook-secret
+              secret: ${GITHUB_WEBHOOK_SECRET}
+              description: GitHub webhook secret
+          - string:
+              scope: GLOBAL
               id: sonar-token
               secret: ${SONAR_TOKEN}
               description: SonarQube
@@ -57,6 +62,17 @@ credentials:
 unclassified:
   location:
     url: ${JENKINS_URL}
+  gitHubPluginConfig:
+    hookUrl: "http://${TOOLS_IP}/github-webhook/"
+    configs:
+      - name: "GitHub"
+        credentialsId: "github-creds"
+        apiUrl: "https://api.github.com"
+        manageHooks: true
+    hookSecretConfigs:
+      - credentialsId: "github-webhook-secret"
+  gitHubConfiguration:
+    apiRateLimitChecker: ThrottleForNormalize
   sonarGlobalConfiguration:
     buildWrapperEnabled: false
     installations:
@@ -69,6 +85,7 @@ unclassified:
         defaultVersion: ${LIBRARY_BRANCH}
         retriever:
           modernSCM:
+            libraryPath: jenkins
             scm:
               git:
                 remote: ${GITHUB_REPO_URL}

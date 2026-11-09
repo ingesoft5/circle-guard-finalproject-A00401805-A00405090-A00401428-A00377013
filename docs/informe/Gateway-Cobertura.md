@@ -82,9 +82,10 @@ Published artifact and image:
 
 ## Pipeline
 
-`ci.buildAndTest(SERVICE_DIR)` runs the tests and the JaCoCo gate, and its
-`finally` block calls `ci.publishReports`, which archives the JUnit XML and the
-JaCoCo HTML report for every build, including failed builds. The shared library
-is loaded from `main`, so this behavior applies after the change is merged.
+The multibranch Jenkinsfile runs `ci.build`, `ci.unitTest` (JUnit + JaCoCo
+gate) and `ci.integrationTest` for the gateway, followed by
+`ci.archive(services)`, which publishes the JUnit XML and the JaCoCo HTML/XML
+reports for every build, including failed builds. The shared library is loaded
+from `main` (`jenkins/vars`).
 
 ![Gateway pipeline](evidencia/jenkins-pr15.png)
