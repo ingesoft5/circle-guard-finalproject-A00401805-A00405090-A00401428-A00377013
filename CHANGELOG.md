@@ -12,7 +12,8 @@ Semantic Versioning.
   gateway, Expo web client, PostgreSQL, Neo4j, Kafka, Redis, and OpenLDAP.
 - Multi-stage, non-root Docker images for all eight services and the web client.
 - Jenkins stages for core image publication, web client publication, dev/stage/prod
-  promotion, manual production approval, rollback, and release note generation.
+  promotion, manual production approval, rollback, release note generation, and
+  idempotent GitHub Release publication.
 - Sprint 0 and Sprint 1 artifacts, product backlog, change management policy,
   architecture diagrams, and release note template.
 - Credential rotation helper that synchronizes GitHub credentials into both

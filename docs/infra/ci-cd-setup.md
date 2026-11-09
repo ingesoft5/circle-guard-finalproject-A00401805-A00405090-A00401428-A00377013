@@ -109,11 +109,12 @@ The `Jenkinsfile` is branch-aware: the multibranch job discovers `main`, feature
 7. **Package**: `bootJar`.
 8. **Git tag** (on `main`): creates and pushes `vX.Y.Z` for publishable services.
 9. **Release notes** (on `main`): generates `docs/release-notes/vX.Y.Z.md` from Conventional Commits.
-10. **Publish** (on `main`): Nexus artifact for publishable Maven services.
-11. **Docker** (on `main`): builds and pushes every service with a Dockerfile using only the semver tag, never `latest`; verifies non-root user and HEALTHCHECK.
-12. **Docker web** (on `main`): builds the Expo client with `mobile/Dockerfile` and publishes `web:<tag>`.
-13. **Deploy** (optional): dev, E2E, stage, production approval, production, rollback. Only when `DEPLOY=true` on `main`.
-14. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt` and release notes.
+10. **GitHub Release** (on `main`): publishes or updates the release for tag `vX.Y.Z` with those notes; retries are idempotent.
+11. **Publish** (on `main`): Nexus artifact for publishable Maven services.
+12. **Docker** (on `main`): builds and pushes every service with a Dockerfile using only the semver tag, never `latest`; verifies non-root user and HEALTHCHECK.
+13. **Docker web** (on `main`): builds the Expo client with `mobile/Dockerfile` and publishes `web:<tag>`.
+14. **Deploy** (optional): dev, E2E, stage, production approval, production, rollback. Only when `DEPLOY=true` on `main`.
+15. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt` and release notes.
 
 ### Selective execution
 

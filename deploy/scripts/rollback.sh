@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CG-DOC: Rolls back an environment to a previous gateway image tag.
+# CG-DOC: Rolls back an environment to a previous full-stack image tag.
 set -euo pipefail
 
 ENV="${1:?Uso: rollback.sh <dev|stage|prod> <tag-anterior>}"

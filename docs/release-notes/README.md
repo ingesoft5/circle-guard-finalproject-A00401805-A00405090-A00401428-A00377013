@@ -47,4 +47,5 @@ v<major>.<minor>.<patch>.md
 - La versión se calcula desde el último tag y los Conventional Commits.
 - Nunca se publica `latest`; la imagen siempre lleva semver.
 - La nota se archiva en el build y se conserva en el repositorio si el cambio la incluye.
+- El stage `GitHub Release` publica o actualiza la release del tag `vX.Y.Z` usando la misma nota (idempotente en reintentos).
 - El tag solo se crea sobre `main` después de los checks.

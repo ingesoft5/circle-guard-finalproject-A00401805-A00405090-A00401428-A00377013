@@ -163,6 +163,40 @@ ${changes ?: '- Sin cambios registrados.'}
     archiveArtifacts artifacts: "docs/release-notes/v${version}.md", fingerprint: true
 }
 
+def publishGitHubRelease(String version) {
+    // Publica las notas como GitHub Release. Si ya existe una release para el tag,
+    // actualiza el cuerpo para que un reintento del pipeline sea idempotente.
+    withCredentials([usernamePassword(credentialsId: 'github-creds',
+            usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+        sh """
+            set -eu
+            notes="docs/release-notes/v${version}.md"
+            if [ ! -f "\$notes" ]; then
+                echo "No hay notas para v${version}; se omite la release."
+                exit 0
+            fi
+            payload=\$(jq -n \
+                --arg tag "v${version}" \
+                --arg name "CircleGuard v${version}" \
+                --rawfile body "\$notes" \
+                '{tag_name: \$tag, name: \$name, body: \$body, draft: false, prerelease: false}')
+            api="https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/releases"
+            existing=\$(curl -fsS -H "Authorization: token \$GH_TOKEN" \
+                "\$api/tags/v${version}" 2>/dev/null || true)
+            if [ -n "\$existing" ]; then
+                id=\$(printf '%s' "\$existing" | jq -r '.id')
+                curl -fsS -X PATCH -H "Authorization: token \$GH_TOKEN" \
+                    -H 'Content-Type: application/json' "\$api/\$id" -d "\$payload" >/dev/null
+                echo "GitHub Release v${version} actualizada (id=\$id)."
+            else
+                curl -fsS -X POST -H "Authorization: token \$GH_TOKEN" \
+                    -H 'Content-Type: application/json' "\$api" -d "\$payload" >/dev/null
+                echo "GitHub Release v${version} publicada."
+            fi
+        """
+    }
+}
+
 pipeline {
     agent any
 
@@ -320,6 +354,18 @@ pipeline {
             }
             steps {
                 script { writeReleaseNotes(env.TAG) }
+            }
+        }
+
+        stage('GitHub Release') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script { publishGitHubRelease(env.TAG) }
             }
         }
 
