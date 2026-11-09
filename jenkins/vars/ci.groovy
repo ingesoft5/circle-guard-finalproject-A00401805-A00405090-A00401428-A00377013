@@ -170,7 +170,7 @@ def e2e() {
         npx playwright install --with-deps chromium
         GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
         PROMOTION_URL=http://${env.DEV_PRIVATE_IP}:8088 \
-        KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:19092 \
+        KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:29092 \
         E2E_ANONYMOUS_ID=${runId} \
         npx playwright test
     """

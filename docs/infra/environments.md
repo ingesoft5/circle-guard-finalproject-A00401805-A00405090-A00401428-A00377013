@@ -15,7 +15,7 @@ cg-dev   (m7i-flex.large, private 10.x.x.x)
 cg-stage (m7i-flex.large, private 10.x.x.x)
 cg-prod  (m7i-flex.large, private 10.x.x.x)
 ├── gateway    :8087   Redis
-└── promotion  :8088   PostgreSQL, Neo4j, Kafka (external listener :19092)
+└── promotion  :8088   PostgreSQL, Neo4j, Kafka (external listener :29092)
 ```
 
 Every environment runs the same stack with the same image tag: `gateway` and
@@ -32,8 +32,12 @@ network, not by configuration differences.
 - Ports 9000 and 8081 are restricted to the teacher and administrator.
 - Port 80 is public for the application ingress.
 - Ports 5000, 5432, 7687 and 9092 stay private inside the Docker network.
-- Port 19092 is Kafka's external listener: it advertises `ENV_HOST_IP`, so the
-  end-to-end suite can publish a questionnaire event from Jenkins.
+- Ports 8087 (gateway) and 8088 (promotion) accept traffic from `cg-tools`, where the
+  deploy health probe and the end-to-end stage run.
+- Port 29092 is Kafka's external listener: it advertises `ENV_HOST_IP`, so the
+  end-to-end suite can publish a questionnaire event from Jenkins. It reuses the
+  port `bootstrap-aws.sh` already opens from `cg-tools` instead of adding a second
+  broker port to the security group.
 
 ## Required variables
 

@@ -11,7 +11,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 import { Kafka, logLevel } from 'kafkajs';
 
 const PROMOTION_URL = process.env.PROMOTION_URL || 'http://localhost:8088';
-const KAFKA_BROKERS = (process.env.KAFKA_BROKERS || 'localhost:19092').split(',');
+const KAFKA_BROKERS = (process.env.KAFKA_BROKERS || 'localhost:29092').split(',');
 
 const kafka = new Kafka({
   clientId: 'circleguard-e2e',
