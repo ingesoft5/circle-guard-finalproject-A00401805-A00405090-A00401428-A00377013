@@ -163,10 +163,13 @@ reconcile_cidr "${TOOLS_SG}" 8080 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}"
 reconcile_cidr "${TOOLS_SG}" 9000 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}"
 reconcile_cidr "${TOOLS_SG}" 8081 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}"
 
-# Registro y gateway privados.
+# Registro y aplicación privados.
 allow_sg "${TOOLS_SG}" 5000 "${ENVS_SG}"
 allow_sg "${TOOLS_SG}" 5000 "${TOOLS_SG}"
 allow_sg "${ENVS_SG}" 8087 "${TOOLS_SG}"
+# 8088 publica promotion-service: la etapa E2E del pipeline consulta sus estadísticas
+# y siembra visitantes desde Jenkins, así que necesita el mismo acceso que el gateway.
+allow_sg "${ENVS_SG}" 8088 "${TOOLS_SG}"
 
 # Middleware solo desde tools y administración.
 for port in 8180 8082 8083 8084 8085 8086 5432 7474 7687 9092 29092 6379 389 1389; do

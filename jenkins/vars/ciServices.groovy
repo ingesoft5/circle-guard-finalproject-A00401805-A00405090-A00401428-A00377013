@@ -12,7 +12,8 @@ def catalog() {
                     jacoco        : true,
                     integration   : true,
                     publish       : true,
-                    docker        : true
+                    docker        : true,
+                    deploy        : true
             ],
             [
                     short         : 'auth',
@@ -25,7 +26,8 @@ def catalog() {
                     jacoco        : true,
                     integration   : true,
                     publish       : true,
-                    docker        : true
+                    docker        : true,
+                    deploy        : true
             ],
             [
                     short         : 'form',
@@ -38,7 +40,8 @@ def catalog() {
                     jacoco        : true,
                     integration   : true,
                     publish       : true,
-                    docker        : true
+                    docker        : true,
+                    deploy        : true
             ],
             [
                     short         : 'identity',
@@ -52,6 +55,7 @@ def catalog() {
                     integration   : false,
                     publish       : true,
                     docker        : true,
+                    deploy        : true,
                     healthcheck   : true
             ],
             [
@@ -61,11 +65,13 @@ def catalog() {
                     dir           : 'services/circleguard-promotion-service',
                     projectKey    : 'circleguard-promotion-service',
                     display       : 'CircleGuard Promotion',
-                    sonarSettings : '',
-                    jacoco        : false,
+                    sonarSettings : 'services/circleguard-promotion-service/sonar-project.properties',
+                    jacoco        : true,
                     integration   : true,
                     publish       : true,
-                    docker        : true
+                    docker        : true,
+                    deploy        : true,
+                    healthcheck   : true
             ],
             [
                     short         : 'notification',
@@ -78,7 +84,8 @@ def catalog() {
                     jacoco        : false,
                     integration   : true,
                     publish       : true,
-                    docker        : false
+                    docker        : true,
+                    deploy        : false
             ],
             [
                     short         : 'file',
@@ -91,7 +98,8 @@ def catalog() {
                     jacoco        : false,
                     integration   : false,
                     publish       : true,
-                    docker        : false
+                    docker        : true,
+                    deploy        : false
             ],
             [
                     short         : 'dashboard',
@@ -104,7 +112,8 @@ def catalog() {
                     jacoco        : false,
                     integration   : false,
                     publish       : true,
-                    docker        : false
+                    docker        : true,
+                    deploy        : false
             ]
     ]
 }

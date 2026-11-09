@@ -185,12 +185,25 @@ def deploy(String environment, String tag) {
 }
 
 def e2e() {
+    // Cada corrida siembra sus propios visitantes; un id fijo reutilizaría el
+    // estado que dejó la corrida anterior.
+    def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
+    sshagent(['cg-envs-ssh']) {
+        sh """
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${env.DEV_PRIVATE_IP} \
+              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose \
+                 ./deploy/scripts/seed-visitor.sh dev ${runId}-symptoms ${runId}-control'
+        """
+    }
     sh """
         cd tests/e2e
         npm install
         npx playwright install --with-deps chromium
         WEB_URL=http://${env.DEV_PRIVATE_IP}:8081 \
         GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
+        PROMOTION_URL=http://${env.DEV_PRIVATE_IP}:8088 \
+        KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:29092 \
+        E2E_ANONYMOUS_ID=${runId} \
         npx playwright test
     """
 }

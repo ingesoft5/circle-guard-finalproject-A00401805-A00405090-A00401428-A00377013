@@ -26,7 +26,12 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "${KAFKA_TRUSTED_PACKAGES:com.circleguard.*}"
+        # form-service publishes the questionnaire as plain JSON. Without a default
+        # type the deserializer rejects every record ("No type information in headers
+        # and no default type provided"), so the service starts but never consumes the
+        # event. java.util is trusted because the target type is a Map, not an event class.
+        spring.json.trusted.packages: "${KAFKA_TRUSTED_PACKAGES:com.circleguard.*,java.util}"
+        spring.json.value.default.type: "${KAFKA_VALUE_DEFAULT_TYPE:java.util.Map}"
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
