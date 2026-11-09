@@ -154,10 +154,11 @@ We maintain high system integrity via multi-level testing:
 
 | Command | Scope |
 |:---|:---|
-| `./gradlew test` | Full system suite (Unit + Integration) |
-| `./gradlew :services:<name>:test` | Single service testing |
+| `./gradlew test` | Full unit suite (all services) |
+| `./gradlew :services:<name>:test` | Single service unit tests |
+| `./gradlew :services:circleguard-gateway-service:integrationTest` | Gateway tests against an ephemeral Redis container |
 
-**Note**: Integration tests use **Testcontainers** to spawn ephemeral Neo4j and PostgreSQL instances for zero-side-effect validation.
+**Note**: Integration tests use **Testcontainers** to spawn ephemeral Neo4j, PostgreSQL, and Redis instances for zero-side-effect validation. The gateway integration suite requires Docker and is excluded from `test` so unit builds do not depend on it.
 
 ---
 

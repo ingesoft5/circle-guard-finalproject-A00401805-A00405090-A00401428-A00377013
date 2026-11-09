@@ -354,6 +354,48 @@ https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6
 
 ---
 
+<a id="gw-ci-02"></a>
+## GW-CI-02 — Integración Gateway–Redis con Testcontainers (8 de noviembre de 2026)
+
+- **Nivel de uso:** 3 (colaboración con IAG).
+- **Herramienta:** OpenCode / Big Pickle.
+- **Historia / Entregable:** `GW-CI-02` — E1.6 (pruebas automatizadas).
+- **Rama:** `feat/HU-GATEWAY-03-integracion-redis-testcontainers`.
+
+### A. Contenido propio entregado a la IAG
+
+1. **Requisitos de la HU:** leer la sección 5 de `CircleGuard_HU_CICD_Gateway_File.pdf` y contrastarla con `Proyecto_Final_CircleGuard.pdf` (E1.6 exige ≥ 60 % de cobertura en gateway, ≥ 3 integraciones entre servicios y 3 flujos E2E).
+2. **Diagnóstico del estado actual:** el repositorio ya tenía `GatewayRedisIntegrationTest` con Testcontainers, pero solo cubría `ACTIVE`, `SUSPECT` y estado ausente; las pruebas de integración corrían dentro de `test`, no existía tarea `integrationTest` ni etapa de Jenkins.
+3. **Decisiones acordadas:** imagen `redis:7.2-alpine`, separación por filtro de paquete (`**/integration/**`), JaCoCo solo con unitarias, commits Conventional Commits sin clave `[CG-02]`, sin cambios en lógica de negocio ni contratos de API.
+4. **Criterios de aceptación:** casos ACTIVE, RECOVERED, SUSPECT, CONTAGIED, estado ausente y token expirado; tarea Gradle propia; etapa de pipeline; < 3 minutos; limpieza de contenedores; 3 corridas consecutivas; Redis caído solo documentado.
+5. **Restricciones del entorno:** WSL2 con el repositorio en `/mnt/c` (9p), sin Java ni Docker instalados inicialmente.
+
+### B. Prompts empleados
+
+```text
+Dame el plan completo
+```
+
+```text
+Ejecuta el plan
+```
+
+### C. Validación humana y hallazgos
+
+- **Entorno:** se instaló Temurin JDK 21 en `~/.local/opt/jdk-21` sin `sudo` y Docker Engine 29.1.3 + Compose v2 mediante `wsl.exe -u root`; se habilitó el socket para el usuario.
+- **Casos:** se amplió la suite a 9 ejecuciones (2 parametrizadas y 3 individuales), incluyendo `RECOVERED`, `CONTAGIED`, `PROBABLE`, `CONFIRMED`, `POTENTIAL` y token expirado.
+- **Hallazgo 1 — Redis no listo:** las primeras corridas fallaban con `RedisConnectionFailureException` porque el contenedor aceptaba conexiones antes de inicializar Redis. Se añadió `Wait.forLogMessage(".*Ready to accept connections.*\\n", 1)`.
+- **Hallazgo 2 — timeouts en WSL:** con timeouts de 2 s el arranque de Lettuce en `/mnt/c` agotaba el tiempo; se ajustaron a 10 s en `application-test.yml`.
+- **Hallazgo 3 — rendimiento de 9p:** la tarea superaba los 3 minutos por la carga de clases desde `/mnt/c`. Se verificó con un init script local que mueve `buildDir` a ext4; en Jenkins el checkout está en ext4 y no requiere ajuste.
+- **Resultado:** tres corridas consecutivas verdes de 28 s, 25 s y 26 s; 9 pruebas, 0 fallos; contenedores eliminados por Ryuk; JaCoCo unitario se mantiene en 95.92 % de líneas.
+- **Sin cambios de producción:** solo se modificaron `build.gradle.kts`, `Jenkinsfile`, `vars/ci.groovy`, pruebas y documentación.
+
+### D. Reflexión crítica
+
+El valor de esta HU estuvo menos en escribir pruebas nuevas y más en hacer explícitas las condiciones que las vuelven confiables: esperar la señal real de readiness de Redis, separar la suite de integración de la unitaria y medir el tiempo en el mismo tipo de filesystem que usa el agente. Las primeras corridas fallidas evidenciaron que un contenedor “arriba” no implica un servicio listo. También quedó claro que el límite de 3 minutos es una restricción de infraestructura tanto como de código: el mismo test tarda 3 s de ejecución JUnit pero más de 3 minutos de tarea cuando el classpath vive en 9p. Documentar el comportamiento ante caída de Redis sin implementar resiliencia mantiene el alcance de la Parte 1 y deja preparado el terreno para la Parte 2.
+
+---
+
 <a id="bitacora-e12"></a>
 ### 2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental (8 de noviembre de 2026)
 
@@ -425,9 +467,9 @@ Ejecuta el Plan completo — E1.2, observaciones y bitácora IAG
 La validación de idempotencia expuso defectos que una sola ejecución del bootstrap ocultaba: desincronización de secretos, reconstrucción innecesaria de Jenkins y usuarios que existían pero no podían autenticarse. El mismo patrón apareció en los Security Groups: agregar reglas sin revocarlas hacía que el estado convergiera solo en apariencia. La verificación del trigger real de Jenkins evitó añadir una allowlist de GitHub innecesaria y mantuvo `8080` con la menor exposición posible. Queda pendiente obtener las 2 aprobaciones, mergear PR-15 y ejecutar el CD en `main` con evidencia de `dev`, `stage`, `prod` y rollback.
 ---
 
-## 3. Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)
+## 4. Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)
 
-### 3.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`
+### 4.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`
 
 - **Fecha:** 7 de noviembre de 2026
 - **Autor:** Alejandro Quiñones Caicedo
