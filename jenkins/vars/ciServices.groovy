@@ -155,7 +155,9 @@ def changed() {
                 path == 'gradlew' ||
                 path == 'gradlew.bat' ||
                 path.startsWith('gradle/') ||
-                path.startsWith('jenkins/')
+                path.startsWith('jenkins/') ||
+                path.startsWith('mobile/') ||
+                path.startsWith('deploy/')
     }
     if (globalChange) {
         echo "Cambio global detectado; se construyen todos los servicios: ${files.join(', ')}"
