@@ -88,7 +88,7 @@ def catalog() {
                     display       : 'CircleGuard File',
                     sonarSettings : '',
                     jacoco        : false,
-                    integration   : true,
+                    integration   : false,
                     publish       : true,
                     docker        : false
             ],
@@ -101,7 +101,7 @@ def catalog() {
                     display       : 'CircleGuard Dashboard',
                     sonarSettings : '',
                     jacoco        : false,
-                    integration   : true,
+                    integration   : false,
                     publish       : true,
                     docker        : false
             ]
