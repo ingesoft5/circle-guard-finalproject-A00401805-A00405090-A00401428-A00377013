@@ -155,7 +155,7 @@ ${changes ?: '- Sin cambios registrados.'}
 
 ## Artefactos
 
-- Imágenes Docker inmutables con tag \`v${version}\`.
+- Imágenes Docker inmutables con tag `v${version}`.
 - JARs publicados en Nexus.
 - Cobertura y quality gate disponibles en SonarQube.
 """
