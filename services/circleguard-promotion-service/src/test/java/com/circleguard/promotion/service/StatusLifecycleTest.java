@@ -31,7 +31,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
+@SpringBootTest(properties = {
+        "spring.main.allow-bean-definition-overriding=true",
+        "spring.kafka.listener.auto-startup=false"
+})
 @ActiveProfiles("test")
 class StatusLifecycleTest {
 
