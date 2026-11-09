@@ -43,6 +43,20 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    void shouldAuthenticateTokenWithoutPermissions() throws Exception {
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(secret);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer " + tokenWithoutPermissions());
+
+        filter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        assertNotNull(authentication);
+        assertEquals("anonymous-id", authentication.getPrincipal());
+        assertTrue(authentication.getAuthorities().isEmpty());
+    }
+
+    @Test
     void shouldNotAuthenticateInvalidToken() throws Exception {
         JwtAuthenticationFilter filter = new JwtAuthenticationFilter(secret);
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -57,6 +71,14 @@ class JwtAuthenticationFilterTest {
         Key key = Keys.hmacShaKeyFor(secret.getBytes());
         return Jwts.builder()
                 .setClaims(Map.of("permissions", permissions))
+                .setSubject("anonymous-id")
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    private String tokenWithoutPermissions() {
+        Key key = Keys.hmacShaKeyFor(secret.getBytes());
+        return Jwts.builder()
                 .setSubject("anonymous-id")
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();

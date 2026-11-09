@@ -1,11 +1,20 @@
-# CG-DOC: Docker build context exclusions.
+# CG-DOC: Build context exclusions for the service images.
 .git
-.gradle
+.gitignore
+.github
 **/build
 **/bin
+**/.gradle
+**/*.log
 node_modules
 mobile
 docs
 design-assets
+scratch
+infra/state
+**/.env
+**/.env.*
 *.pdf
+*.png
+README.md
 dashboard_test_output.txt

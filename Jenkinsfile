@@ -1,5 +1,9 @@
-// CG-DOC: Jenkins multibranch pipeline for the gateway service lifecycle.
+// CG-DOC: Jenkins multibranch pipeline for the CircleGuard services.
+// The multibranch job discovers branches and pull requests; this file orchestrates
+// reusable stages from the circleguard Shared Library (jenkins/vars).
 @Library('circleguard') _
+
+def services = []
 
 pipeline {
     agent any
@@ -7,55 +11,117 @@ pipeline {
     options {
         timestamps()
         disableConcurrentBuilds()
-    }
-
-    triggers {
-        cron('H/5 * * * *')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
     }
 
     parameters {
+        choice(
+                name: 'SERVICE',
+                choices: [
+                        'auto',
+                        'all',
+                        'circleguard-gateway-service',
+                        'circleguard-auth-service',
+                        'circleguard-form-service',
+                        'circleguard-identity-service',
+                        'circleguard-dashboard-service',
+                        'circleguard-file-service',
+                        'circleguard-notification-service',
+                        'circleguard-promotion-service'
+                ],
+                description: 'auto = solo servicios modificados; all = servicios con JaCoCo.'
+        )
         string(name: 'TAG', defaultValue: '', description: 'Tag semver. Vacío = calcular con el commit.')
+        booleanParam(name: 'SKIP_INTEGRATION', defaultValue: false, description: 'Omitir pruebas de integración.')
+        booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Desplegar a dev/stage/prod (solo main).')
         string(name: 'ROLLBACK_TAG', defaultValue: '', description: 'Si se indica, despliega ese tag en prod sin reconstruir.')
-        booleanParam(name: 'SKIP_E2E', defaultValue: false, description: 'Omitir E2E (solo para diagnóstico).')
-    }
-
-    environment {
-        SERVICE = 'circleguard-gateway-service'
-        SERVICE_DIR = 'services/circleguard-gateway-service'
-        SERVICE_PATH = ':services:circleguard-gateway-service'
     }
 
     stages {
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                script { ci.checkoutRepo() }
+            }
         }
 
-        stage('Prepare') {
+        stage('Resolve services') {
             steps {
                 script {
                     if (params.ROLLBACK_TAG?.trim()) {
                         env.TAG = params.ROLLBACK_TAG.trim()
+                        services = []
+                        echo "Rollback solicitado: ${env.TAG}"
                     } else {
                         env.TAG = params.TAG?.trim() ?: "1.0.0-${(env.GIT_COMMIT ?: 'local').take(7)}"
+                        services = ciServices.resolve(params.SERVICE ?: 'auto')
+                        env.SERVICES = services.collect { it.short }.join(',')
+                        echo "Servicios a construir: ${env.SERVICES ?: 'ninguno'}"
                     }
-                    echo "Tag de build: ${env.TAG}"
                 }
             }
         }
 
-        stage('Build & Test') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
-            steps { script { ci.buildAndTest(env.SERVICE_PATH) } }
+        stage('Build') {
+            when { expression { services } }
+            steps {
+                script {
+                    services.each { service ->
+                        timeout(time: 10, unit: 'MINUTES') {
+                            echo "Compilando ${service.name}..."
+                            ci.build(service)
+                        }
+                    }
+                }
+            }
         }
 
-        stage('SonarQube') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
-            steps { script { ci.sonarScan() } }
+        stage('Unit Tests + JaCoCo') {
+            when { expression { services } }
+            steps {
+                script {
+                    services.each { service ->
+                        timeout(time: 10, unit: 'MINUTES') {
+                            echo "Pruebas unitarias y cobertura de ${service.name}..."
+                            ci.unitTest(service)
+                        }
+                    }
+                }
+            }
         }
 
-        stage('Quality Gate') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
-            steps { script { ci.qualityGate() } }
+        stage('SonarQube + Quality Gate') {
+            when { expression { services && !params.ROLLBACK_TAG?.trim() } }
+            steps {
+                script {
+                    services.each { service ->
+                        if (service.jacoco) {
+                            echo "Analizando ${service.name} con SonarQube..."
+                            ci.sonarScan(service)
+                            ci.qualityGate(service)
+                        } else {
+                            echo "SonarQube omitido para ${service.name}: sin JaCoCo configurado."
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Integration Tests') {
+            when { expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() } }
+            steps {
+                script {
+                    services.each { service ->
+                        if (service.integration) {
+                            timeout(time: 5, unit: 'MINUTES') {
+                                echo "Pruebas de integración de ${service.name}..."
+                                ci.integrationTest(service)
+                            }
+                        } else {
+                            echo "Integración omitida para ${service.name}."
+                        }
+                    }
+                }
+            }
         }
 
         stage('Integration Test') {
@@ -65,49 +131,108 @@ pipeline {
         }
 
         stage('Package') {
-            when { expression { !params.ROLLBACK_TAG?.trim() } }
-            steps { sh "./gradlew ${env.SERVICE_PATH}:bootJar" }
+            when { expression { services && !params.ROLLBACK_TAG?.trim() } }
+            steps {
+                script {
+                    services.each { service ->
+                        echo "Empaquetando ${service.name}..."
+                        ci.packageService(service)
+                    }
+                }
+            }
         }
 
         stage('Publish') {
-            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
-            steps { script { ci.publish(env.SERVICE_PATH) } }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script {
+                    services.each { service -> ci.publish(service) }
+                }
+            }
         }
 
         stage('Docker') {
-            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
-            steps { script { ci.dockerBuildPush(env.SERVICE_DIR, 'gateway', env.TAG) } }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script {
+                    def gateway = services.find { it.short == 'gateway' }
+                    if (gateway) {
+                        def digest = ci.dockerBuildPush(gateway, env.TAG)
+                        echo "Digest publicado: ${digest}"
+                    }
+                }
+            }
         }
 
         stage('Deploy dev') {
-            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
             steps { script { ci.deploy('dev', env.TAG) } }
         }
 
         stage('E2E') {
-            when { allOf { branch 'main'; expression { !params.SKIP_E2E && !params.ROLLBACK_TAG?.trim() } } }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.DEPLOY && services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
             steps { script { ci.e2e() } }
         }
 
         stage('Deploy stage') {
-            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
             steps { script { ci.deploy('stage', env.TAG) } }
         }
 
         stage('Approval prod') {
-            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
             steps {
                 input message: 'Aprobar despliegue a producción', ok: 'Desplegar'
             }
         }
 
         stage('Deploy prod') {
-            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
             steps { script { ci.deploy('prod', env.TAG) } }
         }
 
         stage('Tag') {
-            when { allOf { branch 'main'; expression { !params.ROLLBACK_TAG?.trim() } } }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'github-creds',
                         usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
@@ -118,20 +243,25 @@ pipeline {
         }
 
         stage('Rollback prod') {
-            when { allOf { branch 'main'; expression { params.ROLLBACK_TAG?.trim() } } }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.ROLLBACK_TAG?.trim() }
+                }
+            }
             steps { script { ci.deploy('prod', params.ROLLBACK_TAG) } }
-        }
-
-        stage('Notify') {
-            steps { script { ci.notify('success') } }
         }
     }
 
     post {
-        success { echo "Pipeline exitoso: ${env.SERVICE} ${env.TAG}" }
+        always {
+            script { ci.archive(services) }
+        }
+        success {
+            echo "Pipeline exitoso: ${env.SERVICES ?: 'sin servicios'} ${env.TAG}"
+        }
         failure {
-            script { ci.notify('failure') }
-            echo "Pipeline falló: ${env.SERVICE} ${env.TAG}"
+            script { ciNotify.failure(services) }
         }
     }
 }

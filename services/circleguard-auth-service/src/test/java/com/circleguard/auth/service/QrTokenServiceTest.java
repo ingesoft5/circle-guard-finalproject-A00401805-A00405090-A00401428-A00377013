@@ -18,7 +18,7 @@ public class QrTokenServiceTest {
 
     @Test
     void shouldGenerateShortLivedQrTokenWithAnonymousIdSubject() {
-        QrTokenService qrTokenService = new QrTokenService(QR_SECRET, 60000L);
+        QrTokenService qrTokenService = new QrTokenService(QR_SECRET, 60L);
         UUID anonymousId = UUID.randomUUID();
 
         String qrToken = qrTokenService.generateQrToken(anonymousId);

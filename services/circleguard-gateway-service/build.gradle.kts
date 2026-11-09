@@ -36,9 +36,9 @@ jacoco {
 }
 
 tasks.test {
-    useJUnitPlatform()
-    // GW-CI-02: las pruebas de integracion viven en su propia tarea para no exigir Docker en cada build.
-    exclude("**/integration/**")
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
     finalizedBy(tasks.jacocoTestReport)
 }
 
@@ -46,10 +46,11 @@ tasks.test {
 val integrationTest by tasks.registering(Test::class) {
     description = "Ejecuta las pruebas de integracion del gateway contra un Redis real (Testcontainers)."
     group = "verification"
-    useJUnitPlatform()
-    include("**/integration/**")
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("integration")
+    }
     shouldRunAfter(tasks.test)
     timeout.set(Duration.ofMinutes(3))
     outputs.upToDateWhen { false }
@@ -81,11 +82,18 @@ tasks.jacocoTestCoverageVerification {
     )
     violationRules {
         rule {
+            element = "BUNDLE"
             limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
                 minimum = "0.60".toBigDecimal()
             }
         }
     }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
 publishing {

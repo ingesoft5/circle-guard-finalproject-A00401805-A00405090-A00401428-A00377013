@@ -1035,6 +1035,8 @@ English purpose of every tracked repository file.
 
 - `tests/e2e/playwright.config.ts` — End-to-end test configuration or scenario: playwright.config.
 
-## vars
+## jenkins
 
-- `vars/ci.groovy` — Shared Jenkins pipeline helpers for build, analysis, publish, deploy, and notify.
+- `jenkins/vars/ci.groovy` — Shared Jenkins pipeline helpers for build, analysis, publish, deploy, and notify.
+- `jenkins/vars/ciServices.groovy` — Service catalog and selective execution (auto, all, or one service).
+- `jenkins/vars/ciNotify.groovy` — GitHub and Slack failure notifications.
