@@ -147,7 +147,7 @@ La variable `FORM_DB_PASSWORD` también es necesaria para `bootRun` local. Las p
 
 Los adjuntos se escriben en `/tmp/circleguard-uploads`, con permisos para el usuario de la aplicación. Para conservarlos al recrear el contenedor, el entorno de ejecución debe montar almacenamiento con permisos para UID `10001`.
 
-### Comprobaciones y futura integración con Jenkins
+### Comprobaciones de imagen y validación de CI
 
 ```bash
 docker image inspect --format '{{.Config.User}}' circleguard-form-service:1.0.0-dcg21
@@ -159,7 +159,7 @@ curl -i http://localhost:8086/api/v1/questionnaires
 
 El usuario debe ser `10001:10001`, Java debe ser 21 y el endpoint debe devolver HTTP `200`. Los logs permiten comprobar el arranque de Spring y las migraciones Flyway.
 
-En Jenkins, ejecutar `./gradlew :services:circleguard-form-service:check --console=plain` antes de construir la imagen. Esta comprobación necesita Docker para Testcontainers y genera los reportes JUnit y JaCoCo de HU2. El clon de CI utiliza el Gradle Wrapper versionado en el repositorio, incluido `gradle-wrapper.jar`; el Dockerfile usa Gradle de su imagen de compilación. La construcción de la imagen usa el comando anterior y no necesita acceso al socket Docker desde sus etapas. La publicación en el registro y el pipeline compartido corresponden a las siguientes subtareas.
+En Jenkins, ejecutar `./gradlew :services:circleguard-form-service:check --console=plain` antes de construir la imagen. Esta comprobación necesita Docker para Testcontainers y genera los reportes JUnit y JaCoCo de HU2. El clon de CI utiliza el Gradle Wrapper versionado en el repositorio, incluido `gradle-wrapper.jar`; el Dockerfile usa Gradle de su imagen de compilación. La construcción de la imagen usa el comando anterior y no necesita acceso al socket Docker desde sus etapas. La integración con el pipeline se describe en DCG-22 al final de este documento; la publicación en el registro corresponde a DCG-24.
 
 ### Resultado de la validación local de DCG-21
 
@@ -179,3 +179,21 @@ Validación realizada el 6 de noviembre de 2026 con la imagen `1.0.0-dcg21` en L
 | JaCoCo, cobertura de líneas | 86,43 % (121 de 140); supera el mínimo del 60 %. |
 
 La comprobación de arranque utilizó PostgreSQL 16 y Kafka/ZooKeeper 7.6.0 en una red temporal, con Kafka anunciando `kafka:9092` y la contraseña suministrada solo al ejecutar. Se eliminaron los contenedores, sus volúmenes temporales y la red al finalizar; la imagen construida queda disponible localmente.
+
+## Pipeline compartido (DCG-22)
+
+Form usa el `Jenkinsfile` de la raíz y la biblioteca `circleguard`, a través del job
+multibranch existente `circleguard-gateway`. El selector `jenkins/services.groovy`
+ejecuta Form cuando cambian sus archivos; un cambio en Promotion también lo selecciona
+porque la prueba Kafka utiliza clases reales de ese servicio.
+
+En **Build with Parameters**, `TARGET_SERVICE=form` ejecuta las pruebas de Form,
+genera JaCoCo, exige el 60 % de cobertura de líneas y crea el JAR con `bootJar`.
+PostgreSQL y Kafka de las pruebas se obtienen con Testcontainers. Sonar, publicación
+de reportes e imagen de Form se incorporarán en DCG-23/DCG-24.
+
+La [guía del pipeline compartido](../../docs/infra/pipeline-servicios.md) explica la
+selección automática, los servicios pendientes, las comprobaciones locales y cómo
+validar esta rama en Jenkins antes de fusionarla. Seleccionar solo Form omite las
+etapas de Sonar, publicación y despliegue de Gateway. `ROLLBACK_TAG` debe quedar vacío:
+ese parámetro conserva el rollback de Gateway y tiene prioridad sobre la selección.

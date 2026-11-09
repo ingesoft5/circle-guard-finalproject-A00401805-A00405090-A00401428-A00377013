@@ -25,7 +25,7 @@ export GITHUB_TOKEN=...
 - `9000` and `8081`: SonarQube and Nexus, restricted to `ADMIN_CIDR` and `TEACHER_CIDR`.
 - `443`: closed; there is no TLS listener.
 - The bootstrap rejects `0.0.0.0/0` for `ADMIN_CIDR` and `TEACHER_CIDR`.
-- Jenkins builds are triggered by the `cron('H/5 * * * *')` timer in the `Jenkinsfile`; no public webhook is required.
+- The existing `cron('H/5 * * * *')` timer is preserved. GitHub webhook delivery must also be verified to meet E1.4; the timer alone is not evidence of webhook activation.
 
 ## Bootstrap
 
@@ -52,6 +52,7 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 - Admin credentials: `infra/state/tools.env`
 - JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`
 - Multibranch job: `circleguard-gateway`
+- The job keeps its name and root `Jenkinsfile`, and selects Gateway/Form with `TARGET_SERVICE`. See [service selection and validation](pipeline-servicios.md).
 - Webhook: `http://<TOOLS_EIP>:8080/github-webhook/`
 - `professor` user: read-only.
 - `cg-envs-ssh`: declared in JCasC.
@@ -70,6 +71,10 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 - Port `80` is public; `443` is reserved for a future domain/TLS.
 
 ## Pipeline
+
+The stages below describe Gateway when selected. Form currently runs tests, the existing
+coverage gate, and JAR packaging; its Sonar/report publication and image publication
+are DCG-23/DCG-24. See [the shared service pipeline](pipeline-servicios.md).
 
 1. Checkout.
 2. Build and test with JaCoCo.
