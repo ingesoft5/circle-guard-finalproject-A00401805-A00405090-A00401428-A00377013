@@ -111,6 +111,10 @@ English purpose of every tracked repository file.
 
 - `docs/informe/E1.2-Informe-Final.pdf` — Binary asset.
 
+- `docs/informe/E1.3-GW-CI-03-Imagen-Inmutable.docx` — Binary asset.
+
+- `docs/informe/evidencia/e1.3/README.md` — Evidence checklist for the E1.3 gateway image delivery.
+
 - `docs/informe/Gateway-Cobertura.md` — Gateway coverage, integration, E2E, and quality evidence report.
 
 - `docs/informe/P1.1-Branching-GitHub-Flow.html` — Repository file.

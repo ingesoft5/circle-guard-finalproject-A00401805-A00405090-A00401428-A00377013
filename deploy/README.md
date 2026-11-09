@@ -23,13 +23,29 @@ Each environment has its own Compose project, Docker network, Redis volume, `.en
 
 ## Gateway image
 
-The pipeline publishes and deploys:
+The pipeline publishes and deploys an immutable image identified by a semantic
+version tag and a registry digest:
 
 ```text
-<TOOLS_PRIVATE_IP>:5000/circleguard-docker/gateway:<TAG>
+<TOOLS_PRIVATE_IP>:5000/circleguard-docker/gateway:vX.Y.Z
+<TOOLS_PRIVATE_IP>:5000/circleguard-docker/gateway@sha256:<digest>
 ```
 
-Nexus hosts the `circleguard-docker` repository on port `5000`.
+Nexus hosts the `circleguard-docker` repository on port `5000`. The tag must
+match `vX.Y.Z` or `vX.Y.Z-<sha>`; `latest` is forbidden.
+
+Build and publish locally:
+
+```bash
+export NEXUS_REGISTRY=<TOOLS_PRIVATE_IP>:5000
+export TAG=v1.0.0-local
+export IMAGE="${NEXUS_REGISTRY}/circleguard-docker/gateway:${TAG}"
+
+docker build --build-arg VERSION="${TAG}" -t "${IMAGE}" \
+  -f services/circleguard-gateway-service/Dockerfile .
+docker push "${IMAGE}"
+docker inspect --format='{{index .RepoDigests 0}}' "${IMAGE}"
+```
 
 ## Scripts
 
@@ -42,9 +58,24 @@ Nexus hosts the `circleguard-docker` repository on port `5000`.
 
 ## Required environment variables
 
-- `TAG`: gateway image tag.
+- `TAG`: gateway image tag in `vX.Y.Z` or `vX.Y.Z-<sha>` format. Never `latest`.
 - `NEXUS_REGISTRY`: `<TOOLS_PRIVATE_IP>:5000`.
-- `QR_SECRET` and `JWT_SECRET`: per-environment secrets.
+- `QR_SECRET` and `JWT_SECRET`: per-environment secrets. They are required at
+  startup; the application has no development defaults.
+
+## Compose healthchecks
+
+Each environment compose starts Redis first and waits for its healthcheck before
+starting the gateway:
+
+```yaml
+depends_on:
+  redis:
+    condition: service_healthy
+```
+
+The gateway exposes `/actuator/health`, which is used both by the Dockerfile
+`HEALTHCHECK` and by the compose healthcheck.
 
 ## Jenkins interface
 

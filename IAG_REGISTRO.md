@@ -16,6 +16,7 @@
    - [1.1 HU-AUTH-01 (DCG-77) — Diagnóstico de estructura y dependencias de `auth-service`](#11-hu-auth-01-dcg-77--diagnóstico-de-estructura-y-dependencias-de-auth-service)
    - [1.2 HU-AUTH-02 (DCG-78) — Automatizar las pruebas unitarias y de integración de `auth-service`](#12-hu-auth-02-dcg-78--automatizar-las-pruebas-unitarias-y-de-integración-de-auth-service)
 2. [Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
+   - [GW-CI-03 — Imagen inmutable no-root del gateway (E1.3)](#gw-ci-03)
 3. [Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)](#3-módulo-circleguard-promotion-service-alejandro-quiñones-caicedo)
    - [3.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`](#31-hu-promo-01-dcg-304--diagnosticar-la-estructura-y-dependencias-de-promotion-service)
 
@@ -262,6 +263,50 @@ Ejecuta el Plan completo — E1.2, observaciones y bitácora IAG
 ### D. Reflexión crítica
 
 La validación de idempotencia expuso defectos que una sola ejecución del bootstrap ocultaba: desincronización de secretos, reconstrucción innecesaria de Jenkins y usuarios que existían pero no podían autenticarse. El mismo patrón apareció en los Security Groups: agregar reglas sin revocarlas hacía que el estado convergiera solo en apariencia. La verificación del trigger real de Jenkins evitó añadir una allowlist de GitHub innecesaria y mantuvo `8080` con la menor exposición posible. Queda pendiente obtener las 2 aprobaciones, mergear PR-15 y ejecutar el CD en `main` con evidencia de `dev`, `stage`, `prod` y rollback.
+---
+
+<a id="gw-ci-03"></a>
+## GW-CI-03 — Imagen inmutable no-root del gateway (E1.3)
+
+- **Fecha:** 8 de noviembre de 2026
+- **Nivel de uso:** 3 (colaboración con IAG).
+- **Herramienta:** OpenCode / Big Pickle.
+- **Historia / Entregable:** `GW-CI-03` — E1.3 Empaquetamiento inmutable.
+- **Rama:** `feat/HU-GATEWAY-04-empaquetamiento-inmutable`.
+
+### A. Contenido propio entregado a la IAG
+
+1. **Auditoría del estado real:** revisión del `Dockerfile`, `.dockerignore`, `application.yml`, los compose de `dev`, `stage` y `prod`, el `Jenkinsfile` y la Shared Library `vars/ci.groovy`.
+2. **Criterios de aceptación:** imagen multi-stage con JDK 21/JRE 21, usuario no-root sin herramientas de build, `HEALTHCHECK` contra `/actuator/health`, configuración por variables de entorno, tag semántico con digest y compose por ambiente con healthchecks.
+3. **Restricciones acordadas:** alcance únicamente del gateway; registro Nexus en `172.31.20.46:5000`; ningún secreto en el repositorio o la imagen; prohibido `latest`; no ejecutar pruebas hasta autorización explícita.
+4. **Evidencia esperada:** `docker inspect` con usuario no-root, `docker run ... id`, health `UP` en `8087`, `docker compose ps` con Redis y gateway saludables, tag y digest en Nexus, y archivos compose con healthchecks.
+
+### B. Prompt empleado
+
+```text
+Crea un plan para esta HU: 6. Etapa 3 · Empaquetamiento (E1.3)
+GW-CI-03 — Imagen inmutable no-root del gateway
+Entregable E1.3 · Must · Servicio: circleguard-gateway-service
+...
+Garantizando la completitud de la rubrica del enunciado del proyecto final
+en pdf para sacar 5.0 E1.3 Empaquetamiento inmutable.
+No cambies nada sin mi aprobación; ahorra tokens; test solo antes de commit.
+Actualiza el registro de IAG y crea un informe elaborado y profesional.
+```
+
+### C. Validación humana y hallazgos
+
+- **Dockerfile:** ya era multi-stage y no-root, pero no tenía `HEALTHCHECK` ni labels OCI. Se añadió el healthcheck y se redujo el contexto de build.
+- **Secretos:** `application.yml` contenía valores por defecto para `JWT_SECRET` y `QR_SECRET`. Se eliminaron para que el contenedor falle si no recibe configuración; se ajustó el test de integración para inyectar `jwt.secret`.
+- **Compose:** el gateway tenía healthcheck, pero Redis no y `depends_on` no esperaba a que estuviera saludable. Se añadió `redis-cli ping` y `condition: service_healthy` en los tres ambientes.
+- **Pipeline:** el tag se publicaba sin capturar el digest y no se validaba semver. Se normalizó a `vX.Y.Z`, se rechazó `latest` y se archivó `build/image-digest.txt`.
+- **Red:** la IP `172.31.20.46:5000` no fue alcanzable desde el entorno actual (`HTTP/HTTPS timeout`, TCP cerrado). La publicación y las capturas de Nexus quedan pendientes de VPN o allowlist.
+- **Alcance:** se mantuvo solo el gateway; los otros siete servicios y el cliente web se completan en sus HUs para no generar conflictos.
+
+### D. Reflexión crítica
+
+El empaquetamiento inmutable no se demuestra solo con un `Dockerfile` multi-stage. Un tag mutable como `latest` o un `application.yml` con secretos por defecto anulan la reproducibilidad y la seguridad aunque la imagen arranque. La separación entre tag y digest obliga a distinguir entre “una versión” y “un artefacto exacto”: el tag facilita la operación, pero el digest es lo que garantiza que dev, stage y prod ejecutan bytes idénticos. La validación pendiente en Nexus es un recordatorio de que la cadena de suministro depende tanto del código como de la red y los permisos del registro.
+
 ---
 
 ## 3. Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)

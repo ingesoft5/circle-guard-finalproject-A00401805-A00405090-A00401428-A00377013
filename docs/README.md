@@ -17,6 +17,8 @@ This directory contains the written documentation for CircleGuard.
 | `infra/runbook.md` | Operational checks, restarts, rollback, and troubleshooting. |
 | `infra/evidence/` | Required CI/CD evidence checklist. |
 | `informe/E1.2-CircleGuard-Infraestructura.md` | E1.2 report with Markdown screenshots. |
+| `informe/E1.3-GW-CI-03-Imagen-Inmutable.docx` | E1.3 gateway image packaging report with evidence. |
+| `informe/evidencia/e1.3/` | Docker image, non-root, healthcheck, compose, and registry evidence. |
 | `informe/Gateway-Cobertura.md` | Gateway unit, integration, E2E, JaCoCo, and quality report. |
 | `arquitectura/diagnostico-auth-service.md` | Auth service architecture diagnosis. |
 
