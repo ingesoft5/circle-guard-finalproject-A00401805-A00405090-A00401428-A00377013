@@ -35,7 +35,7 @@ English purpose of every tracked repository file.
 
 - `IAG_REGISTRO.md` — Registry of generative AI usage and human verification.
 
-- `Jenkinsfile` — Jenkins multibranch pipeline for the gateway service lifecycle.
+- `Jenkinsfile` — Shared Jenkins multibranch pipeline for CircleGuard services, quality gates, semver tags, and Docker publication.
 
 - `Proyecto_Final_CircleGuard.pdf` — Binary asset.
 
@@ -113,6 +113,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/Gateway-Cobertura.md` — Gateway coverage, integration, E2E, and quality evidence report.
 
+- `docs/informe/HU-ID-03.md` — Identity service Docker packaging, CI integration, semver, and acceptance evidence report.
+
 - `docs/informe/P1.1-Branching-GitHub-Flow.html` — Repository file.
 
 - `docs/informe/P1.1-Branching-GitHub-Flow.md` — Repository file.
@@ -120,6 +122,8 @@ English purpose of every tracked repository file.
 - `docs/informe/P1.1-Branching-GitHub-Flow.pdf` — Binary asset.
 
 - `docs/informe/evidencia/README.md` — Evidence screenshots for the E1.2 Markdown report.
+
+- `docs/informe/evidencia/HU-ID-03/README.md` — Evidence checklist for the identity Docker and CI report.
 
 - `docs/informe/evidencia/github/github-branches.png` — Binary asset.
 
@@ -689,6 +693,10 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-identity-service/build.gradle.kts` — Build configuration for the identity service.
 
+- `services/circleguard-identity-service/Dockerfile` — Multi-stage immutable image with non-root runtime and healthcheck.
+
+- `services/circleguard-identity-service/sonar-project.properties` — SonarQube project and JaCoCo coverage settings for the identity service.
+
 - `services/circleguard-identity-service/src/main/java/com/circleguard/identity/IdentityServiceApplication.java` — Java source for the identity service: Identity Service Application.
 
 - `services/circleguard-identity-service/src/main/java/com/circleguard/identity/config/JwtAuthenticationFilter.java` — configuration for the identity service: Jwt Authentication Filter.
@@ -730,6 +738,8 @@ English purpose of every tracked repository file.
 - `services/circleguard-identity-service/src/test/java/com/circleguard/identity/controller/IdentityVaultControllerTest.java` — Unit or integration tests for Identity Vault Controller Test in the identity service.
 
 - `services/circleguard-identity-service/src/test/java/com/circleguard/identity/repository/IdentityMappingRepositoryTest.java` — Unit or integration tests for Identity Mapping Repository Test in the identity service.
+
+- `services/circleguard-identity-service/src/test/java/com/circleguard/identity/service/IdentityVaultServiceTest.java` — Unit tests for identity mapping creation, reuse, and restricted lookup.
 
 - `services/circleguard-identity-service/src/test/java/com/circleguard/identity/util/IdentityEncryptionConverterTest.java` — Unit or integration tests for Identity Encryption Converter Test in the identity service.
 
@@ -975,4 +985,5 @@ English purpose of every tracked repository file.
 
 - `jenkins/vars/ci.groovy` — Shared Jenkins pipeline helpers for build, analysis, publish, deploy, and notify.
 - `jenkins/vars/ciServices.groovy` — Service catalog and selective execution (auto, all, or one service).
+- `jenkins/vars/ciVersion.groovy` — Semantic version resolution and Git tag creation from Conventional Commits.
 - `jenkins/vars/ciNotify.groovy` — GitHub and Slack failure notifications.

@@ -31,7 +31,7 @@ pipeline {
                 ],
                 description: 'auto = solo servicios modificados; all = servicios con JaCoCo.'
         )
-        string(name: 'TAG', defaultValue: '', description: 'Tag semver. Vacío = calcular con el commit.')
+        string(name: 'TAG', defaultValue: '', description: 'Tag semver. Vacío = calcular desde Git tags y Conventional Commits.')
         booleanParam(name: 'SKIP_INTEGRATION', defaultValue: false, description: 'Omitir pruebas de integración.')
         booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Desplegar a dev/stage/prod (solo main).')
         string(name: 'ROLLBACK_TAG', defaultValue: '', description: 'Si se indica, despliega ese tag en prod sin reconstruir.')
@@ -48,13 +48,14 @@ pipeline {
             steps {
                 script {
                     if (params.ROLLBACK_TAG?.trim()) {
-                        env.TAG = params.ROLLBACK_TAG.trim()
+                        env.TAG = ciVersion.normalize(params.ROLLBACK_TAG.trim())
                         services = []
                         echo "Rollback solicitado: ${env.TAG}"
                     } else {
-                        env.TAG = params.TAG?.trim() ?: "1.0.0-${(env.GIT_COMMIT ?: 'local').take(7)}"
+                        env.TAG = ciVersion.resolve(params.TAG ?: '')
                         services = ciServices.resolve(params.SERVICE ?: 'auto')
                         env.SERVICES = services.collect { it.short }.join(',')
+                        echo "Versión semántica: ${env.TAG}"
                         echo "Servicios a construir: ${env.SERVICES ?: 'ninguno'}"
                     }
                 }
@@ -136,6 +137,20 @@ pipeline {
             }
         }
 
+        stage('Git tag') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression {
+                        services && services.any { it.publish || it.docker } && !params.ROLLBACK_TAG?.trim()
+                    }
+                }
+            }
+            steps {
+                script { ciVersion.createTag(env.TAG) }
+            }
+        }
+
         stage('Publish') {
             when {
                 allOf {
@@ -159,10 +174,9 @@ pipeline {
             }
             steps {
                 script {
-                    def gateway = services.find { it.short == 'gateway' }
-                    if (gateway) {
-                        def digest = ci.dockerBuildPush(gateway, env.TAG)
-                        echo "Digest publicado: ${digest}"
+                    services.findAll { it.docker }.each { service ->
+                        def digest = ci.dockerBuildPush(service, env.TAG)
+                        echo "Digest publicado para ${service.short}: ${digest}"
                     }
                 }
             }
@@ -218,22 +232,6 @@ pipeline {
                 }
             }
             steps { script { ci.deploy('prod', env.TAG) } }
-        }
-
-        stage('Tag') {
-            when {
-                allOf {
-                    branch 'main'
-                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
-                }
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'github-creds',
-                        usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
-                    sh 'git tag -f v${TAG}'
-                    sh 'git push -f https://${GH_USER}:${GH_TOKEN}@github.com/${GITHUB_OWNER}/${GITHUB_REPO}.git v${TAG}'
-                }
-            }
         }
 
         stage('Rollback prod') {

@@ -47,11 +47,11 @@ def catalog() {
                     dir           : 'services/circleguard-identity-service',
                     projectKey    : 'circleguard-identity-service',
                     display       : 'CircleGuard Identity',
-                    sonarSettings : '',
-                    jacoco        : false,
+                    sonarSettings : 'services/circleguard-identity-service/sonar-project.properties',
+                    jacoco        : true,
                     integration   : false,
                     publish       : false,
-                    docker        : false
+                    docker        : true
             ],
             [
                     short         : 'promotion',

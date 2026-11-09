@@ -90,18 +90,38 @@ def dockerBuildPush(Map service, String tag) {
     if (!service.docker) {
         return ''
     }
-    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${tag}"
+    def version = (tag ?: '').trim()
+    if (!version) {
+        error "No se puede publicar ${service.short}: la versión semántica está vacía."
+    }
+    def commit = env.GIT_COMMIT ?: 'unknown'
+    def source = env.GITHUB_REPO_URL ?: 'unknown'
+    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${version}"
     def digest = ''
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
-        sh "docker build -t ${image} -f ${service.dir}/Dockerfile ."
+        sh """
+            docker build \
+              --build-arg VERSION=${version} \
+              --build-arg GIT_COMMIT=${commit} \
+              --build-arg SOURCE_URL=${source} \
+              -t ${image} -f ${service.dir}/Dockerfile .
+        """
+        def uid = sh(script: "docker run --rm --entrypoint id ${image} -u", returnStdout: true).trim()
+        if (uid == '0') {
+            error "La imagen ${image} se ejecuta como root; se requiere un usuario no root."
+        }
+        def healthcheck = sh(script: "docker inspect --format='{{json .Config.Healthcheck}}' ${image}", returnStdout: true).trim()
+        if (!healthcheck || healthcheck == 'null') {
+            error "La imagen ${image} no define HEALTHCHECK."
+        }
         sh "docker push ${image}"
         digest = sh(script: "docker inspect --format='{{index .RepoDigests 0}}' ${image}", returnStdout: true).trim()
         if (!digest || digest == '<no value>') {
             digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
         }
-        writeFile file: 'image-digest.txt', text: "${image}\n${digest}\n"
+        writeFile file: 'image-digest.txt', text: "${image}\n${digest}\ncommit=${commit}\n"
     }
     return digest
 }
