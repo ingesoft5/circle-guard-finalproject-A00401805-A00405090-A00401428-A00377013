@@ -51,6 +51,15 @@ El objetivo es validar el flujo de validación de QR del gateway contra una inst
 ./gradlew :services:circleguard-gateway-service:integrationTest
 ```
 
+En WSL con el repositorio en `/mnt/c` (9p), el classpath tarda más que el timeout de 3 minutos. Para ejecutarla localmente sin cambiar el límite de CI, mueve las salidas de build a ext4 con el init script incluido:
+
+```bash
+./gradlew -I gradle/wsl-ext4.init.gradle.kts \
+  :services:circleguard-gateway-service:integrationTest
+```
+
+GitHub Actions y Jenkins hacen checkout en ext4, por lo que no necesitan el script.
+
 ![Tarea integrationTest](evidencia/gw-ci-02/validacion/04-tarea.png)
 
 ### 2.2 Clase base con el contenedor
