@@ -167,6 +167,8 @@ def e2e() {
         cd tests/e2e
         npm install
         npx playwright install --with-deps chromium
-        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 npx playwright test
+        WEB_URL=http://${env.DEV_PRIVATE_IP}:8081 \
+        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
+        npx playwright test
     """
 }
