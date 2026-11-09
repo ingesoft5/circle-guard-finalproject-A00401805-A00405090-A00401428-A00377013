@@ -5,7 +5,7 @@ jwt:
 
 qr:
   secret: "my-super-secret-qr-test-key-32-chars-long"
-  expiration: 60000
+  expiration: 60
 
 identity:
   service:

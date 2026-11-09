@@ -27,6 +27,7 @@ GITHUB_TOKEN=${GITHUB_TOKEN:-change-me}
 GITHUB_OWNER=${GITHUB_OWNER:-ingesoft5}
 GITHUB_REPO=${GITHUB_REPO:-circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013}
 GITHUB_REPO_URL=${GITHUB_REPO_URL:-https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git}
+GITHUB_WEBHOOK_SECRET=$(rand_secret)
 SONAR_DB_PASSWORD=$(rand_secret)
 SONAR_ADMIN_PASSWORD=$(rand_secret)
 SONAR_TOKEN=change-me
@@ -51,6 +52,7 @@ EOF
   ensure_secret "${TOOLS_ENV}" SONAR_DB_PASSWORD
   ensure_secret "${TOOLS_ENV}" SONAR_ADMIN_PASSWORD
   ensure_secret "${TOOLS_ENV}" NEXUS_PASSWORD
+  ensure_secret "${TOOLS_ENV}" GITHUB_WEBHOOK_SECRET
   ensure_env_kv "${TOOLS_ENV}" GITHUB_USER "${GITHUB_USER:-change-me}"
   ensure_env_kv "${TOOLS_ENV}" GITHUB_TOKEN "${GITHUB_TOKEN:-change-me}"
   ensure_env_kv "${TOOLS_ENV}" GITHUB_OWNER "${GITHUB_OWNER:-ingesoft5}"
@@ -85,9 +87,17 @@ configure_sonar() {
     die "SonarQube authentication failed; review SONAR_ADMIN_PASSWORD."
   fi
   auth="admin:${SONAR_ADMIN_PASSWORD}"
-  curl -fsS -u "${auth}" -X POST "${base}/api/projects/create" \
-    --data-urlencode "name=CircleGuard Gateway" \
-    --data-urlencode "project=circleguard-gateway-service" >/dev/null 2>&1 || true
+  local entry project_key project_name
+  for entry in \
+    "circleguard-gateway-service|CircleGuard Gateway" \
+    "circleguard-auth-service|CircleGuard Auth" \
+    "circleguard-form-service|CircleGuard Form"; do
+    project_key="${entry%%|*}"
+    project_name="${entry#*|}"
+    curl -fsS -u "${auth}" -X POST "${base}/api/projects/create" \
+      --data-urlencode "name=${project_name}" \
+      --data-urlencode "project=${project_key}" >/dev/null 2>&1 || true
+  done
   curl -fsS -u "${auth}" -X POST "${base}/api/users/create" \
     --data-urlencode "login=professor" --data-urlencode "name=Professor" \
     --data-urlencode "password=${PROFESSOR_SONAR_PASSWORD}" --data-urlencode "local=true" >/dev/null 2>&1 || true
@@ -98,12 +108,52 @@ configure_sonar() {
       --data-urlencode "password=${PROFESSOR_SONAR_PASSWORD}" >/dev/null \
       || die "SonarQube professor password sync failed."
   fi
-  curl -fsS -u "${auth}" -X POST "${base}/api/permissions/add_user" \
-    --data-urlencode "login=professor" --data-urlencode "permission=user" \
+  local permission
+  for entry in \
+    "circleguard-gateway-service" \
+    "circleguard-auth-service" \
+    "circleguard-form-service"; do
+    for permission in user codeviewer; do
+      curl -fsS -u "${auth}" -X POST "${base}/api/permissions/add_user" \
+        --data-urlencode "login=professor" --data-urlencode "permission=${permission}" \
+        --data-urlencode "projectKey=${entry}" >/dev/null 2>&1 || true
+    done
+  done
+  ensure_gate() {
+    local gate_name="$1" gate_id condition_id
+    gate_id="$(curl -fsS -u "${auth}" "${base}/api/qualitygates/list" \
+      | jq -r --arg name "${gate_name}" '.qualitygates[]? | select(.name == $name) | .id' | head -n1)"
+    if [ -z "${gate_id}" ] || [ "${gate_id}" = "null" ]; then
+      gate_id="$(curl -fsS -u "${auth}" -X POST "${base}/api/qualitygates/create" \
+        --data-urlencode "name=${gate_name}" | jq -r '.id // empty')"
+      [ -n "${gate_id}" ] || die "SonarQube quality gate creation failed: ${gate_name}."
+    fi
+    if ! curl -fsS -u "${auth}" "${base}/api/qualitygates/show?id=${gate_id}" \
+        | jq -e '.conditions[]? | select(.metric == "line_coverage" and .op == "LT" and ((.error | tonumber) == 60))' >/dev/null; then
+      for condition_id in $(curl -fsS -u "${auth}" "${base}/api/qualitygates/show?id=${gate_id}" \
+          | jq -r '.conditions[]? | select(.metric == "line_coverage") | .id'); do
+        curl -fsS -u "${auth}" -X POST "${base}/api/qualitygates/delete_condition" \
+          --data-urlencode "id=${condition_id}" >/dev/null 2>&1 || true
+      done
+      curl -fsS -u "${auth}" -X POST "${base}/api/qualitygates/create_condition" \
+        --data-urlencode "gateId=${gate_id}" --data-urlencode "metric=line_coverage" \
+        --data-urlencode "op=LT" --data-urlencode "error=60" >/dev/null \
+        || die "SonarQube quality gate condition creation failed: ${gate_name}."
+    fi
+    printf '%s' "${gate_id}"
+  }
+
+  local gateway_gate services_gate project_key
+  gateway_gate="$(ensure_gate "CircleGuard Gateway")"
+  services_gate="$(ensure_gate "CircleGuard Services")"
+  curl -fsS -u "${auth}" -X POST "${base}/api/qualitygates/select" \
+    --data-urlencode "gateId=${gateway_gate}" \
     --data-urlencode "projectKey=circleguard-gateway-service" >/dev/null 2>&1 || true
-  curl -fsS -u "${auth}" -X POST "${base}/api/permissions/add_user" \
-    --data-urlencode "login=professor" --data-urlencode "permission=codeviewer" \
-    --data-urlencode "projectKey=circleguard-gateway-service" >/dev/null 2>&1 || true
+  for project_key in circleguard-auth-service circleguard-form-service; do
+    curl -fsS -u "${auth}" -X POST "${base}/api/qualitygates/select" \
+      --data-urlencode "gateId=${services_gate}" \
+      --data-urlencode "projectKey=${project_key}" >/dev/null 2>&1 || true
+  done
   token="${SONAR_TOKEN:-}"
   if [ -z "${token}" ] || [ "${token}" = "change-me" ] || \
      ! curl -fsS -u "${token}:" "${base}/api/authentication/validate" | jq -e '.valid' >/dev/null; then

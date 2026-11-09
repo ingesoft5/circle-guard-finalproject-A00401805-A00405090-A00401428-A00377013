@@ -18,6 +18,7 @@ GITHUB_TOKEN=${GITHUB_TOKEN:-change-me}
 GITHUB_OWNER=${GITHUB_OWNER:-ingesoft5}
 GITHUB_REPO=${GITHUB_REPO:-circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013}
 GITHUB_REPO_URL=${GITHUB_REPO_URL:-https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git}
+GITHUB_WEBHOOK_SECRET=$(rand_secret)
 SONAR_DB_PASSWORD=$(rand_secret)
 SONAR_ADMIN_PASSWORD=$(rand_secret)
 SONAR_TOKEN=change-me
@@ -41,6 +42,7 @@ EOF
   done
   ensure_env_kv "${TOOLS_ENV_LOCAL}" PROFESSOR_SONAR_PASSWORD "$(rand_secret)"
   ensure_env_kv "${TOOLS_ENV_LOCAL}" PROFESSOR_NEXUS_PASSWORD "$(rand_secret)"
+  ensure_env_kv "${TOOLS_ENV_LOCAL}" GITHUB_WEBHOOK_SECRET "$(rand_secret)"
   set_env_kv "${TOOLS_ENV_LOCAL}" NEXUS_REGISTRY "${TOOLS_PRIVATE_IP}:${REGISTRY_PORT}"
   set_env_kv "${TOOLS_ENV_LOCAL}" TOOLS_IP "${TOOLS_IP}"
   set_env_kv "${TOOLS_ENV_LOCAL}" TOOLS_PRIVATE_IP "${TOOLS_PRIVATE_IP}"
@@ -75,6 +77,18 @@ bootstrap_tools() {
   chmod 600 "${STATE_DIR}/tools.env" "${TOOLS_ENV_LOCAL}"
 }
 
+bootstrap_github() {
+  local token
+  token="$(get_env_kv "${STATE_DIR}/tools.env" GITHUB_TOKEN)"
+  if [ -z "${token}" ] || [ "${token}" = "change-me" ]; then
+    log_warn "GITHUB_TOKEN no configurado; se omite webhook y branch protection."
+    return 0
+  fi
+  if ! bash "${BOOTSTRAP_DIR}/bootstrap-github.sh"; then
+    log_warn "No se pudo configurar GitHub automaticamente; revisa el token y los permisos."
+  fi
+}
+
 bootstrap_env() {
   local env_name="$1" ip="$2"
   log_info "Synchronizing ${env_name} on ${ip}"
@@ -98,6 +112,7 @@ case "${MODE}" in
     load_state
     prepare_tools_env
     bootstrap_tools
+    bootstrap_github
     bootstrap_env dev "${DEV_PUBLIC_IP}"
     bootstrap_env stage "${STAGE_PUBLIC_IP}"
     bootstrap_env prod "${PROD_PUBLIC_IP}"
@@ -106,6 +121,7 @@ case "${MODE}" in
     load_state
     prepare_tools_env
     bootstrap_tools
+    bootstrap_github
     ;;
   --envs-only)
     load_state
