@@ -284,7 +284,15 @@ pipeline {
 
     post {
         always {
-            script { ci.archive(services) }
+            script {
+                // A build aborted while it was still waiting for an executor never received
+                // a workspace, and archiveArtifacts then fails with MissingContextVariable
+                // (hudson.FilePath is missing). That secondary error hides the real reason
+                // the build stopped, so archiving only happens when something was resolved.
+                if (services) {
+                    ci.archive(services)
+                }
+            }
         }
         success {
             echo "Pipeline exitoso: ${env.SERVICES ?: 'sin servicios'} ${env.TAG}"
