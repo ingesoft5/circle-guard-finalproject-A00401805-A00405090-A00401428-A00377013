@@ -99,9 +99,6 @@ def dockerBuildPush(Map service, String tag) {
     if (!service.docker) {
         return ''
     }
-    if (!env.NEXUS_REGISTRY) {
-        error 'Falta NEXUS_REGISTRY: sin registro no se puede publicar la imagen.'
-    }
     def version = (tag ?: '').trim()
     if (!version) {
         error "No se puede publicar ${service.short}: la versión semántica está vacía."
@@ -135,9 +132,27 @@ def dockerBuildPush(Map service, String tag) {
         if (!digest || digest == '<no value>') {
             digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
         }
-        // Append instead of write: the pipeline now publishes more than one image per
-        // build, and a plain write would leave only the digest of the last service.
-        sh "printf '%s\\n%s\\ncommit=%s\\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
+        sh "printf '%s\n%s\ncommit=%s\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
+    }
+    return digest
+}
+
+// The Expo web client is not a Gradle module, so it uses its own Dockerfile and
+// image name while sharing the same registry/tag as the Java services.
+def dockerBuildPushClient(String tag) {
+    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/web:${tag}"
+    def commit = env.GIT_COMMIT ?: 'unknown'
+    def digest = ''
+    withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+            usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+        sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
+        sh "docker build -t ${image} -f mobile/Dockerfile ."
+        sh "docker push ${image}"
+        digest = sh(script: "docker inspect --format='{{index .RepoDigests 0}}' ${image}", returnStdout: true).trim()
+        if (!digest || digest == '<no value>') {
+            digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
+        }
+        sh "printf '%s\n%s\ncommit=%s\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
     }
     return digest
 }
@@ -161,9 +176,6 @@ def archive(List services) {
 
 def deploy(String environment, String tag) {
     def ip = env."${environment.toUpperCase()}_PRIVATE_IP"
-    if (!ip) {
-        error "Falta ${environment.toUpperCase()}_PRIVATE_IP: no se puede desplegar a ${environment}."
-    }
     sshagent(['cg-envs-ssh']) {
         sh """
             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${ip} \
@@ -173,12 +185,8 @@ def deploy(String environment, String tag) {
 }
 
 def e2e() {
-    if (!env.DEV_PRIVATE_IP) {
-        error 'Falta DEV_PRIVATE_IP: no se puede ejecutar el E2E contra dev.'
-    }
-    // Un identificador por build: promotion-service actualiza visitantes existentes y
-    // nunca los crea, así que cada corrida siembra los suyos. Con un id fijo, la
-    // segunda corrida mediría el estado que dejó la primera.
+    // Cada corrida siembra sus propios visitantes; un id fijo reutilizaría el
+    // estado que dejó la corrida anterior.
     def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
     sshagent(['cg-envs-ssh']) {
         sh """
@@ -191,6 +199,7 @@ def e2e() {
         cd tests/e2e
         npm install
         npx playwright install --with-deps chromium
+        WEB_URL=http://${env.DEV_PRIVATE_IP}:8081 \
         GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
         PROMOTION_URL=http://${env.DEV_PRIVATE_IP}:8088 \
         KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:29092 \

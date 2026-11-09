@@ -14,10 +14,10 @@
 - `circleguard-notification-service`
 - `circleguard-promotion-service`
 
-The current CI/CD platform builds and validates `circleguard-gateway-service`,
-`circleguard-auth-service`, `circleguard-form-service`, and
-`circleguard-identity-service`. Identity and gateway also publish Docker images
-with semantic version tags.
+The CI/CD platform builds and tests all services. The core services
+(`auth`, `identity`, `promotion`, `form`, `gateway`) and the web client are
+packaged, published and deployed; `notification`, `file` and `dashboard` are
+built, tested, packaged and published for Part 2.
 
 ## Standard layout
 

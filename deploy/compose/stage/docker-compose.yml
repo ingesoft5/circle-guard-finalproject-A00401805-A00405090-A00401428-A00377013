@@ -20,15 +20,17 @@ services:
     container_name: cg-postgres-stage
     restart: unless-stopped
     environment:
-      POSTGRES_DB: circleguard_promotion
+      POSTGRES_DB: circleguard_auth
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: circleguard_identity,circleguard_promotion,circleguard_form
     volumes:
       - postgres_stage:/var/lib/postgresql/data
+      - ../postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
     networks: [stage-net]
     mem_limit: 384m
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d circleguard_promotion"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d circleguard_auth"]
       interval: 10s
       timeout: 5s
       retries: 15
@@ -38,9 +40,6 @@ services:
     container_name: cg-neo4j-stage
     restart: unless-stopped
     environment:
-      # Neo4j interprets every NEO4J_* variable as a server setting and aborts on
-      # unknown ones, so the password only travels inside NEO4J_AUTH and the
-      # healthcheck strips the user prefix off that value.
       NEO4J_AUTH: neo4j/${NEO4J_PASSWORD}
       NEO4J_server_memory_heap_initial__size: 256m
       NEO4J_server_memory_heap_max__size: 512m
@@ -76,10 +75,10 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
-    volumes:
-      - kafka_stage:/var/lib/kafka/data
     ports:
       - "29092:29092"
+    volumes:
+      - kafka_stage:/var/lib/kafka/data
     networks: [stage-net]
     mem_limit: 768m
     healthcheck:
@@ -89,29 +88,88 @@ services:
       retries: 20
       start_period: 30s
 
-  gateway:
-    image: ${NEXUS_REGISTRY}/circleguard-docker/gateway:${TAG}
-    container_name: cg-gateway-stage
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: cg-openldap-stage
+    restart: unless-stopped
+    environment:
+      LDAP_ORGANISATION: CircleGuard
+      LDAP_DOMAIN: circleguard.edu
+      LDAP_ADMIN_PASSWORD: ${OPENLDAP_ADMIN_PASSWORD}
+    volumes:
+      - openldap_stage:/var/lib/ldap
+      - openldap_config_stage:/etc/ldap/slapd.d
+    networks: [stage-net]
+    mem_limit: 192m
+    healthcheck:
+      test: ["CMD-SHELL", "ldapsearch -x -H ldap://localhost -b dc=circleguard,dc=edu -s base >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+
+  auth:
+    image: ${NEXUS_REGISTRY}/circleguard-docker/auth:${TAG}
+    container_name: cg-auth-stage
     restart: unless-stopped
     depends_on:
-      redis:
+      postgres:
+        condition: service_healthy
+      openldap:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: stage
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      SERVER_PORT: 8087
+      SERVER_PORT: 8180
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/circleguard_auth
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_LDAP_URLS: ldap://openldap:389
+      SPRING_LDAP_USERNAME: cn=admin,dc=circleguard,dc=edu
+      SPRING_LDAP_PASSWORD: ${OPENLDAP_ADMIN_PASSWORD}
+      IDENTITY_SERVICE_URL: http://identity:8083/api/v1/identities/map
+      IDENTITY_SERVICE_FALLBACK_ENABLED: "true"
+      MANAGEMENT_HEALTH_LDAP_ENABLED: "false"
       QR_SECRET: ${QR_SECRET}
       JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "8087:8087"
+      - "8180:8180"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health | grep -q UP || exit 1"]
-      interval: 30s
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8180/actuator/health | grep -q UP || exit 1"]
+      interval: 20s
       timeout: 10s
-      retries: 10
+      retries: 12
+      start_period: 45s
     networks: [stage-net]
-    mem_limit: 512m
+    mem_limit: 448m
+
+  identity:
+    image: ${NEXUS_REGISTRY}/circleguard-docker/identity:${TAG}
+    container_name: cg-identity-stage
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: stage
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/circleguard_identity
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      VAULT_SECRET: ${VAULT_SECRET}
+      VAULT_SALT: ${VAULT_SALT}
+      VAULT_HASH_SALT: ${VAULT_HASH_SALT}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q UP || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
+    networks: [stage-net]
+    mem_limit: 448m
 
   promotion:
     image: ${NEXUS_REGISTRY}/circleguard-docker/promotion:${TAG}
@@ -142,20 +200,90 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8088:8088"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8088/actuator/health | grep -q UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
     networks: [stage-net]
     mem_limit: 768m
+
+  form:
+    image: ${NEXUS_REGISTRY}/circleguard-docker/form:${TAG}
+    container_name: cg-form-stage
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: stage
+      SERVER_PORT: 8086
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/circleguard_form
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8086:8086"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8088/actuator/health | grep -q UP || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health | grep -q UP || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
+    networks: [stage-net]
+    mem_limit: 448m
+
+  gateway:
+    image: ${NEXUS_REGISTRY}/circleguard-docker/gateway:${TAG}
+    container_name: cg-gateway-stage
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: stage
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SERVER_PORT: 8087
+      QR_SECRET: ${QR_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8087:8087"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health | grep -q UP || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 10
-      start_period: 60s
+    networks: [stage-net]
+    mem_limit: 448m
+
+  web:
+    image: ${NEXUS_REGISTRY}/circleguard-docker/web:${TAG}
+    container_name: cg-web-stage
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    networks: [stage-net]
+    mem_limit: 64m
 
 volumes:
   redis_stage:
   postgres_stage:
   neo4j_stage:
   kafka_stage:
+  openldap_stage:
+  openldap_config_stage:
 
 networks:
   stage-net:
