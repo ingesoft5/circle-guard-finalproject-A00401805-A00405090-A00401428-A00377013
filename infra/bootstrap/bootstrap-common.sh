@@ -237,9 +237,10 @@ compose_up() {
     [ -f "$env_file" ] || die "No existe $env_file"
     args=(--env-file "$env_file" "${args[@]}")
   fi
-  [ "$build" = "yes" ] && args+=(--build)
+  local up_args=(up -d --remove-orphans --wait --wait-timeout 600)
+  [ "$build" = "yes" ] && up_args+=(--build)
   log_info "Levantando ${project} desde ${file} ..."
-  dk compose "${args[@]}" up -d --remove-orphans --wait --wait-timeout 600
+  dk compose "${args[@]}" "${up_args[@]}"
   log_info "${project} listo."
 }
 
