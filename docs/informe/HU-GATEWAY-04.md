@@ -193,7 +193,7 @@ Las capturas se almacenan en `docs/informe/evidencia/HU-GATEWAY-04/`. Ver el
 
 | Evidencia | Archivo | Estado |
 |---|---|---|
-| URL del build de Jenkins | `01-jenkins-build.png` | ✅ Build #2 |
+| URL del build de Jenkins | `01-jenkins-build.png` | ✅ Build #1 |
 | Reporte JaCoCo ≥ 60 % | `02-jacoco-report.png` | ✅ 95 % líneas |
 | Dashboard de Sonar con gate verde | `03-sonar-dashboard.png` y `17-sonar-overall.png` | ✅ Gate Passed |
 | Configuración del webhook | `04-github-webhook-config.png` | Pendiente de UI |
@@ -202,7 +202,7 @@ Las capturas se almacenan en `docs/informe/evidencia/HU-GATEWAY-04/`. Ver el
 | Artefactos del build | `07-jenkins-artifacts.png` y `15-artifacts-services.png` | ✅ |
 | Reporte JUnit | `14-junit-report.png` | ✅ 78 pruebas |
 | Enlaces a Sonar | `16-sonar-links.png` | ✅ |
-| Duración del build | `08-build-duration.png` | ✅ 5 min 58 s |
+| Duración del build | `08-build-duration.png` | ✅ 6 min 28 s |
 | Notificación de fallo en GitHub | `09-failure-notification-github.png` | Pendiente |
 | Notificación de fallo en Slack | `10-failure-notification-slack.png` | Pendiente |
 | Quality gate en rojo | `11-quality-gate-red.png` | Pendiente |
@@ -211,9 +211,9 @@ Las capturas se almacenan en `docs/informe/evidencia/HU-GATEWAY-04/`. Ver el
 
 ### 5.1 URL del build
 
-Build **#2** del PR #23, commit `5329864`, ejecutado el 8 de noviembre de 2026:
+Build **#1** del PR #23, commit `c165a49`, ejecutado el 8 de noviembre de 2026:
 
-**<http://77.112.223.174:8080/job/circleguard-gateway/job/PR-23/2/>**
+**<http://77.112.223.174:8080/job/circleguard-gateway/job/PR-23/1/>**
 
 ![Página del build de Jenkins](evidencia/HU-GATEWAY-04/01-jenkins-build.png)
 
@@ -248,7 +248,7 @@ los reportes de los tres servicios y `sonar-links.txt`.
 
 ### 5.5 Duración
 
-El build completo tardó **5 min 58 s**, por debajo del límite de 10 minutos.
+El build completo tardó **6 min 28 s**; las etapas de Build y Unit Tests + JaCoCo sumaron **4 min 44 s**, por debajo del límite de 10 minutos.
 
 ![Duración del build](evidencia/HU-GATEWAY-04/08-build-duration.png)
 
