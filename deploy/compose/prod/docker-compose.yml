@@ -113,7 +113,7 @@ services:
       postgres:
         condition: service_healthy
       openldap:
-        condition: service_started
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SERVER_PORT: 8180
