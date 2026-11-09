@@ -14,6 +14,8 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
+  kafka:
+    bootstrap-servers: localhost:9092
 
 vault:
   secret: "746573742d7365637265742d33322d63686172732d6c6f6e672d313233343536" # hex for "test-secret-..."
@@ -21,4 +23,4 @@ vault:
   hash-salt: "12345678" # hex for hashing
 
 jwt:
-  secret: "my-super-secret-test-key-32-chars-long"
+  secret: "test-jwt-secret-32-chars-long-12345678"

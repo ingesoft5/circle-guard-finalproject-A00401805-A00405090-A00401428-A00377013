@@ -26,5 +26,5 @@ RUN cp "$(find /tmp/libs -name '*.jar' ! -name '*-plain.jar' | head -n 1)" /app/
 USER circleguard
 EXPOSE 8083
 HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
-    CMD wget -qO- http://127.0.0.1:8083/actuator/health | grep -q UP || exit 1
+    CMD wget -qO- http://127.0.0.1:8083/actuator/health/liveness | grep -q '"status":"UP"' || exit 1
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -41,10 +41,31 @@ services/<service>/
   :services:circleguard-gateway-service:jacocoTestCoverageVerification
 ```
 
+Identity service build, tests, and coverage:
+
+```bash
+./gradlew :services:circleguard-identity-service:test \
+  :services:circleguard-identity-service:jacocoTestReport \
+  :services:circleguard-identity-service:jacocoTestCoverageVerification
+```
+
+Identity image:
+
+```bash
+docker build -f services/circleguard-identity-service/Dockerfile \
+  --build-arg VERSION=1.0.0 \
+  --build-arg GIT_COMMIT="$(git rev-parse HEAD)" \
+  -t circleguard/identity:1.0.0 .
+```
+
+The identity container requires `SPRING_DATASOURCE_*`,
+`SPRING_KAFKA_BOOTSTRAP_SERVERS`, `VAULT_SECRET`, `VAULT_SALT`,
+`VAULT_HASH_SALT`, and `JWT_SECRET`. See `docs/informe/HU-ID-03.md`.
+
 Package:
 
 ```bash
-./gradlew :services:circleguard-gateway-service:bootJar
+./gradlew :services:circleguard-identity-service:bootJar
 ```
 
 Publish to Nexus:

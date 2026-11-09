@@ -17,6 +17,7 @@
 | `bootstrap-check.sh` | Validates AWS, tools, and instance types. |
 | `bootstrap-aws.sh` | Creates four hosts, two SGs, one EIP, and the key pair. |
 | `bootstrap-tools.sh` | Jenkins, SonarQube, Nexus, registry `5000`, ingress, and read-only access. |
+| `configure-sonar-identity.sh` | Idempotently creates the identity Sonar project and assigns the coverage gate. |
 | `bootstrap-envs.sh <env>` | Prepares one environment host. |
 | `bootstrap-all.sh` | Runs AWS, tools, and all environments. |
 | `bootstrap-start.sh` | Starts the four hosts and refreshes public IPs. |
