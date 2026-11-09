@@ -51,7 +51,7 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 - URL: `http://<TOOLS_EIP>:8080` (admin/teacher networks only).
 - Admin credentials: `infra/state/tools.env`.
 - JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`.
-- Multibranch job: `circleguard-gateway`, with GitHub Branch Source for branches and pull requests.
+- Multibranch job: `circleguard-gateway`, reused as the shared pipeline for branches and pull requests of all services (`SERVICE=auto` or `SERVICE=identity`).
 - Webhook: `http://<TOOLS_EIP>/github-webhook/`, events `push` and `pull_request`.
 - Secret: `GITHUB_WEBHOOK_SECRET` in `infra/state/tools.env`; JCasC exposes it as `github-webhook-secret`.
 - Shared Library: `circleguard`, loaded from `jenkins/vars/` (`libraryPath: jenkins`).
@@ -78,8 +78,15 @@ If the token cannot manage branch protection, the script prints a warning and th
 - Registry: `<TOOLS_PRIVATE_IP>:5000`, private.
 - Repository: `circleguard-docker`.
 - Quality gate `CircleGuard Gateway`: line coverage must be at least 60 %.
-- Quality gate `CircleGuard Services`: same coverage rule for auth and form.
-- Projects: `circleguard-gateway-service`, `circleguard-auth-service`, `circleguard-form-service`.
+- Quality gate `CircleGuard Services`: same coverage rule for auth, form, and identity.
+- Projects: `circleguard-gateway-service`, `circleguard-auth-service`, `circleguard-form-service`, `circleguard-identity-service`.
+- To create only the identity project and gate with an admin token:
+
+```bash
+SONAR_URL=http://<TOOLS_EIP>:9000 \
+SONAR_ADMIN_TOKEN=<token-admin> \
+./infra/bootstrap/configure-sonar-identity.sh
+```
 
 ## Application ingress
 
@@ -92,21 +99,23 @@ If the token cannot manage branch protection, the script prints a warning and th
 The `Jenkinsfile` is branch-aware: the multibranch job discovers `main`, feature branches, and pull requests. Each child build runs the same stages with the code of its branch or PR.
 
 1. **Checkout**: `checkout scm` and commit metadata.
-2. **Resolve services**: `SERVICE=auto` detects changed services from the diff; `SERVICE=all` builds gateway, auth, and form; a service name builds only that service.
+2. **Resolve services and version**: `SERVICE=auto` detects changed services from the diff; `SERVICE=all` builds every service with JaCoCo; `ciVersion` calculates the semantic version from Git tags and Conventional Commits.
 3. **Build**: Gradle compilation per service.
-4. **Unit tests + JaCoCo**: tests and coverage; gateway enforces **line coverage ≥ 60 %**.
+4. **Unit tests + JaCoCo**: tests and coverage; all JaCoCo services enforce **line coverage ≥ 60 %**.
 5. **SonarQube + Quality Gate**: scanner and blocking `waitForQualityGate`; the pipeline stops if the gate is red.
 6. **Integration tests**: Testcontainers tests, separate from unit tests.
 7. **Package**: `bootJar`.
-8. **Publish** (on `main`): Nexus artifact and Docker image push with digest.
-9. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt`.
-10. **Deploy** (optional): dev, E2E, stage, production approval, production, tag, rollback. Only when `DEPLOY=true` on `main`.
+8. **Git tag** (on `main`): creates and pushes `vX.Y.Z` for publishable services.
+9. **Publish** (on `main`): Nexus artifact for publishable Maven services.
+10. **Docker** (on `main`): builds and pushes services with `docker: true` using only the semver tag, never `latest`.
+11. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt`.
+12. **Deploy** (optional): dev, E2E, stage, production approval, production, rollback. Only when `DEPLOY=true` on `main`.
 
 ### Selective execution
 
 - `SERVICE=auto`: services touched under `services/<service>/`; global files (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `Jenkinsfile`, `sonar-project.properties`, `gradlew`, `gradle/`, `jenkins/`) select every CI service.
-- `SERVICE=all`: gateway, auth, and form.
-- `SERVICE=<name>`: one service.
+- `SERVICE=all`: gateway, auth, form, and identity.
+- `SERVICE=<name>`: one service; for example `identity`.
 - With no changed services the build is green and skips compilation.
 
 ### Artifacts
@@ -115,4 +124,4 @@ Every build archives JUnit XML, JaCoCo HTML/XML, the Sonar dashboard links, and 
 
 ## Evidence
 
-Store screenshots in `docs/informe/evidencia/HU-GATEWAY-04/` and the Markdown report in `docs/informe/HU-GATEWAY-04.md`. Never include passwords, tokens, or private keys.
+Store screenshots in `docs/informe/evidencia/HU-GATEWAY-04/` and `docs/informe/evidencia/HU-ID-03/`, with the Markdown reports in `docs/informe/HU-GATEWAY-04.md` and `docs/informe/HU-ID-03.md`. Never include passwords, tokens, or private keys.
