@@ -18,12 +18,17 @@ FROM eclipse-temurin:21-jre-jammy@sha256:1eac8b8fee11ca7d6725a48bc5d41992ed15615
 # Prepara la ubicación de la aplicación y el directorio de adjuntos con permisos de escritura.
 WORKDIR /app
 RUN mkdir -p /tmp/circleguard-uploads \
-    && chown 10001:10001 /tmp/circleguard-uploads
+    && chown 10001:10001 /tmp/circleguard-uploads \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends wget \
+    && rm -rf /var/lib/apt/lists/*
 # Transfiere únicamente el JAR generado; Gradle y las fuentes quedan en la etapa anterior.
 COPY --from=build /home/gradle/project/services/circleguard-form-service/build/libs/*.jar /app/app.jar
 # Ejecuta el servicio con un usuario sin privilegios de root.
 USER 10001:10001
 # Documenta el puerto HTTP; su publicación se configura al crear el contenedor.
 EXPOSE 8086
+HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=5 \
+  CMD wget -qO- http://127.0.0.1:8086/actuator/health | grep -q UP || exit 1
 # Inicia Java como proceso principal para recibir las señales de parada de Docker.
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

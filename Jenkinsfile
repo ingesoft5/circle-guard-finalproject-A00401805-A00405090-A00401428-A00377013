@@ -33,6 +33,79 @@ def loadEnvironment(String... names) {
     }
 }
 
+// La Shared Library pinneada a main puede ir un commit por detrás de este Jenkinsfile
+// (el PR no ve sus propios cambios de library). El catálogo local corrige los flags
+// que necesita la entrega sin bloquear el build del PR.
+def enrichServices(List services) {
+    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form']
+    def covered = ['gateway', 'auth', 'identity', 'promotion', 'form']
+    services.each { service ->
+        service.docker = true
+        service.deploy = deployable.contains(service.short)
+        if (covered.contains(service.short)) {
+            service.jacoco = true
+        }
+        if (['auth', 'identity', 'promotion', 'form'].contains(service.short)) {
+            service.healthcheck = true
+        }
+        if (service.short == 'promotion') {
+            service.sonarSettings = 'services/circleguard-promotion-service/sonar-project.properties'
+        }
+    }
+    return services
+}
+
+// El cliente Expo no es un módulo Gradle; se construye aparte y se publica con el
+// mismo tag semántico que las imágenes Java.
+def dockerBuildPushClientLocal(String tag) {
+    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/web:${tag}"
+    def commit = env.GIT_COMMIT ?: 'unknown'
+    def source = env.GITHUB_REPO_URL ?: 'unknown'
+    def digest = ''
+    withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+            usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+        sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
+        sh """
+            docker build \
+              --build-arg VERSION=${tag} \
+              --build-arg GIT_COMMIT=${commit} \
+              --build-arg SOURCE_URL=${source} \
+              -t ${image} -f mobile/Dockerfile mobile
+        """
+        sh "docker push ${image}"
+        digest = sh(script: "docker inspect --format='{{index .RepoDigests 0}}' ${image}", returnStdout: true).trim()
+        if (!digest || digest == '<no value>') {
+            digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
+        }
+        sh "printf '%s\\n%s\\ncommit=%s\\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
+    }
+    return digest
+}
+
+// Los tres flujos UI (login, cuestionario y acceso) viven en tests/e2e. Se ejecutan
+// aquí para no depender de la versión de ci.e2e() que esté publicada en main.
+def runE2E() {
+    def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
+    sshagent(['cg-envs-ssh']) {
+        sh """
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${env.DEV_PRIVATE_IP} \
+              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose \
+                 ./deploy/scripts/seed-visitor.sh dev ${runId}-symptoms ${runId}-control'
+        """
+    }
+    sh """
+        cd tests/e2e
+        npm install
+        npx playwright install --with-deps chromium
+        WEB_URL=http://${env.DEV_PRIVATE_IP}:8081 \
+        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
+        PROMOTION_URL=http://${env.DEV_PRIVATE_IP}:8088 \
+        KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:29092 \
+        E2E_ANONYMOUS_ID=${runId} \
+        npx playwright test
+    """
+}
+
 // Shared library vars added in the same PR are not visible to that PR build:
 // @Library loads from LIBRARY_BRANCH, not from the checked-out PR branch.
 // Keep the semver helpers here so the pipeline can validate itself.
@@ -247,7 +320,7 @@ pipeline {
                         echo "Rollback solicitado: ${env.TAG}"
                     } else {
                         env.TAG = resolveSemver(params.TAG ?: '')
-                        services = ciServices.resolve(params.SERVICE ?: 'auto')
+                        services = enrichServices(ciServices.resolve(params.SERVICE ?: 'auto'))
                         env.SERVICES = services.collect { it.short }.join(',')
                         echo "Versión semántica: ${env.TAG}"
                         echo "Servicios a construir: ${env.SERVICES ?: 'ninguno'}"
@@ -414,7 +487,7 @@ pipeline {
             }
             steps {
                 script {
-                    def digest = ci.dockerBuildPushClient(env.TAG)
+                    def digest = dockerBuildPushClientLocal(env.TAG)
                     echo "Digest publicado (web): ${digest}"
                 }
             }
@@ -437,7 +510,7 @@ pipeline {
                     expression { params.DEPLOY && services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
                 }
             }
-            steps { script { ci.e2e() } }
+            steps { script { runE2E() } }
         }
 
         stage('Deploy stage') {
