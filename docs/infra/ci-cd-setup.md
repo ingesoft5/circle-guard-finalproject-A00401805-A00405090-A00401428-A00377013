@@ -61,7 +61,7 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 - URL: `http://<TOOLS_EIP>:8080` (admin/teacher networks only).
 - Admin credentials: `infra/state/tools.env`.
 - JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`.
-- Multibranch job: `circleguard`, with GitHub Branch Source for branches and pull requests of all services (`SERVICE=auto`, `all`, or one service).
+- Multibranch job: `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`, with GitHub Branch Source for branches and pull requests of all services (`SERVICE=auto`, `all`, or one service).
 - Webhook: `http://<TOOLS_EIP>/github-webhook/`, events `push` and `pull_request`.
 - Secret: `GITHUB_WEBHOOK_SECRET` in `infra/state/tools.env`; JCasC exposes it as `github-webhook-secret`.
 - Shared Library: `circleguard`, loaded from `jenkins/vars/` (`libraryPath: jenkins`) and pinned to `main`.

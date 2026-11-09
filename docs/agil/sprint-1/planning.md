@@ -25,7 +25,7 @@ cliente web en dev/stage/prod, y completar la documentación y evidencias de la 
 
 | Clave | Ítem | Pts | Responsable |
 |---|---|---|---|
-| HU-INFRA-02 | Job `circleguard`, catálogo de servicios y publicación de imágenes | 8 | DC |
+| HU-INFRA-02 | Job `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`, catálogo de servicios y publicación de imágenes | 8 | DC |
 | HU-AUTH-03/04 | Empaquetar y desplegar auth, validar login E2E | 8 | Equipo |
 | HU-ID-03/04 | Empaquetar y desplegar identity, Sonar y JaCoCo | 8 | Equipo |
 | HU-PROMO-04 | Desplegar promotion con PostgreSQL/Neo4j/Kafka/Redis | 8 | Equipo |

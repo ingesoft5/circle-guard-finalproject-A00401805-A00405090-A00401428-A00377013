@@ -22,7 +22,7 @@ criterios de aceptación y el estado que soporta la entrega.
 | DCG-77 | HU-AUTH-01: diagnosticar `auth-service` | Estructura, endpoints, dependencias y compilación documentados en `docs/arquitectura/diagnostico-auth-service.md` | Alta | 5 | 1 | Done |
 | DCG-304 | HU-PROMO-01: diagnosticar `promotion-service` | Estructura, endpoints, dependencias, eventos y compilación documentados | Alta | 5 | 1 | Done |
 | DCG-309 | HU-PROMO-04: desplegar `promotion-service` | Imagen inmutable, middleware PostgreSQL/Neo4j/Kafka/Redis, healthchecks y flujo E2E en dev/stage/prod | Alta | 8 | 1 | Done |
-| HU-INFRA-02 | Habilitar servicios núcleo en Jenkins | Job `circleguard`, catálogo con `docker`/`deploy`, publicación de las 8 imágenes y despliegue de los 5 núcleos + web | Alta | 8 | 1 | En revisión (PR #34 integrado en `feat/parte1-integracion`) |
+| HU-INFRA-02 | Habilitar servicios núcleo en Jenkins | Job `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`, catálogo con `docker`/`deploy`, publicación de las 8 imágenes y despliegue de los 5 núcleos + web | Alta | 8 | 1 | En revisión (PR #34 integrado en `feat/parte1-integracion`) |
 | HU-AUTH-03/04 | Empaquetar y desplegar `auth-service` | Dockerfile multi-stage no-root, healthcheck, integración con PostgreSQL/OpenLDAP, compose y E2E de login | Alta | 8 | 1 | En revisión |
 | HU-FORM-03 | Empaquetar `form-service` | Dockerfile multi-stage no-root, healthcheck, compose con PostgreSQL/Kafka y pruebas E2E del cuestionario | Alta | 5 | 1 | En revisión |
 | HU-ID-03/04 | Empaquetar y desplegar `identity-service` | Dockerfile multi-stage no-root, Sonar, JaCoCo ≥ 60 %, compose con PostgreSQL y validación E2E | Alta | 8 | 1 | En revisión |

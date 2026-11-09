@@ -14,7 +14,7 @@ web, pruebas automatizadas y documentación de la Parte 1.
 
 | Ítem | Resultado | Evidencia |
 |---|---|---|
-| Pipeline multibranch | Job `circleguard`, etapas build, tests, Sonar, integración, package, publish, Docker, deploy, E2E, stage, aprobación y prod | `Jenkinsfile`, `jenkins/vars/ci.groovy` |
+| Pipeline multibranch | Job `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`, etapas build, tests, Sonar, integración, package, publish, Docker, deploy, E2E, stage, aprobación y prod | `Jenkinsfile`, `jenkins/vars/ci.groovy` |
 | Imágenes inmutables | Dockerfiles multi-stage no-root para los 8 servicios y el cliente web; tag semver; HEALTHCHECK | `services/*/Dockerfile`, `mobile/Dockerfile` |
 | Stack dev/stage/prod | PostgreSQL, Neo4j, Kafka, Redis, OpenLDAP, auth, identity, promotion, form, gateway y web | `deploy/compose/*/docker-compose.yml` |
 | Pruebas unitarias | JaCoCo ≥ 60 % en auth, identity, gateway y form; promotion ≥ 70 % | `build.gradle.kts` de cada servicio |

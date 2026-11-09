@@ -24,7 +24,7 @@ try {
   await page.fill('input[name="j_password"]', process.env.PROFESSOR_PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForTimeout(4000);
-  await page.goto(`http://${tools}:8080/job/circleguard-gateway/`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`http://${tools}:8080/job/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2000);
   await shot('jenkins-professor');
 } catch (e) {
