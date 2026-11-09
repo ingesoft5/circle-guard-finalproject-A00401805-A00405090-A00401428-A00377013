@@ -114,6 +114,8 @@ English purpose of every tracked repository file.
 - `docs/arquitectura/README.md` — Container architecture, ports, environments, and design decisions.
 
 - `docs/arquitectura/pipeline.md` — CI/CD pipeline architecture and dev-to-prod promotion flow.
+- `docs/arquitectura/despliegue-auth-service.md` — Auth service deployment, Playwright E2E validation, and rollback evidence.
+- `docs/arquitectura/despliegue-identity-service.md` — Identity service deployment, anonymization E2E validation, and rollback evidence.
 
 - `docs/change-management.md` — Change request, approval, release, and rollback policy.
 

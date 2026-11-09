@@ -27,6 +27,8 @@ This directory contains the written documentation for CircleGuard.
 | `release-notes/README.md` | Release note template and semver rules. |
 | `arquitectura/README.md` | Container architecture and isolated environments. |
 | `arquitectura/pipeline.md` | CI/CD pipeline architecture and promotion flow. |
+| `arquitectura/despliegue-auth-service.md` | Auth service deployment, E2E validation, and rollback record. |
+| `arquitectura/despliegue-identity-service.md` | Identity service deployment, anonymization validation, and rollback record. |
 | `informe/P1.1-Branching-GitHub-Flow.md` | Branching strategy, real branch status, and P1.1 evidence. |
 
 ## Standards

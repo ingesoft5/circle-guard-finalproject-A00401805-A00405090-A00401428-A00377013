@@ -18,6 +18,10 @@ Semantic Versioning.
   architecture diagrams, and release note template.
 - Credential rotation helper that synchronizes GitHub credentials into both
   `infra/state/tools.env` and `deploy/compose/tools/.env`.
+- Expanded auth and identity Playwright E2E coverage (login, RBAC, QR validation,
+  anonymization, JWT PII checks) and smoke tests for both services.
+- Full IAG log entries for auth/identity packaging, deployment, E2E validation,
+  and rollback, plus deployment runbooks for both services.
 
 ### Changed
 
