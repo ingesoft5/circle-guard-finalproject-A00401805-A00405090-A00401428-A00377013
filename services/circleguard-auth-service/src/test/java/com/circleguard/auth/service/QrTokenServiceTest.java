@@ -18,7 +18,7 @@ public class QrTokenServiceTest {
 
     @Test
     void shouldGenerateShortLivedQrTokenWithAnonymousIdSubject() {
-        QrTokenService qrTokenService = new QrTokenService(QR_SECRET, 60L);
+        QrTokenService qrTokenService = new QrTokenService(QR_SECRET, 300L);
         UUID anonymousId = UUID.randomUUID();
 
         String qrToken = qrTokenService.generateQrToken(anonymousId);
@@ -32,6 +32,6 @@ public class QrTokenServiceTest {
 
         assertEquals(anonymousId.toString(), claims.getSubject());
         long ttlMs = claims.getExpiration().getTime() - claims.getIssuedAt().getTime();
-        assertEquals(60000L, ttlMs);
+        assertEquals(300000L, ttlMs);
     }
 }
