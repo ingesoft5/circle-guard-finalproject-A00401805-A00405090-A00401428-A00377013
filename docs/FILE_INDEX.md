@@ -397,6 +397,10 @@ English purpose of every tracked repository file.
 
 ## mobile
 
+- `mobile/Dockerfile` — Imagen multi-stage del cliente Expo web con Nginx sin privilegios.
+
+- `mobile/nginx.conf` — Configuración de Nginx para servir rutas estáticas de Expo Router.
+
 - `mobile/.gitignore` — Mobile application file: .gitignore.
 
 - `mobile/README.md` — Expo mobile client structure, configuration, and test commands.
