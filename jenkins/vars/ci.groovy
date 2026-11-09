@@ -105,7 +105,28 @@ def dockerBuildPush(Map service, String tag) {
         if (!digest || digest == '<no value>') {
             digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
         }
-        writeFile file: 'image-digest.txt', text: "${image}\n${digest}\n"
+        sh "echo '${image}' >> image-digest.txt"
+        sh "echo '${digest}' >> image-digest.txt"
+    }
+    return digest
+}
+
+// The Expo web client is not a Gradle module, so it uses its own Dockerfile and
+// image name while sharing the same registry/tag as the Java services.
+def dockerBuildPushClient(String tag) {
+    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/web:${tag}"
+    def digest = ''
+    withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+            usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+        sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
+        sh "docker build -t ${image} -f mobile/Dockerfile ."
+        sh "docker push ${image}"
+        digest = sh(script: "docker inspect --format='{{index .RepoDigests 0}}' ${image}", returnStdout: true).trim()
+        if (!digest || digest == '<no value>') {
+            digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
+        }
+        sh "echo '${image}' >> image-digest.txt"
+        sh "echo '${digest}' >> image-digest.txt"
     }
     return digest
 }

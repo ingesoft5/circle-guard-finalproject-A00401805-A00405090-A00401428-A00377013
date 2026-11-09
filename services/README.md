@@ -14,7 +14,10 @@
 - `circleguard-notification-service`
 - `circleguard-promotion-service`
 
-The current CI/CD platform focuses on `circleguard-gateway-service`.
+The CI/CD platform builds and tests all services. The core services
+(`auth`, `identity`, `promotion`, `form`, `gateway`) and the web client are
+packaged, published and deployed; `notification`, `file` and `dashboard` are
+built, tested, packaged and published for Part 2.
 
 ## Standard layout
 

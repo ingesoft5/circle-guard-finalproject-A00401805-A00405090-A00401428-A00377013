@@ -159,11 +159,29 @@ pipeline {
             }
             steps {
                 script {
-                    def gateway = services.find { it.short == 'gateway' }
-                    if (gateway) {
-                        def digest = ci.dockerBuildPush(gateway, env.TAG)
-                        echo "Digest publicado: ${digest}"
+                    def images = services.findAll { it.docker }
+                    if (!images) {
+                        echo 'Ningún servicio seleccionado publica imagen.'
                     }
+                    images.each { service ->
+                        def digest = ci.dockerBuildPush(service, env.TAG)
+                        echo "Digest publicado (${service.short}): ${digest}"
+                    }
+                }
+            }
+        }
+
+        stage('Docker client') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script {
+                    def digest = ci.dockerBuildPushClient(env.TAG)
+                    echo "Digest publicado (web): ${digest}"
                 }
             }
         }

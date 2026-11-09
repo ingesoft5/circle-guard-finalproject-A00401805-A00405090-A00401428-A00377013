@@ -25,7 +25,7 @@ def catalog() {
                     jacoco        : true,
                     integration   : true,
                     publish       : true,
-                    docker        : false
+                    docker        : true
             ],
             [
                     short         : 'form',
@@ -38,7 +38,7 @@ def catalog() {
                     jacoco        : true,
                     integration   : true,
                     publish       : true,
-                    docker        : false
+                    docker        : true
             ],
             [
                     short         : 'identity',
@@ -51,7 +51,7 @@ def catalog() {
                     jacoco        : false,
                     integration   : true,
                     publish       : true,
-                    docker        : false
+                    docker        : true
             ],
             [
                     short         : 'promotion',
@@ -64,7 +64,7 @@ def catalog() {
                     jacoco        : false,
                     integration   : true,
                     publish       : true,
-                    docker        : false
+                    docker        : true
             ],
             [
                     short         : 'notification',
