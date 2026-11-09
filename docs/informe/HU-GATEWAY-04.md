@@ -1,8 +1,10 @@
 # HU-GATEWAY-04 — Pipeline CI del gateway con quality gate
 
-> **Estado:** implementación y pruebas locales completadas; validación remota y
-> capturas pendientes de acceso al entorno de herramientas. Las evidencias de
-> este documento se completan únicamente con capturas reales.
+> **Estado:** implementación, pruebas locales y validación remota completadas.
+> El pipeline corre en Jenkins, el quality gate está en verde, el webhook de
+> GitHub fue verificado y la imagen se publicó con digest. Las capturas de
+> Jenkins y Sonar son reales; las de GitHub corresponden a datos reales de la
+> API porque el entorno no tiene sesión web de GitHub.
 
 ## 1. Resumen
 
@@ -193,41 +195,48 @@ Las capturas se almacenan en `docs/informe/evidencia/HU-GATEWAY-04/`. Ver el
 
 | Evidencia | Archivo | Estado |
 |---|---|---|
-| URL del build de Jenkins | `01-jenkins-build.png` | ✅ Build #1 |
+| URL del build de Jenkins | `01-jenkins-build.png` | ✅ Build `main #8` |
 | Reporte JaCoCo ≥ 60 % | `02-jacoco-report.png` | ✅ 95 % líneas |
-| Dashboard de Sonar con gate verde | `03-sonar-dashboard.png` y `17-sonar-overall.png` | ✅ Gate Passed |
-| Configuración del webhook | `04-github-webhook-config.png` | Pendiente de UI |
-| Entrega reciente del webhook | `05-github-webhook-delivery.png` | Pendiente de UI; API 200 |
-| Protección de `main` | `06-branch-protection.png` | Pendiente de UI; API aplicada |
+| Dashboard de Sonar con gate verde | `03-sonar-dashboard.png` y `17-sonar-overall.png` | ✅ Gate Passed, 88.7 % |
+| Configuración del webhook | `04-github-webhook-config.png` | ✅ Datos reales de la API |
+| Entrega reciente del webhook | `05-github-webhook-delivery.png` | ✅ `push` y `pull_request` 200 |
+| Protección de `main` | `06-branch-protection.png` | ✅ Datos reales de la API |
 | Artefactos del build | `07-jenkins-artifacts.png` y `15-artifacts-services.png` | ✅ |
-| Reporte JUnit | `14-junit-report.png` | ✅ 78 pruebas |
+| Reporte JUnit | `14-junit-report.png` | ✅ 78 pruebas, 0 fallos |
 | Enlaces a Sonar | `16-sonar-links.png` | ✅ |
-| Duración del build | `08-build-duration.png` | ✅ 6 min 28 s |
-| Notificación de fallo en GitHub | `09-failure-notification-github.png` | Pendiente |
-| Notificación de fallo en Slack | `10-failure-notification-slack.png` | Pendiente |
-| Quality gate en rojo | `11-quality-gate-red.png` | Pendiente |
-| Ejecución selectiva `auto` | `12-selective-auto.png` | Pendiente |
-| Ejecución selectiva `all` | `13-selective-all.png` | Pendiente |
+| Duración del build | `08-build-duration.png` | ✅ 7 min 38 s total; 4 min 20.5 s build+pruebas |
+| Notificación de fallo en GitHub | `09-failure-notification-github.png` | ✅ Comentario real en PR-24 |
+| Notificación de fallo en Slack | `10-failure-notification-slack.png` | ⚠️ No configurado en el entorno |
+| Quality gate en rojo | `11-quality-gate-red.png` | ✅ Build #3 abortado por gate |
+| Ejecución selectiva por servicio | `12-selective-service.png` | ✅ `SERVICE=circleguard-gateway-service` |
+| Ejecución selectiva `all`/auto | `13-selective-all.png` | ✅ `gateway,auth,form` |
+| Digest de imagen | `18-main-image-digest.png` y `19-main-console-publish.png` | ✅ `sha256:db436cb…` |
 
 ### 5.1 URL del build
 
-Build **#1** del PR #23, commit `c165a49`, ejecutado el 8 de noviembre de 2026:
+Build **`main #8`**, commit `c3ac704`, ejecutado el 8 de noviembre de 2026,
+iniciado por **`Push event to branch main`**:
 
-**<http://77.112.223.174:8080/job/circleguard-gateway/job/PR-23/1/>**
+**<http://77.112.223.174:8080/job/circleguard-gateway/job/main/8/>**
+
+El build terminó en **7 min 38 s** con `Finished: SUCCESS`, 78 pruebas y 0
+fallos; la cobertura agregada de líneas fue 95 %.
 
 ![Página del build de Jenkins](evidencia/HU-GATEWAY-04/01-jenkins-build.png)
 
 ### 5.2 Cobertura JaCoCo
 
 El reporte agregado muestra **95 % de líneas**; el gateway reporta 95.92 %,
-auth 97.86 % y form 86.43 %.
+auth 97.86 % y form 86.43 %. La regla `LINE >= 0.60` se verifica en la etapa
+`Unit Tests + JaCoCo` y el build falla si no se cumple.
 
 ![Reporte JaCoCo](evidencia/HU-GATEWAY-04/02-jacoco-report.png)
 
 ### 5.3 SonarQube
 
 El gate `CircleGuard Gateway` está en **Passed**, con **88.7 % de cobertura
-global** sobre 49 líneas y 0 bugs, 0 vulnerabilidades y 0 code smells.
+global** sobre 49 líneas y 0 bugs, 0 vulnerabilidades y 0 code smells. La
+versión analizada es `1.0.0-c3ac704`.
 
 ![Dashboard de Sonar](evidencia/HU-GATEWAY-04/03-sonar-dashboard.png)
 
@@ -236,7 +245,7 @@ global** sobre 49 líneas y 0 bugs, 0 vulnerabilidades y 0 code smells.
 ### 5.4 Pruebas y artefactos
 
 La página de pruebas reporta **78 pruebas y 0 fallos**. Los artefactos incluyen
-los reportes de los tres servicios y `sonar-links.txt`.
+los reportes de los tres servicios, `sonar-links.txt` e `image-digest.txt`.
 
 ![Reporte JUnit](evidencia/HU-GATEWAY-04/14-junit-report.png)
 
@@ -248,9 +257,97 @@ los reportes de los tres servicios y `sonar-links.txt`.
 
 ### 5.5 Duración
 
-El build completo tardó **6 min 28 s**; las etapas de Build y Unit Tests + JaCoCo sumaron **4 min 44 s**, por debajo del límite de 10 minutos.
+El build completo tardó **7 min 38 s**. Las etapas de Build (126.1 s), Unit
+Tests + JaCoCo (112.6 s) e Integration Tests (21.8 s) sumaron **260.5 s
+(4 min 20.5 s)**, por debajo del límite de 10 minutos. El total incluye 116.8 s
+de construcción y publicación de la imagen Docker, que no forma parte del
+criterio de build y pruebas.
 
 ![Duración del build](evidencia/HU-GATEWAY-04/08-build-duration.png)
+
+### 5.6 Webhook de GitHub
+
+El hook `709193234` está activo en
+`http://77.112.223.174/github-webhook/`, con eventos `push` y `pull_request`,
+`content_type=json` y entrega **200**. El build `main #8` se inició con
+`Push event to branch main`, y las entregas de las 01:24:13 y 01:24:14 UTC
+coinciden con el build de PR #23.
+
+![Configuración del webhook](evidencia/HU-GATEWAY-04/04-github-webhook-config.png)
+
+![Entregas del webhook](evidencia/HU-GATEWAY-04/05-github-webhook-delivery.png)
+
+> Estas dos capturas se generaron desde la API real de GitHub porque el entorno
+> no tiene sesión web. El contenido —id, URL, eventos, estado y código de
+> respuesta— es el devuelto por la API, no una simulación.
+
+### 5.7 Protección de `main`
+
+La rama `main` exige el check `continuous-integration/jenkins/pr-merge`,
+`strict: true`, una aprobación, conversaciones resueltas y prohíbe force push y
+borrado. El PR #23 se fusionó como squash `c3ac704` después de que el check
+quedara en verde.
+
+![Protección de main](evidencia/HU-GATEWAY-04/06-branch-protection.png)
+
+### 5.8 Notificación de fallo
+
+La prueba negativa usó el PR temporal #24 con `FailureNotificationProbeTest`.
+El build #3 falló en `Unit Tests + JaCoCo` y `ciNotify.failure` publicó un
+comentario real en el PR mencionando a `@danielacastanomoreno`, los servicios,
+la rama, el commit, el autor, la URL del build y la etapa.
+
+![Notificación de fallo en GitHub](evidencia/HU-GATEWAY-04/09-failure-notification-github.png)
+
+`SLACK_WEBHOOK_URL` no está configurado en el entorno, por lo que no se generó
+la captura de Slack. La implementación envía el mensaje si la variable existe;
+esto se documenta como limitación y no como fallo del pipeline.
+
+### 5.9 Quality gate bloqueante
+
+Se creó un gate temporal `CircleGuard Negative` con `line_coverage < 99` y se
+asignó al gateway. El build #3 de PR-23 falló en 51 s con:
+
+```text
+ERROR: Pipeline aborted due to quality gate failure: ERROR
+```
+
+Después se restauró `CircleGuard Gateway` (`line_coverage < 60`) y el build #4
+volvió a pasar. Esto demuestra que el gate es bloqueante, no informativo.
+
+![Quality gate en rojo](evidencia/HU-GATEWAY-04/11-quality-gate-red.png)
+
+### 5.10 Ejecución selectiva
+
+`SERVICE=auto` detecta los servicios modificados; `SERVICE=all` construye
+gateway, auth y form; y `SERVICE=<servicio>` construye solo ese servicio. El
+build de `main #8` muestra `Servicios a construir: gateway,auth,form`; el build
+**`main #12`** se ejecutó con `SERVICE=circleguard-gateway-service` y
+`TAG=1.0.0-c3ac704-selective`, terminó en **4 min 56 s** y su log muestra
+`Servicios a construir: gateway`.
+
+> El primer intento selectivo (`main #11`) falló al publicar en Nexus porque
+> reutilizaba la versión `1.0.0-c3ac704` ya publicada por `main #8`; Nexus
+> rechaza sobrescribir una versión. Se relanzó con un TAG único y pasó. No fue
+> un fallo del pipeline.
+
+![Ejecución selectiva por servicio](evidencia/HU-GATEWAY-04/12-selective-service.png)
+
+![Ejecución de todos los servicios](evidencia/HU-GATEWAY-04/13-selective-all.png)
+
+### 5.11 Publicación y digest
+
+La etapa `Publish` publicó en Nexus y la etapa `Docker` publicó la imagen en el
+registro. El artefacto `image-digest.txt` contiene:
+
+```text
+172.31.20.46:5000/circleguard-docker/gateway:1.0.0-c3ac704
+172.31.20.46:5000/circleguard-docker/gateway@sha256:db436cb08f03151b1cbb8742653d0f3c07431a4b45ac18b0bd0a16da21d3b33a
+```
+
+![Digest de la imagen](evidencia/HU-GATEWAY-04/18-main-image-digest.png)
+
+![Consola de publicación](evidencia/HU-GATEWAY-04/19-main-console-publish.png)
 
 ## 6. Cómo reproducir la validación
 
@@ -260,8 +357,9 @@ El build completo tardó **6 min 28 s**; las etapas de Build y Unit Tests + JaCo
    `http://<TOOLS_EIP>/github-webhook/`, eventos `push` y `pull_request`, y una
    entrega 200.
 3. En Jenkins, ejecutar **Scan Multibranch Pipeline Now**.
-4. Abrir el build de la rama `feat/HU-GATEWAY-04-pipeline-ci`.
-5. Ejecutar un build con `SERVICE=auto` y otro con `SERVICE=all`.
+4. Abrir el build `main #8` y verificar la causa `Push event to branch main`.
+5. Ejecutar un build con `SERVICE=auto` y otro con `SERVICE=<servicio>`; el
+   build `main #12` es el ejemplo selectivo de gateway.
 6. Abrir el reporte JaCoCo y verificar cobertura de líneas ≥ 60 %.
 7. Abrir el dashboard de Sonar y verificar el gate en verde.
 8. Descargar los artefactos y registrar el digest.
@@ -277,13 +375,25 @@ El build completo tardó **6 min 28 s**; las etapas de Build y Unit Tests + JaCo
   librería se movió a `jenkins/vars/`; después se restaura a `main`.
 - Testcontainers requiere Docker y `TESTCONTAINERS_HOST_OVERRIDE`; ya está
   configurado en el contenedor de Jenkins.
-- El primer build puede superar los 10 minutos por caché fría; la evidencia de
-  duración se toma de un build con caché caliente.
+- El primer build en frío tardó 6 min 28 s y el build de `main` 7 min 38 s;
+  ambos cumplen el límite de 10 minutos. El build `main #8` incluye 116.8 s de
+  Docker, que no forma parte del criterio de build y pruebas.
 - SonarQube Community no decora PRs; el estado se reporta con Jenkins y se
   valida por API.
+- Slack no está configurado en el entorno; la notificación de Slack se envía si
+  `SLACK_WEBHOOK_URL` existe, pero no hay captura de esa integración.
+- Las capturas 04, 05 y 06 son renders de datos reales de la API de GitHub, no
+  de la UI, porque el entorno no tiene sesión web de GitHub. Si se dispone de
+  sesión, conviene reemplazarlas por capturas de **Settings → Webhooks** y
+  **Settings → Branches**.
+- Las recreaciones de Jenkins con JCasC reiniciaron el historial del job
+  multibranch; las URLs de los builds citados corresponden al historial actual.
 
 ## 8. Conclusión
 
-La implementación cubre los criterios de la HU. La conclusión definitiva y las
-capturas se completan cuando se ejecute el pipeline en el entorno de
-herramientas.
+La implementación cubre los criterios de la HU: el job es multibranch, se
+activa por webhook de GitHub, usa la Shared Library, selecciona servicios,
+ejecuta build, pruebas unitarias con JaCoCo, SonarQube con gate bloqueante,
+integración, empaquetamiento y publicación; archiva JUnit, JaCoCo, enlaces de
+Sonar y el digest de la imagen; y notifica al autor cuando falla. La evidencia
+real está en `docs/informe/evidencia/HU-GATEWAY-04/`.
