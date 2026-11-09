@@ -4,6 +4,7 @@
 package com.circleguard.notification.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -14,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Tag("integration")
 class ExposureNotificationListenerTest {
 
     @Autowired

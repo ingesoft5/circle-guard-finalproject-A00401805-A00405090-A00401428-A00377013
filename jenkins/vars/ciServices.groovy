@@ -23,8 +23,8 @@ def catalog() {
                     display       : 'CircleGuard Auth',
                     sonarSettings : 'services/circleguard-auth-service/sonar-project.properties',
                     jacoco        : true,
-                    integration   : false,
-                    publish       : false,
+                    integration   : true,
+                    publish       : true,
                     docker        : false
             ],
             [
@@ -36,8 +36,8 @@ def catalog() {
                     display       : 'CircleGuard Form',
                     sonarSettings : 'services/circleguard-form-service/sonar-project.properties',
                     jacoco        : true,
-                    integration   : false,
-                    publish       : false,
+                    integration   : true,
+                    publish       : true,
                     docker        : false
             ],
             [
@@ -50,8 +50,9 @@ def catalog() {
                     sonarSettings : 'services/circleguard-identity-service/sonar-project.properties',
                     jacoco        : true,
                     integration   : false,
-                    publish       : false,
-                    docker        : true
+                    publish       : true,
+                    docker        : true,
+                    healthcheck   : true
             ],
             [
                     short         : 'promotion',
@@ -62,8 +63,8 @@ def catalog() {
                     display       : 'CircleGuard Promotion',
                     sonarSettings : '',
                     jacoco        : false,
-                    integration   : false,
-                    publish       : false,
+                    integration   : true,
+                    publish       : true,
                     docker        : false
             ],
             [
@@ -75,8 +76,8 @@ def catalog() {
                     display       : 'CircleGuard Notification',
                     sonarSettings : '',
                     jacoco        : false,
-                    integration   : false,
-                    publish       : false,
+                    integration   : true,
+                    publish       : true,
                     docker        : false
             ],
             [
@@ -88,8 +89,8 @@ def catalog() {
                     display       : 'CircleGuard File',
                     sonarSettings : '',
                     jacoco        : false,
-                    integration   : false,
-                    publish       : false,
+                    integration   : true,
+                    publish       : true,
                     docker        : false
             ],
             [
@@ -101,8 +102,8 @@ def catalog() {
                     display       : 'CircleGuard Dashboard',
                     sonarSettings : '',
                     jacoco        : false,
-                    integration   : false,
-                    publish       : false,
+                    integration   : true,
+                    publish       : true,
                     docker        : false
             ]
     ]
@@ -111,8 +112,8 @@ def catalog() {
 def resolve(String mode) {
     def requested = (mode ?: 'auto').trim()
     if (requested == 'all') {
-        // "all" cubre los servicios con JaCoCo y quality gate de cobertura real.
-        return catalog().findAll { it.jacoco }
+        // "all" cubre todos los servicios del catálogo.
+        return catalog()
     }
     if (requested == 'auto') {
         return changed()
@@ -125,11 +126,11 @@ def resolve(String mode) {
 }
 
 def changed() {
-    // En main no hay CHANGE_TARGET: se construyen los servicios CI para no
+    // En main no hay CHANGE_TARGET: se construyen todos los servicios para no
     // dejar main sin validar cuando el diff contra sí mismo está vacío.
     if (!env.CHANGE_TARGET?.trim() && (env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master')) {
-        echo 'Build de main: se construyen todos los servicios con JaCoCo.'
-        return catalog().findAll { it.jacoco }
+        echo 'Build de main: se construyen todos los servicios.'
+        return catalog()
     }
     def target = env.CHANGE_TARGET?.trim() ?: 'main'
     def base = "origin/${target}"
@@ -138,8 +139,8 @@ def changed() {
         sh "git fetch --no-tags origin ${target}"
         diff = sh(script: "git diff --name-only ${base}...HEAD", returnStdout: true).trim()
     } catch (Exception ex) {
-        echo "No se pudo calcular el diff contra ${base}: ${ex.message}. Se construyen los servicios CI."
-        return catalog().findAll { it.jacoco }
+        echo "No se pudo calcular el diff contra ${base}: ${ex.message}. Se construyen todos los servicios."
+        return catalog()
     }
     if (!diff) {
         echo "Sin cambios de servicio respecto a ${base}."
@@ -158,8 +159,8 @@ def changed() {
                 path.startsWith('jenkins/')
     }
     if (globalChange) {
-        echo "Cambio global detectado; se construyen los servicios CI: ${files.join(', ')}"
-        return catalog().findAll { it.jacoco }
+        echo "Cambio global detectado; se construyen todos los servicios: ${files.join(', ')}"
+        return catalog()
     }
     def selected = catalog().findAll { service ->
         files.any { path -> path.startsWith("${service.dir}/") }

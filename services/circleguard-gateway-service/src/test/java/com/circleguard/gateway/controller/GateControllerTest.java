@@ -43,6 +43,22 @@ class GateControllerTest {
     }
 
     @Test
+    void shouldReturnDeniedWhenTokenIsMissing() throws Exception {
+        QrValidationService.ValidationResult denied =
+                new QrValidationService.ValidationResult(false, "RED", "Invalid or Expired Token");
+
+        Mockito.when(validationService.validateToken(null)).thenReturn(denied);
+
+        mockMvc.perform(post("/api/v1/gate/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valid").value(false))
+                .andExpect(jsonPath("$.status").value("RED"))
+                .andExpect(jsonPath("$.message").value("Invalid or Expired Token"));
+    }
+
+    @Test
     void shouldReturnDeniedResult() throws Exception {
         QrValidationService.ValidationResult denied =
                 new QrValidationService.ValidationResult(false, "RED", "Access Denied");

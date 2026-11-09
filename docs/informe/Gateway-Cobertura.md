@@ -14,15 +14,39 @@ Only `circleguard-gateway-service`: unit tests, Redis integration, Playwright E2
   :services:circleguard-gateway-service:jacocoTestCoverageVerification
 ```
 
-Target: line coverage >= 60%.
+Target: line coverage >= 60 % (GW-CI-01). The threshold is enforced by
+`jacocoTestCoverageVerification` (`minimum = 0.60`) and wired to the Gradle
+`check` lifecycle.
 
-Current result:
+Current result (JaCoCo 0.8.12, 24 tests, 0 failures):
 
-- instruction: 97.44 %
-- branch: 72.73 %
-- line: 95.92 %
+| Metric | Covered / Total | Coverage |
+|---|---:|---:|
+| Instructions | 195 / 195 | 100.00 % |
+| Branches | 18 / 22 | 81.82 % |
+| **Lines** | **49 / 49** | **100.00 %** |
+| Methods | 9 / 9 | 100.00 % |
+| Classes | 4 / 4 | 100.00 % |
 
 ![JaCoCo coverage](evidencia/gateway-jacoco.png)
+
+### Acceptance criteria -> tests
+
+| GW-CI-01 criterion | Test |
+|---|---|
+| `ACTIVE` / `RECOVERED` -> `GREEN` | `QrValidationServiceTest.shouldAllowAllowedStatuses` |
+| Risk statuses, `UNKNOWN` and `CLEAR` -> `RED` | `QrValidationServiceTest.shouldDenyRiskOrUnknownStatuses` |
+| Missing Redis status -> `RED` | `QrValidationServiceTest.shouldDenyWhenStatusIsMissing` |
+| Expired token -> `Invalid or Expired Token` | `QrValidationServiceTest.shouldDenyExpiredToken` |
+| Invalid signature -> `Invalid or Expired Token` | `QrValidationServiceTest.shouldDenyTokenWithInvalidSignature` |
+| Malformed, empty or null token -> `Invalid or Expired Token` | `QrValidationServiceTest.shouldDenyMissingOrMalformedToken` |
+| Token without subject -> `Invalid or Expired Token` | `QrValidationServiceTest.shouldDenyTokenWithoutSubject` |
+| Redis failure propagates | `QrValidationServiceTest.shouldPropagateRedisFailure` |
+| Controller returns the service result | `GateControllerTest.shouldReturnValidationResult`, `shouldReturnDeniedResult` |
+| Controller handles a missing `token` field | `GateControllerTest.shouldReturnDeniedWhenTokenIsMissing` |
+| JWT filter builds authorities from `permissions` | `JwtAuthenticationFilterTest.shouldAuthenticateTokenWithPermissions` |
+| JWT filter accepts a token without `permissions` | `JwtAuthenticationFilterTest.shouldAuthenticateTokenWithoutPermissions` |
+| JWT filter ignores an invalid token | `JwtAuthenticationFilterTest.shouldNotAuthenticateInvalidToken` |
 
 ## Integration test
 
@@ -32,7 +56,7 @@ Current result:
 - `SUSPECT` status -> access denied.
 - Missing status -> access denied.
 
-![Integration test](evidencia/gateway-integration.png)
+It runs with the `test` task and uses Testcontainers (`redis:7.2-alpine`).
 
 ## E2E tests
 
@@ -42,11 +66,9 @@ Playwright validates:
 2. Request without staff JWT returns 401/403.
 3. Malformed staff JWT returns 401/403.
 
-![E2E tests](evidencia/gateway-e2e.png)
-
 ## SonarQube
 
-![SonarQube quality gate](evidencia/gateway-sonar.png)
+![SonarQube quality gate](evidencia/sonarqube-quality-gate.png)
 
 ## Nexus
 
@@ -56,8 +78,14 @@ Published artifact and image:
 <TOOLS_PRIVATE_IP>:5000/circleguard-docker/gateway:<TAG>
 ```
 
-![Nexus artifacts](evidencia/gateway-nexus.png)
+![Nexus artifacts](evidencia/nexus-repositories.png)
 
 ## Pipeline
 
-![Gateway pipeline](evidencia/gateway-pipeline.png)
+The multibranch Jenkinsfile runs `ci.build`, `ci.unitTest` (JUnit + JaCoCo
+gate) and `ci.integrationTest` for the gateway, followed by
+`ci.archive(services)`, which publishes the JUnit XML and the JaCoCo HTML/XML
+reports for every build, including failed builds. The shared library is loaded
+from `main` (`jenkins/vars`).
+
+![Gateway pipeline](evidencia/jenkins-pr15.png)

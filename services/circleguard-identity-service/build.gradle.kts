@@ -6,10 +6,8 @@ plugins {
     kotlin("plugin.spring")
     kotlin("plugin.jpa")
     jacoco
+    `maven-publish`
 }
-
-// En Jenkins el TAG llega como variable de entorno; en local se mantiene SNAPSHOT.
-version = System.getenv("TAG") ?: "1.0.0-SNAPSHOT"
 
 jacoco {
     toolVersion = "0.8.12"
@@ -68,6 +66,41 @@ tasks.jacocoTestCoverageVerification {
                 counter = "LINE"
                 value = "COVEREDRATIO"
                 minimum = "0.60".toBigDecimal()
+            }
+        }
+    }
+}
+
+// Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
+val integrationTest by tasks.registering(Test::class) {
+    description = "Runs the ${project.name} integration tests."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("integration")
+    }
+    shouldRunAfter(tasks.test)
+}
+
+// Publicación del artefacto en Nexus (snapshots o releases según la versión/TAG).
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            artifact(tasks.bootJar)
+        }
+    }
+    repositories {
+        maven {
+            name = "nexus"
+            val nexusBase = (System.getenv("NEXUS_URL") ?: "http://localhost:8081").trimEnd('/')
+            val repo = if (version.toString().endsWith("SNAPSHOT")) "maven-snapshots" else "maven-releases"
+            url = uri("${nexusBase}/repository/${repo}/")
+            isAllowInsecureProtocol = true
+            credentials {
+                username = System.getenv("NEXUS_USER") ?: "jenkins"
+                password = System.getenv("NEXUS_PASSWORD") ?: "change-me"
             }
         }
     }

@@ -121,8 +121,8 @@ Ejecutadas con Java 21 en contenedor:
 | Comando | Resultado |
 |---|---|
 | `./gradlew :services:circleguard-identity-service:test jacocoTestReport jacocoTestCoverageVerification` | **BUILD SUCCESSFUL** |
-| Pruebas unitarias | **16 pruebas, 0 fallos** |
-| Cobertura JaCoCo | **74/93 líneas, 79.6 %** |
+| Pruebas unitarias | **17 pruebas, 0 fallos** |
+| Cobertura JaCoCo | **88/93 líneas, 94.6 %** |
 | `docker build` | **Imagen construida** |
 | `docker run --entrypoint id ... -u` | **UID 100** |
 | `docker inspect` | **Healthcheck definido** |

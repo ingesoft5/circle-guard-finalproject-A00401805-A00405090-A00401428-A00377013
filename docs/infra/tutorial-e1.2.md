@@ -18,7 +18,7 @@ export GITHUB_USER=your_github_user
 export GITHUB_TOKEN=your_github_token
 export GITHUB_OWNER=ingesoft5
 export GITHUB_REPO=circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013
-export LIBRARY_BRANCH=feat/HU-GATEWAY-01-configurar-servidores
+export LIBRARY_BRANCH=main
 ```
 
 Do not print the token.

@@ -8,8 +8,16 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
+  datasource:
+    password: test
   neo4j:
     uri: bolt://localhost:7687
     authentication:
       username: neo4j
       password: password
+  data:
+    redis:
+      password:
+
+jwt:
+  secret: my-super-secret-test-key-32-chars-long
