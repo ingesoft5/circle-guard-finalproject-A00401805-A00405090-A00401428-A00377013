@@ -80,6 +80,13 @@ If the token cannot manage branch protection, the script prints a warning and th
 - Quality gate `CircleGuard Gateway`: line coverage must be at least 60 %.
 - Quality gate `CircleGuard Services`: same coverage rule for auth, form, and identity.
 - Projects: `circleguard-gateway-service`, `circleguard-auth-service`, `circleguard-form-service`, `circleguard-identity-service`.
+- To create only the identity project and gate with an admin token:
+
+```bash
+SONAR_URL=http://<TOOLS_EIP>:9000 \
+SONAR_ADMIN_TOKEN=<token-admin> \
+./infra/bootstrap/configure-sonar-identity.sh
+```
 
 ## Application ingress
 

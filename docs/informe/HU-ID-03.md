@@ -99,6 +99,22 @@ El pipeline compartido ejecuta:
 Un fallo en pruebas, cobertura o quality gate detiene el pipeline antes de las
 etapas `Git tag`, `Publish` y `Docker`.
 
+### Configuración del proyecto y gate en Sonar
+
+Si no se ejecuta `infra/bootstrap/bootstrap-tools.sh`, el proyecto y el gate se
+pueden crear de forma idempotente con una credencial administrativa:
+
+```bash
+SONAR_URL=http://<TOOLS_EIP>:9000 \
+SONAR_ADMIN_TOKEN=<token-admin> \
+./infra/bootstrap/configure-sonar-identity.sh
+```
+
+El script valida la credencial, crea `circleguard-identity-service` si no existe,
+reutiliza o crea el gate `CircleGuard Services`, asegura la condición
+`line_coverage < 60` y asigna el gate al proyecto. También acepta
+`SONAR_ADMIN_PASSWORD` en lugar de `SONAR_ADMIN_TOKEN`.
+
 ## 5. Versionado semántico
 
 `jenkins/vars/ciVersion.groovy` calcula la versión:

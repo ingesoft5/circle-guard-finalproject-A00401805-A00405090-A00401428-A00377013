@@ -129,6 +129,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/evidencia/HU-ID-03/README.md` — Evidence checklist for the identity Docker and CI report.
 
+- `docs/informe/evidencia/HU-ID-03/validacion-local.md` — Local test, coverage, Docker, and runtime validation results.
+
 - `docs/informe/evidencia/github/github-branches.png` — Binary asset.
 
 - `docs/informe/evidencia/github/github-commit-history.png` — Binary asset.
@@ -358,6 +360,8 @@ English purpose of every tracked repository file.
 - `infra/bootstrap/bootstrap-stop.sh` — Stops the four provisioned instances to reduce compute cost.
 
 - `infra/bootstrap/bootstrap-tools.sh` — Provisions Jenkins, SonarQube, Nexus, the private registry, and the ingress on cg-tools.
+
+- `infra/bootstrap/configure-sonar-identity.sh` — Creates the identity Sonar project and assigns the coverage quality gate with an admin credential.
 
 ## (root)
 
