@@ -20,12 +20,12 @@ export GITHUB_TOKEN=...
 
 ## Exposure
 
-- `80`: public ingress to the dev gateway.
-- `8080`: Jenkins, restricted to `ADMIN_CIDR` and `TEACHER_CIDR`.
+- `80`: public ingress. It serves the dev gateway at `/` and the GitHub webhook at `/github-webhook/`.
+- `8080`: Jenkins UI, restricted to `ADMIN_CIDR` and `TEACHER_CIDR`.
 - `9000` and `8081`: SonarQube and Nexus, restricted to `ADMIN_CIDR` and `TEACHER_CIDR`.
 - `443`: closed; there is no TLS listener.
 - The bootstrap rejects `0.0.0.0/0` for `ADMIN_CIDR` and `TEACHER_CIDR`.
-- Jenkins builds are triggered by the `cron('H/5 * * * *')` timer in the `Jenkinsfile`; no public webhook is required.
+- Jenkins is triggered by the GitHub webhook, not by a timer. The webhook is reachable at `http://<TOOLS_EIP>/github-webhook/`; nginx forwards only that path to `jenkins:8080`, so port `8080` stays private.
 
 ## Bootstrap
 
@@ -48,13 +48,28 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 
 ## Jenkins
 
-- URL: `http://<TOOLS_EIP>:8080`
-- Admin credentials: `infra/state/tools.env`
-- JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`
-- Multibranch job: `circleguard-gateway`
-- Webhook: `http://<TOOLS_EIP>:8080/github-webhook/`
+- URL: `http://<TOOLS_EIP>:8080` (admin/teacher networks only).
+- Admin credentials: `infra/state/tools.env`.
+- JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`.
+- Multibranch job: `circleguard-gateway`, with GitHub Branch Source for branches and pull requests.
+- Webhook: `http://<TOOLS_EIP>/github-webhook/`, events `push` and `pull_request`.
+- Secret: `GITHUB_WEBHOOK_SECRET` in `infra/state/tools.env`; JCasC exposes it as `github-webhook-secret`.
+- Shared Library: `circleguard`, loaded from `jenkins/vars/` (`libraryPath: jenkins`).
 - `professor` user: read-only.
 - `cg-envs-ssh`: declared in JCasC.
+- The webhook is created by `infra/bootstrap/bootstrap-github.sh` when the token has `admin:repo_hook`. Otherwise create it manually in **Settings → Webhooks** with content type `application/json`.
+
+## Branch protection
+
+`infra/bootstrap/bootstrap-github.sh` protects the default branch (`main`) with:
+
+- Pull request required before merging.
+- One approving review.
+- Required status check: `continuous-integration/jenkins/pr-merge`.
+- Conversation resolution required.
+- Force pushes and branch deletion disabled.
+
+If the token cannot manage branch protection, the script prints a warning and the settings must be applied manually.
 
 ## SonarQube and Nexus
 
@@ -62,6 +77,9 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 - Nexus UI: `http://<TOOLS_EIP>:8081`, teacher/admin only.
 - Registry: `<TOOLS_PRIVATE_IP>:5000`, private.
 - Repository: `circleguard-docker`.
+- Quality gate `CircleGuard Gateway`: line coverage must be at least 60 %.
+- Quality gate `CircleGuard Services`: same coverage rule for auth and form.
+- Projects: `circleguard-gateway-service`, `circleguard-auth-service`, `circleguard-form-service`.
 
 ## Application ingress
 
@@ -71,19 +89,30 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 
 ## Pipeline
 
-1. Checkout.
-2. Build and test with JaCoCo.
-3. SonarQube and blocking quality gate.
-4. Package and publish.
-5. Docker build/push to `5000`.
-6. Deploy dev.
-7. E2E.
-8. Deploy stage.
-9. Manual production approval.
-10. Deploy prod.
-11. Tag and notify.
-12. Rollback with `ROLLBACK_TAG`.
+The `Jenkinsfile` is branch-aware: the multibranch job discovers `main`, feature branches, and pull requests. Each child build runs the same stages with the code of its branch or PR.
+
+1. **Checkout**: `checkout scm` and commit metadata.
+2. **Resolve services**: `SERVICE=auto` detects changed services from the diff; `SERVICE=all` builds gateway, auth, and form; a service name builds only that service.
+3. **Build**: Gradle compilation per service.
+4. **Unit tests + JaCoCo**: tests and coverage; gateway enforces **line coverage ≥ 60 %**.
+5. **SonarQube + Quality Gate**: scanner and blocking `waitForQualityGate`; the pipeline stops if the gate is red.
+6. **Integration tests**: Testcontainers tests, separate from unit tests.
+7. **Package**: `bootJar`.
+8. **Publish** (on `main`): Nexus artifact and Docker image push with digest.
+9. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt`.
+10. **Deploy** (optional): dev, E2E, stage, production approval, production, tag, rollback. Only when `DEPLOY=true` on `main`.
+
+### Selective execution
+
+- `SERVICE=auto`: services touched under `services/<service>/`; global files (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `Jenkinsfile`, `sonar-project.properties`, `gradlew`, `gradle/`, `jenkins/`) select every CI service.
+- `SERVICE=all`: gateway, auth, and form.
+- `SERVICE=<name>`: one service.
+- With no changed services the build is green and skips compilation.
+
+### Artifacts
+
+Every build archives JUnit XML, JaCoCo HTML/XML, the Sonar dashboard links, and the published image digest. The links are also printed in the build log.
 
 ## Evidence
 
-Store screenshots in `docs/infra/evidence/` and the Markdown report in `docs/informe/`. Never include passwords, tokens, or private keys.
+Store screenshots in `docs/informe/evidencia/HU-GATEWAY-04/` and the Markdown report in `docs/informe/HU-GATEWAY-04.md`. Never include passwords, tokens, or private keys.
