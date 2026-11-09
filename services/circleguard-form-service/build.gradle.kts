@@ -6,6 +6,7 @@ plugins {
     kotlin("plugin.spring")
     kotlin("plugin.jpa")
     jacoco
+    `maven-publish`
 }
 
 // Alinea los módulos y el núcleo de Testcontainers en el classpath de pruebas.
@@ -68,4 +69,39 @@ tasks.jacocoTestCoverageVerification {
 // ./gradlew check falle si la cobertura de líneas es menor al 60 %.
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+// Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
+val integrationTest by tasks.registering(Test::class) {
+    description = "Runs the ${project.name} integration tests."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("integration")
+    }
+    shouldRunAfter(tasks.test)
+}
+
+// Publicación del artefacto en Nexus (snapshots o releases según la versión/TAG).
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            artifact(tasks.bootJar)
+        }
+    }
+    repositories {
+        maven {
+            name = "nexus"
+            val nexusBase = (System.getenv("NEXUS_URL") ?: "http://localhost:8081").trimEnd('/')
+            val repo = if (version.toString().endsWith("SNAPSHOT")) "maven-snapshots" else "maven-releases"
+            url = uri("${nexusBase}/repository/${repo}/")
+            isAllowInsecureProtocol = true
+            credentials {
+                username = System.getenv("NEXUS_USER") ?: "jenkins"
+                password = System.getenv("NEXUS_PASSWORD") ?: "change-me"
+            }
+        }
+    }
 }

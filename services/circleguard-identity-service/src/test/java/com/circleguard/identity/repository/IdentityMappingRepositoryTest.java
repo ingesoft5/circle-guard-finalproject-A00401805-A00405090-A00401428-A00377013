@@ -5,6 +5,7 @@ package com.circleguard.identity.repository;
 
 import com.circleguard.identity.model.IdentityMapping;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest
 @ActiveProfiles("test")
 @Transactional
+@Tag("integration")
 class IdentityMappingRepositoryTest {
 
     @Autowired

@@ -1,3 +1,4 @@
+// CG-DOC: Build configuration for the auth service.
 plugins {
     id("org.springframework.boot")
     id("io.spring.dependency-management")
@@ -72,6 +73,19 @@ tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
+// Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
+val integrationTest by tasks.registering(Test::class) {
+    description = "Runs the ${project.name} integration tests."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("integration")
+    }
+    shouldRunAfter(tasks.test)
+}
+
+// Publicación del artefacto en Nexus (snapshots o releases según la versión/TAG).
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
@@ -82,7 +96,9 @@ publishing {
     repositories {
         maven {
             name = "nexus"
-            url = uri(System.getenv("NEXUS_URL") ?: "http://localhost:8081/repository/maven-releases/")
+            val nexusBase = (System.getenv("NEXUS_URL") ?: "http://localhost:8081").trimEnd('/')
+            val repo = if (version.toString().endsWith("SNAPSHOT")) "maven-snapshots" else "maven-releases"
+            url = uri("${nexusBase}/repository/${repo}/")
             isAllowInsecureProtocol = true
             credentials {
                 username = System.getenv("NEXUS_USER") ?: "jenkins"
