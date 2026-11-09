@@ -29,7 +29,7 @@ class HealthStatusControllerTest {
     private HealthStatusService statusService;
 
     @Test
-    @WithMockUser(authorities = "HEALTH_CENTER")
+    @WithMockUser(authorities = "ROLE_HEALTH_CENTER")
     void confirmPositive_WithPermission_CallsUpdateStatus() throws Exception {
         String json = "{\"anonymousId\": \"user-1\"}";
 
@@ -42,7 +42,7 @@ class HealthStatusControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "HEALTH_CENTER")
+    @WithMockUser(authorities = "ROLE_HEALTH_CENTER")
     void resolve_WithPermission_CallsResolveStatus() throws Exception {
         String json = "{\"anonymousId\": \"user-1\"}";
 

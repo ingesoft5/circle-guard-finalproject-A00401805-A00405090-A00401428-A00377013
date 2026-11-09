@@ -17,13 +17,14 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Neo4jContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 public class AdministrativeCorrectionTest {
 
     @Container
@@ -34,6 +35,9 @@ public class AdministrativeCorrectionTest {
     static GenericContainer<?> redis = new GenericContainer<>("redis:7.2.1")
             .withExposedPorts(6379);
 
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.neo4j.uri", neo4j::getBoltUrl);
@@ -41,6 +45,12 @@ public class AdministrativeCorrectionTest {
         registry.add("spring.neo4j.authentication.password", () -> "password");
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", redis::getFirstMappedPort);
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        // This class starts no broker; without this the listener retries localhost:9092
+        // for the whole run and floods the log.
+        registry.add("spring.kafka.listener.auto-startup", () -> "false");
     }
 
     @Autowired
@@ -73,8 +83,7 @@ public class AdministrativeCorrectionTest {
         userRepository.save(b);
 
         CircleNode circle = circleService.createCircle("RiskGroup", "loc1");
-        userRepository.recordEncounter("A", "B", System.currentTimeMillis(), "loc1"); // Backdoor encounter
-        // Wait, I'll use the circle membership
+        userRepository.recordEncounter("A", "B", System.currentTimeMillis(), "loc1");
         circleRepository.joinCircle("A", circle.getInviteCode());
         circleRepository.joinCircle("B", circle.getInviteCode());
 
@@ -86,9 +95,6 @@ public class AdministrativeCorrectionTest {
         statusService.updateStatus("A", "CONFIRMED");
 
         // 3. Verify: B should NOT be affected through the invalid circle
-        statusService.getCachedStatus("B");
-        // Since circle is invalid, B remains ACTIVE (unless updateStatus is called)
-        // Wait, updateStatus only returns affected. Let's check DB.
         assertThat(userRepository.findById("B").get().getStatus()).isEqualTo("ACTIVE");
     }
 
