@@ -193,19 +193,64 @@ Las capturas se almacenan en `docs/informe/evidencia/HU-GATEWAY-04/`. Ver el
 
 | Evidencia | Archivo | Estado |
 |---|---|---|
-| URL del build de Jenkins | `01-jenkins-build.png` | Pendiente |
-| Reporte JaCoCo ≥ 60 % | `02-jacoco-report.png` | Pendiente |
-| Dashboard de Sonar con gate verde | `03-sonar-dashboard.png` | Pendiente |
-| Configuración del webhook | `04-github-webhook-config.png` | Pendiente |
-| Entrega reciente del webhook | `05-github-webhook-delivery.png` | Pendiente |
-| Protección de `main` | `06-branch-protection.png` | Pendiente |
-| Artefactos del build | `07-jenkins-artifacts.png` | Pendiente |
-| Duración del build | `08-build-duration.png` | Pendiente |
+| URL del build de Jenkins | `01-jenkins-build.png` | ✅ Build #2 |
+| Reporte JaCoCo ≥ 60 % | `02-jacoco-report.png` | ✅ 95 % líneas |
+| Dashboard de Sonar con gate verde | `03-sonar-dashboard.png` y `17-sonar-overall.png` | ✅ Gate Passed |
+| Configuración del webhook | `04-github-webhook-config.png` | Pendiente de UI |
+| Entrega reciente del webhook | `05-github-webhook-delivery.png` | Pendiente de UI; API 200 |
+| Protección de `main` | `06-branch-protection.png` | Pendiente de UI; API aplicada |
+| Artefactos del build | `07-jenkins-artifacts.png` y `15-artifacts-services.png` | ✅ |
+| Reporte JUnit | `14-junit-report.png` | ✅ 78 pruebas |
+| Enlaces a Sonar | `16-sonar-links.png` | ✅ |
+| Duración del build | `08-build-duration.png` | ✅ 5 min 58 s |
 | Notificación de fallo en GitHub | `09-failure-notification-github.png` | Pendiente |
 | Notificación de fallo en Slack | `10-failure-notification-slack.png` | Pendiente |
 | Quality gate en rojo | `11-quality-gate-red.png` | Pendiente |
 | Ejecución selectiva `auto` | `12-selective-auto.png` | Pendiente |
 | Ejecución selectiva `all` | `13-selective-all.png` | Pendiente |
+
+### 5.1 URL del build
+
+Build **#2** del PR #23, commit `5329864`, ejecutado el 8 de noviembre de 2026:
+
+**<http://77.112.223.174:8080/job/circleguard-gateway/job/PR-23/2/>**
+
+![Página del build de Jenkins](evidencia/HU-GATEWAY-04/01-jenkins-build.png)
+
+### 5.2 Cobertura JaCoCo
+
+El reporte agregado muestra **95 % de líneas**; el gateway reporta 95.92 %,
+auth 97.86 % y form 86.43 %.
+
+![Reporte JaCoCo](evidencia/HU-GATEWAY-04/02-jacoco-report.png)
+
+### 5.3 SonarQube
+
+El gate `CircleGuard Gateway` está en **Passed**, con **88.7 % de cobertura
+global** sobre 49 líneas y 0 bugs, 0 vulnerabilidades y 0 code smells.
+
+![Dashboard de Sonar](evidencia/HU-GATEWAY-04/03-sonar-dashboard.png)
+
+![Cobertura global de Sonar](evidencia/HU-GATEWAY-04/17-sonar-overall.png)
+
+### 5.4 Pruebas y artefactos
+
+La página de pruebas reporta **78 pruebas y 0 fallos**. Los artefactos incluyen
+los reportes de los tres servicios y `sonar-links.txt`.
+
+![Reporte JUnit](evidencia/HU-GATEWAY-04/14-junit-report.png)
+
+![Artefactos del build](evidencia/HU-GATEWAY-04/07-jenkins-artifacts.png)
+
+![Artefactos por servicio](evidencia/HU-GATEWAY-04/15-artifacts-services.png)
+
+![Enlaces a Sonar](evidencia/HU-GATEWAY-04/16-sonar-links.png)
+
+### 5.5 Duración
+
+El build completo tardó **5 min 58 s**, por debajo del límite de 10 minutos.
+
+![Duración del build](evidencia/HU-GATEWAY-04/08-build-duration.png)
 
 ## 6. Cómo reproducir la validación
 
