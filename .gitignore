@@ -55,4 +55,5 @@ infra/state/
 *.key
 .env
 .env.*
+*.env
 !.env.example
