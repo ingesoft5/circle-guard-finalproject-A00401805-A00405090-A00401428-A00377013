@@ -160,6 +160,13 @@ We maintain high system integrity via multi-level testing:
 
 **Note**: Integration tests use **Testcontainers** to spawn ephemeral Neo4j, PostgreSQL, and Redis instances for zero-side-effect validation. The gateway integration suite requires Docker and is excluded from `test` so unit builds do not depend on it.
 
+**WSL (repo on `/mnt/c`)**: the 9p mount makes the classpath too slow for the 3-minute task timeout. Move the build outputs to ext4 with the local init script:
+
+```bash
+./gradlew -I gradle/wsl-ext4.init.gradle.kts \
+  :services:circleguard-gateway-service:integrationTest
+```
+
 ---
 
 ## Privacy & Compliance
