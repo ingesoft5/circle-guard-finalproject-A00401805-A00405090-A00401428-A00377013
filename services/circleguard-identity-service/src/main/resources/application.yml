@@ -6,24 +6,37 @@ spring:
     problemdetails:
       enabled: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/circleguard_identity
-    username: admin
-    password: password
-    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
 vault:
-  secret: "746573742d7365637265742d33322d63686172732d6c6f6e672d313233343536"
-  salt: "deadbeef"
-  hash-salt: "12345678"
+  secret: ${VAULT_SECRET}
+  salt: ${VAULT_SALT}
+  hash-salt: ${VAULT_HASH_SALT}
 
 jwt:
-  secret: "my-super-secret-dev-key-32-chars-long-12345678"
+  secret: ${JWT_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
 
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
