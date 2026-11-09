@@ -68,6 +68,11 @@ def integrationTest(Map service) {
         return
     }
     sh "./gradlew ${service.path}:integrationTest --no-daemon --console=plain"
+    // GW-CI-02: una corrida sin resultados debe fallar el build, no pasar en silencio.
+    junit testResults: "${service.dir}/build/test-results/integrationTest/*.xml",
+            allowEmptyResults: false, keepLongStdio: true
+    archiveArtifacts artifacts: "${service.dir}/build/integration-test/*.log",
+            allowEmptyArchive: true
 }
 
 def packageService(Map service) {
@@ -94,18 +99,40 @@ def dockerBuildPush(Map service, String tag) {
     if (!service.docker) {
         return ''
     }
-    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${tag}"
+    def version = (tag ?: '').trim()
+    if (!version) {
+        error "No se puede publicar ${service.short}: la versión semántica está vacía."
+    }
+    def commit = env.GIT_COMMIT ?: 'unknown'
+    def source = env.GITHUB_REPO_URL ?: 'unknown'
+    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${version}"
     def digest = ''
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
-        sh "docker build -t ${image} -f ${service.dir}/Dockerfile ."
+        sh """
+            docker build \
+              --build-arg VERSION=${version} \
+              --build-arg GIT_COMMIT=${commit} \
+              --build-arg SOURCE_URL=${source} \
+              -t ${image} -f ${service.dir}/Dockerfile .
+        """
+        def uid = sh(script: "docker run --rm --entrypoint id ${image} -u", returnStdout: true).trim()
+        if (uid == '0') {
+            error "La imagen ${image} se ejecuta como root; se requiere un usuario no root."
+        }
+        if (service.healthcheck) {
+            def healthcheck = sh(script: "docker inspect --format='{{json .Config.Healthcheck}}' ${image}", returnStdout: true).trim()
+            if (!healthcheck || healthcheck == 'null') {
+                error "La imagen ${image} no define HEALTHCHECK."
+            }
+        }
         sh "docker push ${image}"
         digest = sh(script: "docker inspect --format='{{index .RepoDigests 0}}' ${image}", returnStdout: true).trim()
         if (!digest || digest == '<no value>') {
             digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
         }
-        sh "printf '%s\\n%s\\n' '${image}' '${digest}' >> image-digest.txt"
+        sh "printf '%s\\n%s\\ncommit=%s\\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
     }
     return digest
 }
@@ -116,10 +143,6 @@ def archive(List services) {
             junit testResults: "${service.dir}/build/test-results/test/*.xml",
                     allowEmptyResults: true, keepLongStdio: true
         }
-        if (service.integration && fileExists("${service.dir}/build/test-results/integrationTest")) {
-            junit testResults: "${service.dir}/build/test-results/integrationTest/*.xml",
-                    allowEmptyResults: true, keepLongStdio: true
-        }
         if (service.jacoco && fileExists("${service.dir}/build/reports/jacoco/test/jacocoTestReport.xml")) {
             jacoco execPattern: "${service.dir}/build/jacoco/test.exec",
                     classPattern: "${service.dir}/build/classes/**",
@@ -127,7 +150,7 @@ def archive(List services) {
                     exclusionPattern: "**/*Application*,**/config/**"
         }
     }
-    archiveArtifacts artifacts: '**/build/reports/jacoco/test/html/**,**/build/reports/jacoco/test/jacocoTestReport.xml,**/build/test-results/**/*.xml,sonar-links.txt,image-digest.txt',
+    archiveArtifacts artifacts: '**/build/reports/jacoco/test/html/**,**/build/reports/jacoco/test/jacocoTestReport.xml,**/build/test-results/**/*.xml,**/build/integration-test/*.log,sonar-links.txt,image-digest.txt',
             allowEmptyArchive: true, fingerprint: true
 }
 
@@ -152,6 +175,6 @@ def e2e() {
         cd tests/e2e
         npm install
         npx playwright install --with-deps chromium
-        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 AUTH_URL=http://${env.DEV_PRIVATE_IP}:8180 npx playwright test
+        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 AUTH_URL=http://${env.DEV_PRIVATE_IP}:8180 IDENTITY_URL=http://${env.DEV_PRIVATE_IP}:8083 npx playwright test
     """
 }

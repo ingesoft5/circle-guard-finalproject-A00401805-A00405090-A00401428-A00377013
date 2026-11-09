@@ -4,6 +4,8 @@
 import { test, expect } from '@playwright/test';
 
 const AUTH_URL = process.env.AUTH_URL || 'http://localhost:8180';
+const IDENTITY_URL = process.env.IDENTITY_URL || 'http://localhost:8083';
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 test('el gateway está saludable', async ({ request }) => {
   const response = await request.get('/actuator/health');
@@ -79,4 +81,71 @@ test('flujo E2E completo: login RBAC en auth-service, generación de QR y valida
   expect(gateRes.status()).toBe(200);
   const gateData = await gateRes.json();
   expect(['GREEN', 'RED']).toContain(gateData.status);
+});
+
+test('identity-service está saludable', async ({ request }) => {
+  const response = await request.get(`${IDENTITY_URL}/actuator/health/liveness`);
+  expect(response.ok()).toBeTruthy();
+  const body = await response.json();
+  expect(body.status).toBe('UP');
+});
+
+test('identity-service anonimiza identidad real y visitante de forma idempotente y bloquea lookup sin autorización', async ({ request }) => {
+  // 1. Mapeo idempotente en la bóveda criptográfica
+  const firstMap = await request.post(`${IDENTITY_URL}/api/v1/identities/map`, {
+    data: { realIdentity: 'student_user' },
+  });
+  expect(firstMap.status()).toBe(200);
+  const firstData = await firstMap.json();
+  expect(firstData.anonymousId).toMatch(UUID_REGEX);
+
+  const secondMap = await request.post(`${IDENTITY_URL}/api/v1/identities/map`, {
+    data: { realIdentity: 'student_user' },
+  });
+  expect(secondMap.status()).toBe(200);
+  const secondData = await secondMap.json();
+  expect(secondData.anonymousId).toBe(firstData.anonymousId);
+
+  // 2. Registro de visitante temporal sin exponer PII
+  const visitorRes = await request.post(`${IDENTITY_URL}/api/v1/identities/visitor`, {
+    data: {
+      name: 'Visitante Externo',
+      email: 'visitante@externo.org',
+      reason_for_visit: 'Conferencia académica',
+    },
+  });
+  expect(visitorRes.status()).toBe(200);
+  const visitorData = await visitorRes.json();
+  expect(visitorData.anonymousId).toMatch(UUID_REGEX);
+  expect(JSON.stringify(visitorData)).not.toContain('visitante@externo.org');
+
+  // 3. Intento de des-anonimización sin autoridad identity:lookup -> 401
+  const lookupRes = await request.get(`${IDENTITY_URL}/api/v1/identities/lookup/${firstData.anonymousId}`);
+  expect([401, 403]).toContain(lookupRes.status());
+});
+
+test('flujo E2E de anonimización: auth-service delega en identity-service y el JWT emitido no expone PII', async ({ request }) => {
+  // 1. Consultar el anonymousId persistido en identity-service para health_user
+  const mapRes = await request.post(`${IDENTITY_URL}/api/v1/identities/map`, {
+    data: { realIdentity: 'health_user' },
+  });
+  expect(mapRes.status()).toBe(200);
+  const { anonymousId: vaultAnonymousId } = await mapRes.json();
+  expect(vaultAnonymousId).toMatch(UUID_REGEX);
+
+  // 2. Iniciar sesión en auth-service con health_user y verificar correspondencia exacta con la bóveda
+  const loginRes = await request.post(`${AUTH_URL}/api/v1/auth/login`, {
+    data: { username: 'health_user', password: 'password' },
+  });
+  expect(loginRes.status()).toBe(200);
+  const loginData = await loginRes.json();
+  expect(loginData.anonymousId).toBe(vaultAnonymousId);
+
+  // 3. Decodificar el payload del JWT y verificar que solo transporta el anonymousId (<UUID>) sin PII
+  const payloadBase64 = loginData.token.split('.')[1];
+  const decodedPayload = Buffer.from(payloadBase64, 'base64url').toString('utf-8');
+  const claims = JSON.parse(decodedPayload);
+  expect(claims.sub).toBe(vaultAnonymousId);
+  expect(decodedPayload).not.toContain('health_user');
+  expect(decodedPayload).not.toContain('health@univ.edu');
 });

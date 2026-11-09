@@ -28,12 +28,63 @@ services:
     networks: [prod-net]
     mem_limit: 192m
 
+  postgres-identity:
+    image: postgres:15-alpine
+    container_name: cg-postgres-identity-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_IDENTITY_DB:-circleguard_identity}
+      POSTGRES_USER: ${POSTGRES_IDENTITY_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_IDENTITY_PASSWORD:-password}
+    volumes:
+      - postgres_identity_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_IDENTITY_USER:-admin} -d ${POSTGRES_IDENTITY_DB:-circleguard_identity}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [prod-net]
+    mem_limit: 192m
+
+  identity:
+    image: ${NEXUS_REGISTRY}/circleguard-docker/identity:${TAG}
+    container_name: cg-identity-prod
+    restart: unless-stopped
+    depends_on:
+      postgres-identity:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8083
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx320m"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-identity:5432/${POSTGRES_IDENTITY_DB:-circleguard_identity}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_IDENTITY_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_IDENTITY_PASSWORD:-password}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_FLYWAY_ENABLED: "true"
+      MANAGEMENT_HEALTH_KAFKA_ENABLED: "false"
+      VAULT_SECRET: ${VAULT_SECRET:-746573742d7365637265742d33322d63686172732d6c6f6e672d313233343536}
+      VAULT_SALT: ${VAULT_SALT:-5c0744940b5c369b}
+      VAULT_HASH_SALT: ${VAULT_HASH_SALT:-12345678}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health/liveness | grep -q UP || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 12
+    networks: [prod-net]
+    mem_limit: 448m
+
   auth:
     image: ${NEXUS_REGISTRY}/circleguard-docker/auth:${TAG}
     container_name: cg-auth-prod
     restart: unless-stopped
     depends_on:
       postgres-auth:
+        condition: service_healthy
+      identity:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -46,7 +97,7 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       MANAGEMENT_HEALTH_LDAP_ENABLED: "false"
       IDENTITY_SERVICE_URL: ${IDENTITY_SERVICE_URL:-http://identity:8083/api/v1/identities/map}
-      IDENTITY_SERVICE_FALLBACK_ENABLED: ${IDENTITY_SERVICE_FALLBACK_ENABLED:-true}
+      IDENTITY_SERVICE_FALLBACK_ENABLED: ${IDENTITY_SERVICE_FALLBACK_ENABLED:-false}
       QR_SECRET: ${QR_SECRET}
       JWT_SECRET: ${JWT_SECRET}
     ports:
@@ -85,6 +136,7 @@ services:
 volumes:
   redis_prod:
   postgres_auth_prod:
+  postgres_identity_prod:
 
 networks:
   prod-net:

@@ -17,6 +17,7 @@
    - [1.2 HU-AUTH-02 (DCG-78) — Automatizar las pruebas unitarias y de integración de `auth-service`](#12-hu-auth-02-dcg-78--automatizar-las-pruebas-unitarias-y-de-integración-de-auth-service)
    - [1.3 HU-AUTH-03 (DCG-79) — Empaquetar `auth-service` e integrarlo al pipeline de CI](#13-hu-auth-03-dcg-79--empaquetar-auth-service-e-integrarlo-al-pipeline-de-ci)
    - [1.4 HU-AUTH-04 (DCG-80) — Desplegar `auth-service` en `dev`, `stage` y `prod` y validar flujo E2E de autenticación](#14-hu-auth-04-dcg-80--desplegar-auth-service-en-dev-stage-y-prod-y-validar-flujo-e2e-de-autenticación)
+   - [1.5 HU-ID-04 (DCG-85) — Desplegar `identity-service` en `dev`, `stage` y `prod` y validar anonimización E2E](#15-hu-id-04-dcg-85--desplegar-identity-service-en-dev-stage-y-prod-y-validar-anonimización-e2e)
 2. [Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)](#2-módulo-circleguard-gateway-service-e-infraestructura-cicd-daniela-castaño)
    - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
    - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
@@ -335,6 +336,54 @@ La validación E2E real sobre las instancias EC2 demostró por qué las pruebas 
 
 ---
 
+### 1.5 HU-ID-04 (DCG-85) — Desplegar `identity-service` en `dev`, `stage` y `prod` y validar anonimización E2E
+
+- **Fecha:** 9 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Historia / Subtareas en Jira:** `DCG-85` (`DCG-118`, `DCG-119`, `DCG-120`, `DCG-121`)
+- **Objetivo de la interacción:** Configurar los manifiestos Docker Compose de `circleguard-identity-service` y su base de datos `postgres-identity` (`circleguard_identity`) con healthchecks y variables criptográficas externalizadas (`VAULT_SECRET`, `VAULT_SALT`, `VAULT_HASH_SALT`) para `dev`, `stage` y `prod` (`DCG-118`), integrar el flujo de despliegue automático a `dev`, promoción a `stage` y aprobación manual a `prod` (`DCG-119`), validar de extremo a extremo con Playwright la anonimización de identidad (`auth-service` $\rightarrow$ `identity-service` `POST /api/v1/identities/map` y `/api/v1/identities/visitor`) comprobando ausencia total de PII en los JWT emitidos (`DCG-120`), y demostrar el rollback hacia una versión semántica previa documentando las evidencias (`DCG-121`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Tras revisar el trabajo previo en `origin/feat/HU-ID-03-empaquetamiento-inmutable` (`services/circleguard-identity-service/Dockerfile`, `build.gradle.kts`, `application.yml`, `IdentityVaultController.java`, `IdentityVaultService.java` e `IdentityEncryptionConverter.java`) y contrastarlo con la arquitectura ya desplegada de `auth-service` (`HU-AUTH-04`), elaboré previamente el siguiente diseño técnico:
+
+1. **Análisis de dependencias y criptografía de la bóveda (`DCG-118`):**
+   - `circleguard-identity-service` expone el puerto `8083`, utiliza PostgreSQL (`circleguard_identity`) con la migración Flyway `V1__initial_identity_schema.sql` (tabla `identity_mappings` con `anonymous_id UUID`, `real_identity_encrypted BYTEA`, `identity_hash VARCHAR(64)` e índices únicos) y cifra `realIdentity` mediante `Encryptors.text(secret, salt)` en `IdentityEncryptionConverter.java`.
+   - `Encryptors.text(secret, salt)` de Spring Security Crypto exige que `VAULT_SALT` sea una cadena hexadecimal válida de longitud par (por ejemplo `5c0744940b5c369b`), mientras que `VAULT_HASH_SALT` se concatena antes de calcular el índice ciego `SHA-256` en `IdentityVaultService.computeHash()`.
+   - El `Dockerfile` de `identity-service` define su `HEALTHCHECK` contra `http://127.0.0.1:8083/actuator/health/liveness`; además, al inyectar `MANAGEMENT_HEALTH_KAFKA_ENABLED=false` en Compose, el servicio arranca en estado `UP (healthy)` sin depender de un broker Kafka activo para las operaciones síncronas `/api/v1/identities/map` y `/api/v1/identities/visitor`.
+2. **Acoplamiento estricto `auth-service` $\rightarrow$ `identity-service` (`DCG-118` y `DCG-120`):**
+   - En `deploy/compose/{dev,stage,prod}/docker-compose.yml`, el contenedor `auth` pasa a depender explícitamente de `identity` (`condition: service_healthy`) y cambia `IDENTITY_SERVICE_FALLBACK_ENABLED` a `false`, garantizando que todo login en `auth-service` invoque obligatoriamente `http://identity:8083/api/v1/identities/map` y reciba el UUID persistido en la bóveda `postgres-identity`.
+3. **Automatización de despliegue, smoke tests y pruebas E2E (`DCG-119`, `DCG-120`, `DCG-121`):**
+   - Actualizar `deploy/scripts/deploy.sh`, `deploy/scripts/rollback.sh` y `deploy/scripts/smoke-test.sh` para orquestar y verificar `gateway` (`:8087`), `identity` (`:8083/actuator/health/liveness`) y `auth` (`:8180/actuator/health`).
+   - Ampliar `tests/e2e/access-validation.spec.ts` con 3 escenarios dedicados a `identity-service`: salud del servicio, idempotencia de `/api/v1/identities/map` + anonimización de `/api/v1/identities/visitor` + bloqueo `401` en `/api/v1/identities/lookup/{id}`, y verificación cruzada de que el JWT emitido por `auth-service` para `health_user` contenga exactamente `sub = vaultAnonymousId` sin filtrar `health_user` ni `health@univ.edu`.
+
+#### B. Prompt empleado
+
+```text
+Implementa `HU-ID-04` (`DCG-85`, subtareas `DCG-118`, `DCG-119`, `DCG-120` y `DCG-121`) en una nueva rama `feat/HU-ID-04-despliegue-validacion-e2e` integrando `origin/feat/HU-ID-03-empaquetamiento-inmutable` y `feat/HU-AUTH-04-despliegue-validacion-e2e`:
+1. Configura `postgres-identity`, `kafka` e `identity` con healthchecks y variables externalizadas en `deploy/compose/{dev,stage,prod}/docker-compose.yml` y `.env.example` (`DCG-118`).
+2. Actualiza `deploy.sh`, `rollback.sh`, `smoke-test.sh` y el `Jenkinsfile` para desplegar `identity-service` en `cg-dev`, `cg-stage` y `cg-prod` desde el registro Docker de Nexus (`DCG-119`).
+3. Verifica con Playwright E2E (`tests/e2e/access-validation.spec.ts`) la anonimización real (`auth-service` -> `identity-service` `POST /api/v1/identities/map`) asegurando que el `sub`/`pseudoId` del JWT no exponga PII (`DCG-120`).
+4. Demuestra el rollback en `cg-prod` entre dos tags semánticos, documenta la evidencia en `docs/arquitectura/despliegue-identity-service.md` y registra la iteración en `IAG_REGISTRO.md` (`DCG-121`).
+```
+
+#### C. Validación humana y ajustes realizados
+
+- **Registro del proyecto en SonarQube y Quality Gate (`configure-sonar-identity.sh`):** Se ejecutó `infra/bootstrap/configure-sonar-identity.sh` contra `http://77.112.223.174:9000` para aprovisionar el proyecto `circleguard-identity-service` y asociarle el Quality Gate bloqueante `CircleGuard Services` (`line_coverage < 60%`).
+- **Configuración de secretos hexadecimales para `Spring Security Crypto` (`VAULT_SALT`):** Se validó que `IdentityEncryptionConverter` instancia `Encryptors.text(secret, salt)`, el cual decodifica `salt` con `Hex.decode()`. Por ello se parametrizó `VAULT_SALT=5c0744940b5c369b` (hexadecimal de 16 caracteres) tanto en `docker-compose.yml` como en `.env` de `cg-dev`, `cg-stage` y `cg-prod`, previniendo fallos `IllegalArgumentException: Non-hex character` al cifrar identidades en PostgreSQL.
+- **Desactivación del fallback local en `auth-service` (`IDENTITY_SERVICE_FALLBACK_ENABLED=false`):** Con `cg-identity-{dev,stage,prod}` desplegado y saludable en el puerto `8083`, se desactivó el fallback local de `IdentityClient` en los tres ambientes y se añadió la condición `depends_on: identity: condition: service_healthy` en `auth`.
+- **Verificación real sobre AWS EC2 (`cg-tools`, `cg-dev`, `cg-stage`, `cg-prod`):**
+  - Se construyeron y publicaron en Nexus (`172.31.20.46:5000/circleguard-docker/identity`) los tags semánticos `1.0.0-ab8c930` y `1.0.1-064ba7b`.
+  - Se desplegaron los tres servicios (`gateway`, `identity`, `auth`) junto con sus bases de datos (`redis`, `postgres-identity`, `postgres-auth`) en `cg-dev` (`3.140.191.217`), `cg-stage` (`13.58.139.230`) y `cg-prod` (`3.140.253.184`).
+  - Se ejecutó la suite E2E ampliada de Playwright (`9 tests`) contra los tres ambientes, obteniendo **`9 passed` en `dev`, `9 passed` en `stage` y `9 passed` en `prod`**.
+  - Se ejecutó `./deploy/scripts/rollback.sh prod 1.0.0-ab8c930` y `./deploy/scripts/smoke-test.sh` en `cg-prod`, comprobando el rollback limpio de `gateway`, `identity` y `auth` hacia `1.0.0-ab8c930` y su posterior restablecimiento a `1.0.1-064ba7b`.
+
+#### D. Reflexión crítica
+
+Integrar `circleguard-identity-service` en el despliegue multi-ambiente permitió cerrar el ciclo arquitectónico de privacidad por diseño (*Privacy by Design*) de CircleGuard: mientras que en `HU-AUTH-04` fue necesario introducir un fallback determinístico temporal en `IdentityClient` porque la bóveda aún no estaba desplegada, en `HU-ID-04` pudimos desactivar dicho fallback (`IDENTITY_SERVICE_FALLBACK_ENABLED=false`) y demostrar con pruebas E2E automatizadas que el identificador `sub` del JWT emitido por `auth-service` proviene directamente del registro cifrado (`AES` + índice ciego `SHA-256`) almacenado por `identity-service` en `postgres-identity`, garantizando que ningún dato personal identificable (`username` ni `email`) salga hacia los tokens ni hacia el gateway.
+
+---
+
 ## 2. Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)
 
 ### 2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway
@@ -386,9 +435,9 @@ Ejecuta el plan
 - **Casos:** se amplió la suite a 9 ejecuciones (2 parametrizadas y 3 individuales), incluyendo `RECOVERED`, `CONTAGIED`, `PROBABLE`, `CONFIRMED`, `POTENTIAL` y token expirado.
 - **Hallazgo 1 — Redis no listo:** las primeras corridas fallaban con `RedisConnectionFailureException` porque el contenedor aceptaba conexiones antes de inicializar Redis. Se añadió `Wait.forLogMessage(".*Ready to accept connections.*\\n", 1)`.
 - **Hallazgo 2 — timeouts en WSL:** con timeouts de 2 s el arranque de Lettuce en `/mnt/c` agotaba el tiempo; se ajustaron a 10 s en `application-test.yml`.
-- **Hallazgo 3 — rendimiento de 9p:** la tarea superaba los 3 minutos por la carga de clases desde `/mnt/c`. Se verificó con un init script local que mueve `buildDir` a ext4; en Jenkins el checkout está en ext4 y no requiere ajuste.
+- **Hallazgo 3 — rendimiento de 9p:** la tarea superaba los 3 minutos por la carga de clases desde `/mnt/c`. Se verificó con `gradle/wsl-ext4.init.gradle.kts`, que mueve `buildDir` a ext4; en Jenkins el checkout está en ext4 y no requiere ajuste.
 - **Resultado:** tres corridas consecutivas verdes de 28 s, 25 s y 26 s; 9 pruebas, 0 fallos; contenedores eliminados por Ryuk; JaCoCo unitario se mantiene en 95.92 % de líneas.
-- **Sin cambios de producción:** solo se modificaron `build.gradle.kts`, `Jenkinsfile`, `vars/ci.groovy`, pruebas y documentación.
+- **Sin cambios de producción:** solo se modificaron `build.gradle.kts`, `Jenkinsfile`, `jenkins/vars/ci.groovy`, pruebas y documentación.
 
 ### D. Reflexión crítica
 

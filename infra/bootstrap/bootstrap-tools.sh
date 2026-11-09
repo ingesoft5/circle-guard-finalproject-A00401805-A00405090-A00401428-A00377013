@@ -91,7 +91,8 @@ configure_sonar() {
   for entry in \
     "circleguard-gateway-service|CircleGuard Gateway" \
     "circleguard-auth-service|CircleGuard Auth" \
-    "circleguard-form-service|CircleGuard Form"; do
+    "circleguard-form-service|CircleGuard Form" \
+    "circleguard-identity-service|CircleGuard Identity"; do
     project_key="${entry%%|*}"
     project_name="${entry#*|}"
     curl -fsS -u "${auth}" -X POST "${base}/api/projects/create" \
@@ -112,7 +113,8 @@ configure_sonar() {
   for entry in \
     "circleguard-gateway-service" \
     "circleguard-auth-service" \
-    "circleguard-form-service"; do
+    "circleguard-form-service" \
+    "circleguard-identity-service"; do
     for permission in user codeviewer; do
       curl -fsS -u "${auth}" -X POST "${base}/api/permissions/add_user" \
         --data-urlencode "login=professor" --data-urlencode "permission=${permission}" \
@@ -149,7 +151,7 @@ configure_sonar() {
   curl -fsS -u "${auth}" -X POST "${base}/api/qualitygates/select" \
     --data-urlencode "gateId=${gateway_gate}" \
     --data-urlencode "projectKey=circleguard-gateway-service" >/dev/null 2>&1 || true
-  for project_key in circleguard-auth-service circleguard-form-service; do
+  for project_key in circleguard-auth-service circleguard-form-service circleguard-identity-service; do
     curl -fsS -u "${auth}" -X POST "${base}/api/qualitygates/select" \
       --data-urlencode "gateId=${services_gate}" \
       --data-urlencode "projectKey=${project_key}" >/dev/null 2>&1 || true

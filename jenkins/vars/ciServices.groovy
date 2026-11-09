@@ -47,11 +47,12 @@ def catalog() {
                     dir           : 'services/circleguard-identity-service',
                     projectKey    : 'circleguard-identity-service',
                     display       : 'CircleGuard Identity',
-                    sonarSettings : '',
-                    jacoco        : false,
-                    integration   : true,
+                    sonarSettings : 'services/circleguard-identity-service/sonar-project.properties',
+                    jacoco        : true,
+                    integration   : false,
                     publish       : true,
-                    docker        : false
+                    docker        : true,
+                    healthcheck   : true
             ],
             [
                     short         : 'promotion',
@@ -88,7 +89,7 @@ def catalog() {
                     display       : 'CircleGuard File',
                     sonarSettings : '',
                     jacoco        : false,
-                    integration   : true,
+                    integration   : false,
                     publish       : true,
                     docker        : false
             ],
@@ -101,7 +102,7 @@ def catalog() {
                     display       : 'CircleGuard Dashboard',
                     sonarSettings : '',
                     jacoco        : false,
-                    integration   : true,
+                    integration   : false,
                     publish       : true,
                     docker        : false
             ]
