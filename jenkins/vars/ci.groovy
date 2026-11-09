@@ -99,6 +99,9 @@ def dockerBuildPush(Map service, String tag) {
     if (!service.docker) {
         return ''
     }
+    if (!env.NEXUS_REGISTRY) {
+        error 'Falta NEXUS_REGISTRY: sin registro no se puede publicar la imagen.'
+    }
     def version = (tag ?: '').trim()
     if (!version) {
         error "No se puede publicar ${service.short}: la versión semántica está vacía."
@@ -132,7 +135,9 @@ def dockerBuildPush(Map service, String tag) {
         if (!digest || digest == '<no value>') {
             digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
         }
-        writeFile file: 'image-digest.txt', text: "${image}\n${digest}\ncommit=${commit}\n"
+        // Append instead of write: the pipeline now publishes more than one image per
+        // build, and a plain write would leave only the digest of the last service.
+        sh "printf '%s\\n%s\\ncommit=%s\\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
     }
     return digest
 }
@@ -156,6 +161,9 @@ def archive(List services) {
 
 def deploy(String environment, String tag) {
     def ip = env."${environment.toUpperCase()}_PRIVATE_IP"
+    if (!ip) {
+        error "Falta ${environment.toUpperCase()}_PRIVATE_IP: no se puede desplegar a ${environment}."
+    }
     sshagent(['cg-envs-ssh']) {
         sh """
             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${ip} \
@@ -165,10 +173,28 @@ def deploy(String environment, String tag) {
 }
 
 def e2e() {
+    if (!env.DEV_PRIVATE_IP) {
+        error 'Falta DEV_PRIVATE_IP: no se puede ejecutar el E2E contra dev.'
+    }
+    // Un identificador por build: promotion-service actualiza visitantes existentes y
+    // nunca los crea, así que cada corrida siembra los suyos. Con un id fijo, la
+    // segunda corrida mediría el estado que dejó la primera.
+    def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
+    sshagent(['cg-envs-ssh']) {
+        sh """
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${env.DEV_PRIVATE_IP} \
+              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose \
+                 ./deploy/scripts/seed-visitor.sh dev ${runId}-symptoms ${runId}-control'
+        """
+    }
     sh """
         cd tests/e2e
         npm install
         npx playwright install --with-deps chromium
-        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 npx playwright test
+        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
+        PROMOTION_URL=http://${env.DEV_PRIVATE_IP}:8088 \
+        KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:29092 \
+        E2E_ANONYMOUS_ID=${runId} \
+        npx playwright test
     """
 }

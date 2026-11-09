@@ -65,7 +65,8 @@ def catalog() {
                     jacoco        : false,
                     integration   : true,
                     publish       : true,
-                    docker        : false
+                    docker        : true,
+                    healthcheck   : true
             ],
             [
                     short         : 'notification',

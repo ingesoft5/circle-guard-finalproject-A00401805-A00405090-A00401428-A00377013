@@ -7,6 +7,32 @@
 
 def services = []
 
+// The Jenkins container carries the environment addresses and the registry in its
+// process environment (deploy/compose/tools/.env), but a pipeline does not see those
+// in `env`. They are read here for the same reason as the semver helpers: the library
+// is loaded from main, so a new library method would only exist after it merged.
+def loadEnvironment(String... names) {
+    def output = sh(
+            script: "printenv | grep -E '^(${names.join('|')})=' || true",
+            returnStdout: true
+    ).trim()
+    def found = [:]
+    output.readLines().each { line ->
+        def separator = line.indexOf('=')
+        if (separator > 0) {
+            found[line.substring(0, separator)] = line.substring(separator + 1)
+        }
+    }
+    names.each { name ->
+        def value = found[name]
+        if (value) {
+            env."${name}" = value
+        } else {
+            echo "Variable de entorno no definida en el contenedor: ${name}"
+        }
+    }
+}
+
 // Shared library vars added in the same PR are not visible to that PR build:
 // @Library loads from LIBRARY_BRANCH, not from the checked-out PR branch.
 // Keep the semver helpers here so the pipeline can validate itself.
@@ -149,6 +175,8 @@ pipeline {
         stage('Resolve services') {
             steps {
                 script {
+                    loadEnvironment('NEXUS_REGISTRY', 'TOOLS_IP', 'DEV_PRIVATE_IP',
+                            'STAGE_PRIVATE_IP', 'PROD_PRIVATE_IP', 'GITHUB_OWNER', 'GITHUB_REPO')
                     if (params.ROLLBACK_TAG?.trim()) {
                         env.TAG = normalizeSemver(params.ROLLBACK_TAG.trim())
                         services = []
@@ -349,7 +377,15 @@ pipeline {
 
     post {
         always {
-            script { ci.archive(services) }
+            script {
+                // A build aborted while it was still waiting for an executor never received
+                // a workspace, and archiveArtifacts then fails with MissingContextVariable
+                // (hudson.FilePath is missing). That secondary error hides the real reason
+                // the build stopped, so archiving only happens when something was resolved.
+                if (services) {
+                    ci.archive(services)
+                }
+            }
         }
         success {
             echo "Pipeline exitoso: ${env.SERVICES ?: 'sin servicios'} ${env.TAG}"
