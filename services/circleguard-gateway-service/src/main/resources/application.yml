@@ -1,3 +1,4 @@
+# CG-DOC: Runtime resource for the gateway service: application.yml.
 spring:
   application:
     name: circleguard-gateway-service

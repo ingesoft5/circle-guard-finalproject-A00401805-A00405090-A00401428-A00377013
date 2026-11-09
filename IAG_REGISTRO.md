@@ -1,3 +1,4 @@
+<!-- CG-DOC: Registry of generative AI usage and human verification. -->
 # Registro de Uso de Inteligencia Artificial Generativa (IAG) — CircleGuard
 
 **Curso:** Ingeniería de Software V (09776 - TIC)  
@@ -17,6 +18,9 @@
    - [1.3 HU-AUTH-03 (DCG-79) — Empaquetar `auth-service` e integrarlo al pipeline de CI](#13-hu-auth-03-dcg-79--empaquetar-auth-service-e-integrarlo-al-pipeline-de-ci)
 2. [Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)](#2-módulo-circleguard-gateway-service-e-infraestructura-cicd-daniela-castaño)
    - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
+   - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
+3. [Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)](#3-módulo-circleguard-promotion-service-alejandro-quiñones-caicedo)
+   - [3.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`](#31-hu-promo-01-dcg-304--diagnosticar-la-estructura-y-dependencias-de-promotion-service)
 
 ---
 
@@ -271,5 +275,132 @@ La integración entre las ramas del equipo (`origin/feature/HU-GATEWAY-CICD-01` 
   - Validar el plan de la HU contra el PDF del proyecto.
   - Ajustar la HU a la Parte 1 / Sprint 1 y al microservicio gateway.
   - Generar scripts Bash idempotentes, Docker Compose y pipeline de Jenkins.
-- **Resultado:** scripts de infraestructura, compose de herramientas y ambientes, Jenkinsfile, Shared Library, correcciones de seguridad del gateway, pruebas y documentación.
+- **Resultado:** integración de `e12-bootstrap` (idempotencia) con el aprovisionamiento AWS y el pipeline del gateway; scripts `infra/bootstrap-*.sh`, compose de herramientas y ambientes, Jenkinsfile, Shared Library, correcciones de seguridad del gateway, pruebas y documentación.
 - **Verificación humana:** el equipo debe revisar y ejecutar cada script, validar las credenciales y estar en capacidad de explicar la configuración en la sustentación.
+
+https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6
+
+---
+
+<a id="bitacora-e12"></a>
+### 2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental (8 de noviembre de 2026)
+
+- **Nivel de uso:** 3 (colaboración con IAG).
+- **Herramienta:** OpenCode / DeepSeek.
+- **Historia / Entregable:** `HU-GATEWAY-CICD-01` — E1.2 (plataforma CI/CD del gateway).
+- **Rama de validación:** `test/HU-INFRA-01-idempotencia`.
+- **Rama del PR:** `feat/HU-GATEWAY-01-configurar-servidores` (PR-15).
+
+### A. Contenido propio entregado a la IAG
+
+1. **Decisiones de flujo:** GitHub Flow con PR hacia `main`; sin rama `dev` para código. La validación de idempotencia debía ejecutarse en una rama separada para no alterar PR-15.
+2. **Invariantes a comprobar:** IDs, IPs, estado y tipo de las 4 instancias EC2; Elastic IP; Security Groups; key pair; hashes SHA-256 de `.env` local y remoto; IDs e imágenes de contenedores; repositorios y usuarios de Nexus; proyectos y usuarios de SonarQube.
+3. **Criterio de evidencia:** no imprimir secretos; comparar hashes; guardar `before`/`after` y un `diffs.txt` vacío como prueba de convergencia.
+4. **Criterio documental:** el informe debía vivir en el PR con capturas reales de CLI, Jenkins, SonarQube y Nexus; la rama de prueba queda como respaldo. Se adoptó `.docx` como único formato de entrega.
+5. **Endurecimiento solicitado en revisión:** eliminar el workflow vacío, restringir Jenkins/Sonar/Nexus a CIDR administrativo y docente, cerrar `443` y dividir futuros PRs por dominio.
+
+### B. Prompts empleados
+
+```text
+Ejecuta el plan
+```
+
+```text
+Restaura el informe de branching de GitHub FLow y ponlo en el commit,
+tambien debo hacer un informe de la idempotencia
+```
+
+```text
+Ejecuta el Plan Informes-E1.2 — Branching restaurado e idempotencia
+```
+
+```text
+Agrega captura al informe de idempotencia
+```
+
+```text
+Añade capturas reales
+```
+
+```text
+De ahora en adelante quiero solo docx
+```
+
+```text
+Ahora dame el plan cmpleto con las observations tambien
+```
+
+```text
+Ejecuta el Plan completo — E1.2, observaciones y bitácora IAG
+```
+
+### C. Validación humana y hallazgos
+
+- **Idempotencia:** segunda ejecución de `./infra/bootstrap/bootstrap-all.sh` con `exit=0` y `diffs.txt` de **0 líneas**, repetida tras el endurecimiento.
+- **Bug 1 — sincronización de `.env`:** el `.env` remoto se copiaba solo a `infra/state/tools.env`, no a `deploy/compose/tools/.env`; `SONAR_TOKEN` y las contraseñas del profesor se regeneraban. Se corrigió la copia y se añadieron las claves faltantes.
+- **Bug 2 — reconstrucción de Jenkins:** `compose_up` usaba `--build` siempre y la etiqueta de imagen quedaba desalineada del contenedor. Ahora solo construye si la imagen no existe.
+- **Bug 3 — credenciales del profesor:** SonarQube creaba `professor` con `|| true` y Nexus devolvía 204 sin cambiar la contraseña; ambos usuarios quedaban sin autenticación. Se añadió sincronización condicional mediante `change_password` / `change-password`.
+- **Bug 4 — reglas de Security Group:** el bootstrap solo agregaba reglas y nunca revocaba las obsoletas. Se añadió `reconcile_cidr`; `8080`, `9000` y `8081` quedaron limitados a `ADMIN_CIDR` y `TEACHER_CIDR`, `443` se cerró y `80` permanece público para el gateway de dev.
+- **Workflow vacío:** se eliminó `require-two-approvals.yml`, que acumulaba 37 runs fallidas. La protección de `main` sigue exigiendo 2 aprobaciones.
+- **Squash merge:** se ajustó `enforce-pr.yml` para aceptar commits con formato `título (#N)`.
+- **Trigger real:** se verificó que Jenkins no usa webhooks; los builds son “Started by timer” por `cron('H/5 * * * *')`. Por eso no se dejó el allowlist de GitHub en `8080`.
+- **CI:** PR-15 se mantuvo en verde con el último build observado en estado `SUCCESS`.
+- **Informe:** `docs/informe/E1.2-Idempotencia.docx` con 4 capturas reales embebidas (CLI, Jenkins, SonarQube, Nexus) y secciones 6.3 y 6.4.
+- **Observaciones no accionables:** el PR de 447 archivos no se divide retroactivamente; se adopta la convención de separar infraestructura, pipeline, código y evidencia en futuras entregas. La evidencia binaria permanece en el historial.
+
+### D. Reflexión crítica
+
+La validación de idempotencia expuso defectos que una sola ejecución del bootstrap ocultaba: desincronización de secretos, reconstrucción innecesaria de Jenkins y usuarios que existían pero no podían autenticarse. El mismo patrón apareció en los Security Groups: agregar reglas sin revocarlas hacía que el estado convergiera solo en apariencia. La verificación del trigger real de Jenkins evitó añadir una allowlist de GitHub innecesaria y mantuvo `8080` con la menor exposición posible. Queda pendiente obtener las 2 aprobaciones, mergear PR-15 y ejecutar el CD en `main` con evidencia de `dev`, `stage`, `prod` y rollback.
+---
+
+## 3. Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)
+
+### 3.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`
+
+- **Fecha:** 7 de noviembre de 2026
+- **Autor:** Alejandro Quiñones Caicedo
+- **Historia / Subtareas en Jira:** `DCG-304` (`DCG-322`, `DCG-323`, `DCG-324`)
+- **Objetivo de la interacción:** Consolidar el diagnóstico arquitectónico de `circleguard-promotion-service` en `docs/arquitectura/diagnostico-promotion-service.md`, cubriendo estructura, endpoints, modelo de datos, dependencias externas y el estado real de compilación y pruebas.
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Tras revisar manualmente `services/circleguard-promotion-service/`, levanté como insumo base:
+
+1. **Puerto y tecnología:** Java 21 (toolchain de la raíz) con Spring Boot `3.2.4`, puerto `8088`, `jjwt 0.11.5`, Flyway y Spring Data Neo4j.
+2. **Controladores:** 11 clases (`AccessPoint`, `Admin`, `Building`, `Circle`, `Encounter`, `Floor`, `HealthStats`, `HealthStatus`, `LocationSignal`, `Mesh`, `SessionHandshake`) con 35 rutas.
+3. **Dependencias:** PostgreSQL (`circleguard_promotion`), Neo4j (`bolt://localhost:7687`), Redis (`localhost:6379`), Kafka (`localhost:9092`, grupo `promotion-service-group`).
+4. **Migraciones:** `V1` (topología y `system_settings`), `V2` (parámetros de tiempos), `V3` (coordenadas del edificio).
+5. **Pruebas:** 8 clases de prueba; al ejecutar la suite, 16 reportados (13 ejecutados + 3 `initializationError`), con 5 fallos.
+
+#### B. Prompt empleado
+
+```text
+Estoy desarrollando HU-PROMO-01 (DCG-304): Diagnosticar la estructura y dependencias de
+`promotion-service` del proyecto CircleGuard, repositorio local en
+`D:\GitHub\circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`.
+
+Levanté manualmente:
+- 11 controladores con 35 rutas, seguridad method-level con @PreAuthorize.
+- Dependencias: PostgreSQL circleguard_promotion, Neo4j bolt://localhost:7687,
+  Redis 6379, Kafka 9092 grupo promotion-service-group.
+- Migraciones V1, V2 y V3.
+- 8 clases de prueba; la suite reporta 16 tests con 5 fallos.
+
+Contrastá mi levantamiento con el código fuente y completá las tres subtareas:
+1. DCG-322: estructura, catálogo de endpoints con su regla de seguridad efectiva y
+   modelo de datos con las migraciones reales.
+2. DCG-323: matriz de dependencias externas, eventos Kafka producidos y consumidos,
+   uso de Redis y variables a externalizar para HU-PROMO-03.
+3. DCG-324: evidencia real de compilación y pruebas, con causa raíz de los fallos.
+Entregá el resultado como documento Markdown en docs/arquitectura/.
+```
+
+#### C. Validación humana y hallazgos adicionales del contraste
+
+- Se verificó la compilación con `./gradlew :services:circleguard-promotion-service:compileJava` (BUILD SUCCESSFUL) y la suite con `:test` (16 casos, 5 fallos).
+- La revisión de un compañero detectó imprecisiones en la primera versión del documento: el inventario de endpoints estaba incompleto (faltaban dos rutas de `EncounterController`), la conclusión de seguridad ignoraba `@EnableMethodSecurity`, el modelo ER no coincidía con las migraciones y el flujo de estados atribuía a `StatusLifecycleService` una orquestación que no realiza. Todas se corrigieron contrastando el código fuente.
+- La causa de los `403` se identificó como `hasRole('HEALTH_CENTER')` exigiendo `ROLE_HEALTH_CENTER`, no como un problema de `@WithMockUser` contra `STATELESS`.
+
+#### D. Reflexión crítica
+
+La IAG aceleró la redacción y el inventario, pero también produjo afirmaciones plausibles y falsas (un conteo de rutas incompleto y una conclusión de seguridad que contradecía las anotaciones del código). La lección es que el diagnóstico debe cerrarse contra el código y contra una revisión externa: sin ese contraste, el documento habría desviado el trabajo de las HU siguientes.

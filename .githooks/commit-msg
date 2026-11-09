@@ -4,24 +4,24 @@
 COMMIT_MSG_FILE=$1
 COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")
 
-# Expresión regular: 
+# Expresión regular:
 # 1. Tipos permitidos
-# 2. Alcance opcional (ej. (auth))
+# 2. Alcance obligatorio con espacios (ej. ( auth ))
 # 3. ! opcional para breaking changes
 # 4. : y espacio
-# 5. Descripción obligatoria
-# 6. [CG-XX] obligatorio al final
-REGEX="^(feat|fix|docs|ci|chore|test|refactor|build|perf|style)(\([a-z-]+\))?!?: .+ \[CG-[0-9]+\]$"
+# 5. Descripción obligatoria en inglés
+REGEX="^(feat|fix|docs|ci|chore|test|refactor|build|perf|style)[[:space:]]+\([[:space:]]*[a-z-]+[[:space:]]*\)[[:space:]]+!?:[[:space:]]+.+$"
 
 if ! echo "$COMMIT_MSG" | grep -qE "$REGEX"; then
     echo "======================================================"
     echo "❌ ERROR: El mensaje de commit no sigue el estándar."
     echo "======================================================"
-    echo "Estructura requerida: <tipo>(<alcance>): <descripción> [ID-JIRA]"
-    echo "Ejemplo: feat(auth): agrega validacion de token [CG-12]"
+    echo "Estructura requerida: <tipo> ( <alcance> ) : <descripción>"
+    echo "Breaking change: <tipo> ( <alcance> ) !: <descripción>"
+    echo "Ejemplo: feat ( auth ) : add token validation"
     echo ""
     echo "Tipos permitidos: feat, fix, docs, ci, chore, test, refactor, build, perf, style"
-    echo "El ID de Jira (ej. [CG-12]) es OBLIGATORIO al final."
+    echo "El alcance es obligatorio y el mensaje debe estar en inglés."
     echo "======================================================"
     exit 1
 fi

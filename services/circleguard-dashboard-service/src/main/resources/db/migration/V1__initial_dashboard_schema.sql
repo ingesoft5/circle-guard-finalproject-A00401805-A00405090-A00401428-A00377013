@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V1__initial_dashboard_schema for the dashboard service.
 -- Dashboard Analytics Schema
 
 CREATE TABLE entry_logs (

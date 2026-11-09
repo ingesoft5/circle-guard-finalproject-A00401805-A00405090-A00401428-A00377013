@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: index.
+ */
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MeshBackground } from '@/components/MeshBackground';
 import { QrCode, Thermometer, Users, Smartphone, Shield, LogOut, Activity } from 'lucide-react-native';

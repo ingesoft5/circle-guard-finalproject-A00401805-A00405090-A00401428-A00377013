@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: utility for the identity service: Identity Encryption Converter.
+ */
 package com.circleguard.identity.util;
 
 import jakarta.persistence.AttributeConverter;

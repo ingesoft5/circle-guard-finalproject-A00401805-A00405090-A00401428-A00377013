@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React hook for the mobile app: use Circles.
+ */
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 import { PROMOTION_BASE_URL } from '../constants/Config';

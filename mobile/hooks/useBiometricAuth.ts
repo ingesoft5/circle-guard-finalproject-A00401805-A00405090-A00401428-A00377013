@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React hook for the mobile app: use Biometric Auth.
+ */
 import { useState, useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';

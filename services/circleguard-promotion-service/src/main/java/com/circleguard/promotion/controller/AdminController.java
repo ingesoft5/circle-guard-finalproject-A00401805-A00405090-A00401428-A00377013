@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the promotion service: Admin Controller.
+ */
 package com.circleguard.promotion.controller;
 
 import com.circleguard.promotion.model.jpa.SystemSettings;

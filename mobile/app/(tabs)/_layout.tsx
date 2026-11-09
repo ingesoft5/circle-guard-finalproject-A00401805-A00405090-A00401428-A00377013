@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: _layout.
+ */
 import React from 'react';
 import { LayoutDashboard, Info, ScanLine, Users, Shield } from 'lucide-react-native';
 import { Link, Tabs, usePathname, useRouter } from 'expo-router';

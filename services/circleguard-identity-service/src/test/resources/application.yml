@@ -1,3 +1,4 @@
+# CG-DOC: Unit or integration tests for application in the identity service.
 spring:
   profiles:
     active: test

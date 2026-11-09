@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the notification service: Room Reservation Service Impl.
+ */
 package com.circleguard.notification.service;
 
 import lombok.extern.slf4j.Slf4j;

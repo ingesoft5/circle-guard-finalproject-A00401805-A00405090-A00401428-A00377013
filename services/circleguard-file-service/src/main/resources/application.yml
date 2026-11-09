@@ -1,3 +1,4 @@
+# CG-DOC: Runtime resource for the file service: application.yml.
 spring:
   application:
     name: circleguard-file-service

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: configuration for the promotion service: Cache Config.
+ */
 package com.circleguard.promotion.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;

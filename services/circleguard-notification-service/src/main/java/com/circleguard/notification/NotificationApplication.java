@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Java source for the notification service: Notification Application.
+ */
 package com.circleguard.notification;
 
 import org.springframework.boot.SpringApplication;

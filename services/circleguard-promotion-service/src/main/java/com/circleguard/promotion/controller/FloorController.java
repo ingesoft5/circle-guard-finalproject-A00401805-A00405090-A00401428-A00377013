@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the promotion service: Floor Controller.
+ */
 package com.circleguard.promotion.controller;
 
 import com.circleguard.promotion.dto.AccessPointDTO;

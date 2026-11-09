@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Reusable React Native component: Dynamic Form.
+ */
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { QuestionInput, QuestionType } from './QuestionInput';

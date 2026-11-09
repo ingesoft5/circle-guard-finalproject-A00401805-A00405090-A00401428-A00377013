@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the form service: Certificate Validation Controller.
+ */
 package com.circleguard.form.controller;
 
 import com.circleguard.form.model.ValidationStatus;

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React hook for the mobile app: use Auth.
+ */
 import { useState, useEffect } from 'react';
 import { storage } from '@/utils/storage';
 

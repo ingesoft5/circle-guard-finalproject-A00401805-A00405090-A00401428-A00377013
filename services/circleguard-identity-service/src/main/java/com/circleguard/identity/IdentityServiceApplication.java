@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Java source for the identity service: Identity Service Application.
+ */
 package com.circleguard.identity;
 
 import org.springframework.boot.SpringApplication;

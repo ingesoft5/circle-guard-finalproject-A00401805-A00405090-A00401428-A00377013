@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: visitor.
+ */
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, Platform, useWindowDimensions, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';

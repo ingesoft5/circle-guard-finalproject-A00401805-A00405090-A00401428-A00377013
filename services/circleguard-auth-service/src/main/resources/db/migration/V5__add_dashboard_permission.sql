@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V5__add_dashboard_permission for the auth service.
 -- Add dashboard viewing permission
 INSERT INTO permissions (name, description) VALUES 
 ('dashboard:view', 'Allow viewing the health analytics dashboard')

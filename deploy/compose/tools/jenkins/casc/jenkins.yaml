@@ -1,3 +1,4 @@
+# CG-DOC: Jenkins Configuration as Code for security, credentials, library, and job.
 jenkins:
   systemMessage: "CircleGuard CI/CD - Gateway"
   numExecutors: 2
@@ -7,9 +8,21 @@ jenkins:
       users:
         - id: admin
           password: ${JENKINS_ADMIN_PASSWORD}
+        - id: professor
+          password: ${PROFESSOR_PASSWORD}
   authorizationStrategy:
-    loggedInUsersCanDoAnything:
-      allowAnonymousRead: false
+    globalMatrix:
+      entries:
+        - user:
+            name: admin
+            permissions:
+              - "Overall/Administer"
+        - user:
+            name: professor
+            permissions:
+              - "Overall/Read"
+              - "Job/Read"
+              - "View/Read"
 
 credentials:
   system:
@@ -23,6 +36,11 @@ credentials:
               description: GitHub
           - string:
               scope: GLOBAL
+              id: github-webhook-secret
+              secret: ${GITHUB_WEBHOOK_SECRET}
+              description: GitHub webhook secret
+          - string:
+              scope: GLOBAL
               id: sonar-token
               secret: ${SONAR_TOKEN}
               description: SonarQube
@@ -32,8 +50,29 @@ credentials:
               username: ${NEXUS_USER}
               password: ${NEXUS_PASSWORD}
               description: Nexus
+          - basicSSHUserPrivateKey:
+              scope: GLOBAL
+              id: cg-envs-ssh
+              username: ubuntu
+              description: CircleGuard environments
+              privateKeySource:
+                directEntry:
+                  privateKey: "${readFile:/var/jenkins_home/.ssh/cg-envs-key}"
 
 unclassified:
+  location:
+    url: ${JENKINS_URL}
+  gitHubPluginConfig:
+    hookUrl: "http://${TOOLS_IP}/github-webhook/"
+    configs:
+      - name: "GitHub"
+        credentialsId: "github-creds"
+        apiUrl: "https://api.github.com"
+        manageHooks: true
+    hookSecretConfigs:
+      - credentialsId: "github-webhook-secret"
+  gitHubConfiguration:
+    apiRateLimitChecker: ThrottleForNormalize
   sonarGlobalConfiguration:
     buildWrapperEnabled: false
     installations:
@@ -43,9 +82,10 @@ unclassified:
   globalLibraries:
     libraries:
       - name: circleguard
-        defaultVersion: main
+        defaultVersion: ${LIBRARY_BRANCH}
         retriever:
           modernSCM:
+            libraryPath: jenkins
             scm:
               git:
                 remote: ${GITHUB_REPO_URL}
@@ -64,6 +104,14 @@ jobs:
                 credentialsId('github-creds')
                 repositoryUrl('${GITHUB_REPO_URL}')
                 configuredByUrl(true)
+                traits {
+                  gitHubBranchDiscovery {
+                    strategyId(1)
+                  }
+                  gitHubPullRequestDiscovery {
+                    strategyId(1)
+                  }
+                }
               }
             }
           }

@@ -1,55 +1,67 @@
-# Runbook operativo
+<!-- CG-DOC: Operations runbook for four hosts, private deployment, and cost controls. -->
+# Operations Runbook
 
-## Verificar plataforma
+## Verify
 
 ```bash
 source infra/state/aws.env
 curl -f "http://${TOOLS_IP}:8080/login"
 curl -f "http://${TOOLS_IP}:9000/api/system/status"
 curl -f "http://${TOOLS_IP}:8081/service/rest/v1/status"
-curl -f "http://${ENVS_IP}:8087/actuator/health"
-curl -f "http://${ENVS_IP}:8088/actuator/health"
-curl -f "http://${ENVS_IP}:8089/actuator/health"
+curl -f "http://${TOOLS_IP}/actuator/health"
 ```
 
-## Reiniciar herramientas
+## IPs
 
 ```bash
-ssh -i infra/state/circleguard-key.pem ubuntu@${TOOLS_IP}
-cd /opt/circleguard/tools
-docker compose restart jenkins
-docker compose logs -f jenkins
+./infra/bootstrap/bootstrap-ips.sh
 ```
 
-## Reiniciar un ambiente
+## Stop and start
 
 ```bash
-ssh -i infra/state/circleguard-key.pem ubuntu@${ENVS_IP}
-cd /opt/circleguard/compose/dev
+./infra/bootstrap/bootstrap-stop.sh
+./infra/bootstrap/bootstrap-start.sh
+```
+
+Private IPs remain stable. Environment public IPs change after a restart.
+
+## Restart tools
+
+```bash
+ssh -i infra/state/circleguard-e12-key.pem ubuntu@${TOOLS_IP}
+cd /opt/circleguard/deploy/compose/tools
+docker compose --env-file .env -p circleguard-tools restart jenkins
+```
+
+## Restart one environment
+
+```bash
+ssh -i infra/state/circleguard-e12-key.pem ubuntu@${DEV_PUBLIC_IP}
+cd /opt/circleguard/deploy/compose/dev
 docker compose restart gateway
-docker compose logs -f gateway
 ```
 
 ## Rollback
 
 ```bash
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/rollback.sh prod <tag-anterior>
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod <previous-tag>
 ```
 
-## Destruir todo
+## Destroy
 
 ```bash
-CONFIRM=yes ./infra/bootstrap/99-destroy.sh
+CONFIRM=yes ./infra/bootstrap/bootstrap-destroy.sh
 ```
 
-## Problemas comunes
+## Common issues
 
-| Síntoma | Causa probable | Acción |
+| Symptom | Cause | Action |
 |---|---|---|
-| Jenkins no abre | Contenedor iniciando o poca RAM | `docker compose logs jenkins`; revisar swap. |
-| SonarQube no pasa de `STARTING` | PostgreSQL o memoria | Revisar `docker compose logs sonarqube`; aumentar swap. |
-| Nexus no abre | Puerto 8081 o memoria | Revisar logs; `mem_limit` 2g. |
-| Gateway no descarga imagen | Registro HTTP no confiable | Verificar `insecure-registries` en `cg-envs`. |
-| Gateway responde 401 | Falta el JWT del empleado | Enviar `Authorization: Bearer <jwt>`. |
-| Gateway responde 403 | JWT sin `gate:scan` | Asignar permiso en auth-service. |
-| Gateway responde 503 | Redis no disponible | Revisar `docker compose logs redis`. |
+| Jenkins does not open | Container starting or low memory | Check logs and swap. |
+| SonarQube stays starting | PostgreSQL or memory | Check logs; increase swap. |
+| Nexus does not open | Port 8081 or memory | Check logs. |
+| Registry pull fails | Trusted HTTP registry | Verify `insecure-registries` on the environment host. |
+| Gateway 401 | Missing staff JWT | Send `Authorization: Bearer <jwt>`. |
+| Gateway 503 | Redis unavailable | Check `docker compose logs redis`. |
+| Pipeline library fails | Wrong `LIBRARY_BRANCH` | Review `deploy/compose/tools/.env`. |

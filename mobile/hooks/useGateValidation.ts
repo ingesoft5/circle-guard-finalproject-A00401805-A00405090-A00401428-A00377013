@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React hook for the mobile app: use Gate Validation.
+ */
 import { useState } from 'react';
 import { API_BASE_URL } from '@/constants/Config';
 import { useAuth } from './useAuth';

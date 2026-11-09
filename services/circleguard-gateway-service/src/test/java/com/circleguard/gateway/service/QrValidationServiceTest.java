@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Qr Validation Service Test in the gateway service.
+ */
 package com.circleguard.gateway.service;
 
 import io.jsonwebtoken.Jwts;
@@ -49,7 +52,7 @@ class QrValidationServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"SUSPECT", "PROBABLE", "CONFIRMED", "CONTAGIED", "POTENTIAL", "UNKNOWN"})
+    @ValueSource(strings = {"SUSPECT", "PROBABLE", "CONFIRMED", "CONTAGIED", "POTENTIAL", "UNKNOWN", "CLEAR"})
     void shouldDenyRiskOrUnknownStatuses(String status) {
         String id = UUID.randomUUID().toString();
         when(valueOps.get("user:status:" + id)).thenReturn(status);
@@ -88,6 +91,34 @@ class QrValidationServiceTest {
     }
 
     @Test
+    void shouldDenyTokenWithInvalidSignature() {
+        String id = UUID.randomUUID().toString();
+        String foreignToken = token(id, 60_000, "another-secret-key-32-chars-long!!");
+
+        QrValidationService.ValidationResult result = service.validateToken(foreignToken);
+
+        assertFalse(result.valid());
+        assertEquals("RED", result.status());
+        assertEquals("Invalid or Expired Token", result.message());
+    }
+
+    @Test
+    void shouldDenyTokenWithoutSubject() {
+        Key key = Keys.hmacShaKeyFor(secret.getBytes());
+        String token = Jwts.builder()
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 60_000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
+        QrValidationService.ValidationResult result = service.validateToken(token);
+
+        assertFalse(result.valid());
+        assertEquals("RED", result.status());
+        assertEquals("Invalid or Expired Token", result.message());
+    }
+
+    @Test
     void shouldPropagateRedisFailure() {
         String id = UUID.randomUUID().toString();
         when(valueOps.get("user:status:" + id)).thenThrow(new RedisConnectionFailureException("down"));
@@ -96,7 +127,11 @@ class QrValidationServiceTest {
     }
 
     private String token(String subject, long ttlMillis) {
-        Key key = Keys.hmacShaKeyFor(secret.getBytes());
+        return token(subject, ttlMillis, secret);
+    }
+
+    private String token(String subject, long ttlMillis, String signingSecret) {
+        Key key = Keys.hmacShaKeyFor(signingSecret.getBytes());
         return Jwts.builder()
                 .setSubject(subject)
                 .setIssuedAt(new Date())

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the promotion service: Health Stats Controller.
+ */
 package com.circleguard.promotion.controller;
 
 import lombok.RequiredArgsConstructor;

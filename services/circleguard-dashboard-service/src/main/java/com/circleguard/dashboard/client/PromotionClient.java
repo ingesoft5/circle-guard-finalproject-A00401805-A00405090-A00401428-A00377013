@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: integration client for the dashboard service: Promotion Client.
+ */
 package com.circleguard.dashboard.client;
 
 import lombok.extern.slf4j.Slf4j;

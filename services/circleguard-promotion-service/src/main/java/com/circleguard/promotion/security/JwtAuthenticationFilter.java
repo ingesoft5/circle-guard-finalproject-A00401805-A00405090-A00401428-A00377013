@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: security component for the promotion service: Jwt Authentication Filter.
+ */
 package com.circleguard.promotion.security;
 
 import io.jsonwebtoken.Claims;

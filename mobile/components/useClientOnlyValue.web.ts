@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Reusable React Native component: use Client Only Value.web.
+ */
 import React from 'react';
 
 // `useEffect` is not invoked during server rendering, meaning

@@ -1,3 +1,4 @@
+# CG-DOC: Git ignore rules for generated files, secrets, and local state.
 # Gradle
 .gradle/
 build/
@@ -54,4 +55,5 @@ infra/state/
 *.key
 .env
 .env.*
+*.env
 !.env.example

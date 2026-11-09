@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Expo screen or layout for the mobile app: +not-found.
+ */
 import { Link, Stack } from 'expo-router';
 import { StyleSheet } from 'react-native';
 

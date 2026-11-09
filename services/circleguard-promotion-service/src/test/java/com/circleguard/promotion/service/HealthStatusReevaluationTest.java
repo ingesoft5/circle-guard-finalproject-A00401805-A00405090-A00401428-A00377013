@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Health Status Reevaluation Test in the promotion service.
+ */
 package com.circleguard.promotion.service;
 
 import org.junit.jupiter.api.BeforeEach;

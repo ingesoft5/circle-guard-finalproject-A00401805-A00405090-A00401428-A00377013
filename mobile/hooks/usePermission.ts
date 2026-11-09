@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React hook for the mobile app: use Permission.
+ */
 import { useMemo } from 'react';
 import { useAuth } from './useAuth';
 

@@ -1,3 +1,4 @@
+# CG-DOC: Docker Compose definition for the tools environment.
 services:
   jenkins:
     build: ./jenkins
@@ -8,22 +9,33 @@ services:
       CASC_JENKINS_CONFIG: /var/jenkins_home/casc/jenkins.yaml
       JAVA_OPTS: "-Xms512m -Xmx1536m"
       JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
+      PROFESSOR_PASSWORD: ${PROFESSOR_PASSWORD}
       GITHUB_USER: ${GITHUB_USER}
       GITHUB_TOKEN: ${GITHUB_TOKEN}
       GITHUB_OWNER: ${GITHUB_OWNER}
       GITHUB_REPO: ${GITHUB_REPO}
       GITHUB_REPO_URL: ${GITHUB_REPO_URL}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
       SONAR_TOKEN: ${SONAR_TOKEN}
       NEXUS_USER: ${NEXUS_USER}
       NEXUS_PASSWORD: ${NEXUS_PASSWORD}
       NEXUS_URL: ${NEXUS_URL}
       NEXUS_REGISTRY: ${NEXUS_REGISTRY}
       SONAR_HOST_URL: ${SONAR_HOST_URL}
-      ENVS_IP: ${ENVS_IP}
+      JENKINS_URL: ${JENKINS_URL}
+      TOOLS_IP: ${TOOLS_IP}
+      TOOLS_PRIVATE_IP: ${TOOLS_PRIVATE_IP}
+      TESTCONTAINERS_HOST_OVERRIDE: ${TOOLS_PRIVATE_IP}
+      TESTCONTAINERS_RYUK_DISABLED: "true"
+      DEV_PRIVATE_IP: ${DEV_PRIVATE_IP}
+      STAGE_PRIVATE_IP: ${STAGE_PRIVATE_IP}
+      PROD_PRIVATE_IP: ${PROD_PRIVATE_IP}
+      LIBRARY_BRANCH: ${LIBRARY_BRANCH:-dev}
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./jenkins/casc:/var/jenkins_home/casc:ro
+      - ${TOOLS_HOME:-/opt/circleguard}/jenkins_ssh:/var/jenkins_home/.ssh:ro
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8080:8080"
@@ -64,9 +76,9 @@ services:
       SONAR_JDBC_URL: jdbc:postgresql://sonar-db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD}
-      SONAR_WEB_JAVAOPTS: "-Xmx1g"
-      SONAR_CE_JAVAOPTS: "-Xmx1g"
-      SONAR_SEARCH_JAVAOPTS: "-Xmx1g"
+      SONAR_WEB_JAVAOPTS: "-Xms512m -Xmx1g"
+      SONAR_CE_JAVAOPTS: "-Xms512m -Xmx1g"
+      SONAR_SEARCH_JAVAOPTS: "-Xms1g -Xmx1g"
     volumes:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
@@ -74,7 +86,7 @@ services:
     ports:
       - "9000:9000"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/api/system/status | grep -q UP || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9000/api/system/status | grep -q UP || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 20
@@ -91,13 +103,25 @@ services:
       - nexus_data:/nexus-data
     ports:
       - "8081:8081"
-      - "8082:8082"
+      - "5000:5000"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8081/service/rest/v1/status >/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 20
     mem_limit: 2g
+    networks: [tools-net]
+
+  ingress:
+    image: nginx:1.27-alpine
+    container_name: cg-ingress
+    restart: unless-stopped
+    environment:
+      DEV_PRIVATE_IP: ${DEV_PRIVATE_IP}
+    volumes:
+      - ./ingress/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    ports:
+      - "80:80"
     networks: [tools-net]
 
 volumes:

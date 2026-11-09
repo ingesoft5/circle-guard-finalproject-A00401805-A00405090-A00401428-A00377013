@@ -1,3 +1,4 @@
+<!-- CG-DOC: Documentation file: diagnostico-auth-service. -->
 # Diagnóstico Técnico y Arquitectónico: `circleguard-auth-service`
 
 **Historia de Usuario:** `HU-AUTH-01 (DCG-77)` — Diagnosticar la estructura y dependencias de `auth-service`  

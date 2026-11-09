@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Reusable React Native component: use Color Scheme.
+ */
 import { useColorScheme as useColorSchemeCore } from 'react-native';
 
 export const useColorScheme = () => {

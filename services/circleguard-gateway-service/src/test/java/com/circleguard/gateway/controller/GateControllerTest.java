@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Unit or integration tests for Gate Controller Test in the gateway service.
+ */
 package com.circleguard.gateway.controller;
 
 import com.circleguard.gateway.service.QrValidationService;
@@ -37,6 +40,22 @@ class GateControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true))
                 .andExpect(jsonPath("$.status").value("GREEN"));
+    }
+
+    @Test
+    void shouldReturnDeniedWhenTokenIsMissing() throws Exception {
+        QrValidationService.ValidationResult denied =
+                new QrValidationService.ValidationResult(false, "RED", "Invalid or Expired Token");
+
+        Mockito.when(validationService.validateToken(null)).thenReturn(denied);
+
+        mockMvc.perform(post("/api/v1/gate/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valid").value(false))
+                .andExpect(jsonPath("$.status").value("RED"))
+                .andExpect(jsonPath("$.message").value("Invalid or Expired Token"));
     }
 
     @Test

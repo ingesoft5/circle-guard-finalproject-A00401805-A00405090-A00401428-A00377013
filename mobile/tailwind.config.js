@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: Mobile application file: tailwind.config.
+ */
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [

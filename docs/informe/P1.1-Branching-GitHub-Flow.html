@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>P1.1 Branching GitHub Flow</title><style>
+@page { size: A4; margin: 17mm 16mm; }
+body { font-family: "DejaVu Sans", Arial, sans-serif; color:#20242a; font-size:10pt; line-height:1.42; }
+h1 { font-size:20pt; color:#0b3d6e; border-bottom:3px solid #0b3d6e; padding-bottom:6px; }
+h2 { font-size:14pt; color:#0b3d6e; margin-top:20px; border-bottom:1px solid #c8d6e5; padding-bottom:3px; }
+h3 { font-size:11.5pt; color:#174f82; margin-top:14px; }
+code { font-family:"DejaVu Sans Mono", monospace; font-size:8.8pt; background:#f2f5f8; padding:1px 3px; border-radius:3px; }
+pre { background:#f5f7fa; border:1px solid #d6dee8; border-left:4px solid #0b3d6e; padding:8px; font-size:8.3pt; white-space:pre-wrap; word-wrap:break-word; }
+table { width:100%; border-collapse:collapse; margin:8px 0; font-size:9pt; }
+th { background:#e8eef5; border:1px solid #b9c8d8; padding:5px; text-align:left; }
+td { border:1px solid #c9d5e2; padding:5px; vertical-align:top; }
+img { max-width:100%; border:1px solid #c9d5e2; margin:8px 0; }
+</style></head><body><h1>P1.1 - Branching y GitHub Flow</h1>
+<p><strong>Proyecto:</strong> CircleGuard<br />
+<strong>Rama:</strong> feat/HU-GATEWAY-01-configurar-servidores<br />
+<strong>Estrategia:</strong> GitHub Flow<br />
+<strong>Fecha:</strong> 8 de noviembre de 2026</p>
+<h2>1. Estrategia GitHub Flow</h2>
+<p>CircleGuard aplica GitHub Flow:</p>
+<ol>
+<li><code>main</code> siempre está en estado desplegable.</li>
+<li>Cada rama se crea desde <code>main</code> y es de corta duración.</li>
+<li>Los commits siguen Conventional Commits en inglés.</li>
+<li>Todo cambio entra por Pull Request.</li>
+<li>Se requiere al menos una aprobación de otro integrante.</li>
+<li>Los checks de Jenkins deben pasar.</li>
+<li>El merge se hace con Squash and Merge.</li>
+<li>La rama se elimina después del merge.</li>
+</ol>
+<p>La estrategia está documentada en <code>BRANCHING-STRATEGY.md</code>.</p>
+<h2>2. Estado de la rama</h2>
+<pre><code class="language-text">Rama actual: feat/HU-GATEWAY-01-configurar-servidores
+Base: main
+Sincronización: merge de main sobre la rama
+PR: pendiente de crear
+Aprobación: pendiente
+Checks Jenkins: pendientes
+</code></pre>
+<p>La rama <code>dev</code> es heredada y no forma parte de GitHub Flow. Se eliminará antes de la entrega.</p>
+<h2>3. Evidencia de GitHub</h2>
+<h3>Ramas</h3>
+<p><img src="evidencia/github/github-branches.png" alt="Ramas de GitHub" /></p>
+<h3>Grafo de red</h3>
+<p><img src="evidencia/github/github-network-graph.png" alt="Grafo de red" /></p>
+<h3>Protección de main</h3>
+<p><img src="evidencia/github/github-ruleset-main.png" alt="Ruleset de main" /></p>
+<h3>Pull Request</h3>
+<p><img src="evidencia/github/github-pr-conversation.png" alt="Conversación del PR" /></p>
+<h3>Aprobación</h3>
+<p><img src="evidencia/github/github-pr-approval.png" alt="Aprobación del PR" /></p>
+<h3>Checks</h3>
+<p><img src="evidencia/github/github-pr-checks.png" alt="Checks del PR" /></p>
+<h3>Historial de commits</h3>
+<p><img src="evidencia/github/github-commit-history.png" alt="Historial de commits" /></p>
+<h3>Plantilla de PR</h3>
+<p><img src="evidencia/github/github-pr-template.png" alt="Plantilla de PR" /></p>
+<h2>4. Evidencia de Jira</h2>
+<h3>Sprint 0</h3>
+<p><img src="evidencia/jira/jira-sprint-0.png" alt="Sprint 0" /></p>
+<h3>Sprint 1</h3>
+<p><img src="evidencia/jira/jira-sprint-1.png" alt="Sprint 1" /></p>
+<h3>Backlog</h3>
+<p><img src="evidencia/jira/jira-backlog.png" alt="Backlog" /></p>
+<h3>Historias y criterios de aceptación</h3>
+<p><img src="evidencia/jira/jira-historias.png" alt="Historias y criterios" /></p>
+<h3>Review y retrospectiva</h3>
+<p><img src="evidencia/jira/jira-retrospectiva.png" alt="Retrospectiva" /></p>
+<h2>5. Cumplimiento de la rúbrica P1.1</h2>
+<table>
+<thead>
+<tr>
+  <th>Criterio</th>
+  <th>Evidencia</th>
+  <th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Tablero vivo</td>
+  <td>Capturas Jira</td>
+  <td>Pendiente de subir</td>
+</tr>
+<tr>
+  <td>Historias con criterios medibles</td>
+  <td>Capturas Jira</td>
+  <td>Pendiente de subir</td>
+</tr>
+<tr>
+  <td>Sprint 0 y Sprint 1</td>
+  <td>Capturas Jira</td>
+  <td>Pendiente de subir</td>
+</tr>
+<tr>
+  <td>Review y retrospectiva</td>
+  <td>Capturas Jira</td>
+  <td>Pendiente de subir</td>
+</tr>
+<tr>
+  <td>Ramas protegidas</td>
+  <td>Ruleset de main</td>
+  <td>Pendiente de captura</td>
+</tr>
+<tr>
+  <td>PR revisados por pares</td>
+  <td>PR con aprobación</td>
+  <td>Pendiente de crear</td>
+</tr>
+<tr>
+  <td>Estrategia de branching</td>
+  <td><code>BRANCHING-STRATEGY.md</code></td>
+  <td>Cumple</td>
+</tr>
+</tbody>
+</table>
+<h2>6. Evidencias que faltan subir</h2>
+<p>Reemplazar los PNG de ejemplo en:</p>
+<pre><code class="language-text">docs/informe/evidencia/github/
+docs/informe/evidencia/jira/
+</code></pre>
+<p>Nombres esperados:</p>
+<pre><code class="language-text">github-branches.png
+github-network-graph.png
+github-ruleset-main.png
+github-pr-conversation.png
+github-pr-approval.png
+github-pr-checks.png
+github-commit-history.png
+github-pr-template.png
+jira-sprint-0.png
+jira-sprint-1.png
+jira-backlog.png
+jira-historias.png
+jira-retrospectiva.png
+</code></pre>
+<h2>7. Conclusión</h2>
+<p>GitHub Flow está definido y la rama actual sigue la convención de nombres y commits. Para cerrar P1.1 falta crear el PR, obtener la aprobación, verificar los checks, hacer Squash and Merge y reemplazar las capturas de ejemplo con las evidencias reales de GitHub y Jira.</p>
+</body></html>

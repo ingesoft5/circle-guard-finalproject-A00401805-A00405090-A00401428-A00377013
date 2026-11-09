@@ -1,3 +1,4 @@
+# CG-DOC: Docker Compose definition for the dev environment.
 services:
   redis:
     image: redis:7.2-alpine
@@ -10,7 +11,7 @@ services:
     mem_limit: 128m
 
   gateway:
-    image: ${NEXUS_REGISTRY}/circleguard/gateway:${TAG}
+    image: ${NEXUS_REGISTRY}/circleguard-docker/gateway:${TAG}
     container_name: cg-gateway-dev
     restart: unless-stopped
     depends_on: [redis]

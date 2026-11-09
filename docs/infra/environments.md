@@ -1,59 +1,47 @@
-# Ambientes dev, stage y prod
+<!-- CG-DOC: Four-host topology and isolated dev, stage, and prod environments. -->
+# Dev, Stage, and Prod Environments
 
-## Topología
+## Topology
 
 ```text
-cg-tools (t3.large)
+cg-tools (m7i-flex.large, Elastic IP)
 ├── Jenkins        :8080
 ├── SonarQube      :9000
-├── PostgreSQL     :5432 (interno)
-└── Nexus          :8081 / 8082
+├── Nexus          :8081
+├── Registry       :5000 (private)
+└── Ingress        :80
 
-cg-envs (t3.medium)
-├── dev   → gateway :8087 + Redis
-├── stage → gateway :8088 + Redis
-└── prod  → gateway :8089 + Redis
+cg-dev   (m7i-flex.large, private 10.x.x.x) gateway :8087 + Redis
+cg-stage (m7i-flex.large, private 10.x.x.x) gateway :8087 + Redis
+cg-prod  (m7i-flex.large, private 10.x.x.x) gateway :8087 + Redis
 ```
 
-## Aislamiento
+## Network rules
 
-Cada ambiente tiene:
+- Jenkins deploys through the private IP of each environment.
+- Only `cg-tools` has an Elastic IP.
+- Environment public IPs are ephemeral and used for screenshots.
+- Port 8080 is public for GitHub webhooks and Jenkins UI.
+- Ports 9000 and 8081 are restricted to the teacher and administrator.
+- Port 80 is public for the application ingress.
+- Port 5000 and middleware ports are private.
 
-- `deploy/compose/<env>/docker-compose.yml`;
-- red Docker propia (`dev-net`, `stage-net`, `prod-net`);
-- volumen propio de Redis;
-- archivo `.env` propio;
-- puerto propio;
-- credenciales `QR_SECRET` y `JWT_SECRET` propias.
-
-Las herramientas CI/CD son compartidas; los ambientes de despliegue están aislados.
-
-## Comandos
+## Commands
 
 ```bash
-# Desplegar
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/deploy.sh dev 1.0.0-abc1234
+# Prepare one environment on its host
+REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
+
+# Deploy
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/deploy.sh dev <TAG>
 
 # Rollback
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/rollback.sh prod 1.0.0-anterior
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod <TAG>
 
-# Sembrar estado para una prueba
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/seed-status.sh dev <anonymousId> ACTIVE
-
-# Smoke test
-COMPOSE_ROOT=/opt/circleguard/compose ./deploy/scripts/smoke-test.sh dev 8087 <anonymousId>
+# IPs for screenshots
+./infra/bootstrap/bootstrap-ips.sh
 ```
 
-## Verificación de aislamiento
+## Isolation
 
-```bash
-docker network ls | grep -E 'dev-net|stage-net|prod-net'
-docker volume ls | grep -E 'redis_dev|redis_stage|redis_prod'
-docker compose -p circleguard-dev ps
-docker compose -p circleguard-stage ps
-docker compose -p circleguard-prod ps
-```
-
-## Dependencia funcional
-
-Gateway valida el QR contra `user:status:{anonymousId}` en Redis. Para el flujo E2E completo se requieren `auth-service` (emite el QR) y `promotion-service` (puebla Redis). Si no están desplegados, usar `seed-status.sh` y un token firmado con el mismo `QR_SECRET`.
+Each environment has its own EC2 instance, Docker network, Redis volume, `.env`, private IP, and gateway container. `SG-envs` is shared, while application isolation is enforced by host and Docker network boundaries.

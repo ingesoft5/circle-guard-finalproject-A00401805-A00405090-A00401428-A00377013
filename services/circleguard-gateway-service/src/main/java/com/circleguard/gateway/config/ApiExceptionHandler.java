@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: configuration for the gateway service: Api Exception Handler.
+ */
 package com.circleguard.gateway.config;
 
 import com.circleguard.gateway.service.QrValidationService.ValidationResult;

@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: business service for the form service: Symptom Mapper.
+ */
 package com.circleguard.form.service;
 
 import com.circleguard.form.model.HealthSurvey;

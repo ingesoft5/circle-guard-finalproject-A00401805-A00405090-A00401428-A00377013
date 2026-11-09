@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration V4__add_alert_permission for the auth service.
 -- Add priority alerting permission
 INSERT INTO permissions (name, description) VALUES 
 ('alert:receive_priority', 'Receive priority alerts for large outbreaks or new confirmed cases');

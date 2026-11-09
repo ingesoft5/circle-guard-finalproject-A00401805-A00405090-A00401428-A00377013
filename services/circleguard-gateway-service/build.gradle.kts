@@ -1,3 +1,4 @@
+// CG-DOC: Build configuration for the gateway service.
 plugins {
     id("org.springframework.boot")
     id("io.spring.dependency-management")
@@ -6,6 +7,9 @@ plugins {
     jacoco
     `maven-publish`
 }
+
+// En Jenkins el TAG llega como variable de entorno; en local se mantiene SNAPSHOT.
+version = System.getenv("TAG") ?: "1.0.0-SNAPSHOT"
 
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
@@ -22,6 +26,7 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.4")
 }
 
 jacoco {
@@ -29,8 +34,21 @@ jacoco {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
     finalizedBy(tasks.jacocoTestReport)
+}
+
+val integrationTest by tasks.registering(Test::class) {
+    description = "Runs the gateway integration tests (Testcontainers)."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("integration")
+    }
+    shouldRunAfter(tasks.test)
 }
 
 tasks.jacocoTestReport {
@@ -46,6 +64,10 @@ tasks.jacocoTestReport {
     )
 }
 
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
 tasks.jacocoTestCoverageVerification {
     dependsOn(tasks.test)
     classDirectories.setFrom(
@@ -55,11 +77,18 @@ tasks.jacocoTestCoverageVerification {
     )
     violationRules {
         rule {
+            element = "BUNDLE"
             limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
                 minimum = "0.60".toBigDecimal()
             }
         }
     }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
 publishing {
@@ -72,7 +101,9 @@ publishing {
     repositories {
         maven {
             name = "nexus"
-            url = uri(System.getenv("NEXUS_URL") ?: "http://localhost:8081/repository/maven-releases/")
+            val nexusBase = (System.getenv("NEXUS_URL") ?: "http://localhost:8081").trimEnd('/')
+            val repo = if (version.toString().endsWith("SNAPSHOT")) "maven-snapshots" else "maven-releases"
+            url = uri("${nexusBase}/repository/${repo}/")
             isAllowInsecureProtocol = true
             credentials {
                 username = System.getenv("NEXUS_USER") ?: "jenkins"

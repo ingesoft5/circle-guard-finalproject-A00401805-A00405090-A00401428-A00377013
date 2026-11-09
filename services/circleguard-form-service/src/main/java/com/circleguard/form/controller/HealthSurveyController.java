@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: HTTP controller for the form service: Health Survey Controller.
+ */
 package com.circleguard.form.controller;
 
 import com.circleguard.form.model.HealthSurvey;

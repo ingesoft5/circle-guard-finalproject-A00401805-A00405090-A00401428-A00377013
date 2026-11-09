@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: security component for the promotion service: Security Config.
+ */
 package com.circleguard.promotion.security;
 
 import lombok.RequiredArgsConstructor;

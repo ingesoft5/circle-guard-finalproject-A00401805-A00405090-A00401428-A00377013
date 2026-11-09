@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: event contract for the identity service: Identity Access Event.
+ */
 package com.circleguard.identity.event;
 
 import java.time.Instant;

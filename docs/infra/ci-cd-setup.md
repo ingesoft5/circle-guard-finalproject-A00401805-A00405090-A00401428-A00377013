@@ -1,111 +1,118 @@
-# Plataforma CI/CD — Jenkins, SonarQube y Nexus
+<!-- CG-DOC: Four-host CI/CD setup, exposure, credentials, and gateway pipeline. -->
+# CI/CD Platform - Jenkins, SonarQube, and Nexus
 
-## Requisitos
+## Requirements
 
-- AWS CLI v2 configurado.
-- `jq`, `ssh`, `curl`, Docker local para validar compose.
-- IP administrativa y IP del docente.
-- Token de GitHub con permisos de webhook.
-- Llave SSH para el agente de Jenkins.
+- AWS CLI v2 with EC2 and SSM permissions.
+- `jq`, `ssh`, `curl`, and `openssl`.
+- `ADMIN_CIDR` and `TEACHER_CIDR`.
+- GitHub token with repository and webhook permissions.
 
 ## Variables
 
 ```bash
-export AWS_REGION=us-east-1
+export AWS_REGION=us-east-2
 export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
+export TEACHER_CIDR="${ADMIN_CIDR}"
 export GITHUB_USER=...
 export GITHUB_TOKEN=...
-export GITHUB_OWNER=ingesoft5
-export GITHUB_REPO=circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013
 ```
 
-## Reconstrucción desde cero
+## Exposure
+
+- `80`: public ingress. It serves the dev gateway at `/` and the GitHub webhook at `/github-webhook/`.
+- `8080`: Jenkins UI, restricted to `ADMIN_CIDR` and `TEACHER_CIDR`.
+- `9000` and `8081`: SonarQube and Nexus, restricted to `ADMIN_CIDR` and `TEACHER_CIDR`.
+- `443`: closed; there is no TLS listener.
+- The bootstrap rejects `0.0.0.0/0` for `ADMIN_CIDR` and `TEACHER_CIDR`.
+- Jenkins is triggered by the GitHub webhook, not by a timer. The webhook is reachable at `http://<TOOLS_EIP>/github-webhook/`; nginx forwards only that path to `jenkins:8080`, so port `8080` stays private.
+
+## Bootstrap
 
 ```bash
-./infra/bootstrap/all.sh
+./infra/bootstrap/bootstrap-check.sh
+./infra/bootstrap/bootstrap-all.sh
 ```
 
-El comando:
-
-1. Verifica AWS.
-2. Crea 2 EC2, Security Groups, Elastic IPs y key pair.
-3. Prepara Docker, Java 21, swap y firewall.
-4. Levanta Jenkins, SonarQube, PostgreSQL y Nexus.
-5. Configura SonarQube y Nexus.
-6. Crea los archivos de los ambientes `dev`, `stage` y `prod`.
-
-Destrucción:
+Tools only:
 
 ```bash
-CONFIRM=yes ./infra/bootstrap/99-destroy.sh
+./infra/bootstrap/bootstrap-tools.sh
+```
+
+Each environment host:
+
+```bash
+REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 ```
 
 ## Jenkins
 
-- URL: `http://<TOOLS_IP>:8080`
-- Usuario: `admin`
-- Contraseña: `infra/state/tools.env`
-- JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`
-- Plugins: `deploy/compose/tools/jenkins/plugins.txt`
-- Job multibranch: `circleguard-gateway`
-- Webhook: `http://<TOOLS_IP>:8080/github-webhook/`
+- URL: `http://<TOOLS_EIP>:8080` (admin/teacher networks only).
+- Admin credentials: `infra/state/tools.env`.
+- JCasC: `deploy/compose/tools/jenkins/casc/jenkins.yaml`.
+- Multibranch job: `circleguard-gateway`, with GitHub Branch Source for branches and pull requests.
+- Webhook: `http://<TOOLS_EIP>/github-webhook/`, events `push` and `pull_request`.
+- Secret: `GITHUB_WEBHOOK_SECRET` in `infra/state/tools.env`; JCasC exposes it as `github-webhook-secret`.
+- Shared Library: `circleguard`, loaded from `jenkins/vars/` (`libraryPath: jenkins`).
+- `professor` user: read-only.
+- `cg-envs-ssh`: declared in JCasC.
+- The webhook is created by `infra/bootstrap/bootstrap-github.sh` when the token has `admin:repo_hook`. Otherwise create it manually in **Settings → Webhooks** with content type `application/json`.
 
-Credenciales necesarias en Jenkins:
+## Branch protection
 
-| ID | Tipo | Uso |
-|---|---|---|
-| `github-creds` | usuario/contraseña | Repositorio y webhook |
-| `sonar-token` | secret text | SonarQube |
-| `nexus-creds` | usuario/contraseña | Nexus |
-| `cg-envs-ssh` | SSH private key | Despliegue en cg-envs |
+`infra/bootstrap/bootstrap-github.sh` protects the default branch (`main`) with:
 
-Crear `cg-envs-ssh` en Jenkins con la llave privada `infra/state/circleguard-key.pem` (tipo *SSH Username with private key*, usuario `ubuntu`).
+- Pull request required before merging.
+- One approving review.
+- Required status check: `continuous-integration/jenkins/pr-merge`.
+- Conversation resolution required.
+- Force pushes and branch deletion disabled.
 
-## SonarQube
+If the token cannot manage branch protection, the script prints a warning and the settings must be applied manually.
 
-- URL: `http://<TOOLS_IP>:9000`
-- Proyecto: `circleguard-gateway-service`
-- Quality gate: `Sonar way`, bloqueante en Jenkins.
-- Reporte: `services/circleguard-gateway-service/build/reports/jacoco/test/jacocoTestReport.xml`
+## SonarQube and Nexus
 
-## Nexus
+- SonarQube: `http://<TOOLS_EIP>:9000`, teacher/admin only.
+- Nexus UI: `http://<TOOLS_EIP>:8081`, teacher/admin only.
+- Registry: `<TOOLS_PRIVATE_IP>:5000`, private.
+- Repository: `circleguard-docker`.
+- Quality gate `CircleGuard Gateway`: line coverage must be at least 60 %.
+- Quality gate `CircleGuard Services`: same coverage rule for auth and form.
+- Projects: `circleguard-gateway-service`, `circleguard-auth-service`, `circleguard-form-service`.
 
-- UI: `http://<TOOLS_IP>:8081`
-- Docker registry: `<TOOLS_IP>:8082`
-- Repositorios: `maven-releases`, `maven-snapshots`, `raw`, `docker-hosted`.
-- Usuario de Jenkins: `jenkins`, rol `jenkins-publisher`.
+## Application ingress
 
-## Notificaciones
+- URL: `http://<TOOLS_EIP>/`
+- Nginx proxies to the dev gateway private IP on `8087`.
+- Port `80` is public; `443` is reserved for a future domain/TLS.
 
-Definir `SLACK_WEBHOOK_URL` en `deploy/compose/tools/.env`. Si está vacío, el pipeline omite la notificación y deja el mensaje en el log de Jenkins.
+## Pipeline
 
-## Pipeline del gateway
+The `Jenkinsfile` is branch-aware: the multibranch job discovers `main`, feature branches, and pull requests. Each child build runs the same stages with the code of its branch or PR.
 
-Etapas implementadas en `Jenkinsfile`:
+1. **Checkout**: `checkout scm` and commit metadata.
+2. **Resolve services**: `SERVICE=auto` detects changed services from the diff; `SERVICE=all` builds gateway, auth, and form; a service name builds only that service.
+3. **Build**: Gradle compilation per service.
+4. **Unit tests + JaCoCo**: tests and coverage; gateway enforces **line coverage ≥ 60 %**.
+5. **SonarQube + Quality Gate**: scanner and blocking `waitForQualityGate`; the pipeline stops if the gate is red.
+6. **Integration tests**: Testcontainers tests, separate from unit tests.
+7. **Package**: `bootJar`.
+8. **Publish** (on `main`): Nexus artifact and Docker image push with digest.
+9. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt`.
+10. **Deploy** (optional): dev, E2E, stage, production approval, production, tag, rollback. Only when `DEPLOY=true` on `main`.
 
-1. Checkout.
-2. Build & Test con JaCoCo y verificación ≥ 60 %.
-3. SonarQube.
-4. Quality gate bloqueante.
-5. Empaquetado `bootJar`.
-6. Publicación en Nexus.
-7. Build y push de imagen Docker.
-8. Despliegue a dev.
-9. E2E Playwright.
-10. Despliegue a stage.
-11. Aprobación manual.
-12. Despliegue a prod.
-13. Tag semver.
-14. Rollback por parámetro `ROLLBACK_TAG`.
+### Selective execution
 
-## Evidencias
+- `SERVICE=auto`: services touched under `services/<service>/`; global files (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `Jenkinsfile`, `sonar-project.properties`, `gradlew`, `gradle/`, `jenkins/`) select every CI service.
+- `SERVICE=all`: gateway, auth, and form.
+- `SERVICE=<name>`: one service.
+- With no changed services the build is green and skips compilation.
 
-Guardar en `docs/infra/evidence/`:
+### Artifacts
 
-- captura de Jenkins con el pipeline verde;
-- captura de SonarQube con quality gate;
-- captura de Nexus con jar e imagen;
-- salida de `docker ps` en `cg-envs`;
-- healthchecks de dev, stage y prod;
-- evidencia de rollback;
-- URLs y usuario de solo lectura para el docente.
+Every build archives JUnit XML, JaCoCo HTML/XML, the Sonar dashboard links, and the published image digest. The links are also printed in the build log.
+
+## Evidence
+
+Store screenshots in `docs/informe/evidencia/HU-GATEWAY-04/` and the Markdown report in `docs/informe/HU-GATEWAY-04.md`. Never include passwords, tokens, or private keys.

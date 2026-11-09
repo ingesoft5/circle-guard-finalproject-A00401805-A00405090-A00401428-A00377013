@@ -1,50 +1,62 @@
-# Validación de recursos AWS — CircleGuard
+<!-- CG-DOC: AWS four-host sizing, exposure, and one-week cost validation. -->
+# AWS Resource Validation - CircleGuard
 
-## Objetivo
+## Topology
 
-Validar si la cuenta AWS permite crear la plataforma CI/CD de la Parte 1 con dos instancias EC2.
+| Host | Type | RAM | Disk | Public IP |
+|---|---|---:|---:|---|
+| `cg-tools` | `m7i-flex.large` | 8 GB | 40 GB | Elastic IP |
+| `cg-dev` | `m7i-flex.large` | 8 GB | 30 GB | ephemeral |
+| `cg-stage` | `m7i-flex.large` | 8 GB | 30 GB | ephemeral |
+| `cg-prod` | `m7i-flex.large` | 8 GB | 30 GB | ephemeral |
 
-## Topología aprobada
+Region: `us-east-2`. Ubuntu 24.04. Architecture: x86_64.
 
-| Instancia | Tipo | vCPU | RAM | Disco | Componentes |
-|---|---|---:|---:|---:|---|
-| `cg-tools` | `t3.large` | 2 | 8 GB | 60 GB gp3 | Jenkins, SonarQube, PostgreSQL, Nexus |
-| `cg-envs` | `t3.medium` | 2 | 4 GB | 40 GB gp3 | dev, stage y prod: gateway + Redis |
+## Exposure
 
-## Checklist
+| Port | Source | Service |
+|---:|---|---|
+| 22 | `ADMIN_CIDR` and `SG-tools` | SSH |
+| 8080 | Internet | Jenkins, authenticated |
+| 9000 | `TEACHER_CIDR` and admin | SonarQube |
+| 8081 | `TEACHER_CIDR` and admin | Nexus UI |
+| 80/443 | Internet | Application ingress |
+| 5000 | `SG-envs` | Private Docker registry |
+| 8087 | `SG-tools` | Gateway |
+| Middleware | `SG-tools` and admin | PostgreSQL, Neo4j, Kafka, Redis, LDAP |
 
-- [ ] Cuenta AWS activa y método de pago o créditos disponibles.
-- [ ] Región definida (`AWS_REGION`).
-- [ ] Capa gratuita vigente verificada en la consola.
-- [ ] Créditos AWS Academy/Educate o presupuesto aprobado.
-- [ ] Alarma de presupuesto creada en AWS Budgets.
-- [ ] Cuota de instancias `t3.large` y `t3.medium` disponible.
-- [ ] Key pair creado y almacenado fuera del repositorio.
-- [ ] CIDR administrativo definido (`ADMIN_CIDR`).
-- [ ] IP del docente identificada para los Security Groups.
+## Free Tier
 
-## Estimación de costo
+Free Tier covers `t3.micro` and `t2.micro`, which cannot run Jenkins, SonarQube, and Nexus together. The USD 120 credit is the real budget.
 
-| Recurso | 24/7 | 12 h/día laboral |
-|---|---:|---:|
-| `cg-tools` t3.large | ~US$60/mes | ~US$22/mes |
-| `cg-envs` t3.medium | ~US$30/mes | ~US$11/mes |
-| EBS 100 GB gp3 | ~US$8/mes | ~US$8/mes |
-| **Total** | **~US$98/mes** | **~US$41/mes** |
+## Cost
 
-> La capa gratuita estricta no alcanza: `t3.micro` tiene 1 GB de RAM y no soporta SonarQube + Nexus + Jenkins. Se requieren créditos o presupuesto.
-
-## Comandos de verificación
-
-```bash
-export AWS_REGION=us-east-1
-export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
-./infra/bootstrap/00-check-prerequisites.sh
+```text
+4 × m7i-flex.large × 0.096 × 180 h = 69.12
+EBS 130 GB gp3 proportional         =  2.56
+4 public IPv4 × 0.005 × 180 h       =  3.60
+------------------------------------------------
+Total 180 h                          = 75.28 USD
 ```
 
-## Evidencia requerida
+Monthly 24/7 estimate: ~305.32 USD.
+USD 120 covers ~16 days 24/7 or more than one month at 8 h/day.
 
-- Salida de `aws sts get-caller-identity`.
-- Salida de `aws ec2 describe-instance-types`.
-- Captura de AWS Budgets.
-- Captura de la capa gratuita o créditos disponibles.
+## Verification
+
+```bash
+export AWS_REGION=us-east-2
+export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
+export TEACHER_CIDR=...
+./infra/bootstrap/bootstrap-check.sh
+```
+
+## Cost controls
+
+```bash
+./infra/bootstrap/bootstrap-stop.sh
+./infra/bootstrap/bootstrap-start.sh
+./infra/bootstrap/bootstrap-ips.sh
+```
+
+Stopping removes compute charges. EBS and the tools Elastic IP remain billable.

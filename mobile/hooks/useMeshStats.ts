@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: React hook for the mobile app: use Mesh Stats.
+ */
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { PROMOTION_BASE_URL } from '../constants/Config';

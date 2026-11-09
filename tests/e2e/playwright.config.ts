@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: End-to-end test configuration or scenario: playwright.config.
+ */
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({

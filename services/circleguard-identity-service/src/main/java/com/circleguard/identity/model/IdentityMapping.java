@@ -1,3 +1,6 @@
+/**
+ * CG-DOC: data model for the identity service: Identity Mapping.
+ */
 package com.circleguard.identity.model;
 
 import com.circleguard.identity.util.IdentityEncryptionConverter;
