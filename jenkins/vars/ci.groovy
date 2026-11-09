@@ -68,6 +68,11 @@ def integrationTest(Map service) {
         return
     }
     sh "./gradlew ${service.path}:integrationTest --no-daemon --console=plain"
+    // GW-CI-02: una corrida sin resultados debe fallar el build, no pasar en silencio.
+    junit testResults: "${service.dir}/build/test-results/integrationTest/*.xml",
+            allowEmptyResults: false, keepLongStdio: true
+    archiveArtifacts artifacts: "${service.dir}/build/integration-test/*.log",
+            allowEmptyArchive: true
 }
 
 def packageService(Map service) {
@@ -116,10 +121,6 @@ def archive(List services) {
             junit testResults: "${service.dir}/build/test-results/test/*.xml",
                     allowEmptyResults: true, keepLongStdio: true
         }
-        if (service.integration && fileExists("${service.dir}/build/test-results/integrationTest")) {
-            junit testResults: "${service.dir}/build/test-results/integrationTest/*.xml",
-                    allowEmptyResults: true, keepLongStdio: true
-        }
         if (service.jacoco && fileExists("${service.dir}/build/reports/jacoco/test/jacocoTestReport.xml")) {
             jacoco execPattern: "${service.dir}/build/jacoco/test.exec",
                     classPattern: "${service.dir}/build/classes/**",
@@ -127,7 +128,7 @@ def archive(List services) {
                     exclusionPattern: "**/*Application*,**/config/**"
         }
     }
-    archiveArtifacts artifacts: '**/build/reports/jacoco/test/html/**,**/build/reports/jacoco/test/jacocoTestReport.xml,**/build/test-results/**/*.xml,sonar-links.txt,image-digest.txt',
+    archiveArtifacts artifacts: '**/build/reports/jacoco/test/html/**,**/build/reports/jacoco/test/jacocoTestReport.xml,**/build/test-results/**/*.xml,**/build/integration-test/*.log,sonar-links.txt,image-digest.txt',
             allowEmptyArchive: true, fingerprint: true
 }
 

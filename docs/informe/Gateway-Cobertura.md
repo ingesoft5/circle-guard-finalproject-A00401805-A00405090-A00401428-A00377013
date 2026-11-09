@@ -57,7 +57,7 @@ Current result (JaCoCo 0.8.12, 24 tests, 0 failures):
 - Missing status -> access denied (`RED`).
 - Expired token -> access denied (`RED`, `Invalid or Expired Token`).
 
-The dedicated Gradle task is `:services:circleguard-gateway-service:integrationTest`; the `Integration Test` Jenkins stage publishes the JUnit report and archives the Redis container log. See [`GW-CI-02-Integracion-Redis.md`](GW-CI-02-Integracion-Redis.md) and [`evidencia/gw-ci-02/`](evidencia/gw-ci-02/) for results and evidence.
+The dedicated Gradle task is `:services:circleguard-gateway-service:integrationTest`; the `Integration Tests` Jenkins stage publishes the JUnit report and archives the Redis container log. See [`GW-CI-02-Integracion-Redis.md`](GW-CI-02-Integracion-Redis.md) and [`evidencia/gw-ci-02/`](evidencia/gw-ci-02/) for results and evidence.
 
 ### Post-rebase verification (8 November 2026)
 

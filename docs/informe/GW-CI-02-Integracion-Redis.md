@@ -25,12 +25,12 @@ El objetivo es validar el flujo de validación de QR del gateway contra una inst
 | Estado ausente y token expirado | ✅ | `deniesWhenStatusIsMissing`, `deniesExpiredToken` |
 | Siembra de estados antes de cada caso | ✅ | `@BeforeEach` → `flushDb()` + `seedStatus(...)` por UUID |
 | Tarea Gradle `integrationTest` | ✅ | Registrada en `build.gradle.kts` |
-| Etapa del pipeline | ✅ | Stage `Integration Test` + `ci.integrationTest` |
+| Etapa del pipeline | ✅ | Stage `Integration Tests` + `ci.integrationTest(service)` |
 | Menos de 3 minutos | ✅ | 24 s, 25 s y 24 s en la verificación post-rebase |
 | Limpieza de contenedores | ✅ | `count=0` tras la ventana de Ryuk |
 | Tres ejecuciones consecutivas | ✅ | Tres corridas verdes, 9 pruebas cada una |
 | Redis caído documentado (sin resiliencia) | ✅ | Sección 6 + `QrValidationServiceTest.shouldPropagateRedisFailure` |
-| Reporte JUnit publicado como artefacto | ✅ | `junit` + `archiveArtifacts` en `vars/ci.groovy` |
+| Reporte JUnit publicado como artefacto | ✅ | `junit` + `archiveArtifacts` en `jenkins/vars/ci.groovy` |
 | Log del contenedor archivado | ✅ | `@AfterAll` escribe `redis-container.log`; Jenkins lo archiva |
 
 > Esta integración es un extra del gateway y **no reemplaza** las tres integraciones entre servicios exigidas por el enunciado del proyecto.
@@ -43,8 +43,8 @@ El objetivo es validar el flujo de validación de QR del gateway contra una inst
 
 `services/circleguard-gateway-service/build.gradle.kts`:
 
-- `tasks.test` excluye `**/integration/**` para que las pruebas unitarias no requieran Docker.
-- Se registra `integrationTest` en el grupo `verification`, con `include("**/integration/**")`, `shouldRunAfter(test)`, timeout de 3 minutos y `outputs.upToDateWhen { false }` para que Jenkins siempre la ejecute.
+- `tasks.test` excluye la etiqueta `@Tag("integration")` (`excludeTags`) para que las pruebas unitarias no requieran Docker.
+- Se registra `integrationTest` en el grupo `verification`, con `includeTags("integration")`, `shouldRunAfter(test)`, timeout de 3 minutos y `outputs.upToDateWhen { false }` para que Jenkins siempre la ejecute.
 - La tarea genera XML y HTML de JUnit; el gate de cobertura sigue calculándose solo con las pruebas unitarias.
 
 ```bash
@@ -75,14 +75,16 @@ El objetivo es validar el flujo de validación de QR del gateway contra una inst
 
 ### 2.4 Pipeline
 
-- `vars/ci.groovy`: helper `integrationTest(servicePath, serviceDir)` que ejecuta Gradle, publica JUnit (`allowEmptyResults: false`) y archiva el reporte HTML y el log de Redis.
-- `Jenkinsfile`: stage `Integration Test` entre `Quality Gate` y `Package`, con timeout de 5 minutos y condicionado a que no sea un rollback.
+- `jenkins/vars/ci.groovy`: helper `integrationTest(service)` que ejecuta Gradle, publica JUnit (`allowEmptyResults: false`), archiva el log de Redis y falla el build si no se generaron resultados.
+- `Jenkinsfile`: stage `Integration Tests` entre `SonarQube + Quality Gate` y `Package`, con timeout de 5 minutos y condicionado a que no sea un rollback.
 
 ![Stage en el Jenkinsfile](evidencia/gw-ci-02/validacion/05-jenkinsfile.png)
 
 ![Helper de la Shared Library](evidencia/gw-ci-02/validacion/06-ci-helper.png)
 
 ![Ubicación en el pipeline](evidencia/gw-ci-02/validacion/14-pipeline.png)
+
+> **Nota:** las capturas `05-jenkinsfile.png`, `06-ci-helper.png` y `14-pipeline.png` se tomaron antes de integrar `main`; el pipeline actual usa el stage `Integration Tests` y la shared library en `jenkins/vars/ci.groovy`.
 
 ---
 

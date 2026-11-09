@@ -228,7 +228,7 @@ Ejecuta el plan
 - **Hallazgo 2 — timeouts en WSL:** con timeouts de 2 s el arranque de Lettuce en `/mnt/c` agotaba el tiempo; se ajustaron a 10 s en `application-test.yml`.
 - **Hallazgo 3 — rendimiento de 9p:** la tarea superaba los 3 minutos por la carga de clases desde `/mnt/c`. Se verificó con un init script local que mueve `buildDir` a ext4; en Jenkins el checkout está en ext4 y no requiere ajuste.
 - **Resultado:** tres corridas consecutivas verdes de 28 s, 25 s y 26 s; 9 pruebas, 0 fallos; contenedores eliminados por Ryuk; JaCoCo unitario se mantiene en 95.92 % de líneas.
-- **Sin cambios de producción:** solo se modificaron `build.gradle.kts`, `Jenkinsfile`, `vars/ci.groovy`, pruebas y documentación.
+- **Sin cambios de producción:** solo se modificaron `build.gradle.kts`, `Jenkinsfile`, `jenkins/vars/ci.groovy`, pruebas y documentación.
 
 ### D. Reflexión crítica
 
