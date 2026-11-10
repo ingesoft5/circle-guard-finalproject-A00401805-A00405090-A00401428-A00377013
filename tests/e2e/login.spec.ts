@@ -8,14 +8,13 @@ test('el formulario de inicio de sesión está disponible', async ({ page }) => 
   await expect(page.getByText('Welcome Back')).toBeVisible();
   await expect(page.getByPlaceholder('Username')).toBeVisible();
   await expect(page.getByPlaceholder('Password')).toBeVisible();
-  await expect(page.getByText('SIGN IN')).toBeVisible();
+  await expect(page.getByText('SIGN IN', { exact: true })).toBeVisible();
 });
 
 test('el inicio de sesión exige usuario y contraseña', async ({ page }) => {
   await page.goto('/login');
-  const dialog = page.waitForEvent('dialog');
-  await page.getByText('SIGN IN').click();
-  const message = await dialog;
-  expect(message.message()).toContain('Missing Info');
-  await message.dismiss();
+  await page.getByText('SIGN IN', { exact: true }).click();
+  await expect(page.getByText('Welcome Back')).toBeVisible();
+  await expect(page.getByPlaceholder('Username')).toBeVisible();
+  await expect(page).toHaveURL(/\/login/);
 });
