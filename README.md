@@ -64,13 +64,13 @@ CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Mod
 
 | Layer | Technology | Rationale |
 |:---|:---|:---|
-| **Backend** | Spring Boot 4 / Java 21 | Enterprise-grade maturity & low-latency Jakarta EE support. |
+| **Backend** | Spring Boot 3.2.4 / Kotlin 1.9.24 / Java 21 | Servicios tipados y reactivos sobre la JVM. |
 | **Graph DB** | Neo4j 5.26 | High-performance recursive traversals unreachable with SQL. |
 | **Relational DB**| PostgreSQL 16 | ACID compliant storage for identity and configuration. |
-| **Message Bus** | Apache Kafka 7.6 | Persistent, audit-trailed event log for status dispatches. |
+| **Message Bus** | Apache Kafka 3.7.0 (KRaft) | Persistent, audit-trailed event log for status dispatches. |
 | **Caching** | Redis 7.2 | L2 distributed cache for rapid entry-gate status validation. |
 | **Mobile/Web** | Expo (React Native) | Unified codebase across iOS, Android, and Browser. |
-| **Infra** | Kubernetes | Orchestration for high availability and auto-scaling. |
+| **Infra** | Docker Compose en AWS EC2 | Cuatro hosts aislados: tools, dev, stage y prod. |
 
 ---
 
@@ -97,11 +97,14 @@ CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Mod
 ## Local Development
 
 ### 1. Infrastructure
-Ensure Docker is installed, then start the middleware stack:
+Ensure Docker is installed. Create the environment file from the template and set `TAG` and `NEXUS_REGISTRY`, then start the stack:
 ```bash
-docker-compose -f docker-compose.dev.yml up -d
+cp deploy/compose/dev/.env.example deploy/compose/dev/.env
+docker compose --env-file deploy/compose/dev/.env -f deploy/compose/dev/docker-compose.yml up -d
 ```
-*Middleware includes: PostgreSQL, Neo4j, Kafka, Zookeeper, Redis, and OpenLDAP.*
+*Middleware includes: PostgreSQL, Neo4j, Kafka (KRaft), Redis, and OpenLDAP.*
+
+> `docker-compose.dev.yml` is a legacy local file and is not used by the deployment pipeline; the supported stack lives in `deploy/compose/`.
 
 ### 2. Build & Run
 CircleGuard uses Gradle for parallel builds across services:
