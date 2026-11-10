@@ -45,7 +45,7 @@ def enrichServices(List services) {
         if (covered.contains(service.short)) {
             service.jacoco = true
         }
-        if (['auth', 'identity', 'promotion', 'form'].contains(service.short)) {
+        if (['gateway', 'auth', 'identity', 'promotion', 'form'].contains(service.short)) {
             service.healthcheck = true
         }
         if (service.short == 'promotion') {
@@ -298,7 +298,7 @@ pipeline {
         )
         string(name: 'TAG', defaultValue: '', description: 'Tag semver. Vacío = calcular desde Git tags y Conventional Commits.')
         booleanParam(name: 'SKIP_INTEGRATION', defaultValue: false, description: 'Omitir pruebas de integración.')
-        booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Desplegar a dev/stage/prod (solo main).')
+        booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Compatibilidad: en main el despliegue es automático; en otras ramas no aplica.')
         string(name: 'ROLLBACK_TAG', defaultValue: '', description: 'Si se indica, despliega ese tag en prod sin reconstruir.')
     }
 
@@ -497,7 +497,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps { script { ci.deploy('dev', env.TAG) } }
@@ -507,7 +507,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { params.DEPLOY && services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
+                    expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps { script { runE2E() } }
@@ -517,7 +517,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps { script { ci.deploy('stage', env.TAG) } }
@@ -527,7 +527,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -539,7 +539,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { params.DEPLOY && services && !params.ROLLBACK_TAG?.trim() }
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps { script { ci.deploy('prod', env.TAG) } }

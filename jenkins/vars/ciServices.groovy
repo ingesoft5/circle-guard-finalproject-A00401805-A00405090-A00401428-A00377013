@@ -13,7 +13,8 @@ def catalog() {
                     integration   : true,
                     publish       : true,
                     docker        : true,
-                    deploy        : true
+                    deploy        : true,
+                    healthcheck   : true
             ],
             [
                     short         : 'auth',

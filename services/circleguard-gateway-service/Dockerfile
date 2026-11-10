@@ -12,4 +12,6 @@ RUN cp "$(find /tmp/libs -name '*.jar' ! -name '*-plain.jar' | head -n 1)" /app/
     && chown -R circleguard:circleguard /app
 USER circleguard
 EXPOSE 8087
+HEALTHCHECK --interval=30s --timeout=10s --start-period=45s --retries=5 \
+  CMD wget -qO- http://localhost:8087/actuator/health | grep -q UP || exit 1
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
