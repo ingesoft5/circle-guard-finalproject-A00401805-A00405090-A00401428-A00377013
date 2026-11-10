@@ -3,7 +3,7 @@
 **Fecha:** 1–2 de noviembre de 2026  
 **Equipo:** Daniela Castaño, Santiago Estrada, Faiber Piedrahita, Alejandro Quiñones  
 **Proyecto Jira:** DCG  
-**Acta completa:** [Sprint-Review-Sprint-0.pdf](../../informe/Sprint-Review-Sprint-0.pdf)
+**Acta completa:** [Sprint-Review-Sprint-0.docx](../../informe/Sprint-Review-Sprint-0.docx)
 
 ## Objetivo del Sprint 0
 
@@ -58,4 +58,4 @@ Se presentó el flujo de trabajo del repositorio, la estructura de ramas, el tab
 
 El acta completa, con la información del equipo, objetivos, revisión y compromisos, está disponible en:
 
-- [`Sprint-Review-Sprint-0.pdf`](../../informe/Sprint-Review-Sprint-0.pdf)
+- [`Sprint-Review-Sprint-0.docx`](../../informe/Sprint-Review-Sprint-0.docx)
