@@ -202,7 +202,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 </tr>
 </tbody>
 </table>
-<p>Los puertos administrativos (<code>22</code>, <code>8080</code>, <code>8081</code>, <code>9000</code>) están restringidos a la IP de trabajo <code>191.95.167.52/32</code>. El puerto <code>80</code> del ingress es el único expuesto públicamente. Nexus publica <code>5000</code> hacia los Security Groups de los ambientes y los healthchecks de E2E usan <code>8081</code> y <code>29092</code> desde tools.</p>
+<p>Los puertos administrativos (<code>22</code>, <code>8080</code>, <code>8081</code>, <code>9000</code>) están restringidos a la IP de trabajo <code>&lt;IP-DE-TRABAJO&gt;/32</code>. El puerto <code>80</code> del ingress es el único expuesto públicamente. Nexus publica <code>5000</code> hacia los Security Groups de los ambientes y los healthchecks de E2E usan <code>8081</code> y <code>29092</code> desde tools.</p>
 <hr />
 <h2>4. Pipeline CI/CD</h2>
 <p>El job multibranch es:</p>
@@ -299,7 +299,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 </tr>
 </tbody>
 </table>
-<p>Cobertura global reportada por JaCoCo: <strong>88,37 %</strong> de líneas, <strong>96,62 %</strong> de clases y <strong>70,81 %</strong> de métodos.</p>
+<p>Cobertura agregada de los cinco servicios núcleo: <strong>81,29 %</strong> de líneas (1082 / 1331). El reporte global de JaCoCo del pipeline (#8) fue <strong>88,37 %</strong> de líneas, <strong>96,62 %</strong> de clases y <strong>70,81 %</strong> de métodos sobre el conjunto completo de módulos; no es comparable con la suma de los cinco núcleos.</p>
 <h3>6.2 Integraciones relevantes</h3>
 <ol>
 <li><strong>form → Kafka → promotion</strong>: formulario de salud publicado en Kafka y consumido por promotion.</li>
@@ -337,11 +337,12 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <h3>7.2 Sprint 0 y revisión por pares</h3>
 <ul>
 <li><code>docs/agil/sprint-0/review.md</code> contiene el acta del Sprint 0: 7/7 ítems, 12/12 puntos, demostración, métricas, decisiones y acciones.</li>
-<li>Acta completa: <code>docs/informe/Sprint-Review-Sprint-0.pdf</code>.</li>
+<li>Acta completa: <code>docs/informe/Sprint-Review-Sprint-0.docx</code>.</li>
 <li>PR <strong>#42</strong> fusionado con el review, las release notes y el CHANGELOG.</li>
 </ul>
 <h3>7.3 Release notes y tags</h3>
-<p>Tags publicados: <code>v1.0.0</code>, <code>v1.0.1</code>, <code>v1.1.0</code>, <code>v1.1.1</code>, <code>v1.2.0</code>, <code>v1.2.1</code>, <code>v1.2.2</code>, <code>v1.2.3</code>, <code>v1.2.4</code>, <code>v1.2.5</code>.</p>
+<p>Tags publicados: <code>v1.0.0</code>, <code>v1.0.1</code>, <code>v1.1.0</code>, <code>v1.1.1</code>, <code>v1.2.0</code>, <code>v1.2.1</code>, <code>v1.2.2</code>, <code>v1.2.3</code>, <code>v1.2.4</code>, <code>v1.2.5</code>, <code>v1.2.6</code>.</p>
+<p><code>v1.2.6</code> es un tag documental sobre <code>ee17b5c</code> (merge de #42); las imágenes desplegadas siguen siendo <code>1.2.5</code>.</p>
 <p>Notas de release:</p>
 <ul>
 <li><code>docs/release-notes/v1.1.1.md</code>.</li>
@@ -357,7 +358,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <li>Gateway, servicios core y middleware con <code>HEALTHCHECK</code> en los compose de dev, stage y prod.</li>
 <li>Jenkins con autenticación y autorización; SonarQube y Nexus con credenciales administrativas.</li>
 <li>Secrets fuera del repositorio: <code>infra/state/tools.env</code> está ignorado por Git.</li>
-<li>Puertos administrativos restringidos a <code>191.95.167.52/32</code>; solo el ingress <code>80</code> es público.</li>
+<li>Puertos administrativos restringidos a <code>&lt;IP-DE-TRABAJO&gt;/32</code>; solo el ingress <code>80</code> es público.</li>
 <li>Tags <code>v*</code> protegidos contra borrado y force-push.</li>
 <li>El webhook anterior fue eliminado; solo queda el de <code>3.131.150.169</code>.</li>
 </ul>
@@ -429,6 +430,17 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <p><em>JaCoCo: reporte de cobertura del gateway.</em></p>
 <p><img src="evidencia/idempotencia-cli.png" alt="Idempotencia de los scripts" /></p>
 <p><em>Bootstrap: ejecución idempotente de los scripts de infraestructura.</em></p>
+<h3>11.2.1 Evidencias del tablero Jira</h3>
+<p><img src="evidencia/jira/jira-sprint-0.png" alt="Sprint 0 en Jira" /></p>
+<p><em>Jira DCG: revisión del Sprint 0.</em></p>
+<p><img src="evidencia/jira/jira-sprint-1.png" alt="Sprint 1 en Jira" /></p>
+<p><em>Jira DCG: revisión del Sprint 1.</em></p>
+<p><img src="evidencia/jira/jira-backlog.png" alt="Backlog en Jira" /></p>
+<p><em>Jira DCG: backlog priorizado.</em></p>
+<p><img src="evidencia/jira/jira-historias.png" alt="Historias en Jira" /></p>
+<p><em>Jira DCG: historias y criterios de aceptación.</em></p>
+<p><img src="evidencia/jira/jira-retrospectiva.png" alt="Retrospectiva en Jira" /></p>
+<p><em>Jira DCG: retrospectiva del equipo.</em></p>
 <h3>11.3 Matriz de evidencias por criterio</h3>
 <table>
 <thead>
@@ -464,7 +476,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 </tr>
 <tr>
   <td>P1.7</td>
-  <td>Release notes 1.1.1/1.2.0/1.2.5, CHANGELOG, tags y GitHub Releases</td>
+  <td>Release notes 1.1.1/1.2.0/1.2.5, CHANGELOG, tags y tag documental 1.2.6</td>
 </tr>
 <tr>
   <td>P1.8</td>
@@ -477,13 +489,12 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <p>La plataforma y el pipeline están operativos. Para la entrega final quedan actividades de evidencia, no de infraestructura:</p>
 <ol>
 <li>Grabar y enlazar el video de demostración de 5–8 minutos.</li>
-<li>Reemplazar las capturas de Jira por las capturas reales del tablero DCG.</li>
 <li>Adjuntar este PDF regenerado y el README actualizado en el PR final.</li>
 <li>Ejecutar el ensayo final desde un clon limpio.</li>
 </ol>
 <hr />
 <h2>13. Uso de IAG</h2>
-<p>La bitácora completa está en <code>IAG_REGISTRO.md</code> (569 líneas), organizada por módulos y responsables:</p>
+<p>La bitácora completa está en <code>IAG_REGISTRO.md</code> (429 líneas), organizada por módulos y responsables:</p>
 <ul>
 <li>auth/identity: Faiber Piedrahita.</li>
 <li>gateway/infraestructura: Daniela Castaño.</li>
