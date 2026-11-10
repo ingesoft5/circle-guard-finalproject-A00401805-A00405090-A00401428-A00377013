@@ -1,30 +1,105 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>E1.2 Informe Final</title><style>
-@page { size: A4; margin: 17mm 16mm; }
-body { font-family: "DejaVu Sans", Arial, sans-serif; color:#20242a; font-size:10pt; line-height:1.42; }
-h1 { font-size:20pt; color:#0b3d6e; border-bottom:3px solid #0b3d6e; padding-bottom:6px; }
-h2 { font-size:14pt; color:#0b3d6e; margin-top:20px; border-bottom:1px solid #c8d6e5; padding-bottom:3px; }
-h3 { font-size:11.5pt; color:#174f82; margin-top:14px; }
-code { font-family:"DejaVu Sans Mono", monospace; font-size:8.8pt; background:#f2f5f8; padding:1px 3px; border-radius:3px; }
-pre { background:#f5f7fa; border:1px solid #d6dee8; border-left:4px solid #0b3d6e; padding:8px; font-size:8.3pt; white-space:pre-wrap; word-wrap:break-word; }
-table { width:100%; border-collapse:collapse; margin:8px 0; font-size:9pt; }
-th { background:#e8eef5; border:1px solid #b9c8d8; padding:5px; text-align:left; }
-td { border:1px solid #c9d5e2; padding:5px; vertical-align:top; }
-img { max-width:100%; border:1px solid #c9d5e2; margin:8px 0; }
-</style></head><body><h1>E1.2 - Informe final de la rama</h1>
-<p><strong>Rama:</strong> <code>feat/HU-GATEWAY-01-configurar-servidores</code><br />
-<strong>Región:</strong> <code>us-east-2</code><br />
-<strong>Fecha:</strong> 8 de noviembre de 2026<br />
-<strong>Alcance:</strong> microservicio gateway, servidores CI/CD y ambientes dev/stage/prod.</p>
-<h2>1. Resumen</h2>
-<p>Se aprovisionaron cuatro instancias EC2 <code>m7i-flex.large</code> con Ubuntu 24.04 en <code>us-east-2</code>, una Elastic IP para <code>cg-tools</code>, dos Security Groups y una llave SSH nueva. En <code>cg-tools</code> quedaron funcionando Jenkins, SonarQube, PostgreSQL, Nexus, el registro privado <code>5000</code> y un ingress Nginx.</p>
-<p>El gateway tiene pruebas unitarias, integración real con Redis y E2E Playwright. La cobertura de líneas medida es <strong>95.92 %</strong>.</p>
-<p>El pipeline aún no ha corrido porque el job multibranch existe pero Jenkins tiene <strong>0 ramas escaneadas</strong>.</p>
-<h2>2. Infraestructura</h2>
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<title>CircleGuard - Informe Final Parte 1</title>
+<style>
+@page { size: A4; margin: 18mm 16mm 18mm 16mm; @bottom-center { content: counter(page); font-size: 8pt; color: #666; } }
+body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9.2pt; line-height: 1.38; color: #202020; }
+h1 { font-size: 20pt; color: #0b3d5c; border-bottom: 3px solid #0b3d5c; padding-bottom: 4px; margin-top: 0; }
+h2 { font-size: 13.5pt; color: #0b3d5c; border-bottom: 1px solid #9fb8c8; padding-bottom: 2px; margin-top: 16px; page-break-after: avoid; }
+h3 { font-size: 11pt; color: #14506e; margin-top: 10px; page-break-after: avoid; }
+p { margin: 4px 0; text-align: justify; }
+table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 8.1pt; }
+th, td { border: 1px solid #b9c7d0; padding: 3px 4px; vertical-align: top; }
+th { background: #e8f0f5; color: #0b3d5c; }
+tr:nth-child(even) td { background: #f8fafb; }
+code { background: #f2f4f5; padding: 1px 3px; border-radius: 2px; font-size: 8.3pt; }
+pre { background: #f2f4f5; padding: 7px; white-space: pre-wrap; word-break: break-word; border-left: 3px solid #9fb8c8; }
+img { max-width: 100%; height: auto; border: 1px solid #d0d7dc; margin: 5px 0; }
+a { color: #0645ad; text-decoration: none; }
+hr { border: 0; border-top: 1px solid #ccc; margin: 12px 0; }
+blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; color: #444; background: #f7f9fa; }
+</style></head><body><h1>CircleGuard — Informe Final de la Parte 1</h1>
+<p><strong>Versión evaluada:</strong> <code>1.2.5</code><br />
+<strong>Fecha de cierre:</strong> 10 de noviembre de 2026<br />
+<strong>Equipo:</strong> Daniela Castaño, Santiago Estrada, Faiber Piedrahita, Alejandro Quiñones<br />
+<strong>Repositorio:</strong> <code>ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013</code><br />
+<strong>Rama de entrega:</strong> <code>main</code><br />
+<strong>Entregable oficial:</strong> este documento PDF (<code>E1.2-Informe-Final.pdf</code>)</p>
+<hr />
+<h2>1. Resumen ejecutivo</h2>
+<p>La Parte 1 de CircleGuard queda cerrada sobre la infraestructura AWS existente. La rama <code>main</code> está desplegada con la versión <strong>1.2.5</strong> y el pipeline multibranch de Jenkins ejecutó la cadena completa:</p>
+<pre><code class="language-text">Build → Publish a Nexus → Docker → Docker client → Deploy dev → E2E → Deploy stage → Approval prod → Deploy prod
+</code></pre>
+<p>El build <strong>main #8</strong> terminó en <strong>SUCCESS</strong> con tag <code>1.2.5</code>. Los dieciséis escenarios E2E pasaron, los tres ambientes quedaron aislados y saludables y el rollback se demostró con el build <strong>#10</strong>, que desplegó <code>1.2.0</code> en producción y luego fue restaurado a <code>1.2.5</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>Criterio</th>
+  <th style="text-align:right">Peso</th>
+  <th>Estado</th>
+  <th>Evidencia principal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>P1.1 Gestión ágil y branching</td>
+  <td style="text-align:right">2,0 %</td>
+  <td>Cumplido</td>
+  <td>Sprint 0 review, PR #42, ruleset 26333547, tag ruleset 26987068</td>
+</tr>
+<tr>
+  <td>P1.2 Nube y automatización Bash</td>
+  <td style="text-align:right">2,0 %</td>
+  <td>Cumplido</td>
+  <td>4 EC2, 3 ambientes aislados, scripts <code>infra/bootstrap-*</code></td>
+</tr>
+<tr>
+  <td>P1.3 Empaquetamiento inmutable</td>
+  <td style="text-align:right">2,5 %</td>
+  <td>Cumplido</td>
+  <td>9 imágenes <code>1.2.5</code>, Dockerfiles multi-stage, usuario no root, healthchecks</td>
+</tr>
+<tr>
+  <td>P1.4 Pipeline CI Jenkins</td>
+  <td style="text-align:right">2,5 %</td>
+  <td>Cumplido</td>
+  <td>Multibranch, webhook, Shared Library, SonarQube gate, build selectivo</td>
+</tr>
+<tr>
+  <td>P1.5 Entrega continua y promoción</td>
+  <td style="text-align:right">2,5 %</td>
+  <td>Cumplido</td>
+  <td>main #8, E2E 16/16, stage, aprobación, prod y rollback #10</td>
+</tr>
+<tr>
+  <td>P1.6 Pruebas automatizadas</td>
+  <td style="text-align:right">3,5 %</td>
+  <td>Cumplido</td>
+  <td>Cobertura ≥60 % en los 5 núcleos, 3 integraciones y 16 E2E</td>
+</tr>
+<tr>
+  <td>P1.7 Change management y release notes</td>
+  <td style="text-align:right">1,5 %</td>
+  <td>Cumplido</td>
+  <td><code>v1.1.1</code>, <code>v1.2.0</code>, <code>v1.2.5</code>, CHANGELOG y plantilla de cambios</td>
+</tr>
+<tr>
+  <td>P1.8 Documentación, video e IAG</td>
+  <td style="text-align:right">1,0 %</td>
+  <td>Parcial</td>
+  <td>README, diagramas, IAG y este PDF; video pendiente de enlace</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Resultado técnico:</strong> la plataforma, el pipeline y la promoción están operativos. El cierre documental pendiente es el video de demostración y la publicación de las capturas reales de Jira.</p>
+<hr />
+<h2>2. Infraestructura AWS</h2>
+<p>La cuenta operativa es <code>556880009270</code>, región <code>us-east-2</code>. Se mantienen cuatro instancias <code>m7i-flex.large</code> con Docker y Docker Compose.</p>
 <table>
 <thead>
 <tr>
   <th>Host</th>
-  <th>Instancia</th>
+  <th>Instance ID</th>
   <th>IP privada</th>
   <th>IP pública</th>
   <th>Función</th>
@@ -32,295 +107,391 @@ img { max-width:100%; border:1px solid #c9d5e2; margin:8px 0; }
 </thead>
 <tbody>
 <tr>
-  <td>cg-tools</td>
-  <td>i-0f39bae4a25328be1</td>
-  <td>172.31.20.46</td>
-  <td>77.112.223.174</td>
-  <td>Jenkins, SonarQube, Nexus, registro, ingress</td>
+  <td><code>cg-tools</code></td>
+  <td><code>i-014c4de36bf7ff9ca</code></td>
+  <td><code>172.31.20.5</code></td>
+  <td><code>3.131.150.169</code></td>
+  <td>Jenkins, SonarQube, Nexus y registry</td>
 </tr>
 <tr>
-  <td>cg-dev</td>
-  <td>i-0168db88a32069ccf</td>
-  <td>172.31.19.75</td>
-  <td>3.141.13.185</td>
-  <td>gateway + Redis</td>
+  <td><code>cg-dev</code></td>
+  <td><code>i-021e09467c8902957</code></td>
+  <td><code>172.31.30.130</code></td>
+  <td><code>3.141.16.138</code></td>
+  <td>Ambiente de desarrollo</td>
 </tr>
 <tr>
-  <td>cg-stage</td>
-  <td>i-0a65406c7c44c52ec</td>
-  <td>172.31.29.207</td>
-  <td>18.222.218.169</td>
-  <td>gateway + Redis</td>
+  <td><code>cg-stage</code></td>
+  <td><code>i-0fe3fb08585c690b1</code></td>
+  <td><code>172.31.23.240</code></td>
+  <td><code>18.220.99.102</code></td>
+  <td>Ambiente de staging</td>
 </tr>
 <tr>
-  <td>cg-prod</td>
-  <td>i-05084037bd8177db7</td>
-  <td>172.31.20.75</td>
-  <td>3.16.131.65</td>
-  <td>gateway + Redis</td>
+  <td><code>cg-prod</code></td>
+  <td><code>i-041a3a3e4b1ea2d3c</code></td>
+  <td><code>172.31.21.137</code></td>
+  <td><code>3.19.69.181</code></td>
+  <td>Producción</td>
 </tr>
 </tbody>
 </table>
-<table>
-<thead>
-<tr>
-  <th>Recurso</th>
-  <th>Valor</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td>Security Group tools</td>
-  <td>sg-0ed6257fcc34b0f5b</td>
-</tr>
-<tr>
-  <td>Security Group ambientes</td>
-  <td>sg-03ed767c4bbcbf5fe</td>
-</tr>
-<tr>
-  <td>Key pair</td>
-  <td>circleguard-e12-key</td>
-</tr>
-<tr>
-  <td>PEM</td>
-  <td>infra/state/circleguard-e12-key.pem</td>
-</tr>
-<tr>
-  <td>Registro Docker</td>
-  <td>172.31.20.46:5000</td>
-</tr>
-</tbody>
-</table>
-<h2>3. Servicios</h2>
+<p>Security Groups:</p>
+<ul>
+<li><code>circleguard-tools-sg</code>: <code>sg-0de205d35d465d041</code>.</li>
+<li><code>circleguard-envs-sg</code>: <code>sg-04045455edcc6a0d3</code>.</li>
+<li>Key pair: <code>circleguard-e12-key</code>.</li>
+<li>Registry interno: <code>172.31.20.5:5000</code>.</li>
+</ul>
+<p>Los tres ambientes usan redes Docker aisladas y volúmenes propios. El aprovisionamiento es idempotente mediante <code>infra/bootstrap/bootstrap-all.sh</code>, <code>bootstrap-tools.sh</code>, <code>bootstrap-envs.sh</code>, <code>bootstrap-github.sh</code> y <code>bootstrap-check.sh</code>.</p>
+<hr />
+<h2>3. Servicios y URLs</h2>
 <table>
 <thead>
 <tr>
   <th>Servicio</th>
-  <th>URL</th>
+  <th>URL / endpoint</th>
   <th>Estado</th>
 </tr>
 </thead>
 <tbody>
 <tr>
   <td>Jenkins</td>
-  <td>http://77.112.223.174:8080</td>
-  <td>200 OK</td>
+  <td><code>http://3.131.150.169:8080/</code></td>
+  <td>Healthy, build #8 y #10 exitosos</td>
 </tr>
 <tr>
   <td>SonarQube</td>
-  <td>http://77.112.223.174:9000</td>
-  <td>200 OK, UP</td>
+  <td><code>http://3.131.150.169:9000/</code></td>
+  <td>Healthy, quality gate bloqueante</td>
 </tr>
 <tr>
   <td>Nexus</td>
-  <td>http://77.112.223.174:8081</td>
-  <td>200 OK</td>
+  <td><code>http://3.131.150.169:8081/</code></td>
+  <td>Healthy, images y Maven</td>
+</tr>
+<tr>
+  <td>Registry</td>
+  <td><code>172.31.20.5:5000</code></td>
+  <td>Imágenes <code>1.2.5</code> publicadas</td>
 </tr>
 <tr>
   <td>Ingress</td>
-  <td>http://77.112.223.174/</td>
-  <td>502, gateway pendiente</td>
+  <td><code>http://3.131.150.169/</code></td>
+  <td>Enruta a la web de dev</td>
 </tr>
 <tr>
-  <td>Registro</td>
-  <td>172.31.20.46:5000</td>
-  <td>privado</td>
+  <td>Web dev</td>
+  <td><code>http://172.31.30.130:8081</code></td>
+  <td>Healthy</td>
+</tr>
+<tr>
+  <td>Gateway dev</td>
+  <td><code>http://172.31.30.130:8087</code></td>
+  <td>Healthy</td>
+</tr>
+<tr>
+  <td>Web stage</td>
+  <td><code>http://172.31.23.240:8081</code></td>
+  <td>Healthy</td>
+</tr>
+<tr>
+  <td>Web prod</td>
+  <td><code>http://172.31.21.137:8081</code></td>
+  <td>Healthy</td>
 </tr>
 </tbody>
 </table>
-<p>Contenedores en <code>cg-tools</code>:</p>
-<pre><code class="language-text">cg-jenkins     healthy
-cg-sonarqube   healthy
-cg-sonar-db    healthy
-cg-nexus       healthy
-cg-ingress     running
+<p>Los puertos administrativos (<code>22</code>, <code>8080</code>, <code>8081</code>, <code>9000</code>) están restringidos a la IP de trabajo <code>191.95.167.52/32</code>. El puerto <code>80</code> del ingress es el único expuesto públicamente. Nexus publica <code>5000</code> hacia los Security Groups de los ambientes y los healthchecks de E2E usan <code>8081</code> y <code>29092</code> desde tools.</p>
+<hr />
+<h2>4. Pipeline CI/CD</h2>
+<p>El job multibranch es:</p>
+<pre><code class="language-text">circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013
 </code></pre>
-<h2>4. Evidencias con usuario professor</h2>
-<h3>Jenkins</h3>
-<p>Sesión iniciada como <code>professor</code>. El job <code>circleguard-gateway</code> está creado, pero el folder está vacío porque aún no se ha escaneado la rama.</p>
-<p><img src="evidencia/jenkins-professor.png" alt="Jenkins como professor" /></p>
-<h3>SonarQube</h3>
-<p>Sesión iniciada como <code>professor</code>. El proyecto <code>circleguard-gateway-service</code> existe; todavía no tiene análisis porque el pipeline no ha corrido.</p>
-<p><img src="evidencia/sonarqube-professor.png" alt="SonarQube como professor" /></p>
-<h3>Nexus</h3>
-<p>Sesión iniciada como <code>professor</code>. El repositorio <code>circleguard-docker</code> existe; todavía no tiene imagen ni JAR porque el pipeline no ha publicado.</p>
-<p><img src="evidencia/nexus-professor.png" alt="Nexus como professor" /></p>
-<h2>5. Cobertura y pruebas</h2>
-<pre><code class="language-text">Líneas:         95.92 %
-Instrucciones:  97.44 %
-Ramas:          72.73 %
-</code></pre>
+<p>La biblioteca compartida se carga con <code>@Library('circleguard@main')</code> y vive en <code>jenkins/vars/</code> (<code>ci.groovy</code>, <code>ciNotify.groovy</code>, <code>ciServices.groovy</code>, <code>ciVersion.groovy</code>).</p>
+<p>Etapas del pipeline:</p>
+<ol>
+<li>Checkout.</li>
+<li>Resolve services (ejecución selectiva por servicio modificado o todos).</li>
+<li>Build.</li>
+<li>Unit Tests + JaCoCo.</li>
+<li>SonarQube + Quality Gate bloqueante.</li>
+<li>Integration Tests.</li>
+<li>Package.</li>
+<li>Git tag y release notes.</li>
+<li>GitHub Release.</li>
+<li>Publish a Nexus.</li>
+<li>Docker y Docker client.</li>
+<li>Deploy dev.</li>
+<li>E2E Playwright.</li>
+<li>Deploy stage.</li>
+<li>Approval prod (input manual).</li>
+<li>Deploy prod.</li>
+<li>Rollback prod (<code>ROLLBACK_TAG</code>).</li>
+</ol>
+<p>Evidencia principal:</p>
+<ul>
+<li>Build <strong>main #8</strong>: <code>http://3.131.150.169:8080/job/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/job/main/8/</code></li>
+<li>Build <strong>main #10 (rollback)</strong>: <code>http://3.131.150.169:8080/job/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/job/main/10/</code></li>
+</ul>
+<hr />
+<h2>5. Entrega continua y promoción</h2>
+<h3>5.1 Flujo exitoso</h3>
+<p>El build <strong>main #8</strong> ejecutó la promoción completa:</p>
+<ul>
+<li>Deploy automático a <code>dev</code>.</li>
+<li>E2E contra dev: <strong>16/16 tests passed</strong>.</li>
+<li>Deploy automático a <code>stage</code> después de E2E.</li>
+<li>Pausa de aprobación manual para <code>prod</code>.</li>
+<li>Deploy a <code>prod</code> con tag <code>1.2.5</code>.</li>
+<li>Verificación de salud de los once contenedores de producción.</li>
+</ul>
+<p>Servicios de producción verificados:</p>
+<ul>
+<li><code>cg-auth-prod</code>, <code>cg-form-prod</code>, <code>cg-gateway-prod</code>, <code>cg-identity-prod</code>, <code>cg-promotion-prod</code> y <code>cg-web-prod</code> con imágenes <code>172.31.20.5:5000/circleguard-docker/*:1.2.5</code>.</li>
+<li><code>cg-kafka-prod</code>, <code>cg-neo4j-prod</code>, <code>cg-openldap-prod</code>, <code>cg-postgres-prod</code> y <code>cg-redis-prod</code> healthy.</li>
+<li>Health <code>200</code> en <code>8087</code> (gateway), <code>8180</code> (auth), <code>8083</code> (identity), <code>8088</code> (promotion), <code>8086</code> (form) y <code>8081</code> (web).</li>
+</ul>
+<h3>5.2 Rollback demostrado</h3>
+<p>El build <strong>main #10</strong> se ejecutó con <code>ROLLBACK_TAG=1.2.0</code>:</p>
+<ul>
+<li>Desplegó prod con las seis imágenes core en <code>1.2.0</code>.</li>
+<li>Se verificaron health <code>200</code> en los seis servicios.</li>
+<li>Luego se ejecutó <code>deploy.sh prod 1.2.5</code> y prod volvió a <code>1.2.5</code>.</li>
+<li>Resultado final: prod healthy en <code>1.2.5</code>.</li>
+</ul>
+<hr />
+<h2>6. Pruebas y cobertura</h2>
+<h3>6.1 Cobertura por servicio</h3>
 <table>
 <thead>
 <tr>
-  <th>Prueba</th>
-  <th>Resultado</th>
+  <th>Servicio</th>
+  <th style="text-align:right">Cobertura de líneas</th>
+  <th style="text-align:right">Líneas cubiertas</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Unitarias gateway</td>
-  <td>16 pruebas, 0 fallos</td>
+  <td>auth</td>
+  <td style="text-align:right"><strong>97,98 %</strong></td>
+  <td style="text-align:right">194 / 198</td>
 </tr>
 <tr>
-  <td>Integración Redis</td>
-  <td>3 pruebas, 0 fallos</td>
+  <td>form</td>
+  <td style="text-align:right"><strong>86,43 %</strong></td>
+  <td style="text-align:right">121 / 140</td>
 </tr>
 <tr>
-  <td>E2E Playwright</td>
-  <td>3 pruebas añadidas</td>
+  <td>gateway</td>
+  <td style="text-align:right"><strong>100,00 %</strong></td>
+  <td style="text-align:right">49 / 49</td>
+</tr>
+<tr>
+  <td>identity</td>
+  <td style="text-align:right"><strong>94,62 %</strong></td>
+  <td style="text-align:right">88 / 93</td>
+</tr>
+<tr>
+  <td>promotion</td>
+  <td style="text-align:right"><strong>74,03 %</strong></td>
+  <td style="text-align:right">630 / 851</td>
 </tr>
 </tbody>
 </table>
-<p>Reporte JaCoCo:</p>
-<pre><code class="language-text">services/circleguard-gateway-service/build/reports/jacoco/test/html/index.html
-</code></pre>
-<h2>6. Commits de la rama</h2>
-<pre><code class="language-text">dc353e9 docs ( informe ) : add e1.2 step by step pdf
-32500ad docs ( infra ) : add e1.2 operations tutorial
-46b367a fix ( infra ) : stabilize sonarqube and jenkins configuration
-03e583a test ( gateway ) : add redis integration and e2e coverage
-9de989f chore ( git ) : align github flow branch rules
-c87f143 refactor ( infra ) : consolidate bootstrap scripts and remove generated files
-7bcd41e feat ( infra ) : support four hosts, private registry and ingress
-a1fb650 feat ( infra ) : use m7i-flex.xlarge and add cost controls
-404428e docs ( git ) : document commit format and scope rules
-</code></pre>
-<h2>7. Problemas resueltos</h2>
+<p>Cobertura global reportada por JaCoCo: <strong>88,37 %</strong> de líneas, <strong>96,62 %</strong> de clases y <strong>70,81 %</strong> de métodos.</p>
+<h3>6.2 Integraciones relevantes</h3>
+<ol>
+<li><strong>form → Kafka → promotion</strong>: formulario de salud publicado en Kafka y consumido por promotion.</li>
+<li><strong>gateway → Redis</strong>: validación de acceso y almacenamiento de estado en Redis.</li>
+<li><strong>auth → PostgreSQL</strong>: persistencia y autenticación contra la base de datos.</li>
+</ol>
+<h3>6.3 E2E Playwright</h3>
+<p>La suite ejecutada en dev contiene 16 pruebas:</p>
+<ul>
+<li><code>login.spec.ts</code>: 2.</li>
+<li><code>health-form.spec.ts</code>: 2.</li>
+<li><code>access-validation.spec.ts</code>: 9.</li>
+<li><code>promotion-flow.spec.ts</code>: 3.</li>
+</ul>
+<p>Resultado del pipeline: <strong>16/16 passed</strong>, con un worker y Chromium headless.</p>
+<hr />
+<h2>7. Gobernanza, change management y release notes</h2>
+<h3>7.1 Protección de <code>main</code></h3>
+<p>Ruleset de rama <strong>26333547</strong> (<code>github-actions</code>):</p>
+<ul>
+<li>1 aprobación obligatoria.</li>
+<li>Descartar aprobaciones antiguas al hacer push.</li>
+<li>Aprobación del último push.</li>
+<li>Resolución obligatoria de conversaciones.</li>
+<li>Check obligatorio <code>continuous-integration/jenkins/pr-merge</code>.</li>
+<li>Política estricta de checks.</li>
+<li>Merge permitido por merge, squash o rebase.</li>
+</ul>
+<p>Ruleset de tags <strong>26987068</strong> (<code>protect-release-tags</code>):</p>
+<ul>
+<li>Target <code>tag</code>.</li>
+<li>Patrón <code>refs/tags/v*</code>.</li>
+<li>Reglas <code>deletion</code> y <code>non_fast_forward</code>.</li>
+</ul>
+<h3>7.2 Sprint 0 y revisión por pares</h3>
+<ul>
+<li><code>docs/agil/sprint-0/review.md</code> contiene el acta del Sprint 0: 7/7 ítems, 12/12 puntos, demostración, métricas, decisiones y acciones.</li>
+<li>Acta completa: <code>docs/informe/Sprint-Review-Sprint-0.pdf</code>.</li>
+<li>PR <strong>#42</strong> fusionado con el review, las release notes y el CHANGELOG.</li>
+</ul>
+<h3>7.3 Release notes y tags</h3>
+<p>Tags publicados: <code>v1.0.0</code>, <code>v1.0.1</code>, <code>v1.1.0</code>, <code>v1.1.1</code>, <code>v1.2.0</code>, <code>v1.2.1</code>, <code>v1.2.2</code>, <code>v1.2.3</code>, <code>v1.2.4</code>, <code>v1.2.5</code>.</p>
+<p>Notas de release:</p>
+<ul>
+<li><code>docs/release-notes/v1.1.1.md</code>.</li>
+<li><code>docs/release-notes/v1.2.0.md</code>.</li>
+<li><code>docs/release-notes/v1.2.5.md</code>.</li>
+<li><code>CHANGELOG.md</code> actualizado con las secciones <code>[1.2.5]</code>, <code>[1.2.0]</code> y <code>[1.1.1]</code>.</li>
+</ul>
+<p>La plantilla de solicitud de cambio y la política de aprobación están en <code>docs/change-management.md</code>.</p>
+<hr />
+<h2>8. Seguridad</h2>
+<ul>
+<li>Contenedores de servicios construidos con usuario no root; el cliente web usa <code>nginx-unprivileged</code> (<code>101:101</code>).</li>
+<li>Gateway, servicios core y middleware con <code>HEALTHCHECK</code> en los compose de dev, stage y prod.</li>
+<li>Jenkins con autenticación y autorización; SonarQube y Nexus con credenciales administrativas.</li>
+<li>Secrets fuera del repositorio: <code>infra/state/tools.env</code> está ignorado por Git.</li>
+<li>Puertos administrativos restringidos a <code>191.95.167.52/32</code>; solo el ingress <code>80</code> es público.</li>
+<li>Tags <code>v*</code> protegidos contra borrado y force-push.</li>
+<li>El webhook anterior fue eliminado; solo queda el de <code>3.131.150.169</code>.</li>
+</ul>
+<hr />
+<h2>9. Costos</h2>
+<p>Las cuatro instancias <code>m7i-flex.large</code> se mantuvieron encendidas durante la ventana de ejecución. La estimación es de aproximadamente <strong>USD 75,28 por 180 horas</strong> para el conjunto, más almacenamiento EBS. Para la entrega se recomienda mantenerlas encendidas hasta la demostración y apagarlas después.</p>
+<hr />
+<h2>10. Problemas resueltos</h2>
 <table>
 <thead>
 <tr>
   <th>Problema</th>
+  <th>Causa</th>
   <th>Solución</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>SCP bloqueaba DescribeInstances en us-east-1</td>
-  <td>Se trabajó en us-east-2</td>
+  <td>Nexus respondía HTTP 500 al publicar</td>
+  <td>Disco de tools al 90 %; OrientDB en read-only</td>
+  <td>Volumen EBS de 40 a 60 GB, <code>growpart</code> y <code>resize2fs</code>; 24 GB libres</td>
 </tr>
 <tr>
-  <td>Security Groups con dependencias cruzadas</td>
-  <td>Se revocaron reglas y se recrearon</td>
+  <td><code>cg-openldap</code> no pasaba el healthcheck</td>
+  <td><code>ldapsearch</code> anónimo devolvía <code>No such object</code></td>
+  <td>Bind autenticado con el admin de LDAP</td>
 </tr>
 <tr>
-  <td>SonarQube no iniciaba</td>
-  <td><code>-Xms1g -Xmx1g</code> en Elasticsearch</td>
+  <td>E2E fallaba en dev</td>
+  <td>Faltaban <code>AUTH_URL</code> e <code>IDENTITY_URL</code>; gateway se consultaba en la web</td>
+  <td>Variables en <code>Jenkinsfile</code> y <code>GATEWAY_URL</code> en el spec</td>
 </tr>
 <tr>
-  <td>SonarQube unhealthy</td>
-  <td>Healthcheck con <code>wget</code></td>
+  <td>Login E2E ambiguo</td>
+  <td><code>getByText('SIGN IN')</code> coincidía con dos textos</td>
+  <td>Locator exacto</td>
 </tr>
 <tr>
-  <td>Jenkins JCasC fallaba con <code>fileOnMaster</code></td>
-  <td><code>directEntry</code> con <code>readFile</code></td>
+  <td>Segundo test de login esperaba diálogo</td>
+  <td><code>Alert.alert</code> no genera diálogo en React Native Web</td>
+  <td>Validación de permanencia en <code>/login</code></td>
 </tr>
 <tr>
-  <td>Jenkins fallaba con <code>matrix</code></td>
-  <td><code>globalMatrix.entries</code></td>
-</tr>
-<tr>
-  <td>Testcontainers no encontraba Docker</td>
-  <td><code>docker-java.properties</code> con <code>api.version=1.44</code></td>
+  <td>Push de imagen con digest mismatch</td>
+  <td>Nexus sin espacio durante el push</td>
+  <td>Limpieza, ampliación de disco y reintento</td>
 </tr>
 </tbody>
 </table>
-<h2>8. Seguridad</h2>
+<hr />
+<h2>11. Evidencias</h2>
+<h3>11.1 URLs verificables</h3>
+<ul>
+<li>Repositorio: <code>https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013</code></li>
+<li>PR #42: <code>https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/42</code></li>
+<li>Jenkins main #8: <code>http://3.131.150.169:8080/job/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/job/main/8/</code></li>
+<li>Jenkins main #10: <code>http://3.131.150.169:8080/job/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/job/main/10/</code></li>
+<li>SonarQube: <code>http://3.131.150.169:9000/</code></li>
+<li>Nexus: <code>http://3.131.150.169:8081/</code></li>
+</ul>
+<h3>11.2 Capturas del flujo</h3>
+<p><img src="evidencia/jenkins-professor.png" alt="Acceso y administración de Jenkins" /></p>
+<p><em>Jenkins: acceso administrativo y ejecución del pipeline.</em></p>
+<p><img src="evidencia/sonarqube-quality-gate.png" alt="Quality gate de SonarQube" /></p>
+<p><em>SonarQube: quality gate bloqueante.</em></p>
+<p><img src="evidencia/nexus-repositories.png" alt="Repositorios de Nexus" /></p>
+<p><em>Nexus: repositorios Maven y Docker.</em></p>
+<p><img src="evidencia/gateway-jacoco.png" alt="Cobertura del gateway" /></p>
+<p><em>JaCoCo: reporte de cobertura del gateway.</em></p>
+<p><img src="evidencia/idempotencia-cli.png" alt="Idempotencia de los scripts" /></p>
+<p><em>Bootstrap: ejecución idempotente de los scripts de infraestructura.</em></p>
+<h3>11.3 Matriz de evidencias por criterio</h3>
 <table>
 <thead>
 <tr>
-  <th>Puerto</th>
-  <th>Origen</th>
-  <th>Servicio</th>
+  <th>Criterio</th>
+  <th>Evidencia</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>22</td>
-  <td>admin y SG-tools</td>
-  <td>SSH</td>
+  <td>P1.1</td>
+  <td>Sprint 0 review, PR #42, ruleset 26333547, tag ruleset 26987068, capturas de Jira</td>
 </tr>
 <tr>
-  <td>8080</td>
-  <td>Internet</td>
-  <td>Jenkins autenticado</td>
+  <td>P1.2</td>
+  <td>Cuatro EC2, tres ambientes aislados, scripts <code>infra/bootstrap-*</code>, captura de idempotencia</td>
 </tr>
 <tr>
-  <td>9000</td>
-  <td>teacher/admin</td>
-  <td>SonarQube</td>
+  <td>P1.3</td>
+  <td>Nueve imágenes <code>1.2.5</code>, Dockerfiles multi-stage, usuario no root, healthchecks</td>
 </tr>
 <tr>
-  <td>8081</td>
-  <td>teacher/admin</td>
-  <td>Nexus</td>
+  <td>P1.4</td>
+  <td>Jenkins multibranch, webhook, Shared Library, Sonar gate, build selectivo</td>
 </tr>
 <tr>
-  <td>80</td>
-  <td>Internet</td>
-  <td>ingress</td>
+  <td>P1.5</td>
+  <td>main #8, E2E 16/16, stage, aprobación, prod healthy, rollback #10</td>
 </tr>
 <tr>
-  <td>5000</td>
-  <td>SG-envs</td>
-  <td>registro privado</td>
+  <td>P1.6</td>
+  <td>Tabla de cobertura, tres integraciones, 16 E2E, reportes JaCoCo</td>
 </tr>
 <tr>
-  <td>8087</td>
-  <td>SG-tools</td>
-  <td>gateway</td>
+  <td>P1.7</td>
+  <td>Release notes 1.1.1/1.2.0/1.2.5, CHANGELOG, tags y GitHub Releases</td>
+</tr>
+<tr>
+  <td>P1.8</td>
+  <td>README, diagramas, <code>IAG_REGISTRO.md</code>, este PDF y video de demostración</td>
 </tr>
 </tbody>
 </table>
-<p><code>TEACHER_CIDR=0.0.0.0/0</code> deja SonarQube y Nexus abiertos. Cambiarlo por la IP del profesor cuando esté disponible.</p>
-<h2>9. Costos</h2>
-<pre><code class="language-text">4 × m7i-flex.large × 180 h = 69.12 USD
-EBS 130 GB proporcional     =  2.56 USD
-4 IPv4 × 180 h              =  3.60 USD
-Total                       = 75.28 USD
-</code></pre>
-<h2>10. Qué falta</h2>
+<hr />
+<h2>12. Qué falta para el cierre documental</h2>
+<p>La plataforma y el pipeline están operativos. Para la entrega final quedan actividades de evidencia, no de infraestructura:</p>
 <ol>
-<li>Escanear el job multibranch en Jenkins.</li>
-<li>Ejecutar el pipeline de la rama.</li>
-<li>Desplegar gateway en dev, stage y aprobar prod.</li>
-<li>Ejecutar E2E contra dev.</li>
-<li>Capturar Jenkins, Sonar, Nexus con pipeline y artefactos reales.</li>
-<li>Repo privado antes del push final.</li>
-<li>Apagar instancias al terminar.</li>
+<li>Grabar y enlazar el video de demostración de 5–8 minutos.</li>
+<li>Reemplazar las capturas de Jira por las capturas reales del tablero DCG.</li>
+<li>Adjuntar este PDF regenerado y el README actualizado en el PR final.</li>
+<li>Ejecutar el ensayo final desde un clon limpio.</li>
 </ol>
-<h3>Escanear y ejecutar</h3>
-<pre><code class="language-bash">source infra/state/aws.env
-source infra/state/tools.env
-
-crumb=$(curl -s -c /tmp/jcookies \
-  -u &quot;admin:${JENKINS_ADMIN_PASSWORD}&quot; \
-  &quot;http://${TOOLS_IP}:8080/crumbIssuer/api/json&quot; | jq -r .crumb)
-
-curl -b /tmp/jcookies \
-  -u &quot;admin:${JENKINS_ADMIN_PASSWORD}&quot; \
-  -H &quot;Jenkins-Crumb: ${crumb}&quot; \
-  -X POST &quot;http://${TOOLS_IP}:8080/job/circleguard-gateway/build?delay=0&quot;
-</code></pre>
-<h3>E2E</h3>
-<pre><code class="language-bash">cd tests/e2e
-npm install
-npx playwright install --with-deps chromium
-GATEWAY_URL=http://3.141.13.185:8087 npx playwright test
-</code></pre>
-<h3>Apagar</h3>
-<pre><code class="language-bash">./infra/bootstrap/bootstrap-stop.sh
-</code></pre>
-<h2>11. Credenciales</h2>
-<p>Están en:</p>
-<pre><code class="language-text">infra/state/tools.env
-</code></pre>
-<p>Usuarios:</p>
-<pre><code class="language-text">Jenkins:   admin / profesor
-SonarQube: admin / professor
-Nexus:     admin / nexus / professor
-</code></pre>
-<p>No incluir contraseñas, tokens ni la llave privada en capturas o informes.</p>
-<h2>12. Conclusión</h2>
-<p>La infraestructura E1.2 está levantada y las herramientas están saludables. El acceso del profesor quedó configurado en Jenkins, SonarQube y Nexus. El gateway supera el 60 % de cobertura y tiene integración real con Redis. Falta ejecutar el pipeline para que las capturas muestren ramas, análisis, artefactos y despliegues reales.</p>
+<hr />
+<h2>13. Uso de IAG</h2>
+<p>La bitácora completa está en <code>IAG_REGISTRO.md</code> (569 líneas), organizada por módulos y responsables:</p>
+<ul>
+<li>auth/identity: Faiber Piedrahita.</li>
+<li>gateway/infraestructura: Daniela Castaño.</li>
+<li>promotion: Alejandro Quiñones.</li>
+</ul>
+<p>La bitácora incluye las decisiones, los prompts y la reflexión crítica sobre el uso de asistentes de IA en el desarrollo y la operación del proyecto.</p>
+<hr />
+<h2>14. Conclusión</h2>
+<p>La Parte 1 queda cerrada técnicamente con la release <strong>1.2.5</strong>. El pipeline ejecuta la cadena completa desde <code>main</code>, los tres ambientes están aislados, las pruebas E2E pasan, la cobertura supera el 60 % en los cinco servicios núcleo y el rollback está demostrado. La gobernanza de <code>main</code> y de los tags quedó configurada con reglas verificables.</p>
+<p>El cierre documental se completa con este PDF, el acta del Sprint 0, las release notes y la bitácora de IAG. El video de demostración y las capturas reales de Jira son los últimos anexos de la entrega.</p>
 </body></html>
