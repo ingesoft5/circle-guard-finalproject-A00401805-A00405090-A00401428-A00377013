@@ -35,6 +35,45 @@ Semantic Versioning.
   configured.
 - `LIBRARY_BRANCH` defaults to `main` in the tools stack.
 
+## [1.2.5] - 2026-11-10
+
+### Added
+
+- Despliegue automático a dev desde `main` y aprobación manual para prod (#39).
+- `HEALTHCHECK` del gateway y validación de salud en los tres ambientes.
+
+### Changed
+
+- Healthcheck de OpenLDAP con bind autenticado (#40).
+- Pruebas E2E alineadas con `AUTH_URL`, `IDENTITY_URL` y `GATEWAY_URL` de dev (#41).
+
+### Fixed
+
+- Publicación estable a Nexus tras ampliar el volumen de tools y limpiar el blob store.
+- Rollback de prod a `1.2.0` verificado y restauración a `1.2.5`.
+
+## [1.2.0] - 2026-11-09
+
+### Added
+
+- Stack completo de la Parte 1: gateway, auth, identity, promotion, form y web.
+- Middleware PostgreSQL, Neo4j, Kafka, Redis y OpenLDAP.
+- Pipeline multibranch con ejecución selectiva, JaCoCo y quality gate de SonarQube.
+
+### Changed
+
+- Job multibranch renombrado y publicación de las imágenes del núcleo (#34).
+
+### Documentation
+
+- Informe de entrega, diagramas de arquitectura y pipeline, y guías operativas (#38).
+
+## [1.1.1] - 2026-11-09
+
+### Changed
+
+- Actualización del informe de entrega y evidencias de la Parte 1 (#37).
+
 ## [1.1.0] - 2026-11-08
 
 ### Added
@@ -49,6 +88,9 @@ Semantic Versioning.
 
 - Initial GitHub Flow, Jenkins pipeline, gateway packaging, and infrastructure scripts.
 
-[Unreleased]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.2.5...HEAD
+[1.2.5]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.2.0...v1.2.5
+[1.2.0]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.1.1...v1.2.0
+[1.1.1]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.0.1...v1.1.0
 [1.0.0]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/releases/tag/v1.0.0
