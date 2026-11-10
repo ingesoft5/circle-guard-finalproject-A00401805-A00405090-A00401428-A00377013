@@ -5,23 +5,24 @@ import { test, expect } from '@playwright/test';
 
 const AUTH_URL = process.env.AUTH_URL || 'http://localhost:8180';
 const IDENTITY_URL = process.env.IDENTITY_URL || 'http://localhost:8083';
+const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8087';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 test('el gateway está saludable', async ({ request }) => {
-  const response = await request.get('/actuator/health');
+  const response = await request.get(`${GATEWAY_URL}/actuator/health`);
   expect(response.ok()).toBeTruthy();
   expect(await response.text()).toContain('UP');
 });
 
 test('el gateway rechaza una petición sin token de personal', async ({ request }) => {
-  const response = await request.post('/api/v1/gate/validate', {
+  const response = await request.post(`${GATEWAY_URL}/api/v1/gate/validate`, {
     data: { token: 'invalid' },
   });
   expect([401, 403]).toContain(response.status());
 });
 
 test('el gateway rechaza un JWT de personal malformado', async ({ request }) => {
-  const response = await request.post('/api/v1/gate/validate', {
+  const response = await request.post(`${GATEWAY_URL}/api/v1/gate/validate`, {
     headers: { Authorization: 'Bearer not-a-valid-jwt' },
     data: { token: 'invalid' },
   });
@@ -74,7 +75,7 @@ test('flujo E2E completo: login RBAC en auth-service, generación de QR y valida
   expect(users.some((u: { username: string }) => u.username === 'health_user')).toBeTruthy();
 
   // 4. Validación cruzada en gateway usando el JWT de staff_guard (con gate:scan) y el qrToken emitido por auth-service
-  const gateRes = await request.post('/api/v1/gate/validate', {
+  const gateRes = await request.post(`${GATEWAY_URL}/api/v1/gate/validate`, {
     headers: authHeader,
     data: { token: qrData.qrToken },
   });
