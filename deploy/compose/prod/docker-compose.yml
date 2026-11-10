@@ -102,7 +102,7 @@ services:
     networks: [prod-net]
     mem_limit: 192m
     healthcheck:
-      test: ["CMD-SHELL", "ldapsearch -x -H ldap://localhost -b dc=circleguard,dc=edu -s base >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "ldapsearch -x -D \"cn=admin,dc=circleguard,dc=edu\" -w \"$$LDAP_ADMIN_PASSWORD\" -H ldap://localhost -b dc=circleguard,dc=edu -s base >/dev/null 2>&1 || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 15
