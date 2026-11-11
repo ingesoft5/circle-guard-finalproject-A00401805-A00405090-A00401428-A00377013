@@ -86,12 +86,12 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <tr>
   <td>P1.8 Documentación, video e IAG</td>
   <td style="text-align:right">1,0 %</td>
-  <td>Parcial</td>
-  <td>README, diagramas, IAG y este PDF; video pendiente de enlace</td>
+  <td>Cumplido</td>
+  <td>README, diagramas, IAG y este PDF; sustentación oral en lugar de video</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Resultado técnico:</strong> la plataforma, el pipeline y la promoción están operativos. El cierre documental pendiente es el video de demostración y la publicación de las capturas reales de Jira.</p>
+<p><strong>Resultado técnico:</strong> la plataforma, el pipeline y la promoción están operativos. El cierre documental queda cubierto por este PDF, las cinco capturas de Jira ya incorporadas y la bitácora de IAG. La demostración se realiza en la sustentación oral del equipo; no aplica video.</p>
 <hr />
 <h2>2. Infraestructura AWS</h2>
 <p>La cuenta operativa es <code>556880009270</code>, región <code>us-east-2</code>. Se mantienen cuatro instancias <code>m7i-flex.large</code> con Docker y Docker Compose.</p>
@@ -343,6 +343,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <h3>7.3 Release notes y tags</h3>
 <p>Tags publicados: <code>v1.0.0</code>, <code>v1.0.1</code>, <code>v1.1.0</code>, <code>v1.1.1</code>, <code>v1.2.0</code>, <code>v1.2.1</code>, <code>v1.2.2</code>, <code>v1.2.3</code>, <code>v1.2.4</code>, <code>v1.2.5</code>, <code>v1.2.6</code>.</p>
 <p><code>v1.2.6</code> es un tag documental sobre <code>ee17b5c</code> (merge de #42); las imágenes desplegadas siguen siendo <code>1.2.5</code>.</p>
+<p><code>v1.2.7</code> es el release más reciente en GitHub y también es documental. Las imágenes desplegadas en los tres ambientes siguen siendo <code>1.2.5</code>.</p>
 <p>Notas de release:</p>
 <ul>
 <li><code>docs/release-notes/v1.1.1.md</code>.</li>
@@ -480,21 +481,21 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 </tr>
 <tr>
   <td>P1.8</td>
-  <td>README, diagramas, <code>IAG_REGISTRO.md</code>, este PDF y video de demostración</td>
+  <td>README, diagramas, <code>IAG_REGISTRO.md</code>, este PDF, capturas de Jira y sustentación oral</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2>12. Qué falta para el cierre documental</h2>
-<p>La plataforma y el pipeline están operativos. Para la entrega final quedan actividades de evidencia, no de infraestructura:</p>
+<h2>12. Actividades de cierre</h2>
+<p>La plataforma y el pipeline están operativos y la evidencia documental está completa en este PDF. Las actividades restantes son de entrega y sustentación, no de infraestructura:</p>
 <ol>
-<li>Grabar y enlazar el video de demostración de 5–8 minutos.</li>
-<li>Adjuntar este PDF regenerado y el README actualizado en el PR final.</li>
-<li>Ejecutar el ensayo final desde un clon limpio.</li>
+<li>Sustentar oralmente la arquitectura, el pipeline y la promoción ante el docente. La demostración se hace en vivo; no se publica video.</li>
+<li>Entregar este PDF regenerado junto con el README actualizado.</li>
+<li>Ejecutar el ensayo final desde un clon limpio como verificación de reproducibilidad.</li>
 </ol>
 <hr />
 <h2>13. Uso de IAG</h2>
-<p>La bitácora completa está en <code>IAG_REGISTRO.md</code> (429 líneas), organizada por módulos y responsables:</p>
+<p>La bitácora completa está en <code>IAG_REGISTRO.md</code> (605 líneas), organizada por módulos y responsables:</p>
 <ul>
 <li>auth/identity: Faiber Piedrahita.</li>
 <li>gateway/infraestructura: Daniela Castaño.</li>
@@ -504,5 +505,4 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <hr />
 <h2>14. Conclusión</h2>
 <p>La Parte 1 queda cerrada técnicamente con la release <strong>1.2.5</strong>. El pipeline ejecuta la cadena completa desde <code>main</code>, los tres ambientes están aislados, las pruebas E2E pasan, la cobertura supera el 60 % en los cinco servicios núcleo y el rollback está demostrado. La gobernanza de <code>main</code> y de los tags quedó configurada con reglas verificables.</p>
-<p>El cierre documental se completa con este PDF, el acta del Sprint 0, las release notes y la bitácora de IAG. El video de demostración y las capturas reales de Jira son los últimos anexos de la entrega.</p>
-</body></html>
+<p>El cierre documental se completa con este PDF, el acta del Sprint 0, las release notes y la bitácora de IAG. La demostración se realiza en la sustentación oral; no se publica video. Las capturas reales de Jira están incorporadas en la sección 11.2.1.</p>

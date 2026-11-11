@@ -51,5 +51,5 @@ web, pruebas automatizadas y documentación de la Parte 1.
 - Merge del PR de la rama `feat/parte1-integracion`.
 - Capturas reales de Jira (Sprint 1, backlog, historias y retrospectiva).
 - Capturas reales de GitHub (ruleset, PR, aprobación y checks).
-- Video de demostración y PDF consolidado del informe.
+- Sustentación oral y PDF consolidado del informe.
 - Actualización de `docs/informe/E1.2-Informe-Final` con el estado actual del pipeline.
