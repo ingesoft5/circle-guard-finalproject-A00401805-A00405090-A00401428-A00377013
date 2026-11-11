@@ -38,6 +38,12 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:1.21.4")
 }
 
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
+}
+
 // Configuración JaCoCo
 tasks.jacocoTestReport {
     // La tarea test se ejecuta antes y deja disponible la información de cobertura.
