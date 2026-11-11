@@ -331,20 +331,6 @@ pipeline {
             }
         }
 
-        stage('Build') {
-            when { expression { services } }
-            steps {
-                script {
-                    services.each { service ->
-                        timeout(time: 10, unit: 'MINUTES') {
-                            echo "Compilando ${service.name}..."
-                            ci.build(service)
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Unit Tests + JaCoCo') {
             when { expression { services } }
             steps {
@@ -353,6 +339,20 @@ pipeline {
                         timeout(time: 10, unit: 'MINUTES') {
                             echo "Pruebas unitarias y cobertura de ${service.name}..."
                             ci.unitTest(service)
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build') {
+            when { expression { services } }
+            steps {
+                script {
+                    services.each { service ->
+                        timeout(time: 10, unit: 'MINUTES') {
+                            echo "Compilando ${service.name}..."
+                            ci.build(service)
                         }
                     }
                 }
