@@ -9,9 +9,9 @@ def build(Map service) {
 }
 
 // `check` is the contract: each module decides what belongs in it (tests, coverage
-// threshold, container-execution guard), so the pipeline does not need to know which
-// tasks a service defines. Naming the tasks here skipped verifyContainerTestsRan, which
-// meant Jenkins enforced the coverage number but never proved the container tests ran.
+// threshold, no-skip guard), so the pipeline does not need to know which tasks a service
+// defines. Naming the tasks here skipped verifyUnitTestsRan, which meant Jenkins enforced
+// the coverage number but never proved the unit suite actually ran.
 def unitTest(Map service) {
     if (service.jacoco) {
         echo "JaCoCo: ${service.short} corre check (pruebas + umbral de cobertura)."
@@ -67,7 +67,7 @@ def integrationTest(Map service) {
         echo "Integración: ${service.short} no declara pruebas de integración."
         return
     }
-    sh "./gradlew ${service.path}:integrationTest --no-daemon --no-build-cache --console=plain"
+    sh "./gradlew ${service.path}:integrationTest --no-daemon --no-build-cache --rerun-tasks --console=plain"
     // GW-CI-02: una corrida sin resultados debe fallar el build, no pasar en silencio.
     junit testResults: "${service.dir}/build/test-results/integrationTest/*.xml",
             allowEmptyResults: false, keepLongStdio: true
