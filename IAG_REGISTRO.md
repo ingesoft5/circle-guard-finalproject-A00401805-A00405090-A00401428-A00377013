@@ -22,6 +22,7 @@
    - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
    - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
    - [2.3 E1.2 — Cierre documental con sustentación en lugar de video](#23-e12--cierre-documental-con-sustentación-en-lugar-de-video)
+   - [2.4 E1.6 — Separación de alcances de prueba y guard de integración](#24-e16--separación-de-alcances-de-prueba-y-guard-de-integración)
 3. [Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)](#3-módulo-circleguard-promotion-service-alejandro-quiñones-caicedo)
    - [3.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`](#31-hu-promo-01-dcg-304--diagnosticar-la-estructura-y-dependencias-de-promotion-service)
 
@@ -552,7 +553,46 @@ El video no aplica, usamos en cambio sustentacion, acomoda documentacion y la bi
 Sustituir el video por la sustentación deja la evidencia de P1.8 en un evento oral que no queda dentro del PDF. El riesgo se mitiga declarando la modalidad de forma explícita, conservando el nombre oficial del criterio y asegurando que el PDF contenga toda la evidencia verificable: URLs, capturas del flujo, capturas de Jira, cobertura y rollback. La lección es que un cambio de modalidad no debe resolverse con un simple cambio de estado: hay que dejar escrito qué se entrega, qué se demuestra en vivo y qué ya está probado.
 
 La segunda lección salió de la auditoría de releases: se afirmó que `1.2.6` y `1.2.7` eran “documentales” sin consultar el registry ni el historial de builds, y la afirmación era falsa. Un artefacto no se describe por el tipo de commit que lo originó, sino por lo que realmente se publicó y desplegó. La verificación en Nexus y en Jenkins tomó minutos y evitó que el informe llegara con una inexactitud que el revisor ya había señalado en el README.
+
 ---
+
+### 2.4 E1.6 — Separación de alcances de prueba y guard de integración (11 de noviembre de 2026)
+
+- **Fecha:** 11 de noviembre de 2026
+- **Autor:** Daniela Castaño
+- **Historia / Subtareas en Jira:** `HU-INFRA-03` (evidencia P1.6)
+- **Objetivo de la interacción:** separar la suite unitaria de la de integración en el pipeline y demostrar que las integraciones se ejecutan de verdad, sin caché ni resultados reutilizados.
+
+#### A. Contenido propio entregado a la IAG
+
+1. **Lectura de la rúbrica:** ≥60 % de cobertura de líneas en los cinco servicios núcleo, ≥3 integraciones relevantes y 3 flujos E2E, todo ejecutado y reportado por el pipeline.
+2. **Inventario propio de pruebas de integración:** 25 casos en 10 clases, etiquetados `@Tag("integration")`, con Testcontainers en form, gateway y promotion.
+3. **Decisión de alcance:** las integraciones se ejecutan en una etapa propia, sin caché, y las unitarias quedan en la etapa de pruebas; la etiqueta `integration` se excluye de `tasks.test` en los seis servicios.
+4. **Restricciones:** no bajar umbrales para tapar caídas de cobertura y no introducir dependencias nuevas.
+
+#### B. Prompt empleado
+
+```text
+Cobertura ≥ 60% en servicios núcleo, ≥ 3 integraciones relevantes y 3 flujos E2E con
+Playwright, todo ejecutado y reportado por el pipeline.
+```
+
+La revisión posterior del PR fue humana, no generada: el revisor señaló dos rutas por las que la suite podía contarse sin ejecutarse.
+
+#### C. Validación humana y hallazgos
+
+- La primera versión del cambio dejaba el guard `verifyContainerTestsRan` leyendo `test-results/test`; al excluir las integraciones de esa suite, el guard ya no veía las clases `@Testcontainers(disabledWithoutDocker = true)` y pasaba en verde. Se renombró a `verifyUnitTestsRan` y se añadió `verifyIntegrationTestsRan` sobre `test-results/integrationTest`, atado con `finalizedBy` a `integrationTest`.
+- `--no-build-cache` no evitaba `UP-TO-DATE`: el workspace de Jenkins persiste y Gradle reutilizaba el XML anterior. Se añadió `--rerun-tasks`.
+- Se midió la cobertura del bundle unitario desde el XML de JaCoCo tras `cleanTest`: auth 94,44 % (187/198), form 77,86 % (109/140), identity 93,55 % (87/93), promotion 65,80 % (560/851) y gateway 100 % (49/49).
+- Se probó el guard en negativo con un XML de fixture que reportaba `skipped="1"`: la tarea falló con `Tests were skipped: ... This module requires Docker`.
+- Se añadió la tarea `integrationCheck` para verificación local completa, dejando `check` unitario por diseño.
+
+#### D. Reflexión crítica
+
+Un guard que lee el artefacto equivocado es peor que no tener guard, porque produce confianza falsa: el reporte existía, el comando terminaba en verde y las pruebas no habían corrido. Lo mismo con la caché: desactivar el build cache no impide que Gradle reutilice una tarea `UP-TO-DATE` cuyo XML sigue en el workspace. Ambos defectos los detectó una revisión humana leyendo el código, no la ejecución del pipeline.
+
+La lección operativa es que todo invariante necesita una prueba negativa: provocar la condición prohibida y comprobar que falla. Medir la cobertura también dejó de ser un supuesto: 65,80 % en promotion es una cifra extraída del XML, no una estimación, y el umbral se documenta como piso de rúbrica mientras el guard asume el control anti-Docker.
+
 
 ## 4. Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)
 

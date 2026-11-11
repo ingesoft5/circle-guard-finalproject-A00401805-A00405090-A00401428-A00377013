@@ -76,7 +76,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
   <td>P1.6 Pruebas automatizadas</td>
   <td style="text-align:right">3,5 %</td>
   <td>Cumplido</td>
-  <td>Cobertura ≥60 % en los 5 núcleos, 3 integraciones y 16 E2E</td>
+  <td>Cobertura ≥60 % en los 5 núcleos, 25 casos de integración y 16 E2E</td>
 </tr>
 <tr>
   <td>P1.7 Change management y release notes</td>
@@ -217,7 +217,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <li>Build.</li>
 <li>Unit Tests + JaCoCo.</li>
 <li>SonarQube + Quality Gate bloqueante.</li>
-<li>Integration Tests.</li>
+<li>Integration Tests (Testcontainers, sin caché y con <code>--rerun-tasks</code>).</li>
 <li>Package.</li>
 <li>Git tag y release notes.</li>
 <li>GitHub Release.</li>
@@ -266,6 +266,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <hr />
 <h2>6. Pruebas y cobertura</h2>
 <h3>6.1 Cobertura por servicio</h3>
+<p>El bundle de cobertura es la <strong>suite unitaria</strong>. Las pruebas de integración se ejecutan en una etapa propia del pipeline y se reportan por separado, de modo que la cifra no mezcla dos alcances distintos.</p>
 <table>
 <thead>
 <tr>
@@ -277,13 +278,13 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 <tbody>
 <tr>
   <td>auth</td>
-  <td style="text-align:right"><strong>97,98 %</strong></td>
-  <td style="text-align:right">194 / 198</td>
+  <td style="text-align:right"><strong>94,44 %</strong></td>
+  <td style="text-align:right">187 / 198</td>
 </tr>
 <tr>
   <td>form</td>
-  <td style="text-align:right"><strong>86,43 %</strong></td>
-  <td style="text-align:right">121 / 140</td>
+  <td style="text-align:right"><strong>77,86 %</strong></td>
+  <td style="text-align:right">109 / 140</td>
 </tr>
 <tr>
   <td>gateway</td>
@@ -292,22 +293,97 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 </tr>
 <tr>
   <td>identity</td>
-  <td style="text-align:right"><strong>94,62 %</strong></td>
-  <td style="text-align:right">88 / 93</td>
+  <td style="text-align:right"><strong>93,55 %</strong></td>
+  <td style="text-align:right">87 / 93</td>
 </tr>
 <tr>
   <td>promotion</td>
-  <td style="text-align:right"><strong>74,03 %</strong></td>
-  <td style="text-align:right">630 / 851</td>
+  <td style="text-align:right"><strong>65,80 %</strong></td>
+  <td style="text-align:right">560 / 851</td>
 </tr>
 </tbody>
 </table>
-<p>Cobertura agregada de los cinco servicios núcleo: <strong>81,29 %</strong> de líneas (1082 / 1331). El reporte global de JaCoCo del pipeline (#8) fue <strong>88,37 %</strong> de líneas, <strong>96,62 %</strong> de clases y <strong>70,81 %</strong> de métodos sobre el conjunto completo de módulos; no es comparable con la suma de los cinco núcleos.</p>
+<p>Cobertura agregada de los cinco servicios núcleo: <strong>74,53 %</strong> de líneas (992 / 1331). Los cinco superan el 60 % exigido, y el gate de Sonar evalúa la misma métrica de líneas sobre el XML de JaCoCo de la suite unitaria.</p>
+<p>Las cifras anteriores (81,29 % agregado) incluían las pruebas de integración dentro de <code>test</code>. Al separar los alcances, la medición cambió de bundle, no de calidad: las integraciones siguen ejecutándose y ahora tienen su propia etapa y su propio guard.</p>
 <h3>6.2 Integraciones relevantes</h3>
+<p>La etapa <strong>Integration Tests</strong> ejecuta 25 casos en 10 clases etiquetadas con <code>@Tag(&quot;integration&quot;)</code>, sin caché y con <code>--rerun-tasks</code>. Solo promotion usa <code>@Testcontainers(disabledWithoutDocker = true)</code>; su guard falla si alguna prueba queda omitida.</p>
+<table>
+<thead>
+<tr>
+  <th>Servicio</th>
+  <th>Clase de prueba</th>
+  <th style="text-align:right">Casos</th>
+  <th>Dependencia real</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>form</td>
+  <td><code>AttachmentControllerTest</code></td>
+  <td style="text-align:right">2</td>
+  <td>PostgreSQL (Testcontainers)</td>
+</tr>
+<tr>
+  <td>form</td>
+  <td><code>FormPromotionKafkaIntegrationTest</code></td>
+  <td style="text-align:right">2</td>
+  <td>Kafka (Testcontainers)</td>
+</tr>
+<tr>
+  <td>gateway</td>
+  <td><code>GatewayRedisIntegrationTest</code></td>
+  <td style="text-align:right">3</td>
+  <td>Redis 7.2</td>
+</tr>
+<tr>
+  <td>identity</td>
+  <td><code>IdentityMappingRepositoryTest</code></td>
+  <td style="text-align:right">2</td>
+  <td>H2 en modo PostgreSQL</td>
+</tr>
+<tr>
+  <td>auth</td>
+  <td><code>AuthIntegrationTest</code></td>
+  <td style="text-align:right">2</td>
+  <td>H2 en memoria y LDAP simulado</td>
+</tr>
+<tr>
+  <td>notification</td>
+  <td><code>ExposureNotificationListenerTest</code></td>
+  <td style="text-align:right">1</td>
+  <td>Sin contenedor</td>
+</tr>
+<tr>
+  <td>notification</td>
+  <td><code>NotificationRetryTest</code></td>
+  <td style="text-align:right">1</td>
+  <td>Sin contenedor</td>
+</tr>
+<tr>
+  <td>promotion</td>
+  <td><code>KafkaPromotionIntegrationTest</code></td>
+  <td style="text-align:right">4</td>
+  <td>Kafka</td>
+</tr>
+<tr>
+  <td>promotion</td>
+  <td><code>AdministrativeCorrectionTest</code></td>
+  <td style="text-align:right">3</td>
+  <td>Neo4j, PostgreSQL y Redis</td>
+</tr>
+<tr>
+  <td>promotion</td>
+  <td><code>HealthStatusReevaluationTest</code></td>
+  <td style="text-align:right">5</td>
+  <td>Neo4j 5.12, PostgreSQL 16 y Redis 7.2.1</td>
+</tr>
+</tbody>
+</table>
+<p>Las tres integraciones relevantes de la rúbrica son:</p>
 <ol>
-<li><strong>form → Kafka → promotion</strong>: formulario de salud publicado en Kafka y consumido por promotion.</li>
-<li><strong>gateway → Redis</strong>: validación de acceso y almacenamiento de estado en Redis.</li>
-<li><strong>auth → PostgreSQL</strong>: persistencia y autenticación contra la base de datos.</li>
+<li><strong>form → Kafka → promotion</strong>: el formulario publica el evento de salud y promotion lo consume (<code>FormPromotionKafkaIntegrationTest</code> y <code>KafkaPromotionIntegrationTest</code>).</li>
+<li><strong>gateway → Redis</strong>: validación de acceso con estado en Redis (<code>GatewayRedisIntegrationTest</code>).</li>
+<li><strong>promotion → Neo4j / PostgreSQL / Redis</strong>: corrección administrativa y reevaluación de estados sobre middleware real (<code>AdministrativeCorrectionTest</code> y <code>HealthStatusReevaluationTest</code>).</li>
 </ol>
 <h3>6.3 E2E Playwright</h3>
 <p>La suite ejecutada en dev contiene 16 pruebas:</p>
@@ -481,7 +557,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 </tr>
 <tr>
   <td>P1.6</td>
-  <td>Tabla de cobertura, tres integraciones, 16 E2E, reportes JaCoCo</td>
+  <td>Tabla de cobertura unitaria, 25 casos de integración en 10 clases, 16 E2E, reportes JaCoCo</td>
 </tr>
 <tr>
   <td>P1.7</td>
@@ -503,7 +579,7 @@ blockquote { border-left: 3px solid #9fb8c8; margin: 6px 0; padding: 2px 10px; c
 </ol>
 <hr />
 <h2>13. Uso de IAG</h2>
-<p>La bitácora completa está en <code>IAG_REGISTRO.md</code> (607 líneas), organizada por módulos y responsables:</p>
+<p>La bitácora completa está en <code>IAG_REGISTRO.md</code> (647 líneas), organizada por módulos y responsables:</p>
 <ul>
 <li>auth/identity: Faiber Piedrahita.</li>
 <li>gateway/infraestructura: Daniela Castaño.</li>
