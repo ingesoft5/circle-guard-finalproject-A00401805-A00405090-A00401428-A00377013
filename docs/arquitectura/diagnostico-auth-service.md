@@ -23,8 +23,8 @@ El microservicio **`circleguard-auth-service`** es el componente encargado de la
 | **Puerto HTTP** | `8180` | `src/main/resources/application.yml` (`server.port: 8180`) |
 | **Librería de Tokens** | `io.jsonwebtoken:jjwt-api / jjwt-impl / jjwt-jackson:0.11.5` (algoritmo `HS256`) | `build.gradle.kts`, `JwtTokenService.java`, `QrTokenService.java` |
 | **Migraciones de Esquema** | Flyway (`org.flywaydb:flyway-core`) con 5 scripts (`V1` a `V5`) | `src/main/resources/db/migration/` |
-| **Base de Datos Relacional** | PostgreSQL 16 (producción/dev: `circleguard_auth`) / H2 en memoria (test) | `application.yml`, `docker-compose.dev.yml`, `init-db.sql` |
-| **Directorio Institucional** | OpenLDAP `1.5.0` (`dc=circleguard,dc=edu`, puerto `389`) | `SecurityConfig.java`, `application.yml`, `docker-compose.dev.yml` |
+| **Base de Datos Relacional** | PostgreSQL 16 (producción/dev: `circleguard_auth`) / H2 en memoria (test) | `application.yml`, `deploy/compose/dev/docker-compose.yml`, `init-db.sql` |
+| **Directorio Institucional** | OpenLDAP `1.5.0` (`dc=circleguard,dc=edu`, puerto `389`) | `SecurityConfig.java`, `application.yml`, `deploy/compose/dev/docker-compose.yml` |
 
 ### 1.2 Estructura de Paquetes y Componentes (`com.circleguard.auth`)
 

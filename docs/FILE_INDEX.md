@@ -89,7 +89,7 @@ English purpose of every tracked repository file.
 
 ## (root)
 
-- `docker-compose.dev.yml` — Local development Docker Compose stack for shared infrastructure.
+- `docker-compose.legacy.yml` — Legacy local Compose stack (Confluent 7.6 + Zookeeper); not used by the deployment pipeline.
 
 ## docs
 

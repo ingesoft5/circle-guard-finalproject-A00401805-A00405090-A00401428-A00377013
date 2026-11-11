@@ -1,4 +1,5 @@
-# CG-DOC: Local development Docker Compose stack for shared infrastructure.
+# CG-DOC: Legacy local Docker Compose stack (Confluent 7.6 + Zookeeper); not used by CircleGuard deployment.
+# CircleGuard deployment uses deploy/compose/{dev,stage,prod}/docker-compose.yml.
 version: '3.8'
 
 services:
