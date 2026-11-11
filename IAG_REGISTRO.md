@@ -523,13 +523,13 @@ La validación de idempotencia expuso defectos que una sola ejecución del boots
 - **Nivel de uso:** 3 (colaboración con IAG).
 - **Herramienta:** OpenCode / DeepSeek.
 - **Entregable:** E1.2 — Informe Final de la Parte 1 (`docs/informe/E1.2-Informe-Final.pdf`) y `IAG_REGISTRO.md`.
-- **Rama del PR:** `docs/HU-INFRA-02-sustentacion-p1.8` (PR-45).
+- **Rama del PR:** `docs/HU-INFRA-02-sustentacion-p18` (PR-45).
 
 ### A. Contenido propio entregado a la IAG
 
 1. **Decisión de equipo:** el video de demostración no aplica para la Parte 1; la demostración se realiza en la sustentación oral ante el docente.
 2. **Estado real verificado:** las cinco capturas de Jira ya estaban embebidas en la sección 11.2.1 del informe, aunque el texto todavía las declaraba pendientes.
-3. **Estado de releases:** `v1.2.5` corresponde a las imágenes desplegadas; `v1.2.6` y `v1.2.7` son releases documentales.
+3. **Estado de releases verificado:** cada merge a `main` publica un parche con sus nueve imágenes. Nexus contiene `1.2.5`, `1.2.6`, `1.2.7` y `1.2.8`; los builds #11 y #12 desplegaron `dev` y `stage`, y #12 llegó a `prod` tras la aprobación manual. El build #13 completó la cadena con `1.2.8`.
 4. **Restricciones:** no inventar fecha de sustentación, no introducir enlaces de video y no reescribir el archivo histórico `Proyecto_Final_CircleGuard.tex`.
 
 ### B. Prompt empleado
@@ -543,13 +543,15 @@ El video no aplica, usamos en cambio sustentacion, acomoda documentacion y la bi
 - Se cambió el estado de P1.8 de **Parcial** a **Cumplido**, conservando el nombre oficial del criterio para no alterar la rúbrica.
 - Se eliminaron las afirmaciones de video pendiente y de capturas de Jira pendientes en la matriz, la sección 11.3, la sección 12 y la conclusión.
 - La sección 12 pasó de "Qué falta para el cierre documental" a "Actividades de cierre", separando la entrega y la sustentación de la infraestructura.
-- Se aclaró que `v1.2.6` y `v1.2.7` son documentales y que las imágenes desplegadas en los tres ambientes siguen siendo `1.2.5`.
+- La primera versión de esta entrada afirmaba que `v1.2.6` y `v1.2.7` eran releases documentales. La verificación contra Nexus y la API de Jenkins lo desmintió: ambos publicaron sus nueve imágenes y desplegaron `dev` y `stage`. Se corrigió el informe con la historia real de los builds #11, #12 y #13, se actualizó la versión evaluada a `1.2.8` y se añadieron las notas de release de `1.2.6`, `1.2.7` y `1.2.8`.
 - `docs/agil/sprint-1/review.md` pasó de "Video de demostración" a "Sustentación oral".
 - Se regeneraron HTML y PDF y se verificaron páginas, tablas, imágenes y la ausencia de secretos e IP personal.
 
 ### D. Reflexión crítica
 
 Sustituir el video por la sustentación deja la evidencia de P1.8 en un evento oral que no queda dentro del PDF. El riesgo se mitiga declarando la modalidad de forma explícita, conservando el nombre oficial del criterio y asegurando que el PDF contenga toda la evidencia verificable: URLs, capturas del flujo, capturas de Jira, cobertura y rollback. La lección es que un cambio de modalidad no debe resolverse con un simple cambio de estado: hay que dejar escrito qué se entrega, qué se demuestra en vivo y qué ya está probado.
+
+La segunda lección salió de la auditoría de releases: se afirmó que `1.2.6` y `1.2.7` eran “documentales” sin consultar el registry ni el historial de builds, y la afirmación era falsa. Un artefacto no se describe por el tipo de commit que lo originó, sino por lo que realmente se publicó y desplegó. La verificación en Nexus y en Jenkins tomó minutos y evitó que el informe llegara con una inexactitud que el revisor ya había señalado en el README.
 ---
 
 ## 4. Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)
