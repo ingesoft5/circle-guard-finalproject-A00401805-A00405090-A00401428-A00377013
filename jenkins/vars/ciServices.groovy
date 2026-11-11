@@ -53,7 +53,7 @@ def catalog() {
                     display       : 'CircleGuard Identity',
                     sonarSettings : 'services/circleguard-identity-service/sonar-project.properties',
                     jacoco        : true,
-                    integration   : false,
+                    integration   : true,
                     publish       : true,
                     docker        : true,
                     deploy        : true,

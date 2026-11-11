@@ -67,7 +67,7 @@ def integrationTest(Map service) {
         echo "Integración: ${service.short} no declara pruebas de integración."
         return
     }
-    sh "./gradlew ${service.path}:integrationTest --no-daemon --console=plain"
+    sh "./gradlew ${service.path}:integrationTest --no-daemon --no-build-cache --console=plain"
     // GW-CI-02: una corrida sin resultados debe fallar el build, no pasar en silencio.
     junit testResults: "${service.dir}/build/test-results/integrationTest/*.xml",
             allowEmptyResults: false, keepLongStdio: true

@@ -76,7 +76,7 @@ tasks.test {
         // PromotionPerformanceTest asserts a 1 s wall-clock budget against a Neo4j
         // container. That is a benchmark, not a unit test: it varies with host load and
         // fails at ~2 s on slower machines. Run it with `performanceTest`.
-        excludeTags("performance")
+        excludeTags("performance", "integration")
     }
     inputs.property("dockerAvailable", dockerAvailable)
     finalizedBy(tasks.jacocoTestReport)

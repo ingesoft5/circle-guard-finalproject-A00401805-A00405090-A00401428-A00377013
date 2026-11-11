@@ -25,6 +25,12 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
+}
+
 // Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
 val integrationTest by tasks.registering(Test::class) {
     description = "Runs the ${project.name} integration tests."
