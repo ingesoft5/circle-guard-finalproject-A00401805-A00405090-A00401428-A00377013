@@ -64,13 +64,13 @@ CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Mod
 
 | Layer | Technology | Rationale |
 |:---|:---|:---|
-| **Backend** | Spring Boot 4 / Java 21 | Enterprise-grade maturity & low-latency Jakarta EE support. |
+| **Backend** | Spring Boot 3.2.4 / Kotlin 1.9.24 / Java 21 | Typed, reactive JVM services. |
 | **Graph DB** | Neo4j 5.26 | High-performance recursive traversals unreachable with SQL. |
 | **Relational DB**| PostgreSQL 16 | ACID compliant storage for identity and configuration. |
-| **Message Bus** | Apache Kafka 7.6 | Persistent, audit-trailed event log for status dispatches. |
+| **Message Bus** | Apache Kafka 3.7.0 (KRaft) | Persistent, audit-trailed event log for status dispatches. |
 | **Caching** | Redis 7.2 | L2 distributed cache for rapid entry-gate status validation. |
 | **Mobile/Web** | Expo (React Native) | Unified codebase across iOS, Android, and Browser. |
-| **Infra** | Kubernetes | Orchestration for high availability and auto-scaling. |
+| **Infra** | Docker Compose on AWS EC2 | Four isolated hosts: tools, dev, stage, prod. |
 
 ---
 
@@ -97,11 +97,26 @@ CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Mod
 ## Local Development
 
 ### 1. Infrastructure
-Ensure Docker is installed, then start the middleware stack:
+Ensure Docker is installed. Copy the environment template, set `TAG` and `NEXUS_REGISTRY`, and replace every `change-me` placeholder before starting:
+
+- `POSTGRES_PASSWORD`
+- `NEO4J_PASSWORD`
+- `OPENLDAP_ADMIN_PASSWORD`
+- `QR_SECRET`
+- `JWT_SECRET`
+- `VAULT_SECRET` (use a real value of at least 32 characters)
+- `VAULT_SALT`
+- `VAULT_HASH_SALT`
+
+Set `ENV_HOST_IP` if the stack must be reachable from outside the host.
+
 ```bash
-docker-compose -f docker-compose.dev.yml up -d
+cp deploy/compose/dev/.env.example deploy/compose/dev/.env
+docker compose --env-file deploy/compose/dev/.env -f deploy/compose/dev/docker-compose.yml up -d
 ```
-*Middleware includes: PostgreSQL, Neo4j, Kafka, Zookeeper, Redis, and OpenLDAP.*
+*Middleware includes: PostgreSQL, Neo4j, Kafka (KRaft), Redis, and OpenLDAP.*
+
+> `docker-compose.legacy.yml` is a legacy local stack kept for historical reference; the supported stack lives in `deploy/compose/`.
 
 ### 2. Build & Run
 CircleGuard uses Gradle for parallel builds across services:
