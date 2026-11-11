@@ -48,8 +48,8 @@ web, pruebas automatizadas y documentación de la Parte 1.
 
 ## Pendientes para el cierre
 
-- Merge del PR de la rama `feat/parte1-integracion`.
-- Capturas reales de Jira (Sprint 1, backlog, historias y retrospectiva).
-- Capturas reales de GitHub (ruleset, PR, aprobación y checks).
-- Video de demostración y PDF consolidado del informe.
-- Actualización de `docs/informe/E1.2-Informe-Final` con el estado actual del pipeline.
+- [x] Merge del PR de la rama `feat/parte1-integracion` (PR #38).
+- [x] Capturas reales de Jira (Sprint 1, backlog, historias y retrospectiva) incorporadas al informe.
+- [ ] Capturas reales de GitHub (ruleset, PR, aprobación y checks).
+- [ ] Sustentación oral y PDF consolidado del informe.
+- [x] `docs/informe/E1.2-Informe-Final.pdf` actualizado con el estado actual del pipeline (release `1.2.8`).
