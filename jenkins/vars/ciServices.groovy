@@ -146,7 +146,10 @@ def changed() {
     def base = "origin/${target}"
     def diff = ''
     try {
-        sh "git fetch --no-tags origin ${target}"
+        // El workspace de rama clona con un refspec restringido a esa rama, así que
+        // "git fetch origin main" solo escribe FETCH_HEAD y no crea origin/main.
+        // Se pide el destino explícito para que ${base} exista antes del diff.
+        sh "git fetch --no-tags origin +refs/heads/${target}:refs/remotes/origin/${target}"
         diff = sh(script: "git diff --name-only ${base}...HEAD", returnStdout: true).trim()
     } catch (Exception ex) {
         echo "No se pudo calcular el diff contra ${base}: ${ex.message}. Se construyen todos los servicios."
