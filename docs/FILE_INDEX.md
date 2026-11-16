@@ -101,6 +101,8 @@ English purpose of every tracked repository file.
 
 - `docs/agil/backlog.md` — Product backlog with acceptance criteria, estimates, and sprint status.
 
+- `docs/agil/plan-circle-guard-5.0.md` — Five-day plan to close Part 1 and deliver Part 2 on-premise.
+
 - `docs/agil/sprint-0/planning.md` — Sprint 0 goal, capacity, committed items, and risks.
 
 - `docs/agil/sprint-0/retrospective.md` — Sprint 0 retrospective and improvement actions.
@@ -262,6 +264,8 @@ English purpose of every tracked repository file.
 - `docs/infra/environments.md` — Four-host topology and isolated dev, stage, and prod environments.
 
 - `docs/infra/evidence/README.md` — Checklist of CI/CD evidence required for the gateway delivery.
+
+- `docs/infra/migracion-onprem.md` — On-premise migration annex: topology, registry, access, and evidence.
 
 - `docs/infra/evidence/idempotency/README.md` — Evidence that the CircleGuard bootstrap converges on repeated execution.
 

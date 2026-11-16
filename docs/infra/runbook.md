@@ -29,7 +29,7 @@ Private IPs remain stable. Environment public IPs change after a restart.
 ## Restart tools
 
 ```bash
-ssh -i infra/state/circleguard_e12_key.pem ubuntu@${TOOLS_IP}
+ssh -i infra/state/circleguard-e12-key.pem ubuntu@${TOOLS_IP}
 cd /opt/circleguard/deploy/compose/tools
 docker compose --env-file .env -p circleguard-tools restart jenkins
 ```
@@ -37,7 +37,7 @@ docker compose --env-file .env -p circleguard-tools restart jenkins
 ## Restart one environment
 
 ```bash
-ssh -i infra/state/circleguard_e12_key.pem ubuntu@${DEV_PUBLIC_IP}
+ssh -i infra/state/circleguard-e12-key.pem ubuntu@${DEV_PUBLIC_IP}
 cd /opt/circleguard/deploy/compose/dev
 docker compose restart gateway
 ```
@@ -49,14 +49,14 @@ so a change to those scripts only takes effect after they are copied over:
 
 ```bash
 source infra/state/aws.env
-tar -C . -czf - infra deploy | ssh -i infra/state/circleguard_e12_key.pem \
+tar -C . -czf - infra deploy | ssh -i infra/state/circleguard-e12-key.pem \
   ubuntu@${DEV_PUBLIC_IP} "tar -xzf - -C /opt/circleguard"
 ```
 
 ## Inspect the promotion stack
 
 ```bash
-ssh -i infra/state/circleguard_e12_key.pem ubuntu@${DEV_PUBLIC_IP}
+ssh -i infra/state/circleguard-e12-key.pem ubuntu@${DEV_PUBLIC_IP}
 cd /opt/circleguard/deploy/compose/dev
 docker compose ps
 docker compose logs --tail=100 promotion
