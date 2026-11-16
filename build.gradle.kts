@@ -47,4 +47,14 @@ subprojects {
     tasks.withType<Test> {
         useJUnitPlatform()
     }
+
+    // lombok.config enables @lombok.Generated so JaCoCo stops counting the generated
+    // equals/hashCode branches. Gradle does not treat it as a compiler input, so the
+    // build cache would replay classes compiled before the file existed; declaring it
+    // here invalidates the cache whenever the configuration changes.
+    tasks.withType<JavaCompile> {
+        inputs.file(rootProject.file("lombok.config"))
+            .withPropertyName("lombokConfig")
+            .optional()
+    }
 }
