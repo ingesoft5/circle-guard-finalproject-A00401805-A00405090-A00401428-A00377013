@@ -183,6 +183,21 @@ configure_sonar() {
   fi
 }
 
+prepull_integration_images() {
+  # Testcontainers arranca estas imágenes en la etapa Integration Tests. Pre-descargarlas
+  # aquí evita que el primer build de Jenkins agote el timeout mientras hace pull.
+  local image
+  for image in \
+    neo4j:5.12.0 \
+    postgres:16-alpine \
+    redis:7.2.1 \
+    apache/kafka:3.7.0 \
+    confluentinc/cp-kafka:7.6.0 \
+    redis:7.2-alpine; do
+    dk image inspect "${image}" >/dev/null 2>&1 || dk pull "${image}"
+  done
+}
+
 configure_nexus() {
   local base=http://localhost:8081 auth old_password role_json user_json
   wait_http "${base}/service/rest/v1/status" 600
@@ -268,6 +283,7 @@ main() {
   ensure_swap 4
   ensure_dir "${TOOLS_HOME}"
   ensure_dir "${TOOLS_HOME}/jenkins_ssh" 1000 1000
+  prepull_integration_images
   if [ -n "${CG_ENVS_KEY_PATH:-}" ] && [ -f "${CG_ENVS_KEY_PATH}" ]; then
     sudo install -m 600 -o 1000 -g 1000 "${CG_ENVS_KEY_PATH}" "${TOOLS_HOME}/jenkins_ssh/cg-envs-key"
   fi
