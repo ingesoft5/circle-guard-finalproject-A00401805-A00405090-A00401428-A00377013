@@ -12,7 +12,7 @@ set -a; source "${ENV_FILE}"; set +a
 : "${GITHUB_TOKEN:?Falta GITHUB_TOKEN}"
 : "${GITHUB_OWNER:?Falta GITHUB_OWNER}"
 : "${GITHUB_REPO:?Falta GITHUB_REPO}"
-: "${TOOLS_IP:?Falta TOOLS_IP}"
+: "${SMEE_URL:?Falta SMEE_URL (p. ej. https://smee.io/nk4nvlnyB0u6Fqnn)}"
 : "${GITHUB_WEBHOOK_SECRET:?Falta GITHUB_WEBHOOK_SECRET}"
 
 if [ "${GITHUB_TOKEN}" = "change-me" ]; then
@@ -20,7 +20,9 @@ if [ "${GITHUB_TOKEN}" = "change-me" ]; then
 fi
 
 API="https://api.github.com"
-HOOK_URL="http://${TOOLS_IP}/github-webhook/"
+# El webhook entra por el canal de smee.io: el host on-prem no es alcanzable
+# desde Internet y no hay dominio propio (ver docs/infra/migracion-onpremise.md, 3.6).
+HOOK_URL="${SMEE_URL}"
 REQUIRED_CHECK="continuous-integration/jenkins/pr-merge"
 REPO_PATH="repos/${GITHUB_OWNER}/${GITHUB_REPO}"
 

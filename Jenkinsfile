@@ -382,7 +382,7 @@ pipeline {
                 script {
                     services.each { service ->
                         if (service.integration) {
-                            timeout(time: 5, unit: 'MINUTES') {
+                            timeout(time: 12, unit: 'MINUTES') {
                                 echo "Pruebas de integración de ${service.name}..."
                                 ci.integrationTest(service)
                             }

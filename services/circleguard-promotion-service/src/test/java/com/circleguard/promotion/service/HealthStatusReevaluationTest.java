@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class HealthStatusReevaluationTest {
 
     @Container
-    static Neo4jContainer<?> neo4jContainer = new Neo4jContainer<>("neo4j:5.12")
+    static Neo4jContainer<?> neo4jContainer = new Neo4jContainer<>("neo4j:5.12.0")
             .withAdminPassword("password");
 
     @Container

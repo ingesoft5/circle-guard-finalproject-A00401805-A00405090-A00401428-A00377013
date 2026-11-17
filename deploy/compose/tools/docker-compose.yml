@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     user: root
     environment:
-      CASC_JENKINS_CONFIG: /var/jenkins_home/casc/jenkins.yaml
+      CASC_JENKINS_CONFIG: /var/jenkins_home/cac/jenkins.yml
       JAVA_OPTS: "-Xms512m -Xmx1536m"
       JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
       PROFESSOR_PASSWORD: ${PROFESSOR_PASSWORD}
@@ -25,6 +25,7 @@ services:
       JENKINS_URL: ${JENKINS_URL}
       TOOLS_IP: ${TOOLS_IP}
       TOOLS_PRIVATE_IP: ${TOOLS_PRIVATE_IP}
+      SMEE_URL: ${SMEE_URL}
       TESTCONTAINERS_HOST_OVERRIDE: ${TOOLS_PRIVATE_IP}
       TESTCONTAINERS_RYUK_DISABLED: "true"
       DEV_PRIVATE_IP: ${DEV_PRIVATE_IP}
@@ -34,7 +35,7 @@ services:
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
     volumes:
       - jenkins_home:/var/jenkins_home
-      - ./jenkins/casc:/var/jenkins_home/casc:ro
+      - ./jenkins/cac:/var/jenkins_home/cac:ro
       - ${TOOLS_HOME:-/opt/circleguard}/jenkins_ssh:/var/jenkins_home/.ssh:ro
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
@@ -46,6 +47,19 @@ services:
       timeout: 10s
       retries: 10
     mem_limit: 2g
+    networks: [tools-net]
+
+  smee-client:
+    build: ./smee-client
+    container_name: cg-smee-client
+    restart: unless-stopped
+    environment:
+      SMEE_URL: ${SMEE_URL}
+      SMEE_TARGET: ${SMEE_TARGET:-http://jenkins:8080/github-webhook/}
+    command: ["-u", "${SMEE_URL}", "-t", "${SMEE_TARGET:-http://jenkins:8080/github-webhook/}"]
+    depends_on:
+      - jenkins
+    mem_limit: 256m
     networks: [tools-net]
 
   sonar-db:

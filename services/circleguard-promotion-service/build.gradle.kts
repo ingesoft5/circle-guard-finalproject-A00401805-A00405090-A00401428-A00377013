@@ -1,6 +1,7 @@
 // CG-DOC: Build configuration for the promotion service.
 import org.gradle.api.provider.ValueSource
 import org.gradle.api.provider.ValueSourceParameters
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 plugins {
@@ -197,6 +198,11 @@ val integrationTest by tasks.registering(Test::class) {
         includeTags("integration")
     }
     shouldRunAfter(tasks.test)
+    // La suite tarda ~4.5 min con las imágenes ya cacheadas (7 contenedores entre 3 clases).
+    // 8 min deja margen para un arranque en frío; un cuelgue real falla aquí con mensaje claro
+    // y deja XML, en vez de morir mudo bajo el timeout de Jenkins.
+    timeout.set(Duration.ofMinutes(8))
+    outputs.upToDateWhen { false }
 }
 
 // The integration suite is where the Testcontainers classes live now. Its guard rides with

@@ -1,22 +1,33 @@
-<!-- CG-DOC: Four-host topology and isolated dev, stage, and prod environments. -->
-# Dev, Stage, and Prod Environments
+# Entornos dev, stage y prod
 
-## Topology
+> **Parte 1 (histórica).** Este documento describe la topología de cuatro hosts con Compose que
+> se usó en el primer entregable. Como la cuenta de AWS quedó inaccesible, la Parte 2 corre
+> sobre un solo host on-premise con un clúster k3d y tres namespaces. La topología vigente está
+> en `docs/infra/migracion-onpremise.md` y `deploy/k8s/README.md`.
+>
+> | Parte 1 | Parte 2 |
+> |---|---|
+> | Instancia EC2 `cg-tools` | Proyecto Compose `circle-guard-dasf` en el mismo host |
+> | Tres hosts EC2 | Tres namespaces (`cg-dev`, `cg-stage`, `cg-prod`) en k3d `cg` |
+> | `deploy/scripts/*.sh` por SSH | `kubectl apply -k deploy/k8s/overlays/<entorno>` |
+> | IP pública + ingress | Traefik `:30080` ruteado por el header `Host` |
+
+## Topología
 
 ```text
 cg-tools (m7i-flex.large, Elastic IP)
 ├── Jenkins        :8080
 ├── SonarQube      :9000
 ├── Nexus          :8081
-├── Registry       :5000 (private)
+├── Registro       :5000 (privado)
 └── Ingress        :80
 
-cg-dev   (m7i-flex.large, private 10.x.x.x)
-cg-stage (m7i-flex.large, private 10.x.x.x)
-cg-prod  (m7i-flex.large, private 10.x.x.x)
+cg-dev   (m7i-flex.large, privada 10.x.x.x)
+cg-stage (m7i-flex.large, privada 10.x.x.x)
+cg-prod  (m7i-flex.large, privada 10.x.x.x)
 ├── postgres   :5432
 ├── neo4j      :7687
-├── kafka      :9092 / external :29092
+├── kafka      :9092 / externo :29092
 ├── redis      :6379
 ├── openldap   :389
 ├── auth       :8180
@@ -24,83 +35,83 @@ cg-prod  (m7i-flex.large, private 10.x.x.x)
 ├── promotion  :8088
 ├── form       :8086
 ├── gateway    :8087
-└── web        :8080 (published as 8081 on the host)
+└── web        :8080 (publicado como 8081 en el host)
 ```
 
-Every environment runs the same stack with the same image tag. The five core services
-and the web client are pulled from the registry; middleware images are pinned to fixed
-versions in the compose file. Isolation is by host and Docker network, not by
-configuration differences.
+Cada entorno ejecuta el mismo stack con el mismo tag de imagen. Los cinco servicios centrales
+y el cliente web se descargan del registro; las imágenes del middleware están fijadas a
+versiones concretas en el archivo compose. El aislamiento es por host y por red de Docker, no
+por diferencias de configuración.
 
-## Network rules
+## Reglas de red
 
-- Jenkins deploys through the private IP of each environment.
-- Only `cg-tools` has an Elastic IP.
-- Environment public IPs are ephemeral and used for screenshots.
-- Port 8080 is public for GitHub webhooks and Jenkins UI.
-- Ports 9000 and 8081 are restricted to the teacher and administrator.
-- Port 80 is public for the application ingress.
-- Ports 5000, 5432, 7687, 9092 and 6379 stay private inside the Docker network.
-- Ports 8087 (gateway), 8083 (identity), 8086 (form), 8088 (promotion), 8180 (auth) and
-  8081 (web) accept traffic from `cg-tools`, where the deploy health probe and the
-  end-to-end stage run.
-- Port 29092 is Kafka's external listener: it advertises `ENV_HOST_IP`, so the
-  end-to-end suite can publish a questionnaire event from Jenkins.
+- Jenkins despliega usando la IP privada de cada entorno.
+- Solo `cg-tools` tiene Elastic IP.
+- Las IP públicas de los entornos son efímeras y se usan para capturas.
+- El puerto 8080 es público para el webhook de GitHub y la interfaz de Jenkins.
+- Los puertos 9000 y 8081 están restringidos al profesor y al administrador.
+- El puerto 80 es público para el ingress de la aplicación.
+- Los puertos 5000, 5432, 7687, 9092 y 6379 quedan privados dentro de la red de Docker.
+- Los puertos 8087 (gateway), 8083 (identity), 8086 (form), 8088 (promotion), 8180 (auth) y
+  8081 (web) aceptan tráfico desde `cg-tools`, donde corre la sonda de salud del despliegue y
+  la suite de extremo a extremo de stage.
+- El puerto 29092 es el listener externo de Kafka: anuncia `ENV_HOST_IP`, de modo que la suite
+  de extremo a extremo puede publicar un evento de cuestionario desde Jenkins.
 
-## Required variables
+## Variables obligatorias
 
-Each environment reads `deploy/compose/<env>/.env` (mode 600, never committed).
-`deploy/compose/<env>/.env.example` lists the keys:
+Cada entorno lee `deploy/compose/<entorno>/.env` (modo 600, nunca versionado).
+`deploy/compose/<entorno>/.env.example` lista las claves:
 
-| Key | Purpose |
+| Clave | Propósito |
 |---|---|
-| `TAG` | Image tag the pipeline deploys |
-| `NEXUS_REGISTRY` | Registry that serves the service and web images |
-| `ENV_HOST_IP` | Address Kafka advertises on its external listener |
-| `POSTGRES_PASSWORD` | Password for the PostgreSQL databases |
-| `NEO4J_PASSWORD` | Password for the promotion graph |
-| `OPENLDAP_ADMIN_PASSWORD` | LDAP admin password used by auth |
-| `VAULT_SECRET`, `VAULT_SALT`, `VAULT_HASH_SALT` | Identity vault encryption and hashing |
-| `QR_SECRET`, `JWT_SECRET` | Signing secrets shared with the gateway |
+| `TAG` | Tag de imagen que despliega el pipeline |
+| `NEXUS_REGISTRY` | Registro que sirve las imágenes de servicios y del cliente |
+| `ENV_HOST_IP` | Dirección que Kafka anuncia en su listener externo |
+| `POSTGRES_PASSWORD` | Contraseña de las bases de datos PostgreSQL |
+| `NEO4J_PASSWORD` | Contraseña del grafo de promoción |
+| `OPENLDAP_ADMIN_PASSWORD` | Contraseña del administrador LDAP que usa auth |
+| `VAULT_SECRET`, `VAULT_SALT`, `VAULT_HASH_SALT` | Cifrado y *hashing* de la bóveda de identidad |
+| `QR_SECRET`, `JWT_SECRET` | Secretos de firma compartidos con el gateway |
 
-`JWT_SECRET` must be at least 32 bytes: the service refuses to start with a
-shorter key (`WeakKeyException` from the JWT library). `bootstrap-envs.sh`
-generates 48 hex characters, which is enough.
+`JWT_SECRET` debe tener al menos 32 bytes: el servicio se niega a arrancar con una clave más
+corta (`WeakKeyException` de la librería JWT). `bootstrap-envs.sh` genera 48 caracteres
+hexadecimales, suficiente. La misma regla aplica a `QR_SECRET` y `VAULT_SALT` en los manifiestos
+de Kubernetes; ver `deploy/k8s/README.md`.
 
-## Commands
+## Comandos
 
 ```bash
-# Prepare one environment on its host
-REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
+# Preparar un entorno en su host
+REGISTRY_HOST=<IP_PRIVADA_TOOLS>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 
-# Deploy the whole stack
+# Desplegar todo el stack
 COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/deploy.sh dev <TAG>
 
-# Rollback
+# Revertir
 COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod <TAG>
 
-# Seed the visitors an end-to-end run is going to promote
+# Sembrar los visitantes que va a promover una ejecución de extremo a extremo
 COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/seed-visitor.sh dev <anonymousId>...
 
-# IPs for screenshots
+# IP para capturas
 ./infra/bootstrap/bootstrap-ips.sh
 ```
 
-`deploy.sh` pulls the five core images plus the web client, starts the stack and waits
-for the healthchecks of gateway, auth, identity, promotion, form and web. A stack that
-starts but never becomes healthy fails the deployment instead of leaving a half-up
-environment.
+`deploy.sh` descarga las cinco imágenes centrales más el cliente web, levanta el stack y espera
+las comprobaciones de salud de gateway, auth, identity, promotion, form y web. Un stack que
+arranca pero nunca se vuelve saludable falla el despliegue en vez de dejar un entorno a medias.
 
-## Isolation
+## Aislamiento
 
-Each environment has its own EC2 instance, Docker network, volumes for Redis,
-PostgreSQL, Neo4j, Kafka and OpenLDAP, `.env`, private IP, and application containers.
-`SG-envs` is shared, while application isolation is enforced by host and Docker
-network boundaries.
+Cada entorno tiene su propia instancia EC2, red de Docker, volúmenes para Redis, PostgreSQL,
+Neo4j, Kafka y OpenLDAP, `.env`, IP privada y contenedores de aplicación. `SG-envs` es
+compartido, mientras que el aislamiento de la aplicación se garantiza por host y por red de
+Docker.
 
-## Bootstrap order
+## Orden de arranque
 
-1. `bootstrap-aws.sh` provisions the four hosts and security groups.
-2. `bootstrap-tools.sh` starts Jenkins, SonarQube, Nexus, registry and ingress.
-3. `bootstrap-envs.sh <env>` creates the `.env`, pulls the stack and waits for health.
-4. The pipeline deploys the application tag and runs the E2E suite.
+1. `bootstrap-aws.sh` aprovisiona los cuatro hosts y los grupos de seguridad.
+2. `bootstrap-tools.sh` levanta Jenkins, SonarQube, Nexus, el registro y el ingress.
+3. `bootstrap-envs.sh <entorno>` crea el `.env`, descarga el stack y espera la salud.
+4. El pipeline despliega el tag de la aplicación y ejecuta la suite de extremo a extremo.
