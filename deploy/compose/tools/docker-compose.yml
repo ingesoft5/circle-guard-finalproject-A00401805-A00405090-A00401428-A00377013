@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     user: root
     environment:
-      CASC_JENKINS_CONFIG: /var/jenkins_home/casc/jenkins.yaml
+      CASC_JENKINS_CONFIG: /var/jenkins_home/cac/jenkins.yml
       JAVA_OPTS: "-Xms512m -Xmx1536m"
       JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
       PROFESSOR_PASSWORD: ${PROFESSOR_PASSWORD}
@@ -34,7 +34,7 @@ services:
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
     volumes:
       - jenkins_home:/var/jenkins_home
-      - ./jenkins/casc:/var/jenkins_home/casc:ro
+      - ./jenkins/cac:/var/jenkins_home/cac:ro
       - ${TOOLS_HOME:-/opt/circleguard}/jenkins_ssh:/var/jenkins_home/.ssh:ro
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
