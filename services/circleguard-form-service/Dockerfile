@@ -7,7 +7,7 @@ WORKDIR /home/gradle/project
 RUN chown gradle:gradle /home/gradle/project
 # Copia la configuración del proyecto y los módulos incluidos en settings.
 # Dockerfile.dockerignore limita las fuentes copiadas al código principal de Form.
-COPY --chown=gradle:gradle build.gradle.kts settings.gradle.kts ./
+COPY --chown=gradle:gradle build.gradle.kts settings.gradle.kts lombok.config ./
 COPY --chown=gradle:gradle services/ services/
 # Genera el JAR ejecutable de Form; las pruebas se ejecutan en un paso separado.
 USER gradle

@@ -1,7 +1,7 @@
 # CG-DOC: Immutable multi-stage container image for the identity service.
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
-COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts gradle.properties ./
+COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts gradle.properties lombok.config ./
 COPY gradle ./gradle
 COPY services ./services
 RUN chmod +x gradlew \

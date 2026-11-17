@@ -3,7 +3,7 @@
 FROM gradle:8.14-jdk21 AS build
 WORKDIR /workspace
 
-COPY --chown=gradle:gradle settings.gradle.kts build.gradle.kts gradlew ./
+COPY --chown=gradle:gradle settings.gradle.kts build.gradle.kts gradlew lombok.config ./
 COPY --chown=gradle:gradle gradle ./gradle
 COPY --chown=gradle:gradle services/circleguard-promotion-service ./services/circleguard-promotion-service
 

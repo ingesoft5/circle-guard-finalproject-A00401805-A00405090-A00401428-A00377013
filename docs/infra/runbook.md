@@ -1,7 +1,156 @@
-<!-- CG-DOC: Operations runbook for four hosts, private deployment, and cost controls. -->
-# Operations Runbook
+# Manual de operaciones (runbook)
 
-## Verify
+## Parte 2 — Kubernetes on-premise (vigente)
+
+### Datos del host
+
+| Elemento | Valor |
+|---|---|
+| Host | `docker@205m07`, Ubuntu 24.04.5, 8 vCPU, 31 GiB de RAM |
+| Dirección privada | `10.147.20.67` (ZeroTier) |
+| Usuario de operación | `docker`, sin `sudo` |
+| Clúster | k3d `cg` (k3d v5.9.0, k3s v1.35.5) |
+| Ingress | Traefik publicado en el puerto `30080` del host |
+| Herramientas | Jenkins `:8080`, SonarQube `:9000`, Nexus `:8081`, registro `:5000` |
+
+### Verificar las herramientas
+
+```bash
+curl -f http://localhost:8080/login
+curl -f http://localhost:9000/api/system/status
+curl -f http://localhost:8081/service/rest/v1/status
+curl -f http://localhost:5000/v2/_catalog
+```
+
+### Verificar el clúster y los entornos
+
+```bash
+k3d cluster list
+kubectl get ns
+kubectl -n cg-dev get pods
+kubectl -n cg-stage get pods
+```
+
+Cada entorno ejecuta 14 pods: los ocho servicios y el cliente web, más PostgreSQL, Redis,
+Neo4j, Kafka y OpenLDAP.
+
+### Levantar un entorno
+
+```bash
+kubectl create namespace cg-stage                # los manifiestos no crean el namespace
+cp deploy/k8s/overlays/dev/secrets.env deploy/k8s/overlays/stage/secrets.env
+chmod 600 deploy/k8s/overlays/stage/secrets.env
+kubectl apply -k deploy/k8s/overlays/stage
+```
+
+Reutilizar los valores validados de `dev` evita los fallos de formato de los secretos que se
+listan más abajo. Para el informe esto queda declarado como deuda: los entornos de producción
+deben usar secretos distintos.
+
+### Arranque en frío: `CrashLoopBackOff` esperado
+
+Un `apply` nuevo levanta los 14 pods al mismo tiempo. PostgreSQL necesita tiempo para crear
+sus cinco bases y las aplicaciones usan Flyway con `failFast`, así que se caen hasta que
+Postgres esté `Ready`. Es el orden de arranque, no un defecto del manifiesto:
+
+```bash
+kubectl -n cg-stage wait --for=condition=Ready pod/postgres-0 --timeout=300s
+kubectl -n cg-stage rollout restart deployment/auth deployment/identity \
+  deployment/dashboard deployment/form deployment/promotion
+kubectl -n cg-stage get pods
+```
+
+### Verificar un entorno
+
+```bash
+curl -o /dev/null -s -w "web=%{http_code}\n" \
+  -H "Host: stage.circleguard.local" http://localhost:30080/
+
+curl -s -X POST -H "Host: stage.circleguard.local" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"super_admin","password":"password"}' \
+  http://localhost:30080/api/v1/auth/login
+```
+
+El campo de login es `username`, no `email`. Los usuarios semilla de desarrollo
+(`super_admin`, `staff_guard`, `health_user`, contraseña `password`) vienen de
+`V2__seed_test_users.sql` y no deben llegar a producción.
+
+### Reiniciar una aplicación
+
+```bash
+kubectl -n cg-dev rollout restart deployment/gateway
+kubectl -n cg-dev rollout status deployment/gateway
+```
+
+### Revertir un despliegue
+
+```bash
+kubectl -n cg-prod rollout undo deployment/auth
+kubectl -n cg-prod rollout status deployment/auth
+```
+
+Las imágenes son inmutables y los PVC no se tocan, así que revertir solo cambia la imagen de
+la aplicación.
+
+### Capturar evidencia
+
+```bash
+mkdir -p docs/informe/evidencia
+kubectl -n cg-dev get pods > docs/informe/evidencia/k8s-dev-pods.txt
+kubectl -n cg-stage get pods > docs/informe/evidencia/k8s-stage-pods.txt
+kubectl -n cg-prod get pods > docs/informe/evidencia/k8s-prod-pods.txt
+curl -o /dev/null -s -w "web=%{http_code}\n" \
+  -H "Host: dev.circleguard.local" http://localhost:30080/ \
+  > docs/informe/evidencia/k8s-dev-ingress.txt
+```
+
+Recorta los JWT (`eyJ...`) de cualquier captura o log antes de versionarlo.
+
+### Bajar un entorno
+
+```bash
+kubectl delete namespace cg-stage
+```
+
+Elimina las cargas de trabajo y los volúmenes declarados en los manifiestos. No borres
+`cg-dev` mientras la demostración siga pendiente.
+
+### Ver qué se está comiendo la memoria
+
+Con los tres entornos arriba el host queda al límite, porque además corren Jenkins, SonarQube
+y Nexus. Cuando un pod muere por `OOMKilled`:
+
+```bash
+free -h
+kubectl -n cg-dev get pods -o custom-columns=NAME:.metadata.name,RESTARTS:.status.containerStatuses[0].restartCount
+kubectl -n cg-stage scale deployment,statefulset --all --replicas=0    # libera el entorno que no se está demostrando
+```
+
+Volver a levantarlo:
+
+```bash
+kubectl -n cg-stage scale deployment,statefulset --all --replicas=1
+kubectl -n cg-stage wait --for=condition=Ready pod/postgres-0 --timeout=300s
+kubectl -n cg-stage rollout restart deployment/auth deployment/identity \
+  deployment/dashboard deployment/form deployment/promotion
+```
+
+### Límites operativos conocidos
+
+- No tocar los contenedores ajenos `k8s-worker` e `icesi-inn`.
+- Nunca ejecutar `docker prune`.
+- Nunca ejecutar `docker compose down -v`: los volúmenes guardan el estado de Jenkins y SonarQube.
+- Mantener `secrets.env` fuera de git; `.gitignore` cubre `deploy/k8s/overlays/*/secrets.env`.
+- El clúster depende de Docker: si se reinicia el servicio, usar `k3d cluster start cg`.
+
+## Parte 1 — Hosts de AWS (evidencia histórica)
+
+Estos comandos documentan la infraestructura original del pipeline. La cuenta de AWS ya no es
+accesible, así que se conservan para la trazabilidad del entregable de la Parte 1, no para
+operar.
+
+### Verificar
 
 ```bash
 source infra/state/aws.env
@@ -11,22 +160,22 @@ curl -f "http://${TOOLS_IP}:8081/service/rest/v1/status"
 curl -f "http://${TOOLS_IP}/actuator/health"
 ```
 
-## IPs
+### Direcciones IP
 
 ```bash
 ./infra/bootstrap/bootstrap-ips.sh
 ```
 
-## Stop and start
+### Detener y arrancar
 
 ```bash
 ./infra/bootstrap/bootstrap-stop.sh
 ./infra/bootstrap/bootstrap-start.sh
 ```
 
-Private IPs remain stable. Environment public IPs change after a restart.
+Las IP privadas se mantienen; las públicas de los entornos cambian tras un reinicio.
 
-## Restart tools
+### Reiniciar las herramientas
 
 ```bash
 ssh -i infra/state/circleguard-e12-key.pem ubuntu@${TOOLS_IP}
@@ -34,7 +183,7 @@ cd /opt/circleguard/deploy/compose/tools
 docker compose --env-file .env -p circleguard-tools restart jenkins
 ```
 
-## Restart one environment
+### Reiniciar un entorno
 
 ```bash
 ssh -i infra/state/circleguard-e12-key.pem ubuntu@${DEV_PUBLIC_IP}
@@ -42,10 +191,10 @@ cd /opt/circleguard/deploy/compose/dev
 docker compose restart gateway
 ```
 
-## Refresh the deploy scripts on a host
+### Actualizar los scripts de despliegue en un host
 
-The pipeline runs `deploy/scripts/*.sh` from `/opt/circleguard` on the target host,
-so a change to those scripts only takes effect after they are copied over:
+El pipeline ejecuta `deploy/scripts/*.sh` desde `/opt/circleguard` en el host destino, así que
+un cambio en esos scripts solo aplica después de copiarlos:
 
 ```bash
 source infra/state/aws.env
@@ -53,7 +202,7 @@ tar -C . -czf - infra deploy | ssh -i infra/state/circleguard-e12-key.pem \
   ubuntu@${DEV_PUBLIC_IP} "tar -xzf - -C /opt/circleguard"
 ```
 
-## Inspect the promotion stack
+### Inspeccionar el stack de promoción
 
 ```bash
 ssh -i infra/state/circleguard-e12-key.pem ubuntu@${DEV_PUBLIC_IP}
@@ -64,45 +213,54 @@ curl -fsS http://localhost:8088/actuator/health
 curl -fsS http://localhost:8088/api/v1/health-status/stats
 ```
 
-## Seed a visitor
+### Sembrar un visitante
 
-`promotion-service` updates visitors by `anonymousId` and never creates them, so a
-new `anonymousId` needs the graph node first. The end-to-end suite does this before
-each run:
+`promotion-service` actualiza visitantes por `anonymousId` y nunca los crea, así que un
+`anonymousId` nuevo necesita primero el nodo en el grafo. La suite de extremo a extremo lo
+hace antes de cada ejecución:
 
 ```bash
 COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/seed-visitor.sh dev e2e-123-symptoms
 ```
 
-## Rollback
+### Revertir (Compose)
 
 ```bash
-COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod <previous-tag>
+COMPOSE_ROOT=/opt/circleguard/deploy/compose ./deploy/scripts/rollback.sh prod <tag-anterior>
 ```
 
-The rollback redeploys the previous tag over the whole stack. Middleware volumes are
-untouched, so the promotion database and graph survive the rollback; only the two
-application images change.
+La reversión redespliega el tag anterior sobre todo el stack. Los volúmenes del middleware no
+se tocan, así que la base y el grafo de promoción sobreviven; solo cambian las dos imágenes de
+aplicación.
 
-## Destroy
+### Destruir
 
 ```bash
 CONFIRM=yes ./infra/bootstrap/bootstrap-destroy.sh
 ```
 
-## Common issues
+## Problemas frecuentes
 
-| Symptom | Cause | Action |
+| Síntoma | Causa | Acción |
 |---|---|---|
-| Jenkins does not open | Container starting or low memory | Check logs and swap. |
-| SonarQube stays starting | PostgreSQL or memory | Check logs; increase swap. |
-| Nexus does not open | Port 8081 or memory | Check logs. |
-| Registry pull fails | Trusted HTTP registry | Verify `insecure-registries` on the environment host. |
-| Gateway 401 | Missing staff JWT | Send `Authorization: Bearer <jwt>`. |
-| Gateway 503 | Redis unavailable | Check `docker compose logs redis`. |
-| Promotion never starts, `WeakKeyException` | `JWT_SECRET` shorter than 32 bytes | Regenerate it with `openssl rand -hex 24` in `.env` and redeploy. |
-| Neo4j restarts, `Unrecognized setting ... PASSWORD` | An extra `NEO4J_*` variable reached the container | Keep the password inside `NEO4J_AUTH`; Neo4j rejects unknown settings. |
-| Questionnaire never changes a status | The Kafka consumer rejects every record | Keep `spring.json.value.default.type` in `application.yml`. |
-| Status never changes for a new visitor | The `anonymousId` has no node in Neo4j | Run `deploy/scripts/seed-visitor.sh` first. |
-| `deploy.sh` fails at `--wait` | A container never reports healthy | `docker compose ps` and `docker compose logs <service>`. |
-| Pipeline library fails | Wrong `LIBRARY_BRANCH` | Review `deploy/compose/tools/.env`. |
+| `WeakKeyException ... 128 bits` (`auth`) | `QR_SECRET` de menos de 32 bytes | `openssl rand -hex 24` en `secrets.env` y re-aplicar |
+| `Detected a Non-hex character at 1 or 2 position` (`identity`) | `VAULT_SALT` no es hexadecimal | `openssl rand -hex 16` (hex de longitud par) |
+| `Unrecognized setting ... PORT.7687.TCP.PORT` (`neo4j-0`) | Las *service links* de Kubernetes inyectan variables `NEO4J_*` y la imagen las lee como configuración | `enableServiceLinks: false` en el StatefulSet |
+| `unable to register with the controller quorum` (`kafka-0`) | El quórum apunta al `Service`, cuyos endpoints solo existen cuando el pod está `Ready` | `KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093` |
+| `Unable to connect to localhost:7687` (`promotion`) | No está definido `SPRING_NEO4J_URI` y Spring usa `localhost` por defecto | Clave `SPRING_NEO4J_URI` en el ConfigMap `cg-config` |
+| `Connection refused` a PostgreSQL | Arranque en frío: Flyway `failFast` antes de que Postgres esté `Ready` | Esperar `postgres-0` y reiniciar las aplicaciones |
+| `OOMKilled` (salida 137) en varios pods | Los tres entornos completos no caben en la RAM del host | Bajar el entorno que no se está demostrando |
+| `404 page not found` de Traefik | El header `Host` no coincide con la regla del Ingress | Usar `curl -H "Host: dev.circleguard.local"` |
+| `Kafka` tarda y los consumidores reconectan | Readiness `tcpSocket` mientras arranca el broker | Esperar 1-2 minutos; es transitorio |
+| `WeakKeyException` en un host Compose (Parte 1) | `JWT_SECRET` de menos de 32 bytes | Regenerarlo con `openssl rand -hex 24` en `.env` y redesplegar |
+| Neo4j reinicia en un host Compose (Parte 1) | Una variable `NEO4J_*` extra llegó al contenedor | Mantener la contraseña dentro de `NEO4J_AUTH` |
+| El cuestionario nunca cambia de estado (Parte 1) | El consumidor de Kafka rechaza todos los registros | Mantener `spring.json.value.default.type` en `application.yml` |
+| Un visitante nuevo nunca cambia de estado (Parte 1) | El `anonymousId` no tiene nodo en Neo4j | Ejecutar `deploy/scripts/seed-visitor.sh` primero |
+| `deploy.sh` falla en `--wait` (Parte 1) | Un contenedor nunca reporta salud | `docker compose ps` y `docker compose logs <servicio>` |
+| La librería del pipeline falla | `LIBRARY_BRANCH` incorrecto | Revisar `deploy/compose/tools/.env` |
+| Jenkins no abre | Contenedor arrancando o poca memoria | Revisar logs y swap |
+| SonarQube se queda en «starting» | PostgreSQL o memoria | Revisar logs; ampliar swap |
+| Nexus no abre | Puerto 8081 o memoria | Revisar logs |
+| El *pull* del registro falla | Registro HTTP no confiable | Verificar `insecure-registries` en el host del entorno |
+| Gateway 401 (Parte 1) | Falta el JWT de personal | Enviar `Authorization: Bearer <jwt>` |
+| Gateway 503 (Parte 1) | Redis no disponible | Revisar `docker compose logs redis` |
