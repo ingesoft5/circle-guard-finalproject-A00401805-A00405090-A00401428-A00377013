@@ -165,7 +165,9 @@ Receta para este host (proyecto `cg-tools`):
    `infra/onpremise/bootstrap-onpremise.sh` ya incluyen el relay).
 2. Ejecutar `infra/onpremise/bootstrap-onpremise.sh`: crea `.env.onpremise` desde la
    plantilla, genera los secretos, detecta la IP de ZeroTier, pide usuario y token de
-   GitHub, y levanta `cg-jenkins` y `cg-smee-client` con `docker compose -p cg-tools`.
+   GitHub, y **no** genera el secreto del webhook: lo toma de `GITHUB_WEBHOOK_SECRET`
+   (del entorno o del archivo) o lo pide, porque debe coincidir exactamente con el del
+   hook de GitHub (id `709307452`); si no, Jenkins responde `403`.
    `SMEE_TARGET` es `localhost` porque el relay va con `network_mode: host`, igual que
    Jenkins; si el relay corre en la red bridge del Compose, usar
    `http://10.147.20.67:8080/github-webhook/`.

@@ -77,6 +77,31 @@ establecer_valor "SMEE_TARGET" "${SMEE_TARGET:-http://localhost:8080/github-webh
 USUARIO_PERSONAL="$(grep -m1 '^GITHUB_USER=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)"
 TOKEN_PERSONAL="$(grep -m1 '^GITHUB_TOKEN=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)"
 
+# El secreto del webhook NUNCA se genera aleatoriamente: el hook ya existe en
+# GitHub (id 709307452) y valida la firma con este valor exacto. Si no coincide,
+# Jenkins responde 403 y el build del PR nunca arranca.
+SECRETO_HOOK="${GITHUB_WEBHOOK_SECRET:-$(grep -m1 '^GITHUB_WEBHOOK_SECRET=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)}"
+if [[ -z "$SECRETO_HOOK" || "$SECRETO_HOOK" == __* ]]; then
+  if [[ -t 0 ]]; then
+    read -rsp "Secreto del webhook de GitHub (debe coincidir con el del hook): " SECRETO_HOOK
+    echo
+  fi
+fi
+if [[ -z "$SECRETO_HOOK" || "$SECRETO_HOOK" == __* ]]; then
+  echo "Falta GITHUB_WEBHOOK_SECRET."
+  echo "Ponlo en $ARCHIVO_ENTORNO o pásalo al ejecutar:"
+  echo "  GITHUB_WEBHOOK_SECRET=<secreto> $0"
+  echo "El valor bueno está en infra/state/tools.env del host del repo (el que"
+  echo "bootstrap-github.sh envió al crear/actualizar el hook)."
+  exit 1
+fi
+if [[ -z "${GITHUB_WEBHOOK_SECRET:-}" && "$SECRETO_HOOK" != __GITHUB_* ]]; then
+  echo "Aviso: se conserva el GITHUB_WEBHOOK_SECRET de $ARCHIVO_ENTORNO."
+  echo "GitHub no expone el secreto del webhook; asegúrate de que coincida con el hook 709307452."
+  echo "Para forzarlo: GITHUB_WEBHOOK_SECRET=<secreto> $0"
+fi
+establecer_valor "GITHUB_WEBHOOK_SECRET" "$SECRETO_HOOK"
+
 if [[ -z "$USUARIO_PERSONAL" || "$USUARIO_PERSONAL" == __GITHUB_* ]]; then
   read -rp "Usuario personal de GitHub (cualquiera de los 4 integrantes): " USUARIO_PERSONAL
 fi
