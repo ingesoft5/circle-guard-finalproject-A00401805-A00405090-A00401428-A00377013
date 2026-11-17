@@ -87,17 +87,27 @@ spec:
               command: ["pg_isready", "-U", "admin", "-d", "circleguard_auth"]
             initialDelaySeconds: 10
             periodSeconds: 10
+          # El primer arranque ejecuta initdb y luego postgres-init. En disco lento tarda
+          # minutos; sin startupProbe el liveness mataba el contenedor a mitad de initdb
+          # (exit 137) y el cluster quedaba sin pg_hba remoto ni las cinco bases.
+          # startupProbe bloquea liveness y readiness hasta que el motor responda.
+          startupProbe:
+            exec:
+              command: ["pg_isready", "-U", "admin", "-d", "circleguard_auth"]
+            periodSeconds: 10
+            failureThreshold: 30
           livenessProbe:
             exec:
               command: ["pg_isready", "-U", "admin", "-d", "circleguard_auth"]
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 20
+            failureThreshold: 5
           resources:
             requests:
               cpu: 100m
               memory: 256Mi
             limits:
-              memory: 512Mi
+              memory: 1Gi
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data

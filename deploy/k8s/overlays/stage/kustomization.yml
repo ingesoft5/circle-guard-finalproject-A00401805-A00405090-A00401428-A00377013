@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: cg-stage
 
 resources:
+  - namespace.yml
   - ../../base
 
 patches:

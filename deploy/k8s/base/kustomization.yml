@@ -3,9 +3,10 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - middleware.yaml
-  - apps.yaml
-  - ingress.yaml
+  - middleware.yml
+  - apps.yml
+  - ingress.yml
+  - hpa.yml
 
 commonLabels:
   app.kubernetes.io/part-of: circleguard

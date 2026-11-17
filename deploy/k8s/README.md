@@ -9,10 +9,11 @@ entregable **E2.2 (Orquestación en Kubernetes)** de la Parte 2.
 ```
 deploy/k8s/
 ├── base/
-│   ├── kustomization.yaml
-│   ├── middleware.yaml   # postgres, redis, neo4j, kafka, openldap + ConfigMaps
-│   ├── apps.yaml         # 8 servicios + web
-│   └── ingress.yaml      # rutas del API y del cliente web (Traefik)
+│   ├── kustomization.yml
+│   ├── middleware.yml   # postgres, redis, neo4j, kafka, openldap + ConfigMaps
+│   ├── apps.yml         # 8 servicios + web
+│   ├── ingress.yml      # rutas del API y del cliente web (Traefik)
+│   └── hpa.yml          # autoscaling de gateway, web y auth
 └── overlays/
     ├── dev/              # namespace cg-dev, host dev.circleguard.local
     ├── stage/            # namespace cg-stage, host stage.circleguard.local
@@ -28,16 +29,16 @@ llega a los tres entornos sin duplicar manifiestos.
 
 ## Namespaces
 
-Kustomize **no crea** el namespace: el campo `namespace:` solo lo asigna a los objetos.
-Como `deploy/k8s` no declara ningún `kind: Namespace`, el namespace se crea antes del
-primer despliegue de cada entorno:
+Cada overlay incluye su propio `namespace.yml`, así que `kubectl apply -k` crea el namespace
+si no existe y el despliegue es autosuficiente:
 
 ```bash
-kubectl create namespace cg-dev    # o cg-stage / cg-prod
+kubectl apply -k deploy/k8s/overlays/dev     # crea cg-dev si falta
+kubectl get ns | grep cg-
 ```
 
-> Deuda registrada: mover esta creación a un `namespace.yaml` por overlay para que
-> `kubectl apply -k` sea autosuficiente.
+Si el namespace ya existe, el `apply` lo reconcilia sin efecto. No hace falta `kubectl create
+namespace` manual (el runbook conserva el comando solo para verificar el estado).
 
 ## Por qué Kustomize y no Helm
 
@@ -104,7 +105,7 @@ contenedores de los otros proyectos del equipo.
    con `k3d cluster start cg`. Es un riesgo operativo conocido y documentado en el runbook.
 4. **No reproduce servicios de nube.** ServiceLB simula el `LoadBalancer`, no hay volúmenes de
    bloque del proveedor ni auto scaling de infraestructura. Esa diferencia con la Parte 1 se
-   declara en `docs/infra/migracion-onprem.md`.
+   declara en `docs/infra/migracion-onpremise.md`.
 
 **Conclusión para el informe:** la elección de k3d es de **empaquetado y operación**, no de
 API. Al ser k3s un Kubernetes certificado, los criterios de E2.2 —namespaces, ConfigMaps y
@@ -204,8 +205,10 @@ kubectl -n cg-stage rollout restart deployment/auth deployment/identity \
   deployment/dashboard deployment/form deployment/promotion
 ```
 
-Con `prod` se repite igual. Deuda registrada: sustituir los reinicios manuales por un
-`initContainer` de espera o un `startupProbe` con `initialDelaySeconds` suficiente.
+Con `prod` se repite igual. El `startupProbe` de PostgreSQL (5 minutos) impide que el liveness
+mate el contenedor durante el `initdb`, que fue lo que dejó a `cg-prod` sin bases ni acceso
+remoto. Deuda registrada: sustituir los reinicios manuales de las cinco aplicaciones por un
+`initContainer` de espera contra PostgreSQL.
 
 ## Acceso
 
@@ -251,6 +254,47 @@ Cada aplicación declara `livenessProbe` y `readinessProbe` HTTP contra
 `/actuator/health`, con periodos de 10 s y umbrales conservadores. El middleware usa sondas
 `tcpSocket` (Postgres, Redis, Kafka, OpenLDAP) y HTTP en Neo4j. Esto cubre el requisito de
 sondas alimentadas por Actuator del entregable E2.2.
+
+## Autoscaling (HPA)
+
+`base/hpa.yml` define tres `HorizontalPodAutoscaler` sobre CPU al 70 %:
+
+| Servicio | Mínimo | Máximo | Motivo |
+|---|---|---|---|
+| `gateway` | 1 | 3 | Es la puerta de entrada del API y el que recibe la carga de la demostración |
+| `web` | 1 | 2 | Cliente estático; su límite de memoria es el más bajo del stack |
+| `auth` | 1 | 2 | Emite los JWT de todas las peticiones autenticadas |
+
+Los tres Deployments escalados **no declaran `spec.replicas`**: el dueño del número de
+réplicas es el HPA. Si el Deployment fijara `replicas`, cada `kubectl apply -k` lo devolvería
+a 1 y pelearía con el autoscaler.
+
+Requisito previo, `metrics-server` (no viene con k3d):
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl -n kube-system patch deployment metrics-server --type=json \
+  -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+kubectl top nodes
+kubectl -n cg-dev get hpa
+```
+
+`--kubelet-insecure-tls` es necesario porque los certificados de k3s son autofirmados; sin
+ese argumento `metrics-server` no puede leer los kubelets y el HPA muestra `<unknown>`.
+
+Para ver el escalado en la demostración:
+
+```bash
+kubectl -n cg-dev get hpa -w
+kubectl -n cg-dev run carga --image=busybox --restart=Never -- \
+  sh -c 'while true; do wget -q -O- http://gateway:8087/actuator/health; done'
+# al terminar
+kubectl -n cg-dev delete pod carga
+```
+
+Decisión declarada: el máximo se limita a 2-3 réplicas porque el host tiene 31 GiB y comparte
+RAM con Jenkins, SonarQube y Nexus. Un clúster de producción usaría máximos mayores; aquí se
+demuestra el mecanismo, no la capacidad.
 
 ## Recursos y capacidad
 
@@ -306,9 +350,9 @@ y **no deben llegar a producción**.
 | Namespaces por ambiente | Cumplido | `cg-dev`, `cg-stage`, `cg-prod` |
 | ConfigMaps y Secrets | Cumplido | `cg-config`, `postgres-init`, `cg-secrets` |
 | Ingress | Cumplido | Traefik `:30080`, tres hosts |
-| Sondas liveness/readiness con Actuator | Cumplido | `apps.yaml`, `/actuator/health` |
+| Sondas liveness/readiness con Actuator | Cumplido | `apps.yml`, `/actuator/health` |
 | Clúster ligero (k3s/k3d) | Cumplido | k3d v5.9.0 / k3s v1.35.5 |
-| HPA | **Pendiente** | requiere `metrics-server` y un `HorizontalPodAutoscaler` por servicio |
+| HPA | Cumplido | `base/hpa.yml` + `metrics-server`; gateway 1-3, web y auth 1-2 |
 | TLS en servicios expuestos | **Pendiente** | depende de DNS propio; hoy es HTTP interno |
 | RBAC de Kubernetes | **Pendiente** | hoy la operación es con el `kubeconfig` de k3d |
 
