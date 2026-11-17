@@ -1,0 +1,8 @@
+# CG-DOC: Namespace del entorno de produccion. Permite que `kubectl apply -k` sea autosuficiente.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cg-prod
+  labels:
+    app.kubernetes.io/part-of: circleguard
+    environment: prod

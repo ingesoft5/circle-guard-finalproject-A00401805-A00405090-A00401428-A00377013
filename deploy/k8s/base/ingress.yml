@@ -1,0 +1,77 @@
+# CG-DOC: Traefik ingress. Only the paths verified in the service controllers are routed;
+# the overlay replaces the host. ClusterIP remains the default for service-to-service calls.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: circleguard
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: circleguard.local
+      http:
+        paths:
+          - path: /api/v1/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth
+                port:
+                  number: 8180
+          - path: /api/v1/users/permissions
+            pathType: Prefix
+            backend:
+              service:
+                name: auth
+                port:
+                  number: 8180
+          - path: /api/v1/identities
+            pathType: Prefix
+            backend:
+              service:
+                name: identity
+                port:
+                  number: 8083
+          - path: /api/v1/questionnaires
+            pathType: Prefix
+            backend:
+              service:
+                name: form
+                port:
+                  number: 8086
+          - path: /api/v1/surveys
+            pathType: Prefix
+            backend:
+              service:
+                name: form
+                port:
+                  number: 8086
+          - path: /api/v1/attachments
+            pathType: Prefix
+            backend:
+              service:
+                name: form
+                port:
+                  number: 8086
+          - path: /api/v1/certificates
+            pathType: Prefix
+            backend:
+              service:
+                name: form
+                port:
+                  number: 8086
+          - path: /api/v1/health-status
+            pathType: Prefix
+            backend:
+              service:
+                name: promotion
+                port:
+                  number: 8088
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 80

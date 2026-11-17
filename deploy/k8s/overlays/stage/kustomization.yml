@@ -1,0 +1,45 @@
+# CG-DOC: Staging overlay. Copy secrets.env.example to secrets.env before applying.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: cg-stage
+
+resources:
+  - namespace.yml
+  - ../../base
+
+patches:
+  - target:
+      kind: Ingress
+      name: circleguard
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: stage.circleguard.local
+
+secretGenerator:
+  - name: cg-secrets
+    envs:
+      - secrets.env
+    options:
+      disableNameSuffixHash: true
+
+images:
+  - name: circleguard-docker/auth
+    newTag: 1.4.0
+  - name: circleguard-docker/identity
+    newTag: 1.4.0
+  - name: circleguard-docker/promotion
+    newTag: 1.4.0
+  - name: circleguard-docker/form
+    newTag: 1.4.0
+  - name: circleguard-docker/gateway
+    newTag: 1.4.0
+  - name: circleguard-docker/dashboard
+    newTag: 1.4.0
+  - name: circleguard-docker/file
+    newTag: 1.4.0
+  - name: circleguard-docker/notification
+    newTag: 1.4.0
+  - name: circleguard-docker/web
+    newTag: 1.4.0

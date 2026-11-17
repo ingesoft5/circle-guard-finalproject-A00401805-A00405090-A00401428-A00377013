@@ -28,15 +28,17 @@ web, pruebas automatizadas y documentación de la Parte 1.
 | Indicador | Resultado |
 |---|---|
 | Ítems comprometidos | 10 |
-| Ítems cerrados en repositorio | 7 |
-| Ítems en revisión por PR | 3 |
-| Cobertura de servicios núcleo | ≥ 60 % (promotion ≥ 70 %) |
-| Flujos E2E | 3 |
+| Ítems cerrados en repositorio | 10 |
+| Ítems en revisión por PR | 0 |
+| Cobertura de servicios núcleo | ≥ 60 % (promotion 76.13 % de líneas) |
+| Flujos E2E | 4 (`login`, `health-form`, `access-validation`, `promotion-flow`) |
 | Integraciones Testcontainers | 5 servicios |
 
-> El estado "en revisión" refleja trabajo integrado en la rama `feat/parte1-integracion`
-> que aún requiere merge a `main` y captura de evidencia. No se declara Done hasta que el
-> PR tenga checks verdes y aprobación.
+> **Cierre (16 de noviembre de 2026):** el trabajo que estaba en la rama
+> `feat/parte1-integracion` quedó integrado en `main` con el PR #38 y los PR de seguimiento
+> #39–#45, #47, #52 y #53. El backlog actualizado en `docs/agil/backlog.md` enlaza cada
+> historia con su PR y su evidencia, por lo que no quedan ítems en revisión dentro del
+> alcance del Sprint 1.
 
 ## Demostración
 
@@ -50,6 +52,9 @@ web, pruebas automatizadas y documentación de la Parte 1.
 
 - [x] Merge del PR de la rama `feat/parte1-integracion` (PR #38).
 - [x] Capturas reales de Jira (Sprint 1, backlog, historias y retrospectiva) incorporadas al informe.
-- [ ] Capturas reales de GitHub (ruleset, PR, aprobación y checks).
-- [ ] Sustentación oral y PDF consolidado del informe.
+- [x] Capturas reales de GitHub (ruleset, PR, aprobación y checks) en `docs/informe/evidencia/github/`.
 - [x] `docs/informe/E1.2-Informe-Final.pdf` actualizado con el estado actual del pipeline (release `1.2.8`).
+- [ ] Sustentación oral ante el docente (la modalidad está declarada en la sección P1.8 del informe).
+
+> La sustentación oral es un evento de entrega, no un artefacto pendiente del repositorio.
+> El PDF consolidado ya contiene la evidencia y la modalidad declarada.

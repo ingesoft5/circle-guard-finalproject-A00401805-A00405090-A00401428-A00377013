@@ -1,0 +1,8 @@
+# CG-DOC: Namespace del entorno de staging. Permite que `kubectl apply -k` sea autosuficiente.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cg-stage
+  labels:
+    app.kubernetes.io/part-of: circleguard
+    environment: stage

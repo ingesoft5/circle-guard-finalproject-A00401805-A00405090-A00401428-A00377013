@@ -22,8 +22,12 @@
    - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
    - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
    - [2.3 E1.2 — Cierre documental con sustentación en lugar de video](#23-e12--cierre-documental-con-sustentación-en-lugar-de-video)
-3. [Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)](#3-módulo-circleguard-promotion-service-alejandro-quiñones-caicedo)
-   - [3.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`](#31-hu-promo-01-dcg-304--diagnosticar-la-estructura-y-dependencias-de-promotion-service)
+3. [Módulo: `circleguard-form-service` (Santiago Estrada)](#3-módulo-circleguard-form-service-santiago-estrada)
+   - [3.1 HU-FORM-01 — Documentar el funcionamiento y las dependencias de `form-service`](#31-hu-form-01--documentar-el-funcionamiento-y-las-dependencias-de-form-service)
+   - [3.2 HU-FORM-02 — Automatizar las pruebas y la cobertura de `form-service`](#32-hu-form-02--automatizar-las-pruebas-y-la-cobertura-de-form-service)
+   - [3.3 HU-FORM-03 — Empaquetar `form-service` e integrarlo al pipeline](#33-hu-form-03--empaquetar-form-service-e-integrarlo-al-pipeline)
+4. [Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)](#4-módulo-circleguard-promotion-service-alejandro-quiñones-caicedo)
+   - [4.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`](#41-hu-promo-01-dcg-304--diagnosticar-la-estructura-y-dependencias-de-promotion-service)
 
 ---
 
@@ -552,6 +556,197 @@ El video no aplica, usamos en cambio sustentacion, acomoda documentacion y la bi
 Sustituir el video por la sustentación deja la evidencia de P1.8 en un evento oral que no queda dentro del PDF. El riesgo se mitiga declarando la modalidad de forma explícita, conservando el nombre oficial del criterio y asegurando que el PDF contenga toda la evidencia verificable: URLs, capturas del flujo, capturas de Jira, cobertura y rollback. La lección es que un cambio de modalidad no debe resolverse con un simple cambio de estado: hay que dejar escrito qué se entrega, qué se demuestra en vivo y qué ya está probado.
 
 La segunda lección salió de la auditoría de releases: se afirmó que `1.2.6` y `1.2.7` eran “documentales” sin consultar el registry ni el historial de builds, y la afirmación era falsa. Un artefacto no se describe por el tipo de commit que lo originó, sino por lo que realmente se publicó y desplegó. La verificación en Nexus y en Jenkins tomó minutos y evitó que el informe llegara con una inexactitud que el revisor ya había señalado en el README.
+---
+
+## 3. Módulo: `circleguard-form-service` (Santiago Estrada)
+
+> **Nota de trazabilidad.** Las intervenciones de esta sección corresponden a los commits
+> `0aae510`, `5357e26`, `60b5641`, `bce8b8f`, `8382948`, `7d81fde`, `e29d6a7` y `d404769`
+> del repositorio (PR #2, PR #3 y PR #34), más los aportes documentales `9331977` y
+> `9c69a0c`. Los prompts se reconstruyeron a partir de los artefactos entregados y se
+> contrastaron contra el código y los archivos finales; no se transcribe ninguna salida que
+> no esté respaldada por el repositorio.
+
+### 3.1 HU-FORM-01 — Documentar el funcionamiento y las dependencias de `form-service`
+
+- **Fecha:** 4–5 de noviembre de 2026
+- **Autor:** Santiago Alejandro Estrada Martínez
+- **Commits:** `0aae510` (estructura y dependencias) y `5357e26` (flujo de integración), PR #2
+- **Objetivo de la interacción:** Producir `services/circleguard-form-service/README.md` con la descripción funcional, la organización de paquetes, las rutas HTTP, las migraciones y los puntos de integración del servicio.
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Antes de redactar, se recorrió el módulo `services/circleguard-form-service/` y se levantó el siguiente inventario:
+
+1. **Paquetes:** `controller`, `service`, `repository` y `model`, con `FormApplication.java` como punto de entrada Spring Boot y las migraciones en `src/main/resources/db/migration/`.
+2. **Controladores y rutas:** `QuestionnaireController` (`/api/v1/questionnaires`), `HealthSurveyController` (`/api/v1/surveys`), `AttachmentController` (`/api/v1/attachments`) y `CertificateValidationController` (`/api/v1/certificates`), con ocho rutas en total.
+3. **Servicios:** `QuestionnaireService`, `HealthSurveyService`, `SymptomMapper` y `StorageService`.
+4. **Modelo de datos:** `Questionnaire`, `Question`, `HealthSurvey`, `QuestionType` y `ValidationStatus`; `HealthSurvey` guarda `anonymousId` y no contiene nombre ni correo.
+5. **Migraciones:** `V1` a `V5`, incluida la columna `responses` en JSONB y el estado de validación.
+6. **Integraciones:** PostgreSQL (`circleguard_form`) y Kafka con dos publicaciones: `survey.submitted` al guardar una encuesta y `certificate.validated` al aprobarla; `promotion-service` las consume en `SurveyListener` y no existe llamada HTTP directa entre ambos servicios.
+
+#### B. Prompt empleado (reconstruido y contrastado)
+
+```text
+Estoy documentando HU-FORM-01 del proyecto CircleGuard. Necesito el README de
+`services/circleguard-form-service/` con esta información que ya levanté del código:
+
+- Paquetes: controller, service, repository, model; entrada en FormApplication.
+- Controladores: QuestionnaireController (/api/v1/questionnaires), HealthSurveyController
+  (/api/v1/surveys), AttachmentController (/api/v1/attachments) y
+  CertificateValidationController (/api/v1/certificates).
+- Servicios: QuestionnaireService, HealthSurveyService, SymptomMapper, StorageService.
+- Entidades: Questionnaire, Question, HealthSurvey (con anonymousId, sin datos personales),
+  QuestionType y ValidationStatus.
+- Migraciones V1 a V5: esquema inicial, cuestionarios dinámicos, responses JSONB, adjunto y
+  estado de validación.
+- Integraciones: PostgreSQL (circleguard_form) y Kafka con los temas survey.submitted y
+  certificate.validated; promotion-service los consume en SurveyListener.
+
+Redacta el README en español con: cómo funciona el servicio, un diagrama Mermaid del flujo
+cliente -> controladores -> servicios -> PostgreSQL/Kafka -> promotion-service, tabla de
+controladores y rutas, tabla de servicios, repositorios y modelos, tabla de migraciones y
+una sección de dependencias que explique la asincronía de Kafka.
+
+Reglas: no inventes rutas ni temas; si algo no está en el insumo, márcalo como pendiente de
+verificar. Usa los nombres reales de clases y archivos y no incluyas credenciales.
+```
+
+#### C. Validación humana y hallazgos
+
+- Se contrastó cada ruta del README contra las anotaciones `@RequestMapping`, `@GetMapping` y `@PostMapping` de los cuatro controladores; las ocho rutas documentadas existen.
+- Se verificó que `HealthSurveyService` publica en `survey.submitted` y `certificate.validated` y que `promotion-service` los consume con `@KafkaListener` en `SurveyListener`; no hay cliente HTTP hacia promotion.
+- Se añadió explícitamente que la respuesta HTTP de `form-service` no confirma el procesamiento del evento, porque la comunicación es asíncrona. Ese matiz no estaba en el primer borrador y evita una promesa falsa en la documentación.
+- Se revisó que el README no incluyera cadenas de conexión ni secretos; solo nombres de variables y de bases de datos.
+
+#### D. Reflexión crítica
+
+El valor de la IAG aquí no fue redactar: fue ordenar un inventario que ya existía y obligar a
+explicitar el contrato de eventos. El hallazgo importante fue la asincronía: documentar
+`survey.submitted` como si fuera una llamada síncrona habría ocultado el hecho de que una
+encuesta puede guardarse correctamente y aun así no reflejarse de inmediato en el estado de
+salud del usuario. Ese contrato es justamente el que después se verificó con un broker real
+en HU-FORM-02.
+
+---
+
+### 3.2 HU-FORM-02 — Automatizar las pruebas y la cobertura de `form-service`
+
+- **Fecha:** 5–6 de noviembre de 2026
+- **Autor:** Santiago Alejandro Estrada Martínez
+- **Commits:** `60b5641` (pruebas unitarias), `bce8b8f` (JaCoCo), `8382948` (integración Kafka) y `7d81fde` (contexto con PostgreSQL), PR #3
+- **Objetivo de la interacción:** Llevar `form-service` al umbral de cobertura del entregable E1.6 (≥ 60 % de líneas), agregar una prueba de integración del flujo Form → Kafka → Promotion y dejar el reporte disponible para Sonar y Jenkins.
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+1. **Estado inicial:** la suite era mínima (`SymptomMapperTest` y pruebas de controlador incompletas) y `build.gradle.kts` no tenía JaCoCo ni una tarea separada de integración.
+2. **Casos diseñados por componente:**
+   - `HealthSurveyService`: guardado de encuesta con y sin síntomas, consulta de pendientes, validación aprobada/rechazada y publicación de los dos eventos.
+   - `QuestionnaireService`: listado, obtención del cuestionario activo, creación y activación.
+   - `SymptomMapper`: preguntas de tipo booleano, selección y texto libre, con respuestas vacías o nulas.
+   - `CertificateValidationController`, `HealthSurveyController` y `QuestionnaireController`: códigos 200/201/400/404 y cuerpos de respuesta.
+3. **Integración:** publicar una encuesta con síntomas, consumir `survey.submitted` desde un broker temporal y comprobar que `SurveyListener` de promotion invoca el cambio a `SUSPECT`.
+4. **Restricción técnica detectada:** incluir el módulo de promotion en el classpath de pruebas arrastraba su `application.yml`, sus migraciones y su cadena de seguridad, lo que rompía el contexto de Form.
+
+#### B. Prompt empleado (reconstruido y contrastado)
+
+```text
+Necesito completar HU-FORM-02 de CircleGuard en `services/circleguard-form-service/`.
+Estado actual: la suite es mínima y el build no tiene JaCoCo ni tarea de integración.
+
+Objetivo:
+1. Configurar JaCoCo con reporte XML y HTML y verificación de cobertura de líneas >= 0.60
+   en la tarea check.
+2. Crear una tarea `integrationTest` que ejecute solo las pruebas con @Tag("integration") y
+   excluya ese tag de `test`.
+3. Ampliar las pruebas unitarias de HealthSurveyService, QuestionnaireService, SymptomMapper
+   y los controladores de encuestas, cuestionarios y certificados.
+4. Escribir una prueba de integración con Testcontainers que publique una encuesta con
+   síntomas en Kafka, lea el tema survey.submitted y verifique que el SurveyListener de
+   promotion-service solicita el estado SUSPECT.
+
+Restricciones:
+- No agregar dependencias de seguridad de promotion al contexto de Form.
+- Evitar que promotion aporte su application.yml y sus migraciones al classpath de pruebas.
+- La prueba de adjuntos requiere PostgreSQL real: déjala con @Tag("integration").
+- No inventes endpoints ni temas; usa los que están en el código.
+Explica qué archivos tocas y por qué.
+```
+
+#### C. Validación humana y hallazgos
+
+- **Cobertura real medida:** 72.45 % de líneas y 84.21 % de ramas en `jacocoTestReport.xml`, por encima del umbral de 0.60 configurado en `jacocoTestCoverageVerification`.
+- **Pruebas:** 33 pruebas unitarias en seis clases (`HealthSurveyServiceTest`, `QuestionnaireServiceTest`, `SymptomMapperTest`, `CertificateValidationControllerTest`, `HealthSurveyControllerTest` y `QuestionnaireControllerTest`) más dos de integración (`FormPromotionKafkaIntegrationTest` y `AttachmentControllerTest`).
+- **Aislamiento del classpath:** se excluyó `spring-boot-starter-security` del módulo de promotion y se solicitó el artefacto con `LibraryElements.CLASSES` para no arrastrar `application.yml` ni migraciones. Sin ese ajuste el contexto de Form fallaba al arrancar.
+- **Kafka:** la prueba usa `KafkaContainer`, crea el tema `survey.submitted` y espera con `Mockito.timeout` la invocación sobre `HealthStatusService`; se validó que el test falla si se altera el nombre del tema.
+- **Adjuntos:** `AttachmentControllerTest` se movió a `@Tag("integration")` porque necesita `PostgreSQLContainer`; así la suite unitaria sigue corriendo sin Docker.
+
+#### D. Reflexión crítica
+
+La prueba de integración fue el punto donde la IAG aportó menos código y más criterio: la
+primera versión “funcionaba” en local porque el contexto levantaba con el `application.yml`
+de promotion, es decir, ocultaba un acoplamiento. Excluir seguridad y pedir solo las clases
+compiladas hizo visible el problema real y dejó una prueba que mide el contrato de eventos y
+no la conveniencia del entorno. La lección es que una prueba de integración debe aislar el
+módulo bajo prueba; si para pasar necesita la configuración del vecino, no está probando el
+vecino, lo está sustituyendo.
+
+---
+
+### 3.3 HU-FORM-03 — Empaquetar `form-service` e integrarlo al pipeline
+
+- **Fecha:** 8 de noviembre de 2026
+- **Autor:** Santiago Alejandro Estrada Martínez
+- **Commits:** `e29d6a7` (imagen multi-stage no-root) y `d404769` (integración al pipeline), PR #34
+- **Objetivo de la interacción:** Construir la imagen inmutable de `form-service`, externalizar su configuración y registrarlo en el catálogo del pipeline compartido para que se construya, publique y despliegue como los demás núcleos.
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+1. **Requisitos de la imagen:** multi-stage, base fijada por digest, usuario sin privilegios, `HEALTHCHECK` contra `/actuator/health`, puerto `8086` y directorio de adjuntos escribible.
+2. **Contexto de build:** el módulo depende de `settings.gradle.kts` y de otros módulos, por lo que el contexto no puede limitarse a la carpeta del servicio; se necesitaba un `.dockerignore` específico.
+3. **Configuración:** `application.yml` debía tomar PostgreSQL y Kafka de variables de entorno para funcionar en dev, stage y prod.
+4. **Pipeline:** el catálogo de servicios (`jenkins/services.groovy`) debía incluir form con sus tareas de test, integración, publicación y despliegue, y el `Jenkinsfile` debía seleccionarlo igual que a los demás.
+
+#### B. Prompt empleado (reconstruido y contrastado)
+
+```text
+Necesito empaquetar `circleguard-form-service` para HU-FORM-03 y conectarlo al pipeline.
+
+Contexto que ya definí:
+- Imagen multi-stage: compilar con Gradle 8.14 y JDK 21, ejecutar con JRE 21.
+- Fijar las imágenes base por digest.
+- Usuario no root (UID 10001), directorio /tmp/circleguard-uploads escribible.
+- EXPOSE 8086 y HEALTHCHECK con wget contra /actuator/health.
+- El build necesita settings.gradle.kts y los módulos, así que no puedo copiar solo el
+  servicio: ayúdame con un Dockerfile.dockerignore que excluya pruebas, reportes y basura
+  sin romper la compilación.
+- application.yml debe leer PostgreSQL y Kafka de variables de entorno.
+
+Además, intégralo al pipeline compartido: revisa Jenkinsfile y jenkins/services.groovy,
+agrega la entrada de form y documenta el catálogo en docs/infra/pipeline-servicios.md.
+Incluye pruebas Groovy del Jenkinsfile si sirven para evitar regresiones en la selección de
+servicios.
+```
+
+#### C. Validación humana y hallazgos
+
+- El `Dockerfile` final usa `gradle:8.14-jdk21` y `eclipse-temurin:21-jre-jammy` fijadas por digest, ejecuta `bootJar` como usuario `gradle`, copia solo el JAR a la etapa de runtime, corre como `10001:10001` y declara `HEALTHCHECK` con `wget -qO- http://127.0.0.1:8086/actuator/health`.
+- `Dockerfile.dockerignore` recorta el contexto sin excluir `settings.gradle.kts` ni los módulos requeridos; se comprobó que el build falla si se elimina esa configuración.
+- Se externalizaron las credenciales de PostgreSQL y la dirección de Kafka en `application.yml`; el servicio dejó de depender de valores locales.
+- En el pipeline se añadió `jenkins/services.groovy` con la entrada de form y se documentó el catálogo en `docs/infra/pipeline-servicios.md`. Las pruebas `JenkinsfileTest`, `ServiceSelectionTest` y `GitDetectionTest` en `tests/jenkins/` validan la selección de servicios y la detección de cambios.
+- La verificación de runtime queda cubierta por las etapas de publicación, despliegue y E2E del pipeline, que consumen la misma imagen y el mismo healthcheck.
+
+#### D. Reflexión crítica
+
+La parte menos visible y más delicada fue el contexto de build. Un `.dockerignore` demasiado
+agresivo produce imágenes que compilan en local y fallan en Jenkins, y uno demasiado laxo
+mete pruebas y reportes en la imagen. Fijar las bases por digest también tiene costo: hay que
+actualizarlas a mano cuando aparece un parche de seguridad, pero a cambio el artefacto es
+reproducible y la auditoría de Trivy en la Parte 2 puede comparar siempre la misma base. La
+lección es que “imagen inmutable” no significa solo etiquetar con semver: significa que el
+contenido, el usuario y el healthcheck estén declarados en el repositorio y no en la cabeza
+de quien despliega.
+
 ---
 
 ## 4. Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)

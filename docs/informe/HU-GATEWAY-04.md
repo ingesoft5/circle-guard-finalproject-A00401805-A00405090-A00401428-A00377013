@@ -80,7 +80,7 @@ globalLibraries:
 
 ### 3.2 Multibranch y webhook
 
-El job se define en `deploy/compose/tools/jenkins/casc/jenkins.yaml` con GitHub
+El job se define en `deploy/compose/tools/jenkins/cac/jenkins.yml` con GitHub
 Branch Source, traits de ramas y PRs, y `scriptPath('Jenkinsfile')`.
 
 El webhook se registra en:

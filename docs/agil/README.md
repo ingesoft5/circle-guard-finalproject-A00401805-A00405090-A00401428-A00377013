@@ -8,6 +8,7 @@
 | Artefacto | Ubicación |
 |---|---|
 | Backlog y criterios de aceptación | [`backlog.md`](backlog.md) |
+| Plan de cierre P1 y entrega P2 | [`plan-circle-guard-5.0.md`](plan-circle-guard-5.0.md) |
 | Sprint 0 — planeación | [`sprint-0/planning.md`](sprint-0/planning.md) |
 | Sprint 0 — retrospectiva | [`sprint-0/retrospective.md`](sprint-0/retrospective.md) |
 | Sprint 0 — review | [`../informe/Sprint-Review-Sprint-0.docx`](../informe/Sprint-Review-Sprint-0.docx) |
