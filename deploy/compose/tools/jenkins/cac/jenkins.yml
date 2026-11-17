@@ -63,12 +63,17 @@ unclassified:
   location:
     url: ${JENKINS_URL}
   gitHubPluginConfig:
-    hookUrl: "http://${TOOLS_IP}/github-webhook/"
+    # Relay del webhook mientras no exista un ingress publico: GitHub no puede
+    # alcanzar localhost. Reemplazar PENDIENTE por el canal real (ver
+    # docs/infra/migracion-onpremise.md 3.3).
+    hookUrl: "https://smee.io/PENDIENTE"
     configs:
       - name: "GitHub"
         credentialsId: "github-creds"
         apiUrl: "https://api.github.com"
-        manageHooks: true
+        # Jenkins no reescribe el hook: se administra a mano en GitHub porque
+        # hookUrl ya no es una IP publica del host.
+        manageHooks: false
     hookSecretConfigs:
       - credentialsId: "github-webhook-secret"
   gitHubConfiguration:
