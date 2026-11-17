@@ -115,8 +115,10 @@ gestionado, y el código de los manifiestos no tendría que cambiar para correr 
 ## Registro e imágenes
 
 El registro Nexus vive en `10.147.20.67:5000` y se publica por HTTP, no por HTTPS. En el
-clúster eso se declara en el `registries.yaml` de k3d y con `imagePullSecrets`; el puerto no
-se expone a Internet.
+clúster eso se declara en el `registries.yaml` de k3d (plantilla en
+`infra/onpremise/registries.yaml`; `infra/onpremise/k3d-cluster-create.sh` la copia a
+`~/.config/k3d/registries.yaml`) y con `imagePullSecrets`; el puerto no se expone a
+Internet.
 
 Mientras el pipeline no publique en Nexus, las imágenes se construyen en el host y se
 importan al clúster. La compilación usa **la raíz del repositorio como contexto** y el

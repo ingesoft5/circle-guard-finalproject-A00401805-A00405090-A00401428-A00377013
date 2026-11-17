@@ -46,7 +46,7 @@ Un solo host con dos capas:
 ```
 ┌──────────────────────────── host (10.147.20.67) ────────────────────────────┐
 │                                                                             │
-│  Docker Compose · proyecto circle-guard-dasf                                │
+│  Docker Compose · proyecto cg-tools                                         │
 │  ┌──────────┐  ┌────────────┐  ┌──────────┐  ┌───────────────────────────┐ │
 │  │ Jenkins  │  │ SonarQube  │  │  Nexus   │  │ Registro Docker :5000     │ │
 │  │ :8080    │  │ :9000      │  │ :8081    │  │ repo circleguard-docker   │ │
@@ -68,9 +68,11 @@ Un solo host con dos capas:
 
 ### 3.1 Stack de herramientas
 
-- Carpeta de trabajo: `cac`.
-- Archivos: `.env.onpremise` y `docker-compose.onpremise.yml`.
-- Proyecto Compose: `circle-guard-dasf`.
+- Archivos versionados: `deploy/compose/tools/docker-compose.onpremise.yml`, la plantilla
+  `deploy/compose/tools/.env.onpremise.example` y `infra/onpremise/bootstrap-onpremise.sh`.
+- El archivo real `.env.onpremise` se genera en el host con el bootstrap y nunca se sube al
+  repositorio (regla 5 de la sección 4).
+- Proyecto Compose: `cg-tools` (el bootstrap lo pasa con `-p cg-tools`).
 - **Jenkins** corre con `network_mode: host` para alcanzar el registro en `localhost:5000` y
   el API del clúster sin saltos de red. Su configuración se carga como código desde
   `/var/jenkins_home/cac/jenkins.yml`; la variable `CASC_JENKINS_CONFIG` conserva ese nombre y
@@ -153,51 +155,23 @@ directamente. El webhook del repo (id `709307452`, eventos `push` y
   Jenkins responde `403` aunque el relay esté conectado.
 - `deploy/compose/tools/jenkins/cac/jenkins.yml` ya trae `hookUrl: "${SMEE_URL}"` y
   `manageHooks: false`: el hook se administra a mano en GitHub.
-- El relay está versionado en `deploy/compose/tools/docker-compose.yml` (servicio
-  `smee-client`, imagen construida desde
-  `deploy/compose/tools/smee-client/Dockerfile`) con target
-  `http://jenkins:8080/github-webhook/` dentro de la red `tools-net`.
+- El relay está versionado en `deploy/compose/tools/docker-compose.yml` (red `tools-net`) y
+  en `docker-compose.onpremise.yml` (`network_mode: host`); la imagen se construye desde
+  `deploy/compose/tools/smee-client/Dockerfile`.
 
-Receta para este host (proyecto `circle-guard-dasf`):
+Receta para este host (proyecto `cg-tools`):
 
-1. En `.env.onpremise` agregar:
-
-   ```
-   SMEE_URL=https://smee.io/nk4nvlnyB0u6Fqnn
-   SMEE_TARGET=http://localhost:8080/github-webhook/
-   GITHUB_WEBHOOK_SECRET=<el mismo valor que ya usa el webhook>
-   ```
-
-   `SMEE_TARGET` es `localhost` porque el relay va con `network_mode: host`, igual
-   que Jenkins. Si el relay corre en la red bridge del Compose, usar
+1. Traer lo versionado: `git pull` (el compose, la plantilla `.env.onpremise.example` y
+   `infra/onpremise/bootstrap-onpremise.sh` ya incluyen el relay).
+2. Ejecutar `infra/onpremise/bootstrap-onpremise.sh`: crea `.env.onpremise` desde la
+   plantilla, genera los secretos, detecta la IP de ZeroTier, pide usuario y token de
+   GitHub, y levanta `cg-jenkins` y `cg-smee-client` con `docker compose -p cg-tools`.
+   `SMEE_TARGET` es `localhost` porque el relay va con `network_mode: host`, igual que
+   Jenkins; si el relay corre en la red bridge del Compose, usar
    `http://10.147.20.67:8080/github-webhook/`.
-
-2. Agregar el servicio al `docker-compose.onpremise.yml`:
-
-   ```yaml
-     smee-client:
-       build: ./smee-client   # relativo a deploy/compose/tools/ del checkout
-       image: cg-smee-client:latest
-       container_name: cg-smee-client
-       restart: unless-stopped
-       network_mode: host
-       environment:
-         SMEE_URL: ${SMEE_URL}
-         SMEE_TARGET: ${SMEE_TARGET:-http://localhost:8080/github-webhook/}
-       command: ["-u", "${SMEE_URL}", "-t", "${SMEE_TARGET:-http://localhost:8080/github-webhook/}"]
-       depends_on:
-         - jenkins
-   ```
-
-3. Jenkins necesita `SMEE_URL` en su `environment` para que JCasC sustituya
-   `${SMEE_URL}` en `hookUrl`; si el `cac` se monta desde este repo, basta
-   `git pull` y reiniciar Jenkins. Si es una copia suelta, copiar primero
-   `jenkins/cac/jenkins.yml`.
-
-4. Levantar y verificar:
+3. Verificar:
 
    ```bash
-   docker compose up -d smee-client
    docker logs -f cg-smee-client        # debe decir "Connected" al canal
    ```
 

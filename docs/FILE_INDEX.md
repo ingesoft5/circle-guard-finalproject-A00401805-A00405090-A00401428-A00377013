@@ -63,7 +63,13 @@ English purpose of every tracked repository file.
 
 - `deploy/compose/tools/.env.example` — Repository file.
 
+- `deploy/compose/tools/.env.onpremise.example` — Environment variable template for the on-premise tools stack (markers resolve with infra/onpremise/bootstrap-onpremise.sh).
+
 - `deploy/compose/tools/docker-compose.yml` — Docker Compose definition for the tools environment.
+
+- `deploy/compose/tools/docker-compose.onpremise.yml` — On-premise tools stack: Jenkins and the smee.io relay on host networking, SonarQube/Nexus on tools-net.
+
+- `deploy/compose/tools/smee-client/Dockerfile` — Image for the smee.io relay that forwards GitHub webhooks to Jenkins.
 
 - `deploy/compose/tools/ingress/default.conf.template` — Nginx ingress template that exposes the dev gateway as the application entry point.
 
@@ -422,6 +428,12 @@ English purpose of every tracked repository file.
 - `infra/bootstrap/bootstrap-stop.sh` — Stops the four provisioned instances to reduce compute cost.
 
 - `infra/bootstrap/bootstrap-tools.sh` — Provisions Jenkins, SonarQube, Nexus, the private registry, and the ingress on cg-tools.
+
+- `infra/onpremise/bootstrap-onpremise.sh` — Provisions the on-premise tools stack: generates `.env.onpremise` (permissions 600), detects the ZeroTier IP, replaces GitHub credentials, and starts the `cg-tools` Compose project including the smee.io relay.
+
+- `infra/onpremise/k3d-cluster-create.sh` — Creates the on-premise k3d cluster `cg` with Traefik published on port 30080 and the HTTP registry mirrored into the nodes.
+
+- `infra/onpremise/registries.yaml` — k3d registries configuration that mirrors the host's plain-HTTP registry (10.147.20.67:5000) into the cluster nodes.
 
 - `infra/bootstrap/configure-sonar-identity.sh` — Creates the identity Sonar project and assigns the coverage quality gate with an admin credential.
 

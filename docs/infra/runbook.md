@@ -13,6 +13,16 @@
 | Ingress | Traefik publicado en el puerto `30080` del host |
 | Herramientas | Jenkins `:8080`, SonarQube `:9000`, Nexus `:8081`, registro `:5000` |
 
+### Arranque del clúster
+
+```bash
+infra/onpremise/k3d-cluster-create.sh
+```
+
+Copia `infra/onpremise/registries.yaml` a `~/.config/k3d/registries.yaml` si falta y crea el
+clúster `cg` con Traefik publicado en `:30080`. Tras un reinicio de Docker, volver a levantar
+con `k3d cluster start cg`.
+
 ### Verificar las herramientas
 
 ```bash

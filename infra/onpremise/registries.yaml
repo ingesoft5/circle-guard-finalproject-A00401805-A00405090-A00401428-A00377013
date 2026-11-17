@@ -1,0 +1,7 @@
+# registries.yaml de k3d: permite al clúster bajar imágenes del registro HTTP del host.
+# k3d lee este archivo desde ~/.config/k3d/registries.yaml al crear el clúster;
+# infra/onpremise/k3d-cluster-create.sh lo copia solo si falta.
+mirrors:
+  "10.147.20.67:5000":
+    endpoint:
+      - "http://10.147.20.67:5000"
