@@ -34,13 +34,26 @@ kubectl -n cg-stage get pods
 Cada entorno ejecuta 14 pods: los ocho servicios y el cliente web, más PostgreSQL, Redis,
 Neo4j, Kafka y OpenLDAP.
 
+### Habilitar el autoscaling (una sola vez por clúster)
+
+`metrics-server` no viene con k3d y sin él los HPA quedan en `<unknown>`:
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl -n kube-system patch deployment metrics-server --type=json \
+  -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+kubectl top nodes
+kubectl -n cg-dev get hpa
+```
+
+`--kubelet-insecure-tls` es obligatorio porque los certificados de k3s son autofirmados.
+
 ### Levantar un entorno
 
 ```bash
-kubectl create namespace cg-stage                # los manifiestos no crean el namespace
 cp deploy/k8s/overlays/dev/secrets.env deploy/k8s/overlays/stage/secrets.env
 chmod 600 deploy/k8s/overlays/stage/secrets.env
-kubectl apply -k deploy/k8s/overlays/stage
+kubectl apply -k deploy/k8s/overlays/stage     # también crea el namespace si falta
 ```
 
 Reutilizar los valores validados de `dev` evita los fallos de formato de los secretos que se
@@ -75,6 +88,20 @@ curl -s -X POST -H "Host: stage.circleguard.local" \
 El campo de login es `username`, no `email`. Los usuarios semilla de desarrollo
 (`super_admin`, `staff_guard`, `health_user`, contraseña `password`) vienen de
 `V2__seed_test_users.sql` y no deben llegar a producción.
+
+### Verificar el escalado
+
+```bash
+kubectl -n cg-dev get hpa
+kubectl -n cg-dev top pods
+kubectl -n cg-dev run carga --image=busybox --restart=Never -- \
+  sh -c 'while true; do wget -q -O- http://gateway:8087/actuator/health; done'
+kubectl -n cg-dev get hpa -w          # gateway debe pasar de 1 a 2-3 réplicas
+kubectl -n cg-dev delete pod carga
+```
+
+Los HPA son de `gateway` (1-3), `web` (1-2) y `auth` (1-2), con objetivo de CPU al 70 %.
+Los Deployments escalados no declaran `replicas`: el dueño es el HPA.
 
 ### Reiniciar una aplicación
 

@@ -3,7 +3,7 @@
 > **Parte 1 (histórica).** Este documento describe la topología de cuatro hosts con Compose que
 > se usó en el primer entregable. Como la cuenta de AWS quedó inaccesible, la Parte 2 corre
 > sobre un solo host on-premise con un clúster k3d y tres namespaces. La topología vigente está
-> en `docs/infra/migracion-onprem.md` y `deploy/k8s/README.md`.
+> en `docs/infra/migracion-onpremise.md` y `deploy/k8s/README.md`.
 >
 > | Parte 1 | Parte 2 |
 > |---|---|

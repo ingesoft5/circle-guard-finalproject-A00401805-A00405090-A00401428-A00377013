@@ -26,7 +26,7 @@ infraestructura propia.
 | 3 | Cobertura de `promotion-service` ≥ 70 % | 76.13 % de líneas en JaCoCo | Hecho |
 | 4 | Módulo de `form-service` en el registro IAG | `IAG_REGISTRO.md` sección 3 | Hecho |
 | 5 | Nombre correcto de la llave en el runbook | `docs/infra/runbook.md` | Hecho |
-| 6 | Anexo de migración on-prem | `docs/infra/migracion-onprem.md` | Hecho |
+| 6 | Anexo de migración on-prem | `docs/infra/migracion-onpremise.md` | Hecho |
 | 7 | Tablero único de P1 y P2 con PR enlazadas | GitHub Project `circle-guard-dasf` | Hecho |
 | 8 | Build final en `main` con pipeline verde | Jenkins + Sonar + JaCoCo | Pendiente |
 

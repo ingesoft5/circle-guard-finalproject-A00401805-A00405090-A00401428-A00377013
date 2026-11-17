@@ -129,13 +129,14 @@ No se exponen SSH, el API de k3s (`6443`), el registro (`5000`), Kafka ni las ba
 
 ### 3.5 Decisiones de configuración de los manifiestos
 
-Tres ajustes del `base` explican por qué un despliegue nuevo arranca sin intervención manual:
+Cuatro ajustes del `base` explican por qué un despliegue nuevo arranca sin intervención manual:
 
 | Componente | Ajuste | Causa que lo motiva |
 |---|---|---|
 | Neo4j | `enableServiceLinks: false` | Kubernetes inyecta `NEO4J_PORT_7687_TCP_PORT` y la imagen lee toda variable `NEO4J_*` como configuración |
 | Kafka | `KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093` | Con el nombre del `Service` el quórum espera endpoints que solo existen cuando el pod está `Ready` |
 | `cg-config` | `SPRING_NEO4J_URI` (antes `NEO4J_URI`) | Spring resuelve `spring.neo4j.uri` por nombre relajado; `NEO4J_URI` no se enlazaba |
+| PostgreSQL | `startupProbe` de 10 s × 30 y liveness con 60 s de gracia | Sin esa ventana el liveness mataba el contenedor a mitad de `initdb` (exit 137) y el clúster quedaba sin las cinco bases ni `pg_hba` remoto |
 
 Los formatos de los secretos también son parte del diseño: `QR_SECRET` ≥ 32 bytes, `VAULT_SALT`
 hex de longitud par, `JWT_SECRET` ≥ 32 bytes y `NEO4J_AUTH` igual a `neo4j/<NEO4J_PASSWORD>`.
@@ -148,8 +149,8 @@ hex de longitud par, `JWT_SECRET` ≥ 32 bytes y `NEO4J_AUTH` igual a `neo4j/<NE
 4. Un solo `kubectl apply` a la vez por namespace para evitar carreras entre integrantes.
 5. Los secretos viven en `.env.onpremise` y en los `Secret` del clúster; nunca en el
    repositorio.
-6. El namespace se crea a mano antes del primer `apply` (`kubectl create namespace cg-<env>`):
-   los manifiestos no incluyen un `kind: Namespace`.
+6. Los manifiestos incluyen un `namespace.yml` por overlay: `kubectl apply -k` crea el
+   namespace si falta. No se crea a mano.
 7. Como máximo dos entornos completos encendidos a la vez: los tres superan la RAM del host
    cuando se suman a Jenkins, SonarQube y Nexus.
 
@@ -189,8 +190,8 @@ la IP de AWS; el plan es recibirlo por `smee.io` mientras no exista un dominio p
 
 - **P1.2 (infraestructura):** el anexo documenta una infraestructura reproducible alternativa y
   explica por qué la de AWS no puede demostrarse en vivo.
-- **P2.2 (Kubernetes):** namespaces, ConfigMaps, Secrets, Ingress y sondas Actuator están
-  desplegados y verificados. Quedan pendientes HPA, TLS y RBAC, declarados en
+- **P2.2 (Kubernetes):** namespaces, ConfigMaps, Secrets, Ingress, sondas Actuator y HPA están
+  desplegados y verificados. Quedan pendientes TLS y RBAC, declarados en
   `deploy/k8s/README.md`.
 - **P2.4 (observabilidad) y P2.8 (pipeline con IaC y `kubectl`):** se apoyan en esta topología;
   comparten host, registro y clúster.

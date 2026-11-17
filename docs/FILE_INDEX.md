@@ -69,9 +69,39 @@ English purpose of every tracked repository file.
 
 - `deploy/compose/tools/jenkins/Dockerfile` — Jenkins controller image with Docker CLI, Node, and Sonar scanner.
 
-- `deploy/compose/tools/jenkins/casc/jenkins.yaml` — Jenkins Configuration as Code for security, credentials, library, and job.
+- `deploy/compose/tools/jenkins/cac/jenkins.yml` — Jenkins Configuration as Code for security, credentials, library, and job.
 
 - `deploy/compose/tools/jenkins/plugins.txt` — Repository file.
+
+- `deploy/k8s/README.md` — On-premise Kubernetes guide: Kustomize layout, secret formats, cold start, access, and traceability with the statement of work.
+
+- `deploy/k8s/base/apps.yml` — Deployments and Services for the eight services and the web client.
+
+- `deploy/k8s/base/hpa.yml` — HorizontalPodAutoscalers for gateway, web, and auth.
+
+- `deploy/k8s/base/ingress.yml` — Traefik Ingress routed by the `Host` header.
+
+- `deploy/k8s/base/kustomization.yml` — Kustomize base that assembles middleware, apps, ingress, and autoscaling.
+
+- `deploy/k8s/base/middleware.yml` — StatefulSets, Services, and ConfigMaps for PostgreSQL, Redis, Neo4j, Kafka, and OpenLDAP.
+
+- `deploy/k8s/overlays/dev/kustomization.yml` — Development overlay: namespace `cg-dev` and host `dev.circleguard.local`.
+
+- `deploy/k8s/overlays/dev/namespace.yml` — Namespace manifest for `cg-dev`.
+
+- `deploy/k8s/overlays/dev/secrets.env.example` — Secret template for the development overlay.
+
+- `deploy/k8s/overlays/prod/kustomization.yml` — Production overlay: namespace `cg-prod` and host `prod.circleguard.local`.
+
+- `deploy/k8s/overlays/prod/namespace.yml` — Namespace manifest for `cg-prod`.
+
+- `deploy/k8s/overlays/prod/secrets.env.example` — Secret template for the production overlay.
+
+- `deploy/k8s/overlays/stage/kustomization.yml` — Staging overlay: namespace `cg-stage` and host `stage.circleguard.local`.
+
+- `deploy/k8s/overlays/stage/namespace.yml` — Namespace manifest for `cg-stage`.
+
+- `deploy/k8s/overlays/stage/secrets.env.example` — Secret template for the staging overlay.
 
 - `deploy/scripts/deploy.sh` — Deploys one image tag to an isolated environment and waits for the whole stack.
 
@@ -265,7 +295,7 @@ English purpose of every tracked repository file.
 
 - `docs/infra/evidence/README.md` — Checklist of CI/CD evidence required for the gateway delivery.
 
-- `docs/infra/migracion-onprem.md` — On-premise migration annex: topology, registry, access, and evidence.
+- `docs/infra/migracion-onpremise.md` — On-premise migration annex: topology, registry, access, and evidence.
 
 - `docs/infra/evidence/idempotency/README.md` — Evidence that the CircleGuard bootstrap converges on repeated execution.
 
