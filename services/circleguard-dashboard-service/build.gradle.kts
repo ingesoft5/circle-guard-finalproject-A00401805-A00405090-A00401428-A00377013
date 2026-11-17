@@ -31,6 +31,24 @@ tasks.jacocoTestReport {
     }
 }
 
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    violationRules {
+        rule {
+            element = "BUNDLE"
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.60".toBigDecimal()
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestReport, tasks.jacocoTestCoverageVerification)
+}
+
 // Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
 val integrationTest by tasks.registering(Test::class) {
     description = "Runs the ${project.name} integration tests."
