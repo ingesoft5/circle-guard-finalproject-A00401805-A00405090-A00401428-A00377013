@@ -1,0 +1,8 @@
+# CG-DOC: Namespace del entorno de desarrollo. Permite que `kubectl apply -k` sea autosuficiente.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cg-dev
+  labels:
+    app.kubernetes.io/part-of: circleguard
+    environment: dev

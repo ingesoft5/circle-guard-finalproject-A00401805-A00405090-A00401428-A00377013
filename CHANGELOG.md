@@ -22,18 +22,37 @@ Semantic Versioning.
   anonymization, JWT PII checks) and smoke tests for both services.
 - Full IAG log entries for auth/identity packaging, deployment, E2E validation,
   and rollback, plus deployment runbooks for both services.
+- Kustomize overlays for `dev`, `stage`, and `prod` on the on-premise k3d cluster, sharing
+  one base and differing only in namespace, Ingress host, and image tag.
+- `HorizontalPodAutoscaler` manifests for gateway, web, and auth, backed by `metrics-server`.
+- Namespace manifests per overlay so `kubectl apply -k` is self-sufficient.
+- Verified token issuance in the `dev`, `stage`, and `prod` namespaces.
 
 ### Changed
 
 - SonarQube now covers promotion and identity in addition to gateway, auth, and form.
 - Kafka exposes an external listener on `29092` for end-to-end tests.
 - Nginx web client runs as a non-root user on port `8080`.
+- `deploy/k8s/base` is now self-sufficient: Neo4j and Kafka run with
+  `enableServiceLinks: false`, Kafka's controller quorum points to `localhost`, and the
+  shared ConfigMap exposes `SPRING_NEO4J_URI`.
+- Kubernetes manifests use the `.yml` extension and the JCasC directory is
+  `deploy/compose/tools/jenkins/cac/jenkins.yml`.
+- On-premise operations use `kubectl` against the local cluster; the AWS four-host compose
+  topology stays as Part 1 evidence.
 
 ### Fixed
 
 - Notification health endpoint no longer fails when the external SMTP server is not
   configured.
 - `LIBRARY_BRANCH` defaults to `main` in the tools stack.
+- `auth` no longer crash-loops when `QR_SECRET` is shorter than 32 bytes.
+- `identity` no longer rejects a non-hex `VAULT_SALT`.
+- `promotion` reaches Neo4j through the shared ConfigMap instead of an imperative
+  `kubectl set env`.
+- `postgres` survives its first `initdb`: a `startupProbe` stops the liveness probe from
+  killing it before it creates the five databases and enables remote access.
+- `neo4j` and `kafka` start on the first attempt in a fresh namespace.
 
 ## [1.2.5] - 2026-11-10
 

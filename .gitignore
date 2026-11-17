@@ -57,3 +57,7 @@ infra/state/
 .env.*
 *.env
 !.env.example
+!.env.*.example
+
+# Kubernetes overlay secrets
+deploy/k8s/overlays/*/secrets.env

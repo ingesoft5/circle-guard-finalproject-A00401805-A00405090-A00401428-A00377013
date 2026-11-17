@@ -63,15 +63,51 @@ English purpose of every tracked repository file.
 
 - `deploy/compose/tools/.env.example` — Repository file.
 
+- `deploy/compose/tools/.env.onpremise.example` — Environment variable template for the on-premise tools stack (markers resolve with infra/onpremise/bootstrap-onpremise.sh).
+
 - `deploy/compose/tools/docker-compose.yml` — Docker Compose definition for the tools environment.
+
+- `deploy/compose/tools/docker-compose.onpremise.yml` — On-premise tools stack: Jenkins and the smee.io relay on host networking, SonarQube/Nexus on tools-net.
+
+- `deploy/compose/tools/smee-client/Dockerfile` — Image for the smee.io relay that forwards GitHub webhooks to Jenkins.
 
 - `deploy/compose/tools/ingress/default.conf.template` — Nginx ingress template that exposes the dev gateway as the application entry point.
 
 - `deploy/compose/tools/jenkins/Dockerfile` — Jenkins controller image with Docker CLI, Node, and Sonar scanner.
 
-- `deploy/compose/tools/jenkins/casc/jenkins.yaml` — Jenkins Configuration as Code for security, credentials, library, and job.
+- `deploy/compose/tools/jenkins/cac/jenkins.yml` — Jenkins Configuration as Code for security, credentials, library, and job.
 
 - `deploy/compose/tools/jenkins/plugins.txt` — Repository file.
+
+- `deploy/k8s/README.md` — On-premise Kubernetes guide: Kustomize layout, secret formats, cold start, access, and traceability with the statement of work.
+
+- `deploy/k8s/base/apps.yml` — Deployments and Services for the eight services and the web client.
+
+- `deploy/k8s/base/hpa.yml` — HorizontalPodAutoscalers for gateway, web, and auth.
+
+- `deploy/k8s/base/ingress.yml` — Traefik Ingress routed by the `Host` header.
+
+- `deploy/k8s/base/kustomization.yml` — Kustomize base that assembles middleware, apps, ingress, and autoscaling.
+
+- `deploy/k8s/base/middleware.yml` — StatefulSets, Services, and ConfigMaps for PostgreSQL, Redis, Neo4j, Kafka, and OpenLDAP.
+
+- `deploy/k8s/overlays/dev/kustomization.yml` — Development overlay: namespace `cg-dev` and host `dev.circleguard.local`.
+
+- `deploy/k8s/overlays/dev/namespace.yml` — Namespace manifest for `cg-dev`.
+
+- `deploy/k8s/overlays/dev/secrets.env.example` — Secret template for the development overlay.
+
+- `deploy/k8s/overlays/prod/kustomization.yml` — Production overlay: namespace `cg-prod` and host `prod.circleguard.local`.
+
+- `deploy/k8s/overlays/prod/namespace.yml` — Namespace manifest for `cg-prod`.
+
+- `deploy/k8s/overlays/prod/secrets.env.example` — Secret template for the production overlay.
+
+- `deploy/k8s/overlays/stage/kustomization.yml` — Staging overlay: namespace `cg-stage` and host `stage.circleguard.local`.
+
+- `deploy/k8s/overlays/stage/namespace.yml` — Namespace manifest for `cg-stage`.
+
+- `deploy/k8s/overlays/stage/secrets.env.example` — Secret template for the staging overlay.
 
 - `deploy/scripts/deploy.sh` — Deploys one image tag to an isolated environment and waits for the whole stack.
 
@@ -100,6 +136,8 @@ English purpose of every tracked repository file.
 - `docs/agil/README.md` — Agile artifacts index and working agreements.
 
 - `docs/agil/backlog.md` — Product backlog with acceptance criteria, estimates, and sprint status.
+
+- `docs/agil/plan-circle-guard-5.0.md` — Five-day plan to close Part 1 and deliver Part 2 on-premise.
 
 - `docs/agil/sprint-0/planning.md` — Sprint 0 goal, capacity, committed items, and risks.
 
@@ -263,6 +301,8 @@ English purpose of every tracked repository file.
 
 - `docs/infra/evidence/README.md` — Checklist of CI/CD evidence required for the gateway delivery.
 
+- `docs/infra/migracion-onpremise.md` — On-premise migration annex: topology, registry, access, and evidence.
+
 - `docs/infra/evidence/idempotency/README.md` — Evidence that the CircleGuard bootstrap converges on repeated execution.
 
 - `docs/infra/evidence/idempotency/dev.containers.after.txt` — Repository file.
@@ -388,6 +428,12 @@ English purpose of every tracked repository file.
 - `infra/bootstrap/bootstrap-stop.sh` — Stops the four provisioned instances to reduce compute cost.
 
 - `infra/bootstrap/bootstrap-tools.sh` — Provisions Jenkins, SonarQube, Nexus, the private registry, and the ingress on cg-tools.
+
+- `infra/onpremise/bootstrap-onpremise.sh` — Provisions the on-premise tools stack: generates `.env.onpremise` (permissions 600), detects the ZeroTier IP, replaces GitHub credentials, and starts the `cg-tools` Compose project including the smee.io relay.
+
+- `infra/onpremise/k3d-cluster-create.sh` — Creates the on-premise k3d cluster `cg` with Traefik published on port 30080 and the HTTP registry mirrored into the nodes.
+
+- `infra/onpremise/registries.yaml` — k3d registries configuration that mirrors the host's plain-HTTP registry (10.147.20.67:5000) into the cluster nodes.
 
 - `infra/bootstrap/configure-sonar-identity.sh` — Creates the identity Sonar project and assigns the coverage quality gate with an admin credential.
 
