@@ -100,7 +100,7 @@ con `k3d image import -c cg`.
 | ZeroTier (`10.147.20.67`) | Jenkins `:8080`, SonarQube `:9000`, Nexus `:8081`, registro `:5000` | Operativo |
 | Ingress de Traefik `:30080` con header `Host: <env>.circleguard.local` | Aplicaciones de `dev`, `stage` y `prod` | Operativo |
 | Cloudflare Tunnel + Access | Acceso público con autenticación | **No disponible**: requiere un dominio propio, que no se obtuvo |
-| smee.io | Recepción del webhook de GitHub hacia Jenkins local | Planificado |
+| smee.io | Recepción del webhook de GitHub hacia Jenkins local | Configurado en el repo; pendiente aplicar y verificar en el host (ver 3.6) |
 
 Detalles que importan:
 
@@ -140,6 +140,73 @@ Cuatro ajustes del `base` explican por qué un despliegue nuevo arranca sin inte
 
 Los formatos de los secretos también son parte del diseño: `QR_SECRET` ≥ 32 bytes, `VAULT_SALT`
 hex de longitud par, `JWT_SECRET` ≥ 32 bytes y `NEO4J_AUTH` igual a `neo4j/<NEO4J_PASSWORD>`.
+
+### 3.6 Receptor del webhook (smee.io)
+
+El host no tiene IP pública ni dominio, así que GitHub no puede llamar a Jenkins
+directamente. El webhook del repo (id `709307452`, eventos `push` y
+`pull_request`) apunta al canal `https://smee.io/nk4nvlnyB0u6Fqnn`; un cliente
+`smee-client` corre como servicio de Compose y reenvía cada evento a Jenkins.
+
+- El canal **no** es secreto; el secreto de firma sigue siendo
+  `GITHUB_WEBHOOK_SECRET` (el mismo que `infra/state/tools.env`). Si no coinciden,
+  Jenkins responde `403` aunque el relay esté conectado.
+- `deploy/compose/tools/jenkins/cac/jenkins.yml` ya trae `hookUrl: "${SMEE_URL}"` y
+  `manageHooks: false`: el hook se administra a mano en GitHub.
+- El relay está versionado en `deploy/compose/tools/docker-compose.yml` (servicio
+  `smee-client`, imagen construida desde
+  `deploy/compose/tools/smee-client/Dockerfile`) con target
+  `http://jenkins:8080/github-webhook/` dentro de la red `tools-net`.
+
+Receta para este host (proyecto `circle-guard-dasf`):
+
+1. En `.env.onpremise` agregar:
+
+   ```
+   SMEE_URL=https://smee.io/nk4nvlnyB0u6Fqnn
+   SMEE_TARGET=http://localhost:8080/github-webhook/
+   GITHUB_WEBHOOK_SECRET=<el mismo valor que ya usa el webhook>
+   ```
+
+   `SMEE_TARGET` es `localhost` porque el relay va con `network_mode: host`, igual
+   que Jenkins. Si el relay corre en la red bridge del Compose, usar
+   `http://10.147.20.67:8080/github-webhook/`.
+
+2. Agregar el servicio al `docker-compose.onpremise.yml`:
+
+   ```yaml
+     smee-client:
+       build: ./smee-client   # relativo a deploy/compose/tools/ del checkout
+       image: cg-smee-client:latest
+       container_name: cg-smee-client
+       restart: unless-stopped
+       network_mode: host
+       environment:
+         SMEE_URL: ${SMEE_URL}
+         SMEE_TARGET: ${SMEE_TARGET:-http://localhost:8080/github-webhook/}
+       command: ["-u", "${SMEE_URL}", "-t", "${SMEE_TARGET:-http://localhost:8080/github-webhook/}"]
+       depends_on:
+         - jenkins
+   ```
+
+3. Jenkins necesita `SMEE_URL` en su `environment` para que JCasC sustituya
+   `${SMEE_URL}` en `hookUrl`; si el `cac` se monta desde este repo, basta
+   `git pull` y reiniciar Jenkins. Si es una copia suelta, copiar primero
+   `jenkins/cac/jenkins.yml`.
+
+4. Levantar y verificar:
+
+   ```bash
+   docker compose up -d smee-client
+   docker logs -f cg-smee-client        # debe decir "Connected" al canal
+   ```
+
+   En GitHub: Settings > Webhooks > última entrega > **Redeliver**; en Jenkins debe
+   aparecer el scan de la multibranch y el build del PR. El check que exige la
+   protección de rama es `continuous-integration/jenkins/pr-merge`.
+
+Ojo: el `status=OK` de GitHub solo significa que smee.io aceptó el evento; sin el
+relay conectado el evento se pierde y el PR no compila.
 
 ## 4. Reglas de operación
 
@@ -183,8 +250,9 @@ repositorio.
 
 El cambio de SSH a `kubectl` obliga a actualizar `Jenkinsfile` y `jenkins/vars/ci.groovy`, que
 todavía contienen `sshagent(['cg-envs-ssh'])`. Esa migración es parte de la Parte 2 y hasta que
-se complete el pipeline on-prem no se declara operativo. El webhook de GitHub todavía apunta a
-la IP de AWS; el plan es recibirlo por `smee.io` mientras no exista un dominio propio.
+se complete el pipeline on-prem no se declara operativo. El webhook de GitHub ya apunta al canal
+de `smee.io` (`nk4nvlnyB0u6Fqnn`); el relay está versionado en `deploy/compose/tools` y falta
+aplicarlo y verificarlo en este host (sección 3.6) mientras no exista un dominio propio.
 
 ## 7. Relación con los entregables
 

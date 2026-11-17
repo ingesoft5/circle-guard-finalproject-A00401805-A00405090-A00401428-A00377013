@@ -63,10 +63,10 @@ unclassified:
   location:
     url: ${JENKINS_URL}
   gitHubPluginConfig:
-    # Relay del webhook mientras no exista un ingress publico: GitHub no puede
-    # alcanzar localhost. Reemplazar PENDIENTE por el canal real (ver
-    # docs/infra/migracion-onpremise.md 3.3).
-    hookUrl: "https://smee.io/PENDIENTE"
+    # Relay del webhook mientras no exista un dominio propio: GitHub no alcanza
+    # el host on-prem, asi que el evento entra por el canal de smee.io (ver
+    # docs/infra/migracion-onpremise.md, seccion 3.6).
+    hookUrl: "${SMEE_URL}"
     configs:
       - name: "GitHub"
         credentialsId: "github-creds"

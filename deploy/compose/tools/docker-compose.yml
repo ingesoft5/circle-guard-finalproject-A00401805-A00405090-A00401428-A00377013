@@ -25,6 +25,7 @@ services:
       JENKINS_URL: ${JENKINS_URL}
       TOOLS_IP: ${TOOLS_IP}
       TOOLS_PRIVATE_IP: ${TOOLS_PRIVATE_IP}
+      SMEE_URL: ${SMEE_URL}
       TESTCONTAINERS_HOST_OVERRIDE: ${TOOLS_PRIVATE_IP}
       TESTCONTAINERS_RYUK_DISABLED: "true"
       DEV_PRIVATE_IP: ${DEV_PRIVATE_IP}
@@ -46,6 +47,19 @@ services:
       timeout: 10s
       retries: 10
     mem_limit: 2g
+    networks: [tools-net]
+
+  smee-client:
+    build: ./smee-client
+    container_name: cg-smee-client
+    restart: unless-stopped
+    environment:
+      SMEE_URL: ${SMEE_URL}
+      SMEE_TARGET: ${SMEE_TARGET:-http://jenkins:8080/github-webhook/}
+    command: ["-u", "${SMEE_URL}", "-t", "${SMEE_TARGET:-http://jenkins:8080/github-webhook/}"]
+    depends_on:
+      - jenkins
+    mem_limit: 256m
     networks: [tools-net]
 
   sonar-db:
