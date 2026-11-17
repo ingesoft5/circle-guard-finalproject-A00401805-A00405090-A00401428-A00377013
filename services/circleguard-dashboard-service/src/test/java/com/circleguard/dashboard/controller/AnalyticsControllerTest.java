@@ -104,4 +104,14 @@ class AnalyticsControllerTest {
                 .andExpect(jsonPath("$").isEmpty());
         verify(analyticsService).getTimeSeries("daily", 7);
     }
+
+    @Test
+    void shouldReturnExistingErrorMapWhenPromotionFails() throws Exception {
+        Mockito.when(analyticsService.getCampusSummary())
+                .thenReturn(Map.of("error", "Service unavailable"));
+
+        mockMvc.perform(get("/api/v1/analytics/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error").value("Service unavailable"));
+    }
 }
