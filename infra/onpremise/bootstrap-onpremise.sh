@@ -102,6 +102,25 @@ if [[ -z "${GITHUB_WEBHOOK_SECRET:-}" && "$SECRETO_HOOK" != __GITHUB_* ]]; then
 fi
 establecer_valor "GITHUB_WEBHOOK_SECRET" "$SECRETO_HOOK"
 
+# El token de SonarQube NUNCA se genera aleatoriamente: sonar-scanner responde
+# "Not authorized" si no es un token creado dentro de SonarQube. Créalo con:
+#   curl -u admin:admin -X POST http://localhost:9000/api/user_tokens/generate --data-urlencode 'name=jenkins-ci'
+SECRETO_SONAR="${SONAR_TOKEN:-$(grep -m1 '^SONAR_TOKEN=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)}"
+if [[ -z "$SECRETO_SONAR" || "$SECRETO_SONAR" == __* ]]; then
+  if [[ -t 0 ]]; then
+    read -rsp "Token de API de SonarQube (créalo en SonarQube): " SECRETO_SONAR
+    echo
+  fi
+fi
+if [[ -z "$SECRETO_SONAR" || "$SECRETO_SONAR" == __* ]]; then
+  echo "Falta SONAR_TOKEN."
+  echo "Ponlo en $ARCHIVO_ENTORNO o pásalo al ejecutar:"
+  echo "  SONAR_TOKEN=squ_... $0"
+  echo "Un valor al azar hace que sonar-scanner falle con 'Not authorized'."
+  exit 1
+fi
+establecer_valor "SONAR_TOKEN" "$SECRETO_SONAR"
+
 if [[ -z "$USUARIO_PERSONAL" || "$USUARIO_PERSONAL" == __GITHUB_* ]]; then
   read -rp "Usuario personal de GitHub (cualquiera de los 4 integrantes): " USUARIO_PERSONAL
 fi
@@ -120,9 +139,9 @@ establecer_valor "GITHUB_USER" "$USUARIO_PERSONAL"
 establecer_valor "GITHUB_TOKEN" "$TOKEN_PERSONAL"
 
 # Verifica que no queden marcadores sin resolver.
-if grep -qE '=__(GENERATE|HOST_IP|GITHUB_)' "$ARCHIVO_ENTORNO"; then
+if grep -qE '=__(GENERATE|HOST_IP|GITHUB_|SONAR_)' "$ARCHIVO_ENTORNO"; then
   echo "Quedaron marcadores sin reemplazar en $ARCHIVO_ENTORNO:"
-  grep -nE '=__(GENERATE|HOST_IP|GITHUB_)' "$ARCHIVO_ENTORNO"
+  grep -nE '=__(GENERATE|HOST_IP|GITHUB_|SONAR_)' "$ARCHIVO_ENTORNO"
   exit 1
 fi
 

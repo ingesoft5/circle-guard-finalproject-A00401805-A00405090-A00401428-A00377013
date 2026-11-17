@@ -124,7 +124,7 @@ No se exponen SSH, el API de k3s (`6443`), el registro (`5000`), Kafka ni las ba
   clúster. Los `Jenkinsfile` todavía contienen `sshagent(['cg-envs-ssh'])`; la migración a
   `kubectl` es parte de la Parte 2.
 - **Jenkins → GitHub:** token personal, guardado como credencial.
-- **Jenkins → SonarQube:** token del proyecto.
+- **Jenkins → SonarQube:** token de API creado en SonarQube; nunca se genera aleatoriamente (ver 3.6). Jenkins va con `network_mode: host`, así que habla con `localhost:9000`, no con `sonarqube:9000`.
 - **Jenkins → Nexus:** usuario y contraseña del usuario `jenkins`.
 - **Aplicación:** login por `username` (no por email), con usuarios semilla de desarrollo
   definidos en `V2__seed_test_users.sql`. Esas credenciales no deben llegar a producción.
@@ -158,6 +158,33 @@ directamente. El webhook del repo (id `709307452`, eventos `push` y
 - El relay está versionado en `deploy/compose/tools/docker-compose.yml` (red `tools-net`) y
   en `docker-compose.onpremise.yml` (`network_mode: host`); la imagen se construye desde
   `deploy/compose/tools/smee-client/Dockerfile`.
+
+### 3.6.1 Token de SonarQube
+
+El `SONAR_TOKEN` del bootstrap **no se genera aleatoriamente**: un `openssl rand` no es un
+token válido de SonarQube y `sonar-scanner` responde `Not authorized`, igual que el paso de
+quality gate. Hay que crearlo dentro de SonarQube:
+
+```bash
+# SonarQube fresco arranca con admin/admin (cambiar si ya se cambió la clave)
+TOKEN=$(curl -s -u admin:admin -X POST http://localhost:9000/api/user_tokens/generate \
+  --data-urlencode 'name=jenkins-ci' | jq -r .token)   # se muestra una sola vez
+```
+
+Se pasa al bootstrap (`SONAR_TOKEN=$TOKEN infra/onpremise/bootstrap-onpremise.sh`) o se edita
+`.env.onpremise` y se recrea Jenkins para que JCasC relea el secreto:
+
+```bash
+docker compose --env-file .env.onpremise -f docker-compose.onpremise.yml -p cg-tools \
+  up -d --force-recreate jenkins
+docker compose --env-file .env.onpremise -f docker-compose.onpremise.yml -p cg-tools up -d smee-client
+curl -s -u "$(grep '^SONAR_TOKEN=' .env.onpremise | cut -d= -f2):" \
+  http://localhost:9000/api/authentication/validate   # debe devolver login, no 401
+```
+
+Mismo cuidado con las URLs: Jenkins va en `network_mode: host`, así que
+`SONAR_HOST_URL` y `NEXUS_URL` son `http://localhost:…`; los nombres de servicio de
+`tools-net` (`sonarqube`, `nexus`) **no resuelven** desde Jenkins.
 
 Receta para este host (proyecto `cg-tools`):
 
