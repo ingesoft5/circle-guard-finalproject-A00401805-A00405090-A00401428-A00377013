@@ -631,6 +631,8 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-dashboard-service/Dockerfile` — Multi-stage, non-root dashboard image with healthcheck.
 
+- `services/circleguard-dashboard-service/README.md` — Architecture diagnosis, dependencies, Gradle compilation evidence, and technical findings for dashboard-service.
+
 - `services/circleguard-dashboard-service/src/main/java/com/circleguard/dashboard/DashboardApplication.java` — Java source for the dashboard service: Dashboard Application.
 
 - `services/circleguard-dashboard-service/src/main/java/com/circleguard/dashboard/client/PromotionClient.java` — integration client for the dashboard service: Promotion Client.
