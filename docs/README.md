@@ -11,10 +11,12 @@ This directory contains the written documentation for CircleGuard.
 |---|---|
 | `FILE_INDEX.md` | English purpose of every tracked repository file. |
 | `standards/documentation.md` | Documentation language, headers, and per-language rules. |
-| `infra/aws-free-tier-validation.md` | AWS resource sizing and cost checks. |
-| `infra/ci-cd-setup.md` | Jenkins, SonarQube, Nexus, credentials, and pipeline setup. |
-| `infra/environments.md` | Isolated `dev`, `stage`, and `prod` topology. |
-| `infra/runbook.md` | Operational checks, restarts, rollback, and troubleshooting. |
+| `infra/aws-free-tier-validation.md` | [Histórico · AWS] AWS resource sizing and cost checks. |
+| `infra/ci-cd-setup.md` | [Histórico · Parte 1] Jenkins, SonarQube, Nexus, credentials, and pipeline setup. |
+| `infra/environments.md` | [Histórico · Parte 1] Isolated `dev`, `stage`, and `prod` topology. |
+| `infra/runbook.md` | Operational checks, restarts, rollback, and troubleshooting (on-prem path). |
+| `../infra/onpremise/README.md` | On-premise platform guide (Compose cg-tools + k3d `cg`). |
+| `../infra/onpremise/verify-onpremise.sh` | Read-only health check of the on-premise platform. |
 | `infra/evidence/` | Required CI/CD evidence checklist. |
 | `informe/E1.2-CircleGuard-Infraestructura.md` | E1.2 report with Markdown screenshots. |
 | `informe/Gateway-Cobertura.md` | Gateway unit, integration, E2E, JaCoCo, and quality report. |

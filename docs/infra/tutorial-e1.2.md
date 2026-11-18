@@ -1,6 +1,11 @@
 <!-- CG-DOC: Step-by-step tutorial to clean, provision, verify, and operate the four-host gateway platform. -->
 # Tutorial E1.2 - Create and Operate the Gateway Platform
 
+> **Parte 1 — histórico (AWS EC2, cuatro hosts).** Ya no es operativo: la cuenta de AWS quedó
+> inaccesible y la plataforma corre on-prem. Ver `infra/onpremise/README.md` para el camino vigente
+> y `docs/infra/migracion-onpremise.md` para el anexo de migración. Este tutorial se conserva como
+> evidencia de la Parte 1.
+
 ## 1. Prerequisites
 
 - AWS CLI with valid credentials.

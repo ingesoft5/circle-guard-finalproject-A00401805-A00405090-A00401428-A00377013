@@ -70,7 +70,7 @@ CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Mod
 | **Message Bus** | Apache Kafka 3.7.0 (KRaft) | Persistent, audit-trailed event log for status dispatches. |
 | **Caching** | Redis 7.2 | L2 distributed cache for rapid entry-gate status validation. |
 | **Mobile/Web** | Expo (React Native) | Unified codebase across iOS, Android, and Browser. |
-| **Infra** | Docker Compose on AWS EC2 | Four isolated hosts: tools, dev, stage, prod. |
+| **Infra** | Docker Compose on-prem (`cg-tools`) + k3d cluster (`cg`) | Host propio, sin sudo ni exponer puertos; ver `infra/onpremise/README.md`. |
 
 ---
 
@@ -97,7 +97,11 @@ CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Mod
 ## Local Development
 
 ### 1. Infrastructure
-Ensure Docker is installed. Copy the environment template, set `TAG` and `NEXUS_REGISTRY`, and replace every `change-me` placeholder before starting:
+For the current on-premise platform (Compose `cg-tools` + k3d `cg`, namespaces `cg-dev`/`cg-stage`/`cg-prod`) follow [`infra/onpremise/README.md`](infra/onpremise/README.md) and [`docs/infra/migracion-onpremise.md`](docs/infra/migracion-onpremise.md).
+
+The `deploy/compose/{dev,stage,prod}` stacks are kept as a **local legacy reference** from Parte 1 (they define the same services + middleware for a single machine); they are no longer the delivery target.
+
+To run the legacy local stack, copy the environment template, set `TAG` and `NEXUS_REGISTRY`, and replace every `change-me` placeholder before starting:
 
 - `POSTGRES_PASSWORD`
 - `NEO4J_PASSWORD`
@@ -215,9 +219,12 @@ circleguard/
 │   ├── ciServices.groovy
 │   ├── ciNotify.groovy
 │   └── ciVersion.groovy
-├── infra/bootstrap/                  # AWS, tools, entornos y credenciales
+├── infra/
+│   ├── onpremise/                    # Bootstrap on-prem: README, herramientas, k3d, verify
+│   └── bootstrap/                    # SOLO HISTÓRICO (Parte 1, AWS) — ver docs/informe/
 ├── deploy/
-│   ├── compose/{tools,dev,stage,prod}/docker-compose.yml
+│   ├── compose/tools/                # cg-tools: Jenkins, SonarQube, Nexus, registro (on-prem)
+│   ├── k8s/{base,overlays}/          # Kustomize: namespaces cg-dev/cg-stage/cg-prod
 │   ├── compose/postgres/init-databases.sh
 │   └── scripts/{deploy,rollback,smoke-test,seed-visitor}.sh
 ├── tests/e2e/                        # Playwright: login, formulario, acceso
@@ -236,33 +243,35 @@ circleguard/
 
 ## CI/CD Platform
 
-La plataforma corre en cuatro instancias EC2:
+La plataforma corre on-premise en un único host (accesible por ZeroTier):
 
-- `cg-tools`: Jenkins, SonarQube, Nexus, registro privado e ingress.
-- `cg-dev`, `cg-stage`, `cg-prod`: stack aislado con PostgreSQL, Neo4j, Kafka, Redis,
-  OpenLDAP, los cinco servicios núcleo y el cliente web.
+- `cg-tools` (Docker Compose): Jenkins, SonarQube, Nexus, registro `circleguard-docker` y el relay smee.io del webhook.
+- Clúster k3d `cg`: namespaces `cg-dev`, `cg-stage` y `cg-prod` con PostgreSQL, Neo4j, Kafka, Redis, OpenLDAP, los cinco servicios núcleo, los tres reportes y el cliente web; Ingress de Traefik en `:30080` ruteado por `Host` (`<env>.circleguard.local`).
 
-Reconstruir desde cero:
-
-```bash
-export AWS_REGION=us-east-2
-export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
-export GITHUB_USER=...
-export GITHUB_TOKEN=...
-./infra/bootstrap/bootstrap-all.sh
-```
-
-Rotar credenciales de GitHub y sincronizar `tools.env`:
+Levantar desde cero en el host on-premise:
 
 ```bash
-./infra/bootstrap/update-credentials.sh --apply
+git clone https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git
+cd circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013
+./infra/onpremise/bootstrap-onpremise.sh   # .env.onpremise + Jenkins + SonarQube + Nexus
+./infra/onpremise/k3d-cluster-create.sh    # clúster cg + namespaces cg-dev/cg-stage/cg-prod
+docker compose --env-file deploy/compose/tools/.env.onpremise \
+  -f deploy/compose/tools/docker-compose.onpremise.yml -p cg-tools up -d
+kubectl apply -k deploy/k8s/overlays/dev   # y stage/prod según el entorno
+./infra/onpremise/verify-onpremise.sh      # chequeo read-only de salud
 ```
+
+El registro HTTP del host (`10.147.20.67:5000`) lo usa el clúster para jalar imágenes; `k3d image import -c cg` importa las que Jenkins publica.
+
+La infraestructura de la Parte 1 (cuatro instancias EC2, scripts `infra/bootstrap/*`) queda **congelada como evidencia histórica**; no es operativa y se documenta en [`docs/informe/`](docs/informe/) y en el `CHANGELOG.md`.
 
 Documentación:
 
+- [Guía on-premise](infra/onpremise/README.md)
 - [Gestión ágil](docs/agil/README.md)
 - [Arquitectura](docs/arquitectura/README.md)
 - [Pipeline](docs/arquitectura/pipeline.md)
+- [Pipeline on-prem (kubectl/Kustomize, sin SSH)](docs/infra/migracion-onpremise.md)
 - [Entornos](docs/infra/environments.md)
 - [CI/CD setup](docs/infra/ci-cd-setup.md)
 - [Runbook](docs/infra/runbook.md)

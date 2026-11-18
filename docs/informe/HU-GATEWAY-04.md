@@ -292,6 +292,11 @@ quedara en verde.
 > cerró el PR #23. La política actual de `main` exige **dos aprobaciones**; se
 > conserva el registro histórico sin reescribirlo.
 
+> **Nota de actualización (2026-11-18, Sprint 2):** la política volvió a cambiar:
+> `main` exige ahora **una** aprobación (además del check `pr-merge`), porque esperar
+> a dos revisores demoraba demasiado la aprobación de los PRs. Este apartado se
+> conserva como registro histórico sin reescribirlo.
+
 ![Protección de main](evidencia/HU-GATEWAY-04/06-branch-protection.png)
 
 ### 5.8 Notificación de fallo

@@ -42,7 +42,7 @@ cliente web en dev/stage/prod, y completar la documentación y evidencias de la 
 |---|---|---|
 | Conflictos entre ramas de servicios | Alto | Integrar en una rama de parte 1 y resolver compose/CI en conjunto |
 | Testcontainers sin Docker en el host | Medio | Validar Docker antes del pipeline; ejecutar integración en Jenkins |
-| Cuota o límites de AWS | Medio | Mantener instancias m7i-flex.large y destruir recursos al terminar |
+| ~~Cuota o límites de AWS~~ (histórico, Parte 1 cerrada) | Medio | Evidencia Parte 1 congelada; la Parte 2 corre on-prem (`infra/onpremise/`) |
 | Credenciales desincronizadas | Alto | Sincronizar `tools.env` y `.env` con `update-credentials.sh` |
 | E2E dependiente de datos | Medio | Sembrar visitantes por corrida con `seed-visitor.sh` |
 

@@ -3,42 +3,39 @@
  *
  * The questionnaire reaches promotion-service as a Kafka event, so this spec
  * publishes the same records form-service publishes and then reads the aggregated
- * status counts back over HTTP. The visitors have to exist before the run: the
- * pipeline seeds them with deploy/scripts/seed-visitor.sh, which is why
+ * status counts back over HTTP. Kafka has no route through the Ingress and the
+ * events must go through the same channel form-service uses, so they are produced
+ * with `kubectl exec` against the broker pod (apache/kafka image ships
+ * kafka-console-producer.sh). The visitors have to exist before the run: the
+ * pipeline seeds them with `kubectl exec ... cypher-shell`, which is why
  * E2E_ANONYMOUS_ID is required instead of silently generating an unused id.
  */
+import { execSync } from 'node:child_process';
 import { test, expect, type APIRequestContext } from '@playwright/test';
-import { Kafka, logLevel } from 'kafkajs';
 
-const PROMOTION_URL = process.env.PROMOTION_URL || 'http://localhost:8088';
-const KAFKA_BROKERS = (process.env.KAFKA_BROKERS || 'localhost:29092').split(',');
-
-const kafka = new Kafka({
-  clientId: 'circleguard-e2e',
-  brokers: KAFKA_BROKERS,
-  logLevel: logLevel.NOTHING,
-  connectionTimeout: 10_000,
-  retry: { retries: 3 },
-});
+const PROMOTION_URL = process.env.PROMOTION_URL || 'http://dev.circleguard.local:30080';
+const KUBE_NS = process.env.KUBE_NS || 'cg-dev';
 
 function visitorId(role: string): string {
   const base = process.env.E2E_ANONYMOUS_ID?.trim();
   if (!base) {
     throw new Error(
-      'Falta E2E_ANONYMOUS_ID: los visitantes se siembran antes de la prueba con deploy/scripts/seed-visitor.sh.',
+      'Falta E2E_ANONYMOUS_ID: los visitantes se siembran antes de la prueba con `kubectl exec ... cypher-shell`.',
     );
   }
   return `${base}-${role}`;
 }
 
+function shellEscape(value: string): string {
+  return value.replace(/'/g, `'\\''`);
+}
+
 async function publish(topic: string, event: Record<string, unknown>): Promise<void> {
-  const producer = kafka.producer();
-  await producer.connect();
-  try {
-    await producer.send({ topic, messages: [{ value: JSON.stringify(event) }] });
-  } finally {
-    await producer.disconnect();
-  }
+  const payload = JSON.stringify(event);
+  execSync(
+    `kubectl exec -n ${KUBE_NS} deploy/kafka -- bash -c 'printf "%s\\n" '"'"'${shellEscape(payload)}'"'"' | /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic ${topic}'`,
+    { stdio: ['ignore', 'pipe', 'pipe'] },
+  );
 }
 
 async function statusCounts(request: APIRequestContext): Promise<Record<string, number>> {
@@ -47,10 +44,9 @@ async function statusCounts(request: APIRequestContext): Promise<Record<string, 
   return response.json();
 }
 
-test('promotion-service está saludable en el entorno', async ({ request }) => {
-  const response = await request.get(`${PROMOTION_URL}/actuator/health`);
+test('promotion-service responde vía ingress', async ({ request }) => {
+  const response = await request.get(`${PROMOTION_URL}/api/v1/health-status/stats`);
   expect(response.ok()).toBeTruthy();
-  expect(await response.text()).toContain('"status":"UP"');
 });
 
 test('el cuestionario con síntomas promueve al visitante a SUSPECT', async ({ request }) => {

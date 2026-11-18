@@ -28,7 +28,7 @@ infraestructura propia.
 | 5 | Nombre correcto de la llave en el runbook | `docs/infra/runbook.md` | Hecho |
 | 6 | Anexo de migración on-prem | `docs/infra/migracion-onpremise.md` | Hecho |
 | 7 | Tablero único de P1 y P2 con PR enlazadas | GitHub Project `circle-guard-dasf` | Hecho |
-| 8 | Build final en `main` con pipeline verde | Jenkins + Sonar + JaCoCo | Pendiente |
+| 8 | Build final en `main` con pipeline verde | Jenkins + Sonar + JaCoCo (+ evidencia de Deploy dev → E2E → prod) | Pendiente (requiere merge del bundle #92/#91 y primer build verde en `main`; ver anexo "Evidencia P1.4") |
 
 ## 3. Parte 2 — cronograma
 
@@ -58,8 +58,22 @@ no se tocan hasta completar los ítems obligatorios.
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| El pipeline aún usa SSH hacia AWS | P2-08 no avanza | Migrar `Jenkinsfile` y `ci.groovy` a `kubectl` local en el día 1 |
+| ~~El pipeline usa SSH hacia AWS~~ (mitigado, PR #91) | P2-08 avanza | `Jenkinsfile` y `ci.groovy` migrados a `kubectl`/Kustomize on-prem: Deploy/E2E sin SSH, `k3d image import` y `rollout status`; day 1 |
 | RAM insuficiente con tres ambientes | Pods en `Pending` | Limitar réplicas en stage/prod y ajustar requests/limits |
-| Webhook de GitHub sin túnel | Builds no se disparan | Polling o smee.io como respaldo |
+| ~~Webhook de GitHub sin túnel~~ (mitigado el 2026-11-18) | Builds no se disparan | Relé smee activo (`cg-smee-client`, `SMEE_TARGET` con doble slash `github-webhook//`), `GITHUB_WEBHOOK_SECRET` únicamente en `.env.onpremise`, relé duplicado eliminado; verificación en vivo: `POST …/github-webhook/ - 200` y `Received PushEvent` en los logs de Jenkins; respaldo adicional `periodicFolderTrigger` 20m |
 | Pérdida de la cuenta AWS | P1.2 sin demo en vivo | Anexo on-prem y sustentación con el entorno propio |
 | Rotación de integrantes | Retrabajo | Un dueño por frente y evidencia en el repositorio, no en chats |
+
+## 6. Anexo P1.4 — estado del multibranch (2026-11-18)
+
+- Webhook de GitHub (hook 709307452 → smee.io → `cg-smee-client` → Jenkins): **verificado en vivo** el
+  2026-11-18 — `POST http://localhost:8080/github-webhook/ - 200` y `Received PushEvent for …/circle-guard-finalproject-…
+  from 140.82.115.110` en `cg-jenkins`, sin `Method POST required`.
+- Causa raíz del 405 histórica: relé smee con URL `github-webhook/` (Stapler 302 → undici baja POST→GET) y
+  duplicado residual `smee-client` apuntando al mismo canal → relays eliminados/corregidos a doble slash.
+- PR #91 (`fix/HU-CICD-02-webhook-single-source`): check `continuous-integration/jenkins/pr-merge` en **pass**;
+  merge por GitHub bloqueado por `REVIEW_REQUIRED` hasta que un compañero apruebe.
+- Esta rama (`feat/HU-CICD-03-multibranch-grade`) empaqueta #91 + pendiente documental para calificación 5.0.
+- **Pendiente estrictamente** para cerrar P1.4: merge del bundle en `main` → rebuild de Jenkins en el host
+  (`up -d --build --force-recreate jenkins`) → `./infra/onpremise/verify-onpremise.sh` verde → build de `main`
+  verde (Deploy dev → E2E → aprobación prod) → actualizar el ítem 8 y este anexo con la evidencia.
