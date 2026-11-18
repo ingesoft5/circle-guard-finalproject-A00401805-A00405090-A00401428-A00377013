@@ -16,6 +16,7 @@ import java.util.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.verify;
 
 @WebMvcTest(AnalyticsController.class)
 class AnalyticsControllerTest {
@@ -57,5 +58,60 @@ class AnalyticsControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].hour").value("08:00"))
                 .andExpect(jsonPath("$[0].count").value(120));
+    }
+
+    @Test
+    void shouldReturnCampusSummary() throws Exception {
+        Mockito.when(analyticsService.getCampusSummary()).thenReturn(Map.of("totalGreen", 42));
+
+        mockMvc.perform(get("/api/v1/analytics/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalGreen").value(42));
+        verify(analyticsService).getCampusSummary();
+    }
+
+    @Test
+    void shouldReturnDepartmentStats() throws Exception {
+        Mockito.when(analyticsService.getDepartmentStats("Engineering"))
+                .thenReturn(Map.of("department", "Engineering", "suspectCount", "<5"));
+
+        mockMvc.perform(get("/api/v1/analytics/department/Engineering"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.department").value("Engineering"))
+                .andExpect(jsonPath("$.suspectCount").value("<5"));
+        verify(analyticsService).getDepartmentStats("Engineering");
+    }
+
+    @Test
+    void shouldUseDefaultTimeSeriesParameters() throws Exception {
+        Mockito.when(analyticsService.getTimeSeries("hourly", 24))
+                .thenReturn(List.of(Map.of("status", "ACTIVE", "total", 10)));
+
+        mockMvc.perform(get("/api/v1/analytics/time-series"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].total").value(10));
+        verify(analyticsService).getTimeSeries("hourly", 24);
+    }
+
+    @Test
+    void shouldPassExplicitTimeSeriesParameters() throws Exception {
+        Mockito.when(analyticsService.getTimeSeries("daily", 7)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/analytics/time-series")
+                        .param("period", "daily")
+                        .param("limit", "7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+        verify(analyticsService).getTimeSeries("daily", 7);
+    }
+
+    @Test
+    void shouldReturnExistingErrorMapWhenPromotionFails() throws Exception {
+        Mockito.when(analyticsService.getCampusSummary())
+                .thenReturn(Map.of("error", "Service unavailable"));
+
+        mockMvc.perform(get("/api/v1/analytics/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error").value("Service unavailable"));
     }
 }
