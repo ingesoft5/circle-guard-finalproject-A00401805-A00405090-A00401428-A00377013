@@ -3,6 +3,8 @@
  */
 package com.circleguard.file.service;
 
+import org.springframework.core.io.PathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -32,8 +34,15 @@ public class FileStorageService {
     }
 
     public Resource loadFile(String filename) {
-        // Implement retrieval logic
-        return null; 
+        try {
+            Path file = this.root.resolve(filename).normalize();
+            if (!file.startsWith(this.root)) {
+                return null;
+            }
+            Resource resource = new PathResource(file);
+            return resource.exists() && resource.isReadable() ? resource : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
-interface Resource {}

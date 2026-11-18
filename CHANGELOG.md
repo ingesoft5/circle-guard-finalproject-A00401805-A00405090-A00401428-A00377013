@@ -6,6 +6,10 @@ Semantic Versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- **File service (FS-CI-01)**: Implementado `loadFile` real y endpoint de descarga `GET /api/v1/files/download/{filename}`. Cobertura JaCoCo 85.71% (líneas), umbral 60% cumplido.
+
 ### Added
 
 - Full core stack for `dev`, `stage`, and `prod`: auth, identity, promotion, form,
