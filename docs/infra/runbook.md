@@ -25,6 +25,8 @@ con `k3d cluster start cg`.
 
 ### Verificar las herramientas
 
+Versión rápida y read-only: `infra/onpremise/verify-onpremise.sh` (imprime OK/FALLA por cheque y sale !=0 si alguno falla). Comprobación manual:
+
 ```bash
 curl -f http://localhost:8080/login
 curl -f http://localhost:9000/api/system/status

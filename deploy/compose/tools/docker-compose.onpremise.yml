@@ -14,9 +14,13 @@ services:
       JAVA_OPTS: "-Xms512m -Xmx2g"
       TESTCONTAINERS_HOST_OVERRIDE: "10.147.20.67"
       TESTCONTAINERS_RYUK_DISABLED: "true"
+      KUBECONFIG: /var/jenkins_home/.kube/config
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./jenkins/cac:/var/jenkins_home/cac:ro
+      # Kubeconfig admin de k3d (k3d cg kubeconfig write ~/.kube/config). Read-only;
+      # la escritura del clúster la hace el pipeline en deploy/k8s/overlays/<env>.
+      - ${HOME}/.kube/config:/var/jenkins_home/.kube/config:ro
       - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/login >/dev/null || exit 1"]

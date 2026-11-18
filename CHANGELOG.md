@@ -8,6 +8,9 @@ Semantic Versioning.
 
 ### Added
 
+- Jenkins image now ships `kubectl` v1.31.2, `kustomize` v5.4.3 and `k3d` v5.9.0 so the pipeline drives the on-premise cluster directly.
+- On-premise playbook `infra/onpremise/README.md` (host → cg-tools Compose → k3d `cg` → verify) plus `infra/onpremise/verify-onpremise.sh`, a read-only health check for the on-premise platform.
+- Traefik Ingress now routes `/api/v1/gate` → gateway (`8087`).
 - Full core stack for `dev`, `stage`, and `prod`: auth, identity, promotion, form,
   gateway, Expo web client, PostgreSQL, Neo4j, Kafka, Redis, and OpenLDAP.
 - Multi-stage, non-root Docker images for all eight services and the web client.
@@ -30,6 +33,10 @@ Semantic Versioning.
 
 ### Changed
 
+- On-prem deploy & rollback are `kustomize edit set image` (workspace-only tag) + `kubectl apply -k` + `k3d image import -c cg` + `rollout status`; the previous SSH-to-AWS path is gone from `ci.deploy`/`ci.e2e`.
+- E2E (Playwright) runs against the k3d Traefik Ingress (`http://dev.circleguard.local:30080`, `E2E_HOST_RESOLVER=--host-resolver-rules=MAP ...`); Neo4j seeding uses `kubectl exec` `cypher-shell`, Kafka `survey.submitted` publish uses `kubectl exec` `kafka-console-producer.sh`, and `kafkajs` is no longer a dependency.
+- Documentation moved to the on-premise platform as primary source; the AWS four-host topology (console, scripts, topology docs) is explicitly frozen as Parte 1 historical evidence.
+- `Jenkinsfile` no longer expects `DEV/STAGE/PROD_PRIVATE_IP`; `tests/e2e` defaults to the ingress.
 - SonarQube now covers promotion and identity in addition to gateway, auth, and form.
 - Kafka exposes an external listener on `29092` for end-to-end tests.
 - Nginx web client runs as a non-root user on port `8080`.
@@ -43,6 +50,7 @@ Semantic Versioning.
 
 ### Fixed
 
+- JCasC `NoSuchFileException: /var/jenkins_home/.ssh/cg-envs-key` on boot: the dead AWS-era `cg-envs-ssh` credential was removed from JCasC.
 - Notification health endpoint no longer fails when the external SMTP server is not
   configured.
 - `LIBRARY_BRANCH` defaults to `main` in the tools stack.

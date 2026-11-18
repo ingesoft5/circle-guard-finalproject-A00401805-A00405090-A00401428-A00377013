@@ -58,7 +58,7 @@ no se tocan hasta completar los ítems obligatorios.
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| El pipeline aún usa SSH hacia AWS | P2-08 no avanza | Migrar `Jenkinsfile` y `ci.groovy` a `kubectl` local en el día 1 |
+| ~~El pipeline usa SSH hacia AWS~~ (mitigado, PR #91) | P2-08 avanza | `Jenkinsfile` y `ci.groovy` migrados a `kubectl`/Kustomize on-prem: Deploy/E2E sin SSH, `k3d image import` y `rollout status`; day 1 |
 | RAM insuficiente con tres ambientes | Pods en `Pending` | Limitar réplicas en stage/prod y ajustar requests/limits |
 | Webhook de GitHub sin túnel | Builds no se disparan | Polling o smee.io como respaldo |
 | Pérdida de la cuenta AWS | P1.2 sin demo en vivo | Anexo on-prem y sustentación con el entorno propio |
