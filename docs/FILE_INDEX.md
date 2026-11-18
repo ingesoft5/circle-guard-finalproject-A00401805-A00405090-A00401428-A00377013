@@ -23,7 +23,7 @@ English purpose of every tracked repository file.
 
 - `.github/workflows/enforce-pr.yml` — GitHub Actions workflow: enforce-pr.
 
-- `.github/workflows/require-two-approvals.yml` — GitHub Actions workflow: require-two-approvals.
+- ~~`.github/workflows/require-two-approvals.yml`~~ — [Eliminada] GitHub Actions workflow: require-two-approvals. Ya no existe en el repositorio; la protección de `main` vive en el ruleset `github-actions` (1 aprobación requerida desde el Sprint 2).
 
 ## (root)
 

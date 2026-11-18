@@ -39,6 +39,7 @@ Semantic Versioning.
 - `Jenkinsfile` no longer expects `DEV/STAGE/PROD_PRIVATE_IP`; `tests/e2e` defaults to the ingress.
 - Documentation audit: `docs/infra/tutorial-e1.2.md`, `docs/arquitectura/despliegue-auth-service.md` and `despliegue-identity-service.md` are now marked Parte 1 históricos; `docs/FILE_INDEX.md` tags `aws-free-tier-validation.md`, `ci-cd-setup.md`, `environments.md`, `evidence/README.md` and `evidence/idempotency/README.md` as Parte 1 históricos.
 - `docs/agil/plan-circle-guard-5.0.md` marks the webhook and SSH risks as mitigated (live verification 2026-11-18) and adds annex §6 with the P1.4 multibranch status; the `main` build (item 8) stays pending until it is green.
+- PR approval policy changed from 2 to 1 required approving review on `main` (ruleset `github-actions`), effective for Sprint 2, to cut approval latency — waiting for two reviewers was too slow and delayed PRs. The status check `continuous-integration/jenkins/pr-merge` remains mandatory, pushes dismiss stale approvals, and the approver must approve the latest revision. `BRANCHING-STRATEGY.md`, `docs/agil/README.md` and `docs/agil/backlog.md` updated; historical Parte 1 records (`docs/informe/P1.1-Branching-GitHub-Flow.md`, `docs/informe/HU-GATEWAY-04.md`, `IAG_REGISTRO.md`) annotated, not rewritten.
 - SonarQube now covers promotion and identity in addition to gateway, auth, and form.
 - Kafka exposes an external listener on `29092` for end-to-end tests.
 - Nginx web client runs as a non-root user on port `8080`.
