@@ -159,6 +159,19 @@ directamente. El webhook del repo (id `709307452`, eventos `push` y
   en `docker-compose.onpremise.yml` (`network_mode: host`); la imagen se construye desde
   `deploy/compose/tools/smee-client/Dockerfile`.
 
+**Incidente (2026-11-18):** en `docker-compose.onpremise.yml` el servicio `jenkins`
+redeclaraba `GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}` en `environment:`.
+`docker compose` da prioridad a `environment:` sobre `env_file:`, y la interpolación
+usaba el `.env` por defecto del directorio (valor stale), no `.env.onpremise`. Resultado:
+Jenkins firmaba los webhooks con un secreto distinto al del hook ⇒ el Stapler de Jenkins
+respondía `400 No valid signature found` y los logs se llenaban de
+`Method POST required` (`RequirePostWithGHHookPayload.shouldBePostMethod`) devolviendo
+`405` a cada evento reenviado por smee-client; ningún `push`/`pull_request` disparaba el
+multibranch. Regla: el servicio `jenkins` **no debe** redeclarar `GITHUB_WEBHOOK_SECRET`
+en `environment:`; la única fuente es `env_file: .env.onpremise`. Tras fijarlo, recrear
+Jenkins (`up -d --force-recreate jenkins`) para que JCasC relea la credencial
+`github-webhook-secret`.
+
 ### 3.6.1 Token de SonarQube
 
 El `SONAR_TOKEN` del bootstrap **no se genera aleatoriamente**: un `openssl rand` no es un
