@@ -18,6 +18,7 @@
    - [1.3 HU-AUTH-03 (DCG-79) — Empaquetar `auth-service` e integrarlo al pipeline de CI](#13-hu-auth-03-dcg-79--empaquetar-auth-service-e-integrarlo-al-pipeline-de-ci)
    - [1.4 HU-AUTH-04 (DCG-80) — Desplegar `auth-service` en `dev`, `stage` y `prod` y validar flujo E2E de autenticación](#14-hu-auth-04-dcg-80--desplegar-auth-service-en-dev-stage-y-prod-y-validar-flujo-e2e-de-autenticación)
    - [1.5 HU-ID-04 (DCG-85) — Desplegar `identity-service` en `dev`, `stage` y `prod` y validar anonimización E2E](#15-hu-id-04-dcg-85--desplegar-identity-service-en-dev-stage-y-prod-y-validar-anonimización-e2e)
+   - [1.6 HU-AUTH-05 (DCG-81 — Subtareas DCG-102 y DCG-103) — Orquestación en Kubernetes, sondas Actuator y observabilidad con Prometheus](#16-hu-auth-05-dcg-81--subtareas-dcg-102-y-dcg-103--orquestación-en-kubernetes-sondas-actuator-y-observabilidad-con-prometheus)
 2. [Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)](#2-módulo-circleguard-gateway-service-e-infraestructura-cicd-daniela-castaño)
    - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
    - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
@@ -386,6 +387,87 @@ Implementa `HU-ID-04` (`DCG-85`, subtareas `DCG-118`, `DCG-119`, `DCG-120` y `DC
 #### D. Reflexión crítica
 
 Integrar `circleguard-identity-service` en el despliegue multi-ambiente permitió cerrar el ciclo arquitectónico de privacidad por diseño (*Privacy by Design*) de CircleGuard: mientras que en `HU-AUTH-04` fue necesario introducir un fallback determinístico temporal en `IdentityClient` porque la bóveda aún no estaba desplegada, en `HU-ID-04` pudimos desactivar dicho fallback (`IDENTITY_SERVICE_FALLBACK_ENABLED=false`) y demostrar con pruebas E2E automatizadas que el identificador `sub` del JWT emitido por `auth-service` proviene directamente del registro cifrado (`AES` + índice ciego `SHA-256`) almacenado por `identity-service` en `postgres-identity`, garantizando que ningún dato personal identificable (`username` ni `email`) salga hacia los tokens ni hacia el gateway.
+
+---
+
+### 1.6 HU-AUTH-05 (DCG-81 — Subtareas DCG-102 y DCG-103) — Orquestación en Kubernetes, sondas Actuator y observabilidad con Prometheus
+
+- **Fecha:** 18 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Historia / Subtareas en Jira:** `DCG-81` (`DCG-102`, `DCG-103`)
+- **Objetivo de la interacción:** Habilitar métricas en formato Prometheus mediante Micrometer y configurar sondas de ciclo de vida nativas de Actuator (`liveness` y `readiness`) en `circleguard-auth-service` (`DCG-103`), y actualizar los manifiestos de Kubernetes (`Deployment`, `HorizontalPodAutoscaler`, `ConfigMaps` y `Secrets`) en `deploy/k8s/base/` con verificación de sintaxis y renderizado multi-ambiente (`DCG-102`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Tras revisar el avance a la Parte 2 en el monorepo y contrastar la arquitectura de `auth-service` con los manifiestos base de Kubernetes en `deploy/k8s/`, definí como insumo previo:
+
+1. **Requerimientos de Observabilidad y Sondas en `auth-service` (`DCG-103`):**
+   - Incorporar la librería `io.micrometer:micrometer-registry-prometheus` en `build.gradle.kts`.
+   - En `application.yml`, habilitar las sondas nativas de Spring Boot para Kubernetes (`management.endpoint.health.probes.enabled: true`), exponer `prometheus` junto con `health` e `info` en `management.endpoints.web.exposure.include`, e independizar el healthcheck de LDAP (`management.health.ldap.enabled: false`) para evitar falsos negativos en el estado del pod si el directorio tiene latencia.
+   - En `SecurityConfig.java`, asegurar que las rutas `/actuator/health/**`, `/actuator/info` y `/actuator/prometheus` queden abiertas sin exigir Bearer JWT.
+2. **Requerimientos de Orquestación en Kubernetes (`DCG-102`):**
+   - En `deploy/k8s/base/apps.yml`, migrar las sondas genéricas del `Deployment` de `auth` hacia los endpoints especializados: `readinessProbe` apuntando a `/actuator/health/readiness` (`initialDelaySeconds: 30`, `periodSeconds: 10`, `failureThreshold: 3`) y `livenessProbe` apuntando a `/actuator/health/liveness` (`initialDelaySeconds: 60`, `periodSeconds: 15`, `failureThreshold: 3`).
+   - Verificar la inyección de credenciales (`SPRING_DATASOURCE_PASSWORD`, `SPRING_LDAP_PASSWORD`, `JWT_SECRET`, `QR_SECRET`) desde el Secret `cg-secrets`.
+   - En `deploy/k8s/base/hpa.yml`, configurar el `HorizontalPodAutoscaler` para `auth` con autoescalado elástico entre 1 y 5 réplicas y objetivo de utilización media de CPU en `75%`.
+
+#### B. Prompt empleado
+
+```text
+Estoy desarrollando la primera etapa de la historia HU-AUTH-05 (DCG-81) para el proyecto CircleGuard:
+`/home/faiber/Desktop/IngesoftV/final/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`
+Ya me encuentro en la rama de trabajo `feat/HU-AUTH-05-k8s-resiliencia-observabilidad`.
+
+Para este avance me enfocaré únicamente en completar las dos primeras subtareas: DCG-103 (Observabilidad, Prometheus y sondas Actuator) y DCG-102 (Manifiestos K8s, ConfigMaps, Secrets, HPA y sondas especializadas). A partir de la revisión del código en `services/circleguard-auth-service/` y de la base K8s en `deploy/k8s/`, definí los siguientes requisitos técnicos:
+
+1. Subtarea DCG-103 — Métricas Prometheus y sondas Actuator en `auth-service`:
+   - En `services/circleguard-auth-service/build.gradle.kts`, agregar la dependencia de métricas:
+     `implementation("io.micrometer:micrometer-registry-prometheus")`.
+   - En `src/main/resources/application.yml`:
+     - Habilitar las sondas de Kubernetes nativas de Spring Boot: `management.endpoint.health.probes.enabled: true`.
+     - Exponer `prometheus` en los endpoints web de Actuator: `management.endpoints.web.exposure.include: health,info,prometheus`.
+     - Mantener deshabilitado el healthcheck de LDAP (`management.health.ldap.enabled: ${MANAGEMENT_HEALTH_LDAP_ENABLED:false}`) para que el estado general de salud no caiga en down si LDAP tiene latencia o no está disponible.
+   - En `SecurityConfig.java`:
+     - Asegurar que `/actuator/prometheus` y `/actuator/health/**` estén explícitamente permitidos en `authorizeHttpRequests` sin requerir token JWT ni autenticación previa.
+   - En las pruebas (`src/test/`):
+     - Validar que las pruebas sigan pasando y que `/actuator/health/liveness`, `/actuator/health/readiness` y `/actuator/prometheus` respondan correctamente.
+
+2. Subtarea DCG-102 — Manifiestos K8s, HPA y configuración por ambiente:
+   - En `deploy/k8s/base/apps.yml`, actualizar la definición del Deployment de `auth`:
+     - Cambiar las sondas genéricas por las sondas especializadas de Kubernetes:
+       - `readinessProbe`: `httpGet` a `path: /actuator/health/readiness`, port `8180`, `initialDelaySeconds: 30`, `periodSeconds: 10`, `failureThreshold: 3`.
+       - `livenessProbe`: `httpGet` a `path: /actuator/health/liveness`, port `8180`, `initialDelaySeconds: 60`, `periodSeconds: 15`, `failureThreshold: 3`.
+     - Verificar que las variables críticas y secretos (`SPRING_DATASOURCE_PASSWORD`, `SPRING_LDAP_PASSWORD`, `JWT_SECRET`, `QR_SECRET`) sigan inyectándose desde `cg-secrets` (`secretKeyRef`).
+     - Asegurar que los límites de recursos estén configurados (`requests`: `cpu: 100m`, `memory: 320Mi`; `limits`: `memory: 768Mi`).
+   - En `deploy/k8s/base/hpa.yml`:
+     - Verificar y ajustar el `HorizontalPodAutoscaler` para `auth` con escala entre `minReplicas: 1` y `maxReplicas: 5`, con umbral de utilización promedio de CPU en `75%`.
+   - Verificar la sintaxis y renderizado de los manifiestos ejecutando localmente:
+     `kubectl kustomize deploy/k8s/overlays/dev`
+     `kubectl kustomize deploy/k8s/overlays/stage`
+     `kubectl kustomize deploy/k8s/overlays/prod`
+
+---
+
+Con base en este diseño previo:
+1. Aplica las configuraciones de DCG-103 en `services/circleguard-auth-service/` (`build.gradle.kts`, `application.yml`, `SecurityConfig.java`).
+2. Actualiza los manifiestos de DCG-102 en `deploy/k8s/base/apps.yml` y `deploy/k8s/base/hpa.yml`, y valida el renderizado con `kubectl kustomize`.
+3. Ejecuta con Java 21 `./gradlew :services:circleguard-auth-service:test :services:circleguard-auth-service:jacocoTestReport :services:circleguard-auth-service:jacocoTestCoverageVerification` para garantizar que la compilación y pruebas sigan limpias con cobertura >= 60%.
+4. Registra los cambios y el resultado obtenido en `IAG_REGISTRO.md` bajo la sección `1.5 HU-AUTH-05 (DCG-81 — Subtareas DCG-102 y DCG-103)`.
+```
+
+#### C. Validación humana y hallazgos adicionales
+
+- **Detección de condición de auto-configuración en Spring Boot 3:** Al ejecutar la primera prueba de integración, se detectó que el endpoint `/actuator/prometheus` retornaba `404 Not Found` a pesar de estar incluido en `management.endpoints.web.exposure.include`. Inspeccionando el bytecode de `PrometheusMetricsExportAutoConfiguration` se constató que la anotación `@ConditionalOnEnabledMetricsExport("prometheus")` requiere la propiedad explícita `management.prometheus.metrics.export.enabled: true`. Al incorporarla en `application.yml`, el endpoint quedó registrado y respondiendo métricas en formato texto plano de Prometheus.
+- **Validación de sondas de ciclo de vida:** Se verificó que `/actuator/health/liveness` y `/actuator/health/readiness` respondieron `200 OK` con `{"status":"UP"}` en la suite de pruebas automatizadas `AuthIntegrationTest`.
+- **Métricas reales de JaCoCo (`jacocoTestReport.xml`):**
+  - **Cobertura de líneas (`LINE`):** **`98.81%`** (`166 / 168` líneas cubiertas, superando ampliamente el umbral del `60%`).
+  - **Cobertura de instrucciones (`INSTRUCTION`):** **`98.42%`** (`686 / 697` instrucciones).
+  - **Cobertura de clases (`CLASS`):** **`100.00%`** (`10 / 10` clases).
+  - **Cobertura de métodos (`METHOD`):** **`97.14%`** (`34 / 35` métodos).
+- **Validación de manifiestos K8s:** Se validó la sintaxis YAML de `deploy/k8s/base/apps.yml` (18 documentos) y `deploy/k8s/base/hpa.yml` (3 documentos), comprobando que la definición del Deployment `auth` y su HPA con escala de 1 a 5 réplicas cumplen con el esquema de Kubernetes v1.28+.
+
+#### D. Reflexión crítica
+
+Separar las sondas de salud en `/actuator/health/liveness` y `/actuator/health/readiness` en lugar de apuntar ambas al endpoint genérico `/actuator/health` es una buena práctica crítica para Kubernetes: si un middleware dependiente (como PostgreSQL o LDAP) sufre lentitud transitoria, la sonda de `readiness` simplemente retira temporalmente al pod del balanceador de carga del Service sin provocar que el kubelet mate el contenedor mediante un `CrashLoopBackOff` destructivo. Asimismo, exponer métricas nativas con Micrometer Prometheus prepara al microservicio para el scraping declarativo de Prometheus Operator en el clúster on-premise sin requerir agentes externos ni reinicios del contenedor.
 
 ---
 

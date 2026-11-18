@@ -130,10 +130,24 @@ public class AuthIntegrationTest {
                 .andExpect(jsonPath("$[0].username").value("health_user"))
                 .andExpect(jsonPath("$[0].email").value("health@circleguard.edu"));
 
-        // 4. Verify Actuator health endpoint is publicly exposed and UP
+        // 4. Verify Actuator health and Prometheus endpoints
         mockMvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"));
+
+        // 5. Verify Kubernetes liveness and readiness probes
+        mockMvc.perform(get("/actuator/health/liveness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+
+        mockMvc.perform(get("/actuator/health/readiness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+
+        // 6. Verify Prometheus metrics scraping endpoint
+        mockMvc.perform(get("/actuator/prometheus"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN));
     }
 
     @Test
