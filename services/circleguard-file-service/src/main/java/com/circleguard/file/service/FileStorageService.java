@@ -13,21 +13,37 @@ import java.util.UUID;
 
 @Service
 public class FileStorageService {
-    private final Path root = Paths.get("uploads");
+    private final Path root;
 
     public FileStorageService() {
+        this(Paths.get("uploads"));
+    }
+
+    public FileStorageService(Path root) {
+        this.root = root.toAbsolutePath().normalize();
         try {
-            Files.createDirectories(root);
+            Files.createDirectories(this.root);
         } catch (IOException e) {
             throw new RuntimeException("Could not initialize storage", e);
         }
     }
 
     public String saveFile(MultipartFile file) {
-        String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        String originalFilename = file.getOriginalFilename();
+        String safeOriginalName = originalFilename == null ? "file" : Paths.get(originalFilename.replace('\\', '/')).getFileName().toString();
+        if (safeOriginalName.isBlank()) {
+            safeOriginalName = "file";
+        }
+        String filename = UUID.randomUUID().toString() + "_" + safeOriginalName;
         try {
-            Files.copy(file.getInputStream(), this.root.resolve(filename));
+            Path destination = this.root.resolve(filename).normalize();
+            if (!destination.startsWith(this.root)) {
+                throw new RuntimeException("Cannot store file outside storage directory");
+            }
+            Files.copy(file.getInputStream(), destination);
             return filename;
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Could not store file", e);
         }

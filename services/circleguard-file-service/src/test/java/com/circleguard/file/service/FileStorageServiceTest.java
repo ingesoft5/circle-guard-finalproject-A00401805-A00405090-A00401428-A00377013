@@ -3,8 +3,9 @@
  */
 package com.circleguard.file.service;
 
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -16,19 +17,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FileStorageServiceTest {
 
-    private final FileStorageService service = new FileStorageService();
+    @TempDir
+    Path tempDir;
 
-    @AfterEach
-    void cleanupUploads() throws IOException {
-        java.io.File uploads = new java.io.File("uploads");
-        if (uploads.isDirectory()) {
-            java.io.File[] files = uploads.listFiles();
-            if (files != null) {
-                for (java.io.File file : files) {
-                    Files.deleteIfExists(file.toPath());
-                }
-            }
-        }
+    private FileStorageService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new FileStorageService(tempDir);
     }
 
     @Test
@@ -40,8 +36,9 @@ class FileStorageServiceTest {
 
         assertNotNull(filename);
         assertTrue(filename.endsWith("_certificate.pdf"));
-        assertTrue(Files.exists(Path.of("uploads", filename)));
-        assertEquals("mock content", new String(Files.readAllBytes(Path.of("uploads", filename))));
+        Path stored = tempDir.resolve(filename);
+        assertTrue(Files.exists(stored));
+        assertEquals("mock content", Files.readString(stored));
     }
 
     @Test
@@ -52,9 +49,9 @@ class FileStorageServiceTest {
         String filename = service.saveFile(file);
 
         assertNotNull(filename);
-        Path stored = Path.of("uploads", filename);
+        Path stored = tempDir.resolve(filename);
         assertTrue(Files.exists(stored));
-        assertEquals(0, stored.toFile().length());
+        assertEquals(0, Files.size(stored));
     }
 
     @Test
@@ -96,5 +93,26 @@ class FileStorageServiceTest {
         assertNotNull(resource);
         assertTrue(resource.exists());
         assertEquals(0, resource.contentLength());
+    }
+
+    @Test
+    void shouldNotStoreFileOutsideRootWhenFilenameContainsTraversal() throws IOException {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "../../../../tmp/cg-escape-test.txt", "text/plain", "malicious".getBytes());
+
+        String filename = service.saveFile(file);
+
+        assertNotNull(filename);
+        assertFalse(filename.contains(".."));
+        assertFalse(filename.contains("/"));
+        assertFalse(filename.contains("\\"));
+
+        Path stored = tempDir.resolve(filename).normalize();
+        assertTrue(Files.exists(stored));
+        assertTrue(stored.startsWith(tempDir.toAbsolutePath().normalize()));
+        assertEquals("malicious", Files.readString(stored));
+
+        Path escaped = tempDir.toAbsolutePath().normalize().getParent().resolve("cg-escape-test.txt");
+        assertFalse(Files.exists(escaped), "File must not be written outside the storage directory");
     }
 }
