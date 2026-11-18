@@ -1,5 +1,12 @@
-<!-- CG-DOC: Four-host CI/CD setup, exposure, credentials, and full-stack pipeline. -->
-# CI/CD Platform - Jenkins, SonarQube, and Nexus
+<!-- CG-DOC: PART 1 (historical) — Four-host AWS CI/CD setup. Not operational; kept as grade evidence.
+     Current platform: infra/onpremise/README.md and docs/infra/migracion-onpremise.md -->
+# CI/CD Platform (Parte 1 — histórico, no operativo)
+
+> **Estado: histórico.** Este documento describe el montaje sobre AWS de la Parte 1 (cuatro
+> instancias EC2, `bootstrap-tools.sh`, secretos en `infra/state/*`). Esa cuenta quedó bloqueada y
+> la plataforma se reprodujo on-premise; el flujo vigente es el de
+> [`infra/onpremise/README.md`](../../infra/onpremise/README.md) y
+> [`docs/infra/migracion-onpremise.md`](./migracion-onpremise.md). Se conserva para trazabilidad.
 
 ## Requirements
 
@@ -66,7 +73,7 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 - Secret: `GITHUB_WEBHOOK_SECRET` in `infra/state/tools.env`; JCasC exposes it as `github-webhook-secret`.
 - Shared Library: `circleguard`, loaded from `jenkins/vars/` (`libraryPath: jenkins`) and pinned to `main`.
 - `professor` user: read-only.
-- `cg-envs-ssh`: declared in JCasC.
+- ~~`cg-envs-ssh`~~: **eliminada** (on-prem); JCasC ya no contiene credencial SSH. Ver `docs/infra/migracion-onpremise.md` §3.4.
 - The webhook is created by `infra/bootstrap/bootstrap-github.sh` when the token has `admin:repo_hook`. Otherwise create it manually in **Settings → Webhooks** with content type `application/json`.
 
 ## Branch protection

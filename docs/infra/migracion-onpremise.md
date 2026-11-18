@@ -120,9 +120,11 @@ No se exponen SSH, el API de k3s (`6443`), el registro (`5000`), Kafka ni las ba
 
 ### 3.4 Autenticación
 
-- **Jenkins → clúster:** sin clave SSH. El despliegue es local, con `kubectl` contra el
-  clúster. Los `Jenkinsfile` todavía contienen `sshagent(['cg-envs-ssh'])`; la migración a
-  `kubectl` es parte de la Parte 2.
+- **Jenkins → clúster:** sin clave SSH. El despliegue es local con `kubectl` contra el
+  clúster; el kubeconfig de k3d (~/.kube/config) se monta read-only en `/var/jenkins_home/.kube/config`
+  y el pipeline despliega con `kustomize edit set image` + `kubectl apply -k` + `rollout status`.
+  La credencial `cg-envs-ssh` y la clave `.ssh/cg-envs-key` se eliminaron de JCasC e imagen; el
+  warning `FileStringLookup NoSuchFileException` que aparecía al arranque Jenkins ya no existe.
 - **Jenkins → GitHub:** token personal, guardado como credencial.
 - **Jenkins → SonarQube:** token de API creado en SonarQube; nunca se genera aleatoriamente (ver 3.6). Jenkins va con `network_mode: host`, así que habla con `localhost:9000`, no con `sonarqube:9000`.
 - **Jenkins → Nexus:** usuario y contraseña del usuario `jenkins`.
@@ -158,6 +160,31 @@ directamente. El webhook del repo (id `709307452`, eventos `push` y
 - El relay está versionado en `deploy/compose/tools/docker-compose.yml` (red `tools-net`) y
   en `docker-compose.onpremise.yml` (`network_mode: host`); la imagen se construye desde
   `deploy/compose/tools/smee-client/Dockerfile`.
+
+**Incidente (2026-11-18):** el multibranch no disparaba nunca, y el síntoma visible eran
+`405 Method POST required` en los logs de `smee-client`. Hay **dos bugs simultáneos**,
+corregidos en el mismo PR:
+
+1. **405 (causa real, independiente del secreto).** `smee-client` v5 (`trimTrailingSlash`)
+   recorta la barra final del target antes de enviar: con `SMEE_TARGET=http://localhost:8080/github-webhook/`
+   el POST llega a `/github-webhook` sin barra, el Stapler de Jenkins responde `302 → /github-webhook/`
+   y la librería `fetch` de smee-client **degrada POST a GET en un 302** (comportamiento del estándar
+   fetch). Jenkins recibe un `GET` → `405 Method POST required`. GitHub siempre mostraba `status=200`
+   porque smee.io no propaga el status del destino. Fix: `SMEE_TARGET=http://localhost:8080/github-webhook//`
+   (doble barra; smee recorta una y llega el POST directo, sin redirect). Comprobado desde fuera:
+   `POST /github-webhook` → `302`, `GET /github-webhook/` → `405`, `POST /github-webhook//` → `400 No valid signature`
+   (llega al plugin).
+2. **Secret en blanco.** En `docker-compose.onpremise.yml` (y en la variante `docker-compose.yml` de `tools-net`) el
+   servicio `jenkins` redeclaraba `GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}` en `environment:`.
+   `docker compose` da prioridad a `environment:` sobre `env_file:`, y la interpolación usaba el `.env`
+   por defecto del directorio (valor stale/ausente), no `.env.onpremise`. Resultado tras el fix 1:
+   Jenkins firmaría con un secreto vacío ⇒ `400 No valid signature found`. Regla: el servicio `jenkins`
+   **no debe** redeclarar `GITHUB_WEBHOOK_SECRET` en `environment:`; la única fuente es `env_file: .env.onpremise`.
+
+Reglas resultantes: fix 1 vive en `SMEE_TARGET` del `.env.onpremise` y en el valor por defecto del compose
+(doble barra); fix 2 exige recrear Jenkins (`up -d --force-recreate jenkins`) para que JCasC relea la
+credencial `github-webhook-secret`. `smee-client` queda fijado a `smee-client@5.0.0` en su `Dockerfile`;
+si se sube la versión, revalidar el doble slash (el trim es de esa versión).
 
 ### 3.6.1 Token de SonarQube
 
@@ -196,8 +223,9 @@ Receta para este host (proyecto `cg-tools`):
    (del entorno o del archivo) o lo pide, porque debe coincidir exactamente con el del
    hook de GitHub (id `709307452`); si no, Jenkins responde `403`.
    `SMEE_TARGET` es `localhost` porque el relay va con `network_mode: host`, igual que
-   Jenkins; si el relay corre en la red bridge del Compose, usar
-   `http://10.147.20.67:8080/github-webhook/`.
+   Jenkins, y debe llevar **doble barra final** (`http://localhost:8080/github-webhook//`,
+   ver 3.6); si el relay corre en la red bridge del Compose, usar
+   `http://10.147.20.67:8080/github-webhook//`.
 3. Verificar:
 
    ```bash
@@ -251,11 +279,14 @@ repositorio.
 | Acceso | IP pública e ingress | ZeroTier + Ingress por header `Host`; Cloudflare pendiente de dominio |
 | Costo | Crédito de AWS | Energía del equipo |
 
-El cambio de SSH a `kubectl` obliga a actualizar `Jenkinsfile` y `jenkins/vars/ci.groovy`, que
-todavía contienen `sshagent(['cg-envs-ssh'])`. Esa migración es parte de la Parte 2 y hasta que
-se complete el pipeline on-prem no se declara operativo. El webhook de GitHub ya apunta al canal
-de `smee.io` (`nk4nvlnyB0u6Fqnn`); el relay está versionado en `deploy/compose/tools` y falta
-aplicarlo y verificarlo en este host (sección 3.6) mientras no exista un dominio propio.
+La migración SSH → `kubectl` está **implementada**: el pipeline despliega con Kustomize
+(`kustomize edit set image` dentro del overlay del workspace, `kubectl apply -k` y
+`rollout status` por servicio), importa las imágenes al clúster con `k3d image import -c cg`,
+y el E2E siembra Neo4j con `kubectl exec ... cypher-shell` y publica `survey.submitted` con
+`kubectl exec ... kafka-console-producer.sh`. No queda `sshagent` ni clave privada en JCasC,
+en la imagen de Jenkins ni en el `Jenkinsfile`. Hasta que no exista un dominio propio, el
+webhook de GitHub apunta al canal `smee.io` (`nk4nvlnyB0u6Fqnn`) con el relay versionado en
+`deploy/compose/tools` (aplicar y verificar en este host, sección 3.6).
 
 ## 7. Relación con los entregables
 
