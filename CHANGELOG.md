@@ -37,6 +37,8 @@ Semantic Versioning.
 - E2E (Playwright) runs against the k3d Traefik Ingress (`http://dev.circleguard.local:30080`, `E2E_HOST_RESOLVER=--host-resolver-rules=MAP ...`); Neo4j seeding uses `kubectl exec` `cypher-shell`, Kafka `survey.submitted` publish uses `kubectl exec` `kafka-console-producer.sh`, and `kafkajs` is no longer a dependency.
 - Documentation moved to the on-premise platform as primary source; the AWS four-host topology (console, scripts, topology docs) is explicitly frozen as Parte 1 historical evidence.
 - `Jenkinsfile` no longer expects `DEV/STAGE/PROD_PRIVATE_IP`; `tests/e2e` defaults to the ingress.
+- Documentation audit: `docs/infra/tutorial-e1.2.md`, `docs/arquitectura/despliegue-auth-service.md` and `despliegue-identity-service.md` are now marked Parte 1 históricos; `docs/FILE_INDEX.md` tags `aws-free-tier-validation.md`, `ci-cd-setup.md`, `environments.md`, `evidence/README.md` and `evidence/idempotency/README.md` as Parte 1 históricos.
+- `docs/agil/plan-circle-guard-5.0.md` marks the webhook and SSH risks as mitigated (live verification 2026-11-18) and adds annex §6 with the P1.4 multibranch status; the `main` build (item 8) stays pending until it is green.
 - SonarQube now covers promotion and identity in addition to gateway, auth, and form.
 - Kafka exposes an external listener on `29092` for end-to-end tests.
 - Nginx web client runs as a non-root user on port `8080`.
