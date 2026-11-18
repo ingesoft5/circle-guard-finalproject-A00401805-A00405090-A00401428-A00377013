@@ -509,7 +509,7 @@ Ejecuta el Plan completo — E1.2, observaciones y bitácora IAG
 - **Bug 2 — reconstrucción de Jenkins:** `compose_up` usaba `--build` siempre y la etiqueta de imagen quedaba desalineada del contenedor. Ahora solo construye si la imagen no existe.
 - **Bug 3 — credenciales del profesor:** SonarQube creaba `professor` con `|| true` y Nexus devolvía 204 sin cambiar la contraseña; ambos usuarios quedaban sin autenticación. Se añadió sincronización condicional mediante `change_password` / `change-password`.
 - **Bug 4 — reglas de Security Group:** el bootstrap solo agregaba reglas y nunca revocaba las obsoletas. Se añadió `reconcile_cidr`; `8080`, `9000` y `8081` quedaron limitados a `ADMIN_CIDR` y `TEACHER_CIDR`, `443` se cerró y `80` permanece público para el gateway de dev.
-- **Workflow vacío:** se eliminó `require-two-approvals.yml`, que acumulaba 37 runs fallidas. La protección de `main` sigue exigiendo 2 aprobaciones.
+- **Workflow vacío:** se eliminó `require-two-approvals.yml`, que acumulaba 37 runs fallidas. La protección de `main` sigue exigiendo 2 aprobaciones. **Actualización (2026-11-18, sprint 2):** la protección de `main` pasó a exigir **1** aprobación (esperar dos revisores demoraba demasiado los PRs); el check `continuous-integration/jenkins/pr-merge` sigue siendo obligatorio.
 - **Squash merge:** se ajustó `enforce-pr.yml` para aceptar commits con formato `título (#N)`.
 - **Trigger real:** se verificó que Jenkins no usa webhooks; los builds son “Started by timer” por `cron('H/5 * * * *')`. Por eso no se dejó el allowlist de GitHub en `8080`.
 - **CI:** PR-15 se mantuvo en verde con el último build observado en estado `SUCCESS`.

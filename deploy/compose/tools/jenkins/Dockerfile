@@ -17,6 +17,16 @@ RUN apt-get update \
     && unzip /tmp/sonar-scanner.zip -d /opt \
     && ln -s /opt/sonar-scanner-*/bin/sonar-scanner /usr/local/bin/sonar-scanner \
     && rm -f /tmp/sonar-scanner.zip \
+    && curl -fsSL "https://dl.k8s.io/release/v1.31.2/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl \
+    && chmod 0755 /usr/local/bin/kubectl \
+    && curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz" -o /tmp/kustomize.tar.gz \
+    && tar -xzf /tmp/kustomize.tar.gz -C /usr/local/bin kustomize \
+    && rm -f /tmp/kustomize.tar.gz \
+    && curl -fsSL "https://github.com/k3d-io/k3d/releases/download/v5.9.0/k3d-linux-amd64" -o /usr/local/bin/k3d \
+    && chmod 0755 /usr/local/bin/k3d \
+    && kubectl version --client \
+    && kustomize version \
+    && k3d version \
     && rm -rf /var/lib/apt/lists/*
 
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt

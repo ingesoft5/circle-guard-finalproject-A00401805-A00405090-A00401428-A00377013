@@ -8,10 +8,13 @@ const IDENTITY_URL = process.env.IDENTITY_URL || 'http://localhost:8083';
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8087';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-test('el gateway está saludable', async ({ request }) => {
-  const response = await request.get(`${GATEWAY_URL}/actuator/health`);
-  expect(response.ok()).toBeTruthy();
-  expect(await response.text()).toContain('UP');
+// El Ingress solo publica rutas que exponen los servicios; los actuators son
+// internos del clúster. La "salud" se verifica por comportamiento API.
+test('el gateway responde vía ingress', async ({ request }) => {
+  const response = await request.post(`${GATEWAY_URL}/api/v1/gate/validate`, {
+    data: { token: 'invalid' },
+  });
+  expect([401, 403]).toContain(response.status());
 });
 
 test('el gateway rechaza una petición sin token de personal', async ({ request }) => {
@@ -29,11 +32,11 @@ test('el gateway rechaza un JWT de personal malformado', async ({ request }) => 
   expect([401, 403]).toContain(response.status());
 });
 
-test('auth-service está saludable', async ({ request }) => {
-  const response = await request.get(`${AUTH_URL}/actuator/health`);
-  expect(response.ok()).toBeTruthy();
-  const body = await response.json();
-  expect(body.status).toBe('UP');
+test('auth-service responde vía ingress', async ({ request }) => {
+  const response = await request.post(`${AUTH_URL}/api/v1/auth/login`, {
+    data: { username: 'staff_guard', password: 'wrong-password' },
+  });
+  expect(response.status()).toBe(401);
 });
 
 test('auth-service rechaza credenciales inválidas con 401', async ({ request }) => {
@@ -84,11 +87,10 @@ test('flujo E2E completo: login RBAC en auth-service, generación de QR y valida
   expect(['GREEN', 'RED']).toContain(gateData.status);
 });
 
-test('identity-service está saludable', async ({ request }) => {
-  const response = await request.get(`${IDENTITY_URL}/actuator/health/liveness`);
-  expect(response.ok()).toBeTruthy();
-  const body = await response.json();
-  expect(body.status).toBe('UP');
+test('identity-service responde vía ingress', async ({ request }) => {
+  // El lookup exige autorización; un 4xx es la prueba de que el servicio está vivo.
+  const response = await request.get(`${IDENTITY_URL}/api/v1/identities/lookup/00000000-0000-0000-0000-000000000000`);
+  expect([401, 403]).toContain(response.status());
 });
 
 test('identity-service anonimiza identidad real y visitante de forma idempotente y bloquea lookup sin autorización', async ({ request }) => {

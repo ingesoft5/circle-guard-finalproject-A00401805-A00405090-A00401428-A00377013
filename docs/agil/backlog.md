@@ -64,7 +64,7 @@ gestionan en el GitHub Project `circle-guard-dasf`.
 
 Una historia se considera Done cuando:
 
-1. El código está integrado en `main` mediante PR con al menos dos aprobaciones.
+1. El código está integrado en `main` mediante PR con al menos una aprobación (política actualizada para el Sprint 2: esperar dos revisores demoraba demasiado los PRs; ver CHANGELOG).
 2. Los checks de Jenkins (build, pruebas, Sonar, quality gate) están verdes.
 3. La imagen, si aplica, está publicada en Nexus con tag semver y usuario no root.
 4. El despliegue en dev está sano y el flujo E2E correspondiente pasa.

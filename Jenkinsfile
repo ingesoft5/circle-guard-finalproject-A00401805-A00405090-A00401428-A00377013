@@ -82,31 +82,9 @@ def dockerBuildPushClientLocal(String tag) {
     return digest
 }
 
-// Los tres flujos UI (login, cuestionario y acceso) viven en tests/e2e. Se ejecutan
-// aquí para no depender de la versión de ci.e2e() que esté publicada en main.
-def runE2E() {
-    def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
-    sshagent(['cg-envs-ssh']) {
-        sh """
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${env.DEV_PRIVATE_IP} \
-              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose \
-                 ./deploy/scripts/seed-visitor.sh dev ${runId}-symptoms ${runId}-control'
-        """
-    }
-    sh """
-        cd tests/e2e
-        npm install
-        npx playwright install --with-deps chromium
-        WEB_URL=http://${env.DEV_PRIVATE_IP}:8081 \
-        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
-        AUTH_URL=http://${env.DEV_PRIVATE_IP}:8180 \
-        IDENTITY_URL=http://${env.DEV_PRIVATE_IP}:8083 \
-        PROMOTION_URL=http://${env.DEV_PRIVATE_IP}:8088 \
-        KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:29092 \
-        E2E_ANONYMOUS_ID=${runId} \
-        npx playwright test
-    """
-}
+// Los tres flujos UI (login, cuestionario y acceso) viven en tests/e2e. El E2E
+// on-prem siembra Neo4j y publica survey.submitted vía kubectl exec y corre contra
+// el Ingress de k3d; ver jenkins/vars/ci.groovy y tests/e2e/playwright.config.ts.
 
 // Shared library vars added in the same PR are not visible to that PR build:
 // @Library loads from LIBRARY_BRANCH, not from the checked-out PR branch.
@@ -314,8 +292,7 @@ pipeline {
         stage('Resolve services') {
             steps {
                 script {
-                    loadEnvironment('NEXUS_REGISTRY', 'TOOLS_IP', 'DEV_PRIVATE_IP',
-                            'STAGE_PRIVATE_IP', 'PROD_PRIVATE_IP', 'GITHUB_OWNER', 'GITHUB_REPO')
+                    loadEnvironment('NEXUS_REGISTRY', 'TOOLS_IP', 'GITHUB_OWNER', 'GITHUB_REPO')
                     if (params.ROLLBACK_TAG?.trim()) {
                         env.TAG = normalizeSemver(params.ROLLBACK_TAG.trim())
                         services = []
@@ -512,7 +489,7 @@ pipeline {
                     expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
                 }
             }
-            steps { script { runE2E() } }
+            steps { script { ci.e2e() } }
         }
 
         stage('Deploy stage') {

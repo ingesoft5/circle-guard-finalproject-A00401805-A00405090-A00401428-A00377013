@@ -1,59 +1,53 @@
-<!-- CG-DOC: Four-host AWS bootstrap, private registry, ingress, and cost controls. -->
-# Infrastructure
+<!-- CG-DOC: On-premise infrastructure as the operational source (`infra/onpremise/`). -->
+# Infrastructure — On-premise (operativa)
 
-## Hosts
+## Plataforma actual
 
-| Host | Type | Disk | Public IP |
-|---|---|---:|---|
-| `cg-tools` | `m7i-flex.large` | 40 GB | Elastic IP |
-| `cg-dev` | `m7i-flex.large` | 30 GB | ephemeral |
-| `cg-stage` | `m7i-flex.large` | 30 GB | ephemeral |
-| `cg-prod` | `m7i-flex.large` | 30 GB | ephemeral |
+La infraestructura vigente de CircleGuard es **on-premise** y vive en `infra/onpremise/` y `deploy/`:
 
-## Scripts
+| Capa | Componente | Definido en |
+|---|---|---|
+| Herramientas | Docker Compose proyecto `cg-tools` | `deploy/compose/tools/docker-compose.onpremise.yml` |
+| Plataforma | Clúster k3d `cg` (namespaces `cg-dev`, `cg-stage`, `cg-prod`) | `deploy/k8s/` (Kustomize) |
+| Hosts | Un servidor Ubuntu 24.04, ZeroTier `10.147.20.67`, usuario `docker` sin `sudo` | `docs/infra/migracion-onpremise.md` |
 
-| Script | Purpose |
+Herramientas en el host: Jenkins (`:8080`), SonarQube (`:9000`), Nexus (`:8081`), registro Docker (`:5000`) y el relay smee.io del webhook (GitHub → `https://smee.io/nk4nvlnyB0u6Fqnn` → Jenkins).
+
+## Carpeta `infra/onpremise/`
+
+| Archivo | Propósito |
 |---|---|
-| `bootstrap-check.sh` | Validates AWS, tools, and instance types. |
-| `bootstrap-aws.sh` | Creates four hosts, two SGs, one EIP, and the key pair. |
-| `bootstrap-tools.sh` | Jenkins, SonarQube, Nexus, registry `5000`, ingress, and read-only access. |
-| `configure-sonar-identity.sh` | Idempotently creates the identity Sonar project and assigns the coverage gate. |
-| `bootstrap-envs.sh <env>` | Prepares one environment host. |
-| `bootstrap-all.sh` | Runs AWS, tools, and all environments. |
-| `bootstrap-start.sh` | Starts the four hosts and refreshes public IPs. |
-| `bootstrap-stop.sh` | Stops the four hosts. |
-| `bootstrap-ips.sh` | Prints private/public IPs and URLs. |
-| `bootstrap-destroy.sh` | Destroys all created resources. |
+| `README.md` | Guía de arranque rápido: requisitos, orden de ejecución y flujo de la plataforma. |
+| `bootstrap-onpremise.sh` | Crea `deploy/compose/tools/.env.onpremise` desde la plantilla, genera los secretos, pregunta GitHub y el webhook (el secreto no se genera aleatoriamente). |
+| `k3d-cluster-create.sh` | Crea el clúster `cg` con la plantilla `registries.yaml` (registro HTTP del host declarado al clúster). |
+| `registries.yaml` | Espejo HTTP `10.147.20.67:5000` para el clúster k3d. |
+| `verify-onpremise.sh` | Chequeo **read-only** de salud de herramientas, clúster y aplicaciones (códigos HTTP, namespaces, Ingress). |
 
-Compatibility wrappers live in `infra/bootstrap/`.
+## Flujo
 
-## Prerequisites
+1. `git clone` del repo en el host.
+2. `./infra/onpremise/bootstrap-onpremise.sh` → `.env.onpremise` (nunca se commitea).
+3. `./infra/onpremise/k3d-cluster-create.sh` → clúster `cg` + namespaces.
+4. `docker compose --env-file deploy/compose/tools/.env.onpremise -f deploy/compose/tools/docker-compose.onpremise.yml -p cg-tools up -d`.
+5. `kubectl apply -k deploy/k8s/overlays/dev` (y `stage`/`prod`).
+6. `./infra/onpremise/verify-onpremise.sh` — debe devolver `OK` en cada cheque.
 
-```bash
-export AWS_REGION=us-east-2
-export ADMIN_CIDR="$(curl -s https://checkip.amazonaws.com)/32"
-export TEACHER_CIDR=...
-export GITHUB_USER=...
-export GITHUB_TOKEN=...
-```
+El motivo de la migración desde AWS y la evidencia histórica están documentados en
+[`docs/infra/migracion-onpremise.md`](../docs/infra/migracion-onpremise.md) y en
+[`docs/informe/`](../docs/informe/).
 
-## Usage
+## Reglas de operación (host compartido)
 
-```bash
-./infra/bootstrap/bootstrap-check.sh
-./infra/bootstrap/bootstrap-all.sh
-```
+- No tocar `k8s-worker` ni `icesi-inn`.
+- Sin `docker prune`, sin `docker compose down -v`.
+- Secretos solo en `.env.onpremise` y en los `Secret` del clúster (`cg-secrets`).
+- Como máximo dos ambientes completos encendidos a la vez (RAM; ver `deploy/k8s/README.md`).
 
-Per environment:
+## Legado AWS ( Parte 1 — histórico, no operativo )
 
-```bash
-REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
-```
+Los scripts `infra/bootstrap/*` (migración a AWS) y su estado (`infra/state/`) se conservan **solo como evidencia** de la entrega Parte 1. No se ejecutan, no se operan y no se documentan como flujo vigente; si encuentras referencias a ellos fuera de `docs/informe/` o `CHANGELOG.md`, repórtalas.
 
-## State
-
-`infra/state/aws.env` stores IDs and IPs. `infra/state/tools.env` stores tool credentials. Both are ignored by Git.
-
-## Cost
-
-Four `m7i-flex.large` for 180 hours plus 130 GB gp3 and four IPv4 addresses cost approximately **75.28 USD**. See `docs/infra/aws-free-tier-validation.md`.
+- Resumen histórico: `docs/infra/ci-cd-setup.md` (sección marcada "Parte 1 — histórico"), `docs/infra/runbook.md`, `docs/infra/environments.md`.
+- Informe y evidencias: `docs/informe/`.
+- Anejo de migración: `docs/infra/migracion-onpremise.md`.
+- Costo de referencia AWS: `docs/infra/aws-free-tier-validation.md`.

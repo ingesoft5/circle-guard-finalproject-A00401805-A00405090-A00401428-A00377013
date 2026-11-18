@@ -50,14 +50,6 @@ credentials:
               username: ${NEXUS_USER}
               password: ${NEXUS_PASSWORD}
               description: Nexus
-          - basicSSHUserPrivateKey:
-              scope: GLOBAL
-              id: cg-envs-ssh
-              username: ubuntu
-              description: CircleGuard environments
-              privateKeySource:
-                directEntry:
-                  privateKey: "${readFile:/var/jenkins_home/.ssh/cg-envs-key}"
 
 unclassified:
   location:
@@ -129,6 +121,15 @@ jobs:
         orphanedItemStrategy {
           discardOldItems {
             numToKeep(10)
+          }
+        }
+        // El webhook es el disparador primario (push/PR en GitHub -> smee.io ->
+        // /github-webhook/), pero si no alcanza o Jenkins no procesa el evento,
+        // el multibranch nunca ve ramas nuevas. Este es el respaldo: escaneo
+        // cada 20 minutos como máximo, para que la rama aparezca sin intervención.
+        triggers {
+          periodicFolderTrigger {
+            interval('20m')
           }
         }
       }
