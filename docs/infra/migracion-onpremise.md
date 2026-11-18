@@ -159,18 +159,30 @@ directamente. El webhook del repo (id `709307452`, eventos `push` y
   en `docker-compose.onpremise.yml` (`network_mode: host`); la imagen se construye desde
   `deploy/compose/tools/smee-client/Dockerfile`.
 
-**Incidente (2026-11-18):** en `docker-compose.onpremise.yml` el servicio `jenkins`
-redeclaraba `GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}` en `environment:`.
-`docker compose` da prioridad a `environment:` sobre `env_file:`, y la interpolación
-usaba el `.env` por defecto del directorio (valor stale), no `.env.onpremise`. Resultado:
-Jenkins firmaba los webhooks con un secreto distinto al del hook ⇒ el Stapler de Jenkins
-respondía `400 No valid signature found` y los logs se llenaban de
-`Method POST required` (`RequirePostWithGHHookPayload.shouldBePostMethod`) devolviendo
-`405` a cada evento reenviado por smee-client; ningún `push`/`pull_request` disparaba el
-multibranch. Regla: el servicio `jenkins` **no debe** redeclarar `GITHUB_WEBHOOK_SECRET`
-en `environment:`; la única fuente es `env_file: .env.onpremise`. Tras fijarlo, recrear
-Jenkins (`up -d --force-recreate jenkins`) para que JCasC relea la credencial
-`github-webhook-secret`.
+**Incidente (2026-11-18):** el multibranch no disparaba nunca, y el síntoma visible eran
+`405 Method POST required` en los logs de `smee-client`. Hay **dos bugs simultáneos**,
+corregidos en el mismo PR:
+
+1. **405 (causa real, independiente del secreto).** `smee-client` v5 (`trimTrailingSlash`)
+   recorta la barra final del target antes de enviar: con `SMEE_TARGET=http://localhost:8080/github-webhook/`
+   el POST llega a `/github-webhook` sin barra, el Stapler de Jenkins responde `302 → /github-webhook/`
+   y la librería `fetch` de smee-client **degrada POST a GET en un 302** (comportamiento del estándar
+   fetch). Jenkins recibe un `GET` → `405 Method POST required`. GitHub siempre mostraba `status=200`
+   porque smee.io no propaga el status del destino. Fix: `SMEE_TARGET=http://localhost:8080/github-webhook//`
+   (doble barra; smee recorta una y llega el POST directo, sin redirect). Comprobado desde fuera:
+   `POST /github-webhook` → `302`, `GET /github-webhook/` → `405`, `POST /github-webhook//` → `400 No valid signature`
+   (llega al plugin).
+2. **Secret en blanco.** En `docker-compose.onpremise.yml` (y en la variante `docker-compose.yml` de `tools-net`) el
+   servicio `jenkins` redeclaraba `GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}` en `environment:`.
+   `docker compose` da prioridad a `environment:` sobre `env_file:`, y la interpolación usaba el `.env`
+   por defecto del directorio (valor stale/ausente), no `.env.onpremise`. Resultado tras el fix 1:
+   Jenkins firmaría con un secreto vacío ⇒ `400 No valid signature found`. Regla: el servicio `jenkins`
+   **no debe** redeclarar `GITHUB_WEBHOOK_SECRET` en `environment:`; la única fuente es `env_file: .env.onpremise`.
+
+Reglas resultantes: fix 1 vive en `SMEE_TARGET` del `.env.onpremise` y en el valor por defecto del compose
+(doble barra); fix 2 exige recrear Jenkins (`up -d --force-recreate jenkins`) para que JCasC relea la
+credencial `github-webhook-secret`. `smee-client` queda fijado a `smee-client@5.0.0` en su `Dockerfile`;
+si se sube la versión, revalidar el doble slash (el trim es de esa versión).
 
 ### 3.6.1 Token de SonarQube
 
@@ -209,8 +221,9 @@ Receta para este host (proyecto `cg-tools`):
    (del entorno o del archivo) o lo pide, porque debe coincidir exactamente con el del
    hook de GitHub (id `709307452`); si no, Jenkins responde `403`.
    `SMEE_TARGET` es `localhost` porque el relay va con `network_mode: host`, igual que
-   Jenkins; si el relay corre en la red bridge del Compose, usar
-   `http://10.147.20.67:8080/github-webhook/`.
+   Jenkins, y debe llevar **doble barra final** (`http://localhost:8080/github-webhook//`,
+   ver 3.6); si el relay corre en la red bridge del Compose, usar
+   `http://10.147.20.67:8080/github-webhook//`.
 3. Verificar:
 
    ```bash

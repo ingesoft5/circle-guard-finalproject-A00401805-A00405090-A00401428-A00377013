@@ -71,7 +71,7 @@ establecer_valor "JENKINS_URL" "http://${IP_EQUIPO}:8080/"
 # El registro y el relay del webhook son fijos en este host.
 establecer_valor "NEXUS_REGISTRY" "${IP_EQUIPO}:5000"
 establecer_valor "SMEE_URL" "${SMEE_URL:-https://smee.io/nk4nvlnyB0u6Fqnn}"
-establecer_valor "SMEE_TARGET" "${SMEE_TARGET:-http://localhost:8080/github-webhook/}"
+establecer_valor "SMEE_TARGET" "${SMEE_TARGET:-http://localhost:8080/github-webhook//}"
 
 # Pide el usuario y el token personal solo si faltan o siguen con marcador.
 USUARIO_PERSONAL="$(grep -m1 '^GITHUB_USER=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)"
