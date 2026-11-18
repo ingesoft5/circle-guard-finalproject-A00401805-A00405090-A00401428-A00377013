@@ -1,6 +1,10 @@
 <!-- CG-DOC: Continuous deployment, E2E validation, and rollback evidence for auth-service (HU-AUTH-04 / DCG-80). -->
 # Despliegue Continuo, Validación E2E y Rollback de `circleguard-auth-service` (`HU-AUTH-04` / `DCG-80`)
 
+> **Parte 1 — histórico (EC2, SSH, IPs privadas).** La Parte 2 no usa este despliegue: el pipeline
+> desplega on-prem con Kustomize + `kubectl` (ver `deploy/README.md`, `docs/infra/migracion-onpremise.md`
+> y `infra/onpremise/README.md`). Las referencias a `infra/bootstrap/*` y a EC2 son evidencia de la Parte 1.
+
 **Proyecto:** CircleGuard — Sistema de Control de Acceso y Monitoreo Epidemiológico  
 **Módulo:** `services/circleguard-auth-service`  
 **Historia de Usuario en Jira:** `DCG-80` (`HU-AUTH-04`)  

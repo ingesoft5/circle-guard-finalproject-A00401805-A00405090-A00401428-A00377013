@@ -293,17 +293,17 @@ English purpose of every tracked repository file.
 
 - `docs/informe/evidencia/sonarqube-quality-gate.png` — Binary asset.
 
-- `docs/infra/aws-free-tier-validation.md` — AWS four-host sizing, exposure, and one-week cost validation.
+- `docs/infra/aws-free-tier-validation.md` — [Histórico Parte 1 · AWS] AWS four-host sizing, exposure, and one-week cost validation.
 
-- `docs/infra/ci-cd-setup.md` — Four-host CI/CD setup, exposure, credentials, and gateway pipeline.
+- `docs/infra/ci-cd-setup.md` — [Histórico Parte 1 · AWS] Four-host CI/CD setup, exposure, credentials, and gateway pipeline.
 
-- `docs/infra/environments.md` — [Historia Parte 1 · AWS] Four-host topology and isolated dev, stage, and prod environments.
+- `docs/infra/environments.md` — [Histórico Parte 1 · AWS] Four-host topology and isolated dev, stage, and prod environments.
 
-- `docs/infra/evidence/README.md` — Checklist of CI/CD evidence required for the gateway delivery.
+- `docs/infra/evidence/README.md` — [Histórico Parte 1 · AWS] Checklist of CI/CD evidence required for the gateway delivery.
 
-- `docs/infra/migracion-onpremise.md` — On-premise migration annex: topology, registry, access, and evidence.
+- `docs/infra/migracion-onpremise.md` — On-premise migration annex: topology, registry, access, and evidence by namespace.
 
-- `docs/infra/evidence/idempotency/README.md` — Evidence that the CircleGuard bootstrap converges on repeated execution.
+- `docs/infra/evidence/idempotency/README.md` — [Histórico Parte 1 · AWS] Evidence that the CircleGuard bootstrap converges on repeated execution.
 
 - `docs/infra/evidence/idempotency/dev.containers.after.txt` — Repository file.
 
