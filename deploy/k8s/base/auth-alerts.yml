@@ -1,0 +1,50 @@
+# CG-DOC: Prometheus alerting rules for circleguard-auth-service (HU-AUTH-05 / DCG-105).
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-prometheus-alerts
+  labels:
+    app: auth
+    app.kubernetes.io/part-of: circleguard
+data:
+  auth-alerts.rules.yml: |
+    groups:
+      - name: circleguard.auth.availability
+        interval: 30s
+        rules:
+          - alert: AuthServiceDown
+            expr: up{app="auth"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: auth
+            annotations:
+              summary: "CircleGuard auth-service is DOWN"
+              description: "The auth-service instance ({{ $labels.instance }} in namespace {{ $labels.namespace }}) has been unreachable for more than 1 minute."
+
+      - name: circleguard.auth.security
+        interval: 30s
+        rules:
+          - alert: AuthHighUnauthorizedRate
+            expr: rate(circleguard_auth_login_attempts_total{result="failure"}[5m]) > 0.5
+            for: 2m
+            labels:
+              severity: warning
+              service: auth
+            annotations:
+              summary: "High rate of failed login attempts (HTTP 401) in auth-service"
+              description: "More than 0.5 failed authentication attempts per second detected over the last 5 minutes on auth-service."
+
+      - name: circleguard.auth.resilience
+        interval: 30s
+        rules:
+          - alert: AuthIdentityCircuitBreakerOpen
+            expr: resilience4j_circuitbreaker_state{name="identityClient", state="open"} == 1
+            for: 30s
+            labels:
+              severity: critical
+              service: auth
+            annotations:
+              summary: "Circuit Breaker identityClient is OPEN in auth-service"
+              description: "The Resilience4j circuit breaker towards identity-service has remained in OPEN state for at least 30 seconds."

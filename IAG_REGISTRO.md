@@ -19,6 +19,7 @@
    - [1.4 HU-AUTH-04 (DCG-80) — Desplegar `auth-service` en `dev`, `stage` y `prod` y validar flujo E2E de autenticación](#14-hu-auth-04-dcg-80--desplegar-auth-service-en-dev-stage-y-prod-y-validar-flujo-e2e-de-autenticación)
    - [1.5 HU-ID-04 (DCG-85) — Desplegar `identity-service` en `dev`, `stage` y `prod` y validar anonimización E2E](#15-hu-id-04-dcg-85--desplegar-identity-service-en-dev-stage-y-prod-y-validar-anonimización-e2e)
    - [1.6 HU-AUTH-05 (DCG-81 — Subtareas DCG-102 y DCG-103) — Orquestación en Kubernetes, sondas Actuator y observabilidad con Prometheus](#16-hu-auth-05-dcg-81--subtareas-dcg-102-y-dcg-103--orquestación-en-kubernetes-sondas-actuator-y-observabilidad-con-prometheus)
+   - [1.7 HU-AUTH-05 (DCG-81 — Subtareas DCG-104 y DCG-105) — Resiliencia con Resilience4j, logs estructurados y alertas Prometheus](#17-hu-auth-05-dcg-81--subtareas-dcg-104-y-dcg-105--resiliencia-con-resilience4j-logs-estructurados-y-alertas-prometheus)
 2. [Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)](#2-módulo-circleguard-gateway-service-e-infraestructura-cicd-daniela-castaño)
    - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
    - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
@@ -468,6 +469,87 @@ Con base en este diseño previo:
 #### D. Reflexión crítica
 
 Separar las sondas de salud en `/actuator/health/liveness` y `/actuator/health/readiness` en lugar de apuntar ambas al endpoint genérico `/actuator/health` es una buena práctica crítica para Kubernetes: si un middleware dependiente (como PostgreSQL o LDAP) sufre lentitud transitoria, la sonda de `readiness` simplemente retira temporalmente al pod del balanceador de carga del Service sin provocar que el kubelet mate el contenedor mediante un `CrashLoopBackOff` destructivo. Asimismo, exponer métricas nativas con Micrometer Prometheus prepara al microservicio para el scraping declarativo de Prometheus Operator en el clúster on-premise sin requerir agentes externos ni reinicios del contenedor.
+
+---
+
+### 1.7 HU-AUTH-05 (DCG-81 — Subtareas DCG-104 y DCG-105) — Resiliencia con Resilience4j, logs estructurados y alertas Prometheus
+
+- **Fecha:** 18 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Historia / Subtareas en Jira:** `DCG-81` (`DCG-104`, `DCG-105`)
+- **Objetivo de la interacción:** Implementar los patrones de resiliencia **Circuit Breaker** y **Retry** con Resilience4j en la comunicación HTTP de `auth-service` hacia `identity-service` (`IdentityClient.java`) con parámetros externalizados por ambiente (`DCG-104`), y estandarizar los logs estructurados SLF4J, las métricas de auditoría de login en Micrometer y las reglas de alerta en Prometheus/Alertmanager (`DCG-105`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+A partir de la revisión de `services/circleguard-auth-service/` tras completar `DCG-102` y `DCG-103`, levanté el siguiente diseño técnico previo:
+
+1. **Tolerancia a fallos con Resilience4j en `IdentityClient` (`DCG-104`):**
+   - Incorporar `io.github.resilience4j:resilience4j-spring-boot3:2.2.0` y `org.springframework.boot:spring-boot-starter-aop` en `build.gradle.kts`.
+   - Anotar `getAnonymousId(String realIdentity)` con `@CircuitBreaker(name = "identityClient", fallbackMethod = "fallbackAnonymousId")` y `@Retry(name = "identityClient")`.
+   - Definir `fallbackAnonymousId(String realIdentity, Throwable ex)` registrando un `WARN` estructurado en SLF4J y retornando el UUID determinista `UUID.nameUUIDFromBytes(("circleguard:" + realIdentity).getBytes(StandardCharsets.UTF_8))` cuando `fallbackEnabled` está activo (o relanzando la excepción cuando está deshabilitado).
+   - Externalizar en `application.yml` los parámetros de la instancia `identityClient` (`sliding-window-size: 10`, `minimum-number-of-calls: 5`, `failure-rate-threshold: 50`, `wait-duration-in-open-state: 10s`, `permitted-number-of-calls-in-half-open-state: 3`, y `retry` con `max-attempts: 3` y `wait-duration: 500ms`).
+2. **Observabilidad, logs estructurados y alertas de seguridad (`DCG-105`):**
+   - Eliminar `System.out.println`, `System.err.println` y `e.printStackTrace()` en `LoginController.java` y `CustomUserDetailsService.java`, sustituyéndolos por `LoggerFactory.getLogger(...)` sin filtrar longitudes de contraseñas ni stack traces crudos a la salida estándar.
+   - Instrumentar `LoginController` con `MeterRegistry` (usando `ObjectProvider<MeterRegistry>` con respaldo a `SimpleMeterRegistry` para pruebas `@WebMvcTest`) registrando los contadores `circleguard_auth_login_attempts_total{result="success|failure|error"}` y `circleguard_auth_visitor_handoff_total`.
+   - Declarar en `deploy/k8s/base/auth-alerts.yml` las tres reglas de alerta operativas para Prometheus (`AuthServiceDown`, `AuthHighUnauthorizedRate` y `AuthIdentityCircuitBreakerOpen`).
+
+#### B. Prompt empleado
+
+```text
+Estoy desarrollando la segunda etapa de la historia HU-AUTH-05 (DCG-81) para el proyecto CircleGuard:
+`/home/faiber/Desktop/IngesoftV/final/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`
+Ya me encuentro en la rama de trabajo `feat/HU-AUTH-05-k8s-resiliencia-observabilidad`, donde previamente completé las subtareas DCG-102 y DCG-103 (sondas liveness/readiness de Actuator, exposición de `/actuator/prometheus` y manifiestos K8s con HPA).
+
+Para este segundo avance me enfocaré en completar las dos subtareas restantes: DCG-104 (Resiliencia con Resilience4j en `IdentityClient`) y DCG-105 (Logs estructurados, métricas de seguridad/autenticación, reglas de alerta Prometheus y validación de calidad). A partir de la revisión del código en `services/circleguard-auth-service/`, definí el siguiente diseño técnico previo:
+
+1. Subtarea DCG-104 — Patrones de resiliencia (Circuit Breaker y Retry) con Resilience4j hacia `identity-service`:
+   - En `services/circleguard-auth-service/build.gradle.kts`, agregar las dependencias:
+     `implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")`
+     `implementation("org.springframework.boot:spring-boot-starter-aop")`
+   - En `src/main/java/com/circleguard/auth/client/IdentityClient.java`:
+     - Anotar `getAnonymousId(String realIdentity)` con `@CircuitBreaker(name = "identityClient", fallbackMethod = "fallbackAnonymousId")` y `@Retry(name = "identityClient")`.
+     - Implementar el método `public UUID fallbackAnonymousId(String realIdentity, Throwable ex)` que registre un log estructurado `WARN` con SLF4J indicando la activación del circuito/fallback hacia `identity-service` y, cuando `fallbackEnabled` esté activo, retorne el UUID determinista `UUID.nameUUIDFromBytes(("circleguard:" + realIdentity).getBytes(StandardCharsets.UTF_8))` (o relance la excepción si `fallbackEnabled` es `false`).
+     - Mantener compatibilidad en invocaciones unitarias directas (sin proxy AOP) para que las pruebas existentes de `IdentityClientTest` sigan funcionando sin regresiones.
+   - En `src/main/resources/application.yml` y `src/test/resources/application.yml`:
+     - Externalizar la configuración de `resilience4j.circuitbreaker.instances.identityClient` (`register-health-indicator: true`, `sliding-window-type: COUNT_BASED`, `sliding-window-size: ${CB_IDENTITY_SLIDING_WINDOW_SIZE:10}`, `minimum-number-of-calls: ${CB_IDENTITY_MIN_CALLS:5}`, `failure-rate-threshold: ${CB_IDENTITY_FAILURE_RATE_THRESHOLD:50}`, `wait-duration-in-open-state: ${CB_IDENTITY_WAIT_DURATION_OPEN:10s}`, `permitted-number-of-calls-in-half-open-state: ${CB_IDENTITY_HALF_OPEN_CALLS:3}`) y `resilience4j.retry.instances.identityClient` (`max-attempts: ${RETRY_IDENTITY_MAX_ATTEMPTS:3}`, `wait-duration: ${RETRY_IDENTITY_WAIT_DURATION:500ms}`).
+   - En `src/test/java/com/circleguard/auth/client/IdentityClientTest.java`:
+     - Añadir pruebas unitarias que verifiquen el método `fallbackAnonymousId` y la transición del `CircuitBreaker` (`CLOSED` -> `OPEN`) ante fallos consecutivos de `identity-service`.
+
+2. Subtarea DCG-105 — Logs estructurados, métricas de autenticación y reglas de alerta en Prometheus/Alertmanager:
+   - En `LoginController.java` y `CustomUserDetailsService.java`:
+     - Reemplazar los `System.out.println`, `System.err.println` y `e.printStackTrace()` por logs estructurados con SLF4J (`LoggerFactory.getLogger(...)`), evitando exponer trazas crudas o datos sensibles en consola.
+     - Registrar contadores de Micrometer (`MeterRegistry` opcional/inyectado en `LoginController`) para auditar intentos de login (`circleguard_auth_login_attempts_total` con tag `result=success|failure|error`) y handoffs de visitantes (`circleguard_auth_visitor_handoff_total`).
+   - Crear el manifiesto de reglas de alerta de Prometheus para `auth-service` en `deploy/k8s/base/auth-alerts.yml` con al menos 3 alertas operativas:
+     - `AuthServiceDown`: `up{app="auth"} == 0` durante `1m` (`severity: critical`).
+     - `AuthHighUnauthorizedRate`: tasa elevada de fallos de autenticación 401 (`rate(circleguard_auth_login_attempts_total{result="failure"}[5m]) > 0.5`) durante `2m` (`severity: warning`).
+     - `AuthIdentityCircuitBreakerOpen`: circuito abierto en `identityClient` (`resilience4j_circuitbreaker_state{name="identityClient", state="open"} == 1`) durante `30s` (`severity: critical`).
+
+---
+
+Con base en este diseño previo:
+1. Implementa los cambios de DCG-104 en `build.gradle.kts`, `IdentityClient.java`, `application.yml` y `IdentityClientTest.java`.
+2. Implementa los cambios de DCG-105 en `LoginController.java`, `CustomUserDetailsService.java`, `LoginControllerTest.java` y crea `deploy/k8s/base/auth-alerts.yml`.
+3. Ejecuta con Java 21 `./gradlew :services:circleguard-auth-service:test :services:circleguard-auth-service:integrationTest :services:circleguard-auth-service:jacocoTestReport :services:circleguard-auth-service:jacocoTestCoverageVerification` para verificar que todas las pruebas pasen y la cobertura de líneas en JaCoCo se mantenga >= 60%.
+4. Registra la interacción en `IAG_REGISTRO.md` bajo la sección `1.7 HU-AUTH-05 (DCG-81 — Subtareas DCG-104 y DCG-105)` siguiendo el formato de Nivel 3 (Insumo previo, Prompt, Validación humana y Reflexión crítica sobre los trade-offs del Circuit Breaker y Retry en la autenticación).
+```
+
+#### C. Validación humana y hallazgos adicionales
+
+- **Desacoplamiento de `MeterRegistry` en tests `@WebMvcTest`:** Al inyectar `ObjectProvider<MeterRegistry>` en el constructor `@Autowired` de `LoginController` con fallback a `SimpleMeterRegistry::new`, las pruebas de slice web (`@WebMvcTest(LoginController.class)`) funcionan sin requerir la auto-configuración completa de Actuator, mientras que en el contexto completo de Spring Boot (`@SpringBootTest` y producción) se inyecta el `PrometheusMeterRegistry` real.
+- **Verificación de transición del Circuit Breaker y contadores Micrometer:**
+  - En `IdentityClientTest` se añadió `shouldTransitionCircuitBreakerToOpenAndFallbackAfterConsecutiveFailures`, comprobando la transición determinista del circuito de `CLOSED` a `OPEN` tras superar el umbral de fallos (`50%` en ventana de 3 llamadas) y la activación del fallback determinista ante `CallNotPermittedException`.
+  - En `LoginControllerTest` se añadió `shouldRecordMicrometerCountersAcrossLoginAndVisitorHandoffOutcomes`, verificando el incremento exacto de `circleguard_auth_login_attempts_total{result="success"}`, `circleguard_auth_login_attempts_total{result="failure"}` y `circleguard_auth_visitor_handoff_total`.
+- **Resultados de pruebas y cobertura JaCoCo (`jacocoTestReport.xml`):**
+  - **Total de pruebas ejecutadas (`test` + `integrationTest`):** **`29 / 29` aprobadas (`0` fallos)**.
+  - **Cobertura de líneas (`LINE`):** **`98.44%`** (`189 / 192` líneas cubiertas, umbral mínimo `60%`).
+  - **Cobertura de instrucciones (`INSTRUCTION`):** **`97.36%`** (`810 / 832` instrucciones).
+  - **Cobertura de métodos (`METHOD`):** **`97.56%`** (`40 / 41` métodos).
+  - **Cobertura de clases (`CLASS`):** **`100.00%`** (`10 / 10` clases).
+- **Validación del manifiesto de alertas (`deploy/k8s/base/auth-alerts.yml`):** Se verificó la validez sintáctica tanto del `ConfigMap` de Kubernetes (`auth-prometheus-alerts`) como del documento interno de reglas de Prometheus (`3` grupos de reglas: `circleguard.auth.availability`, `circleguard.auth.security` y `circleguard.auth.resilience`), integrándolo en `deploy/k8s/base/kustomization.yml`.
+
+#### D. Reflexión crítica
+
+Combinar **Retry** (`max-attempts: 3`, `wait-duration: 500ms`) y **Circuit Breaker** (`failure-rate-threshold: 50%`, `wait-duration-in-open-state: 10s`) en la llamada síncrona de `auth-service` hacia `identity-service` implica un trade-off arquitectónico importante entre disponibilidad y latencia de cola (*tail latency*): mientras el circuito permanece `CLOSED`, un fallo transitorio de red puede añadir hasta `1.0s` de espera por los reintentos antes de resolver el login; sin embargo, si `identity-service` cae por completo, el `CircuitBreaker` pasa a estado `OPEN` tras alcanzar el umbral de la ventana deslizante y corta de inmediato las llamadas remotas (*fail-fast*), evitando el agotamiento del pool de hilos de Tomcat en `auth-service` y activando el fallback o la alerta crítica `AuthIdentityCircuitBreakerOpen` en Prometheus en menos de 30 segundos. Asimismo, reemplazar las impresiones crudas en consola (`System.out.println` que exponían la longitud de la contraseña) por logs estructurados SLF4J y contadores Micrometer elimina una vulnerabilidad de fuga de información en logs centralizados (Loki) y permite detectar ataques de fuerza bruta mediante la alerta `AuthHighUnauthorizedRate`.
 
 ---
 
