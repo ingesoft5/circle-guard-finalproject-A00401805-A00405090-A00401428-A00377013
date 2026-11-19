@@ -23,7 +23,7 @@ English purpose of every tracked repository file.
 
 - `.github/workflows/enforce-pr.yml` — GitHub Actions workflow: enforce-pr.
 
-- `.github/workflows/require-two-approvals.yml` — GitHub Actions workflow: require-two-approvals.
+- ~~`.github/workflows/require-two-approvals.yml`~~ — [Eliminada] GitHub Actions workflow: require-two-approvals. Ya no existe en el repositorio; la protección de `main` vive en el ruleset `github-actions` (1 aprobación requerida desde el Sprint 2).
 
 ## (root)
 
@@ -35,7 +35,7 @@ English purpose of every tracked repository file.
 
 - `IAG_REGISTRO.md` — Registry of generative AI usage and human verification.
 
-- `Jenkinsfile` — Shared Jenkins multibranch pipeline for CircleGuard services, quality gates, semver tags, and Docker publication.
+- `Jenkinsfile` — Shared Jenkins multibranch pipeline for CircleGuard services, quality gates, semver tags, and Docker publication; on-prem deploys via kubectl/kustomize to k3d.
 
 - `Proyecto_Final_CircleGuard.pdf` — Binary asset.
 
@@ -47,19 +47,19 @@ English purpose of every tracked repository file.
 
 ## deploy
 
-- `deploy/README.md` — Deployment layout for CI/CD tools, isolated gateway environments, and operational scripts.
+- `deploy/README.md` — On-premise deployment guide (kubectl/kustomize, k3d `cg`); legacy Compose tooling marked as reference.
 
 - `deploy/compose/dev/.env.example` — Environment variable template for the dev stack.
 
-- `deploy/compose/dev/docker-compose.yml` — Docker Compose definition for the dev environment.
+- `deploy/compose/dev/docker-compose.yml` — [Legacy Parte 1] Docker Compose definition for the dev environment.
 
 - `deploy/compose/prod/.env.example` — Environment variable template for the prod stack.
 
-- `deploy/compose/prod/docker-compose.yml` — Docker Compose definition for the prod environment.
+- `deploy/compose/prod/docker-compose.yml` — [Legacy Parte 1] Docker Compose definition for the prod environment.
 
 - `deploy/compose/stage/.env.example` — Environment variable template for the stage stack.
 
-- `deploy/compose/stage/docker-compose.yml` — Docker Compose definition for the stage environment.
+- `deploy/compose/stage/docker-compose.yml` — [Legacy Parte 1] Docker Compose definition for the stage environment.
 
 - `deploy/compose/tools/.env.example` — Repository file.
 
@@ -109,9 +109,9 @@ English purpose of every tracked repository file.
 
 - `deploy/k8s/overlays/stage/secrets.env.example` — Secret template for the staging overlay.
 
-- `deploy/scripts/deploy.sh` — Deploys one image tag to an isolated environment and waits for the whole stack.
+- `deploy/scripts/deploy.sh` — [Legacy Parte 1 · SSH] Deploys one image tag to an isolated environment and waits for the whole stack.
 
-- `deploy/scripts/rollback.sh` — Rolls back an environment to a previous image tag.
+- `deploy/scripts/rollback.sh` — [Legacy Parte 1 · SSH] Rolls back an environment to a previous image tag.
 
 - `deploy/scripts/seed-status.sh` — Seeds Redis with a visitor status for smoke and end-to-end tests.
 
@@ -125,7 +125,7 @@ English purpose of every tracked repository file.
 
 ## (root)
 
-- `docker-compose.legacy.yml` — Legacy local Compose stack (Confluent 7.6 + Zookeeper); not used by the deployment pipeline.
+- `docker-compose.legacy.yml` — [Legacy] local Compose stack (Confluent 7.6 + Zookeeper); not used by the deployment pipeline.
 
 ## docs
 
@@ -295,17 +295,17 @@ English purpose of every tracked repository file.
 
 - `docs/informe/evidencia/sonarqube-quality-gate.png` — Binary asset.
 
-- `docs/infra/aws-free-tier-validation.md` — AWS four-host sizing, exposure, and one-week cost validation.
+- `docs/infra/aws-free-tier-validation.md` — [Histórico Parte 1 · AWS] AWS four-host sizing, exposure, and one-week cost validation.
 
-- `docs/infra/ci-cd-setup.md` — Four-host CI/CD setup, exposure, credentials, and gateway pipeline.
+- `docs/infra/ci-cd-setup.md` — [Histórico Parte 1 · AWS] Four-host CI/CD setup, exposure, credentials, and gateway pipeline.
 
-- `docs/infra/environments.md` — Four-host topology and isolated dev, stage, and prod environments.
+- `docs/infra/environments.md` — [Histórico Parte 1 · AWS] Four-host topology and isolated dev, stage, and prod environments.
 
-- `docs/infra/evidence/README.md` — Checklist of CI/CD evidence required for the gateway delivery.
+- `docs/infra/evidence/README.md` — [Histórico Parte 1 · AWS] Checklist of CI/CD evidence required for the gateway delivery.
 
-- `docs/infra/migracion-onpremise.md` — On-premise migration annex: topology, registry, access, and evidence.
+- `docs/infra/migracion-onpremise.md` — On-premise migration annex: topology, registry, access, and evidence by namespace.
 
-- `docs/infra/evidence/idempotency/README.md` — Evidence that the CircleGuard bootstrap converges on repeated execution.
+- `docs/infra/evidence/idempotency/README.md` — [Histórico Parte 1 · AWS] Evidence that the CircleGuard bootstrap converges on repeated execution.
 
 - `docs/infra/evidence/idempotency/dev.containers.after.txt` — Repository file.
 
@@ -409,27 +409,29 @@ English purpose of every tracked repository file.
 
 ## infra
 
-- `infra/README.md` — Four-host AWS bootstrap, private registry, ingress, and cost controls.
+- `infra/README.md` — On-premise infrastructure guide: Compose cg-tools + k3d `cg`, rules, and legacy AWS note.
 
-- `infra/bootstrap/bootstrap-all.sh` — Orchestrates four-host provisioning, tools setup, and per-environment preparation.
+- `infra/bootstrap/bootstrap-all.sh` — [Histórico Parte 1 · AWS] Orchestrates four-host provisioning, tools setup, and per-environment preparation.
 
-- `infra/bootstrap/bootstrap-aws.sh` — Provisions four EC2 hosts, two security groups, one tools Elastic IP, and the SSH key pair.
+- `infra/bootstrap/bootstrap-aws.sh` — [Histórico Parte 1 · AWS] Provisions four EC2 hosts, two security groups, one tools Elastic IP, and the SSH key pair.
 
-- `infra/bootstrap/bootstrap-check.sh` — Validates AWS and local prerequisites without creating resources.
+- `infra/bootstrap/bootstrap-check.sh` — [Histórico Parte 1 · AWS] Validates AWS and local prerequisites without creating resources.
 
-- `infra/bootstrap/bootstrap-common.sh` — Shared idempotent helpers for logging, Docker, secrets, SSH, and Compose.
+- `infra/bootstrap/bootstrap-common.sh` — [Histórico Parte 1 · AWS] Shared idempotent helpers for logging, Docker, secrets, SSH, and Compose.
 
-- `infra/bootstrap/bootstrap-destroy.sh` — Destroys the four hosts, tools Elastic IP, security groups, key pair, and local state.
+- `infra/bootstrap/bootstrap-destroy.sh` — [Histórico Parte 1 · AWS] Destroys the four hosts, tools Elastic IP, security groups, key pair, and local state.
 
-- `infra/bootstrap/bootstrap-envs.sh` — Prepares one isolated environment host (dev, stage, or prod).
+- `infra/bootstrap/bootstrap-envs.sh` — [Histórico Parte 1 · AWS] Prepares one isolated environment host (dev, stage, or prod).
 
-- `infra/bootstrap/bootstrap-ips.sh` — Prints private and public IPs and public tool URLs.
+- `infra/bootstrap/bootstrap-ips.sh` — [Histórico Parte 1 · AWS] Prints private and public IPs and public tool URLs.
 
-- `infra/bootstrap/bootstrap-start.sh` — Starts the four provisioned instances and refreshes ephemeral public IPs.
+- `infra/bootstrap/bootstrap-start.sh` — [Histórico Parte 1 · AWS] Starts the four provisioned instances and refreshes ephemeral public IPs.
 
-- `infra/bootstrap/bootstrap-stop.sh` — Stops the four provisioned instances to reduce compute cost.
+- `infra/bootstrap/bootstrap-stop.sh` — [Histórico Parte 1 · AWS] Stops the four provisioned instances to reduce compute cost.
 
-- `infra/bootstrap/bootstrap-tools.sh` — Provisions Jenkins, SonarQube, Nexus, the private registry, and the ingress on cg-tools.
+- `infra/bootstrap/bootstrap-tools.sh` — [Histórico Parte 1 · AWS] Provisions Jenkins, SonarQube, Nexus, the private registry, and the ingress on cg-tools.
+
+- `infra/onpremise/README.md` — On-premise platform guide: host → cg-tools Compose → k3d `cg` → verified, with rules and secrets.
 
 - `infra/onpremise/bootstrap-onpremise.sh` — Provisions the on-premise tools stack: generates `.env.onpremise` (permissions 600), detects the ZeroTier IP, replaces GitHub credentials, and starts the `cg-tools` Compose project including the smee.io relay.
 
@@ -437,7 +439,9 @@ English purpose of every tracked repository file.
 
 - `infra/onpremise/registries.yaml` — k3d registries configuration that mirrors the host's plain-HTTP registry (10.147.20.67:5000) into the cluster nodes.
 
-- `infra/bootstrap/configure-sonar-identity.sh` — Creates the identity Sonar project and assigns the coverage quality gate with an admin credential.
+- `infra/onpremise/verify-onpremise.sh` — Read-only health check for the on-premise platform (tools, SonarQube auth, registry catalog, cluster, namespaces, pods, Ingress).
+
+- `infra/bootstrap/configure-sonar-identity.sh` — [Histórico Parte 1 · AWS] Creates the identity Sonar project and assigns the coverage quality gate with an admin credential.
 
 ## (root)
 
@@ -1129,19 +1133,19 @@ English purpose of every tracked repository file.
 
 - `tests/README.md` — Test suites, end-to-end execution, and required environment variables.
 
-- `tests/e2e/access-validation.spec.ts` — End-to-end test configuration or scenario: access-validation.spec.
+- `tests/e2e/access-validation.spec.ts` — Playwright E2E: auth/gateway/identity API behavior via Traefik Ingress (no actuators exposed).
 
 - `tests/e2e/capture-evidence.sh` — Captures public evidence screenshots with Playwright when URLs are available.
 
 - `tests/e2e/capture-professor.mjs` — Captures professor read-only evidence from Jenkins, SonarQube, and Nexus.
 
-- `tests/e2e/package-lock.json` — Dependency lockfile; generated by npm.
+- `tests/e2e/package-lock.json` — Dependency lockfile; regenerated without kafkajs.
 
-- `tests/e2e/package.json` — JSON configuration or data file.
+- `tests/e2e/package.json` — E2E dependencies (@playwright/test only; KafkaJS dropped).
 
-- `tests/e2e/playwright.config.ts` — End-to-end test configuration or scenario: playwright.config.
+- `tests/e2e/playwright.config.ts` — Playwright config: baseURL defaults to the k3d Traefik ingress (http://dev.circleguard.local:30080); E2E_HOST_RESOLVER adds `--host-resolver-rules` for the Host header.
 
-- `tests/e2e/promotion-flow.spec.ts` — End-to-end scenario: questionnaire event through Kafka into the promotion status.
+- `tests/e2e/promotion-flow.spec.ts` — Playwright E2E: questionnaire event published through `kubectl exec` kafka-console-producer into promotion status counts via the Ingress.
 
 ## jenkins
 

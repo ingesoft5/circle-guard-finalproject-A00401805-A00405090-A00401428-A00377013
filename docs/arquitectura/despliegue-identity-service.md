@@ -1,6 +1,11 @@
 <!-- CG-DOC: Continuous deployment, E2E anonymization validation, and rollback evidence for identity-service (HU-ID-04 / DCG-85). -->
 # Despliegue Continuo, Validación E2E de Anonimización y Rollback de `circleguard-identity-service` (`HU-ID-04` / `DCG-85`)
 
+> **Parte 1 — histórico (EC2, SSH, IPs privadas).** La Parte 2 no usa este despliegue: el pipeline
+> despliega on-prem con Kustomize + `kubectl` (ver `deploy/README.md`, `docs/infra/migracion-onpremise.md`
+> y `infra/onpremise/README.md`). Las referencias a `infra/bootstrap/configure-sonar-identity.sh` y a
+> EC2 son evidencia de la Parte 1.
+
 **Proyecto:** CircleGuard — Sistema de Control de Acceso y Monitoreo Epidemiológico  
 **Módulo:** `services/circleguard-identity-service`  
 **Historia de Usuario en Jira:** `DCG-85` (`HU-ID-04`)  

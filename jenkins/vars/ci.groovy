@@ -175,35 +175,64 @@ def archive(List services) {
             allowEmptyArchive: true, fingerprint: true
 }
 
+// Despliega sobre k3d creando un tag del overlay en el workspace y aplicando con
+// Kustomize; no se commitea nada. Las imágenes las publica el pipeline en el
+// registro HTTP del host (NEXUS_REGISTRY, mismo mecanismo con el que hace push),
+// y k3d las importa a los nodos porque `IfNotPresent` no llega a un registro
+// con TLS propio del clúster.
 def deploy(String environment, String tag) {
-    def ip = env."${environment.toUpperCase()}_PRIVATE_IP"
-    sshagent(['cg-envs-ssh']) {
-        sh """
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${ip} \
-              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose TAG=${tag} ./deploy/scripts/deploy.sh ${environment} ${tag}'
-        """
-    }
-}
-
-def e2e() {
-    // Cada corrida siembra sus propios visitantes; un id fijo reutilizaría el
-    // estado que dejó la corrida anterior.
-    def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
-    sshagent(['cg-envs-ssh']) {
-        sh """
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${env.DEV_PRIVATE_IP} \
-              'cd /opt/circleguard && COMPOSE_ROOT=/opt/circleguard/deploy/compose \
-                 ./deploy/scripts/seed-visitor.sh dev ${runId}-symptoms ${runId}-control'
-        """
+    def namespace = "cg-${environment}"
+    def overlay = "deploy/k8s/overlays/${environment}"
+    def services = ['auth', 'identity', 'promotion', 'form', 'gateway', 'dashboard', 'file', 'notification', 'web']
+    withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+            usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+        sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
     }
     sh """
+        set -e
+        for svc in ${services.join(' ')}; do
+            docker pull ${env.NEXUS_REGISTRY}/circleguard-docker/\${svc}:${tag}
+            docker tag ${env.NEXUS_REGISTRY}/circleguard-docker/\${svc}:${tag} circleguard-docker/\${svc}:${tag}
+            k3d image import -c cg circleguard-docker/\${svc}:${tag}
+        done
+        cd "${overlay}"
+        for svc in ${services.join(' ')}; do
+            kustomize edit set image "circleguard-docker/\${svc}=circleguard-docker/\${svc}:${tag}"
+        done
+        kubectl --namespace ${namespace} apply -k .
+        cd "${WORKSPACE}"
+        for svc in ${services.join(' ')}; do
+            kubectl --namespace ${namespace} rollout status "deployment/\${svc}" --timeout=180s
+        done
+    """
+}
+
+// Cada corrida siembra sus propios visitantes vía kubectl exec (sin SSH ni IPs del
+// mundo AWS); un id fijo reutilizaría el estado que dejó la corrida anterior.
+def e2e() {
+    // Seed Neo4j y ejecuta Playwright contra el Ingress de k3d (Traefik :30080).
+    def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
+    sh """
+        set -e
+        NEO4J_PASSWORD=\$(kubectl get secret cg-secrets -n cg-dev -o jsonpath='{.data.NEO4J_PASSWORD}' | base64 -d)
+        for id in "${runId}-symptoms" "${runId}-control"; do
+            kubectl exec -n cg-dev deploy/neo4j -- cypher-shell -a bolt://localhost:7687 -u neo4j -p "\$NEO4J_PASSWORD" \\
+                "MERGE (u:User {anonymousId: '\${id}'}) SET u.status = 'ACTIVE', u.statusUpdatedAt = timestamp()" >/dev/null
+            echo "Visitante sembrado: \${id} (ACTIVE)"
+        done
+    """
+    sh """
+        set -e
         cd tests/e2e
         npm install
         npx playwright install --with-deps chromium
-        WEB_URL=http://${env.DEV_PRIVATE_IP}:8081 \
-        GATEWAY_URL=http://${env.DEV_PRIVATE_IP}:8087 \
-        PROMOTION_URL=http://${env.DEV_PRIVATE_IP}:8088 \
-        KAFKA_BROKERS=${env.DEV_PRIVATE_IP}:29092 \
+        KUBE_NS=cg-dev \
+        WEB_URL=http://dev.circleguard.local:30080 \
+        GATEWAY_URL=http://dev.circleguard.local:30080 \
+        AUTH_URL=http://dev.circleguard.local:30080 \
+        IDENTITY_URL=http://dev.circleguard.local:30080 \
+        PROMOTION_URL=http://dev.circleguard.local:30080 \
+        E2E_HOST_RESOLVER='MAP dev.circleguard.local 127.0.0.1' \
         E2E_ANONYMOUS_ID=${runId} \
         npx playwright test
     """
