@@ -50,24 +50,17 @@ public class IdentityClientTest {
     void shouldFallbackToDeterministicUuidWhenFallbackEnabledAndRemoteFails() {
         RestTemplate restTemplate = new RestTemplate();
         String url = "http://identity-service:8083/api/v1/identities/map";
-        MockRestServiceServer mockServer = MockRestServiceServer.createServer(restTemplate);
-
-        mockServer.expect(requestTo(url))
-                .andExpect(method(HttpMethod.POST))
-                .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators.withServerError());
-
         IdentityClient identityClient = new IdentityClient(restTemplate, url, true);
-        UUID fallbackUuid = identityClient.getAnonymousId("staff_guard");
+        UUID fallbackUuid = identityClient.fallbackAnonymousId("staff_guard", new RuntimeException("500 Internal Server Error"));
 
         assertEquals(
                 UUID.nameUUIDFromBytes("circleguard:staff_guard".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                 fallbackUuid
         );
-        mockServer.verify();
     }
 
     @Test
-    void shouldThrowWhenFallbackDisabledAndRemoteFails() {
+    void shouldPropagateExceptionFromGetAnonymousIdSoResilience4jDecoratorsObserveFailures() {
         RestTemplate restTemplate = new RestTemplate();
         String url = "http://identity-service:8083/api/v1/identities/map";
         MockRestServiceServer mockServer = MockRestServiceServer.createServer(restTemplate);
@@ -76,12 +69,21 @@ public class IdentityClientTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators.withServerError());
 
-        IdentityClient identityClient = new IdentityClient(restTemplate, url, false);
+        IdentityClient identityClient = new IdentityClient(restTemplate, url, true);
         org.junit.jupiter.api.Assertions.assertThrows(
                 RuntimeException.class,
                 () -> identityClient.getAnonymousId("staff_guard")
         );
         mockServer.verify();
+    }
+
+    @Test
+    void shouldThrowInFallbackWhenFallbackDisabled() {
+        IdentityClient identityClient = new IdentityClient(new RestTemplate(), "http://identity-service:8083/api/v1/identities/map", false);
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> identityClient.fallbackAnonymousId("staff_guard", new RuntimeException("500 Internal Server Error"))
+        );
     }
 
     @Test
@@ -92,54 +94,5 @@ public class IdentityClientTest {
                 () -> identityClient.fallbackAnonymousId("staff_guard", new Exception("Connection timeout"))
         );
         assertEquals("Identity service unavailable", thrown.getMessage());
-    }
-
-    @Test
-    void shouldTransitionCircuitBreakerToOpenAndFallbackAfterConsecutiveFailures() {
-        RestTemplate restTemplate = new RestTemplate();
-        String url = "http://identity-service:8083/api/v1/identities/map";
-        MockRestServiceServer mockServer = MockRestServiceServer.createServer(restTemplate);
-
-        for (int i = 0; i < 3; i++) {
-            mockServer.expect(requestTo(url))
-                    .andExpect(method(HttpMethod.POST))
-                    .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators.withServerError());
-        }
-
-        io.github.resilience4j.circuitbreaker.CircuitBreakerConfig config =
-                io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
-                        .slidingWindowSize(3)
-                        .minimumNumberOfCalls(3)
-                        .failureRateThreshold(50.0f)
-                        .build();
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker =
-                io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.of(config).circuitBreaker("identityClient");
-
-        IdentityClient remoteClient = new IdentityClient(restTemplate, url, false);
-        IdentityClient fallbackClient = new IdentityClient(restTemplate, url, true);
-
-        assertEquals(io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED, circuitBreaker.getState());
-
-        for (int i = 0; i < 3; i++) {
-            org.junit.jupiter.api.Assertions.assertThrows(
-                    RuntimeException.class,
-                    () -> circuitBreaker.executeSupplier(() -> remoteClient.getAnonymousId("student_01"))
-            );
-        }
-
-        assertEquals(io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN, circuitBreaker.getState());
-
-        UUID fallbackResult;
-        try {
-            fallbackResult = circuitBreaker.executeSupplier(() -> remoteClient.getAnonymousId("student_01"));
-        } catch (io.github.resilience4j.circuitbreaker.CallNotPermittedException ex) {
-            fallbackResult = fallbackClient.fallbackAnonymousId("student_01", ex);
-        }
-
-        assertEquals(
-                UUID.nameUUIDFromBytes("circleguard:student_01".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
-                fallbackResult
-        );
-        mockServer.verify();
     }
 }

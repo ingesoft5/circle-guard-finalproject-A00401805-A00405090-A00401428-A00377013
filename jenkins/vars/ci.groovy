@@ -171,8 +171,53 @@ def archive(List services) {
                     exclusionPattern: "**/*Application*,**/config/**"
         }
     }
-    archiveArtifacts artifacts: '**/build/reports/jacoco/test/html/**,**/build/reports/jacoco/test/jacocoTestReport.xml,**/build/test-results/**/*.xml,**/build/integration-test/*.log,sonar-links.txt,image-digest.txt',
+    archiveArtifacts artifacts: '**/build/reports/jacoco/test/html/**,**/build/reports/jacoco/test/jacocoTestReport.xml,**/build/test-results/**/*.xml,**/build/integration-test/*.log,build/reports/security/**,sonar-links.txt,image-digest.txt',
             allowEmptyArchive: true, fingerprint: true
+}
+
+def trivyScanIaC() {
+    sh """
+        set -eu
+        mkdir -p build/reports/security
+        trivy config --severity HIGH,CRITICAL --format json --output build/reports/security/trivy-iac.json deploy/k8s/
+        trivy config --severity CRITICAL --exit-code 1 deploy/k8s/ | tee build/reports/security/trivy-iac.txt
+    """
+}
+
+def trivyScanImage(Map service, String tag) {
+    if (!service.docker) {
+        return
+    }
+    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${tag}"
+    sh """
+        set -eu
+        mkdir -p build/reports/security
+        trivy image --severity HIGH,CRITICAL --ignore-unfixed --format json --output build/reports/security/trivy-${service.short}-${tag}.json "${image}"
+        trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 "${image}" | tee build/reports/security/trivy-${service.short}-${tag}.txt
+    """
+}
+
+def owaspZapScan(String environment) {
+    def namespace = "cg-${environment}"
+    def zapPod = "zap-gate-${env.BUILD_NUMBER ?: 'local'}"
+    sh """
+        set -eu
+        mkdir -p build/reports/security
+        kubectl -n ${namespace} delete pod ${zapPod} --ignore-not-found >/dev/null 2>&1 || true
+        trap 'kubectl -n ${namespace} delete pod ${zapPod} --ignore-not-found >/dev/null 2>&1 || true' EXIT
+        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway --timeout=180s
+        kubectl -n ${namespace} run ${zapPod} \\
+          --image=ghcr.io/zaproxy/zaproxy:stable \\
+          --restart=Never \\
+          --labels="ci-security-gate=true" \\
+          --command -- zap-baseline.py -t http://auth:8180/actuator/health -m 1
+        kubectl -n ${namespace} wait "pod/${zapPod}" --for=jsonpath='{.status.phase}'=Succeeded --timeout=300s
+        kubectl -n ${namespace} logs ${zapPod} | tee build/reports/security/zap-${environment}.txt
+        if grep -qE '^FAIL-NEW:[[:space:]]*[1-9]' build/reports/security/zap-${environment}.txt; then
+            echo "OWASP ZAP detectó vulnerabilidades bloqueantes en ${namespace}." >&2
+            exit 1
+        fi
+    """
 }
 
 // Despliega sobre k3d creando un tag del overlay en el workspace y aplicando con

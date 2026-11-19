@@ -533,19 +533,24 @@ Con base en este diseño previo:
 4. Registra la interacción en `IAG_REGISTRO.md` bajo la sección `1.7 HU-AUTH-05 (DCG-81 — Subtareas DCG-104 y DCG-105)` siguiendo el formato de Nivel 3 (Insumo previo, Prompt, Validación humana y Reflexión crítica sobre los trade-offs del Circuit Breaker y Retry en la autenticación).
 ```
 
-#### C. Validación humana y hallazgos adicionales
+#### C. Validación humana y hallazgos adicionales (incluyendo resolución de Code Review en PR)
 
-- **Desacoplamiento de `MeterRegistry` en tests `@WebMvcTest`:** Al inyectar `ObjectProvider<MeterRegistry>` en el constructor `@Autowired` de `LoginController` con fallback a `SimpleMeterRegistry::new`, las pruebas de slice web (`@WebMvcTest(LoginController.class)`) funcionan sin requerir la auto-configuración completa de Actuator, mientras que en el contexto completo de Spring Boot (`@SpringBootTest` y producción) se inyecta el `PrometheusMeterRegistry` real.
-- **Verificación de transición del Circuit Breaker y contadores Micrometer:**
-  - En `IdentityClientTest` se añadió `shouldTransitionCircuitBreakerToOpenAndFallbackAfterConsecutiveFailures`, comprobando la transición determinista del circuito de `CLOSED` a `OPEN` tras superar el umbral de fallos (`50%` en ventana de 3 llamadas) y la activación del fallback determinista ante `CallNotPermittedException`.
-  - En `LoginControllerTest` se añadió `shouldRecordMicrometerCountersAcrossLoginAndVisitorHandoffOutcomes`, verificando el incremento exacto de `circleguard_auth_login_attempts_total{result="success"}`, `circleguard_auth_login_attempts_total{result="failure"}` y `circleguard_auth_visitor_handoff_total`.
+- **Corrección de propagación de excepciones y orden de aspectos AOP en Resilience4j (`IdentityClient`):**
+  - En la primera versión generada, `IdentityClient.getAnonymousId()` capturaba `RuntimeException` en un `try/catch` interno cuando `fallbackEnabled=true`, impidiendo que los aspectos `@Retry` y `@CircuitBreaker` observaran el fallo. Se eliminó el `try/catch` interno para que la excepción se propague por el proxy AOP y el fallback resida exclusivamente en `fallbackMethod = "fallbackAnonymousId"`.
+  - Al probar el bean real con `@SpringBootTest` (`IdentityClientResilienceTest`), se detectó que con el orden por defecto de Resilience4j (`Retry` externo y `CircuitBreaker` interno con `fallbackMethod`), el `CircuitBreaker` interno capturaba el primer fallo y devolvía el fallback sin permitir que `Retry` reintentara. Se configuró explícitamente `circuit-breaker-aspect-order: 1` (externo) y `retry-aspect-order: 2` (interno) en `application.yml`, logrando que cada llamada fallida ejecute los 3 intentos de `@Retry` antes de contabilizar el fallo en el `CircuitBreaker` (`10/5/50`) y activar `fallbackAnonymousId`.
+- **Eliminación de secretos por defecto (*fail-fast*) y alineación de `IDENTITY_SERVICE_FALLBACK_ENABLED=false`:**
+  - Se eliminaron los valores por defecto de `SPRING_DATASOURCE_PASSWORD`, `SPRING_LDAP_PASSWORD`, `JWT_SECRET` y `QR_SECRET` en `src/main/resources/application.yml` y `SecurityConfig.java` para que el contenedor falle inmediatamente si no se inyectan los secretos.
+  - Se fijó `IDENTITY_SERVICE_FALLBACK_ENABLED: "false"` en `deploy/k8s/base/apps.yml` y en `deploy/compose/{dev,stage,prod}/docker-compose.yml` para preservar la bóveda de `identity-service` como fuente única del `sub` del JWT en operación normal.
+- **Stack completo de monitoreo (`deploy/k8s/monitoring/`) y compuertas de seguridad en Jenkins (`Trivy` + `OWASP ZAP`):**
+  - Se añadieron las anotaciones `prometheus.io/scrape: "true"`, `prometheus.io/path: "/actuator/prometheus"` y `prometheus.io/port: "8180"` en `deploy/k8s/base/apps.yml` y se crearon los manifiestos `deploy/k8s/monitoring/{namespace,prometheus,alertmanager,grafana,kustomization}.yml`, montando `auth-prometheus-alerts` en `/etc/prometheus/rules`.
+  - Se integró `trivy v0.57.1` en `deploy/compose/tools/jenkins/Dockerfile` y se añadieron en `Jenkinsfile` y `jenkins/vars/ci.groovy` las etapas bloqueantes `Trivy IaC Security Gate`, `Trivy Image Security Gate` (`--severity CRITICAL --exit-code 1`) y `OWASP ZAP Security Gate` sobre `cg-stage` antes de `Approval prod` / `Deploy prod`.
+  - Se actualizaron `deploy/k8s/README.md` y `docs/agil/backlog.md` cruzando los identificadores `DCG-81` (`DCG-102`..`DCG-105`), `P2-02`..`P2-06` y `E2.2`..`E2.5`.
 - **Resultados de pruebas y cobertura JaCoCo (`jacocoTestReport.xml`):**
-  - **Total de pruebas ejecutadas (`test` + `integrationTest`):** **`29 / 29` aprobadas (`0` fallos)**.
-  - **Cobertura de líneas (`LINE`):** **`98.44%`** (`189 / 192` líneas cubiertas, umbral mínimo `60%`).
-  - **Cobertura de instrucciones (`INSTRUCTION`):** **`97.36%`** (`810 / 832` instrucciones).
-  - **Cobertura de métodos (`METHOD`):** **`97.56%`** (`40 / 41` métodos).
+  - **Total de pruebas ejecutadas (`test` + `IdentityClientResilienceTest` + `integrationTest`):** **`32 / 32` aprobadas (`0` fallos)**.
+  - **Cobertura de líneas (`LINE`):** **`100.00%`** (`189 / 189` líneas cubiertas, umbral mínimo `60%`).
+  - **Cobertura de instrucciones (`INSTRUCTION`):** **`98.91%`** (`815 / 824` instrucciones).
+  - **Cobertura de métodos (`METHOD`):** **`100.00%`** (`42 / 42` métodos).
   - **Cobertura de clases (`CLASS`):** **`100.00%`** (`10 / 10` clases).
-- **Validación del manifiesto de alertas (`deploy/k8s/base/auth-alerts.yml`):** Se verificó la validez sintáctica tanto del `ConfigMap` de Kubernetes (`auth-prometheus-alerts`) como del documento interno de reglas de Prometheus (`3` grupos de reglas: `circleguard.auth.availability`, `circleguard.auth.security` y `circleguard.auth.resilience`), integrándolo en `deploy/k8s/base/kustomization.yml`.
 
 #### D. Reflexión crítica
 

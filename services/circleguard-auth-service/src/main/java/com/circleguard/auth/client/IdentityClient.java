@@ -48,16 +48,13 @@ public class IdentityClient {
     @CircuitBreaker(name = "identityClient", fallbackMethod = "fallbackAnonymousId")
     @Retry(name = "identityClient")
     public UUID getAnonymousId(String realIdentity) {
-        try {
-            Map<String, String> request = Map.of("realIdentity", realIdentity);
-            Map<?, ?> response = restTemplate.postForObject(identityUrl, request, Map.class);
-            return UUID.fromString(response.get("anonymousId").toString());
-        } catch (RuntimeException ex) {
-            if (fallbackEnabled) {
-                return fallbackAnonymousId(realIdentity, ex);
-            }
-            throw ex;
-        }
+        Map<String, String> request = Map.of("realIdentity", realIdentity);
+        Map<?, ?> response = restTemplate.postForObject(identityUrl, request, Map.class);
+        return UUID.fromString(response.get("anonymousId").toString());
+    }
+
+    public RestTemplate getRestTemplate() {
+        return restTemplate;
     }
 
     public UUID fallbackAnonymousId(String realIdentity, Throwable ex) {

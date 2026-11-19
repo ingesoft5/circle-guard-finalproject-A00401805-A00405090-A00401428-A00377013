@@ -144,10 +144,11 @@ public class AuthIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"));
 
-        // 6. Verify Prometheus metrics scraping endpoint
+        // 6. Verify Prometheus metrics scraping endpoint exports auth login counters
         mockMvc.perform(get("/actuator/prometheus"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN));
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("circleguard_auth_login_attempts_total{result=\"success\",}")));
     }
 
     @Test

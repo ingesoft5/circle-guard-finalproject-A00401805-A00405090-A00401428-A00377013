@@ -128,7 +128,7 @@ services:
       SPRING_LDAP_USERNAME: cn=admin,dc=circleguard,dc=edu
       SPRING_LDAP_PASSWORD: ${OPENLDAP_ADMIN_PASSWORD}
       IDENTITY_SERVICE_URL: http://identity:8083/api/v1/identities/map
-      IDENTITY_SERVICE_FALLBACK_ENABLED: "true"
+      IDENTITY_SERVICE_FALLBACK_ENABLED: "false"
       MANAGEMENT_HEALTH_LDAP_ENABLED: "false"
       QR_SECRET: ${QR_SECRET}
       JWT_SECRET: ${JWT_SECRET}
