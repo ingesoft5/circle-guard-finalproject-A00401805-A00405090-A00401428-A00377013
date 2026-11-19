@@ -1,7 +1,9 @@
 # CG-DOC: Jenkins controller image with Docker CLI, Node, and Sonar scanner.
+FROM aquasec/trivy:0.57.1 AS trivy-cli
 FROM jenkins/jenkins:lts-jdk21
 
 USER root
+COPY --from=trivy-cli /usr/local/bin/trivy /usr/local/bin/trivy
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        ca-certificates curl gnupg git jq unzip \
@@ -24,10 +26,6 @@ RUN apt-get update \
     && rm -f /tmp/kustomize.tar.gz \
     && curl -fsSL "https://github.com/k3d-io/k3d/releases/download/v5.9.0/k3d-linux-amd64" -o /usr/local/bin/k3d \
     && chmod 0755 /usr/local/bin/k3d \
-    && curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v0.57.1/trivy_0.57.1_Linux-64bit.tar.gz" -o /tmp/trivy.tar.gz \
-    && tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy \
-    && chmod 0755 /usr/local/bin/trivy \
-    && rm -f /tmp/trivy.tar.gz \
     && kubectl version --client \
     && kustomize version \
     && k3d version \

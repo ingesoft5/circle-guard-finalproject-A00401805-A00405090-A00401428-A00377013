@@ -175,22 +175,40 @@ def archive(List services) {
             allowEmptyArchive: true, fingerprint: true
 }
 
-def trivyScanIaC() {
-    sh """
+def ensureTrivyBinary() {
+    sh '''
         set -eu
+        if ! command -v trivy >/dev/null 2>&1 && [ ! -x "${WORKSPACE}/.trivy-bin/trivy" ]; then
+            cid=$(docker create aquasec/trivy:0.57.1)
+            mkdir -p "${WORKSPACE}/.trivy-bin"
+            docker cp "$cid:/usr/local/bin/trivy" "${WORKSPACE}/.trivy-bin/trivy"
+            chmod 0755 "${WORKSPACE}/.trivy-bin/trivy"
+            cp "${WORKSPACE}/.trivy-bin/trivy" /usr/local/bin/trivy 2>/dev/null || true
+            docker rm -f "$cid" >/dev/null 2>&1 || true
+        fi
+    '''
+}
+
+def trivyScanIaC() {
+    ensureTrivyBinary()
+    sh '''
+        set -eu
+        export PATH="/usr/local/bin:${WORKSPACE}/.trivy-bin:${PATH}"
         mkdir -p build/reports/security
         trivy config --severity HIGH,CRITICAL --format json --output build/reports/security/trivy-iac.json deploy/k8s/
         trivy config --severity CRITICAL --exit-code 1 deploy/k8s/ | tee build/reports/security/trivy-iac.txt
-    """
+    '''
 }
 
 def trivyScanImage(Map service, String tag) {
     if (!service.docker) {
         return
     }
+    ensureTrivyBinary()
     def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${tag}"
     sh """
         set -eu
+        export PATH="/usr/local/bin:\${WORKSPACE}/.trivy-bin:\${PATH}"
         mkdir -p build/reports/security
         trivy image --severity HIGH,CRITICAL --ignore-unfixed --format json --output build/reports/security/trivy-${service.short}-${tag}.json "${image}"
         trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 "${image}" | tee build/reports/security/trivy-${service.short}-${tag}.txt

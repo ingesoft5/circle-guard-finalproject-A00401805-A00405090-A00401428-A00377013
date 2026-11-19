@@ -82,32 +82,43 @@ def dockerBuildPushClientLocal(String tag) {
     return digest
 }
 
-def trivyScanIaCLocal() {
-    sh """
+def ensureTrivyBinaryLocal() {
+    sh '''
         set -eu
-        mkdir -p build/reports/security
-        if command -v trivy >/dev/null 2>&1; then
-            trivy config --severity HIGH,CRITICAL --format json --output build/reports/security/trivy-iac.json deploy/k8s/
-            trivy config --severity CRITICAL --exit-code 1 deploy/k8s/ | tee build/reports/security/trivy-iac.txt
-        else
-            docker run --rm -v "\${WORKSPACE}:/work:ro" aquasec/trivy:0.57.1 config --severity CRITICAL --exit-code 1 /work/deploy/k8s/ | tee build/reports/security/trivy-iac.txt
+        if ! command -v trivy >/dev/null 2>&1 && [ ! -x "${WORKSPACE}/.trivy-bin/trivy" ]; then
+            echo "Extrayendo binario trivy desde aquasec/trivy:0.57.1..."
+            cid=$(docker create aquasec/trivy:0.57.1)
+            mkdir -p "${WORKSPACE}/.trivy-bin"
+            docker cp "$cid:/usr/local/bin/trivy" "${WORKSPACE}/.trivy-bin/trivy"
+            chmod 0755 "${WORKSPACE}/.trivy-bin/trivy"
+            cp "${WORKSPACE}/.trivy-bin/trivy" /usr/local/bin/trivy 2>/dev/null || true
+            docker rm -f "$cid" >/dev/null 2>&1 || true
         fi
-    """
+    '''
+}
+
+def trivyScanIaCLocal() {
+    ensureTrivyBinaryLocal()
+    sh '''
+        set -eu
+        export PATH="/usr/local/bin:${WORKSPACE}/.trivy-bin:${PATH}"
+        mkdir -p build/reports/security
+        trivy config --severity HIGH,CRITICAL --format json --output build/reports/security/trivy-iac.json deploy/k8s/
+        trivy config --severity CRITICAL --exit-code 1 deploy/k8s/ | tee build/reports/security/trivy-iac.txt
+    '''
     archiveArtifacts artifacts: 'build/reports/security/trivy-iac.*', allowEmptyArchive: true
 }
 
 def trivyScanImagesLocal(List images, String tag) {
+    ensureTrivyBinaryLocal()
     images.each { service ->
         def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${tag}"
         sh """
             set -eu
+            export PATH="/usr/local/bin:\${WORKSPACE}/.trivy-bin:\${PATH}"
             mkdir -p build/reports/security
-            if command -v trivy >/dev/null 2>&1; then
-                trivy image --severity HIGH,CRITICAL --ignore-unfixed --format json --output build/reports/security/trivy-${service.short}-${tag}.json "${image}"
-                trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 "${image}" | tee build/reports/security/trivy-${service.short}-${tag}.txt
-            else
-                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.57.1 image --severity CRITICAL --ignore-unfixed --exit-code 1 "${image}" | tee build/reports/security/trivy-${service.short}-${tag}.txt
-            fi
+            trivy image --severity HIGH,CRITICAL --ignore-unfixed --format json --output build/reports/security/trivy-${service.short}-${tag}.json "${image}"
+            trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 "${image}" | tee build/reports/security/trivy-${service.short}-${tag}.txt
         """
     }
     archiveArtifacts artifacts: 'build/reports/security/trivy-*', allowEmptyArchive: true
