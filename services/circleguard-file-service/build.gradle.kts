@@ -4,7 +4,12 @@ plugins {
     id("io.spring.dependency-management")
     kotlin("jvm")
     kotlin("plugin.spring")
+    jacoco
     `maven-publish`
+}
+
+jacoco {
+    toolVersion = "0.8.12"
 }
 
 dependencies {
@@ -14,6 +19,53 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+}
+
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+// Configuración JaCoCo
+tasks.jacocoTestReport {
+    // La tarea test se ejecuta antes y deja disponible la información de cobertura.
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) { exclude("**/*Application*") }
+        })
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    // Verifica la cobertura generada por las pruebas del módulo.
+    dependsOn(tasks.jacocoTestReport)
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) { exclude("**/*Application*") }
+        })
+    )
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.60".toBigDecimal()
+            }
+        }
+    }
+}
+
+// ./gradlew check falle si la cobertura de líneas es menor al 60 %.
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
 // Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
