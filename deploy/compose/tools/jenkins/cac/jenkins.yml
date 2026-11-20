@@ -111,7 +111,7 @@ jobs:
                   // Solo indexa ramas activas por convención; los PRs se descubren
                   // por gitHubPullRequestDiscovery (P1.4: main, feature branches y PRs).
                   headWildcardFilter {
-                    includes('main master develop feature/* feat/* fix/* bugfix/* hotfix/* release/* chore/*')
+                    includes('main master develop feature/* feat/* fix/* bugfix/* hotfix/* release/* chore/* docs/* infra/*')
                     excludes('')
                   }
                 }
