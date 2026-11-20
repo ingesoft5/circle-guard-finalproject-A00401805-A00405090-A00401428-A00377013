@@ -1,10 +1,18 @@
 # CG-DOC: Container image definition for the gateway service.
-FROM eclipse-temurin:21-jdk AS build
+# CG-DOC: Las imágenes base se sobreescriben desde Jenkins con --build-arg para usar
+# el mirror de Nexus (circleguard-base/*) en el host on-premise (sin IPv6 a Docker Hub).
+ARG GRADLE_IMAGE=gradle:8.14-jdk21
+ARG JDK_IMAGE=eclipse-temurin:21-jdk
+ARG ALPINE_IMAGE=eclipse-temurin:21-jre-alpine
+ARG JAMMY_IMAGE=eclipse-temurin:21-jre-jammy
+ARG NODE_IMAGE=node:22-alpine
+ARG WEB_IMAGE=nginxinc/nginx-unprivileged:1.27-alpine
+FROM ${JDK_IMAGE} AS build
 WORKDIR /workspace
 COPY . .
 RUN chmod +x gradlew && ./gradlew :services:circleguard-gateway-service:bootJar --no-daemon
 
-FROM eclipse-temurin:21-jre-alpine
+FROM ${ALPINE_IMAGE}
 RUN addgroup -S circleguard && adduser -S circleguard -G circleguard
 WORKDIR /app
 COPY --from=build /workspace/services/circleguard-gateway-service/build/libs/ /tmp/libs/

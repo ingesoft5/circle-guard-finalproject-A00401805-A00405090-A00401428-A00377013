@@ -8,6 +8,7 @@ Semantic Versioning.
 
 ### Changed
 
+- Los Dockerfiles toman las imágenes base desde `$NEXUS_REGISTRY/circleguard-base` mediante `--build-arg`; el host on-premise no tiene ruta IPv6 al CDN de Docker Hub. Sembrar con `./infra/onpremise/seed-base-images.sh`. Se retiró el pin por digest del Dockerfile de `form` porque el mirror publica sus propios digests.
 - **File service (FS-CI-01)**: Implementado `loadFile` real y endpoint de descarga `GET /api/v1/files/download/{filename}`. Cobertura JaCoCo 85.71% (líneas), umbral 60% cumplido.
 
 ### Added

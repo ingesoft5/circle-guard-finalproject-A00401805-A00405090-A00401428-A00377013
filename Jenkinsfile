@@ -65,8 +65,11 @@ def dockerBuildPushClientLocal(String tag) {
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
+        def registry = (env.NEXUS_REGISTRY ?: '').trim()
+        def base = registry ? "${registry}/circleguard-base" : ''
+        def baseArgs = base ? "--build-arg GRADLE_IMAGE=${base}/gradle:8.14-jdk21 --build-arg JDK_IMAGE=${base}/eclipse-temurin:21-jdk --build-arg ALPINE_IMAGE=${base}/eclipse-temurin:21-jre-alpine --build-arg JAMMY_IMAGE=${base}/eclipse-temurin:21-jre-jammy --build-arg NODE_IMAGE=${base}/node:22-alpine --build-arg WEB_IMAGE=${base}/nginx-unprivileged:1.27-alpine" : ''
         sh """
-            docker build \
+            docker build ${baseArgs} \
               --build-arg VERSION=${tag} \
               --build-arg GIT_COMMIT=${commit} \
               --build-arg SOURCE_URL=${source} \
@@ -517,6 +520,13 @@ pipeline {
             }
             steps {
                 script {
+                    def catalogOk = sh(
+                        script: "curl -fsS http://${env.NEXUS_REGISTRY}/v2/_catalog | grep -q circleguard-base",
+                        returnStatus: true
+                    )
+                    if (catalogOk != 0) {
+                        error 'Faltan imágenes base en Nexus: ejecuta ./infra/onpremise/seed-base-images.sh en el host on-premise.'
+                    }
                     // Todo servicio con Dockerfile se empaqueta, no solo el gateway.
                     def images = services.findAll { it.docker }
                     if (!images) {

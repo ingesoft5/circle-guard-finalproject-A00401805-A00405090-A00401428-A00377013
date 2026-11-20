@@ -110,8 +110,13 @@ def dockerBuildPush(Map service, String tag) {
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
+        // El host no tiene ruta IPv6 al CDN de Docker Hub: las imágenes base se
+        // toman del mirror circleguard-base en Nexus (ver seed-base-images.sh).
+        def registry = (env.NEXUS_REGISTRY ?: '').trim()
+        def base = registry ? "${registry}/circleguard-base" : ''
+        def baseArgs = base ? "--build-arg GRADLE_IMAGE=${base}/gradle:8.14-jdk21 --build-arg JDK_IMAGE=${base}/eclipse-temurin:21-jdk --build-arg ALPINE_IMAGE=${base}/eclipse-temurin:21-jre-alpine --build-arg JAMMY_IMAGE=${base}/eclipse-temurin:21-jre-jammy --build-arg NODE_IMAGE=${base}/node:22-alpine --build-arg WEB_IMAGE=${base}/nginx-unprivileged:1.27-alpine" : ''
         sh """
-            docker build \
+            docker build ${baseArgs} \
               --build-arg VERSION=${version} \
               --build-arg GIT_COMMIT=${commit} \
               --build-arg SOURCE_URL=${source} \
