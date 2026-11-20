@@ -49,6 +49,14 @@ Identity service build, tests, and coverage:
   :services:circleguard-identity-service:jacocoTestCoverageVerification
 ```
 
+File service build, tests, and coverage:
+
+```bash
+./gradlew :services:circleguard-file-service:test \
+  :services:circleguard-file-service:jacocoTestReport \
+  :services:circleguard-file-service:jacocoTestCoverageVerification
+```
+
 Identity image:
 
 ```bash
