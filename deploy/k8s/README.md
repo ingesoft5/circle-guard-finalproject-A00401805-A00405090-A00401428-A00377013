@@ -266,6 +266,7 @@ sondas alimentadas por Actuator del entregable E2.2.
 | `gateway` | 1 | 3 | Es la puerta de entrada del API y el que recibe la carga de la demostración |
 | `web` | 1 | 2 | Cliente estático; su límite de memoria es el más bajo del stack |
 | `auth` | 1 | 2 | Emite los JWT de todas las peticiones autenticadas |
+| `identity` | 1 | 3 | Bóveda criptográfica de anonimización (umbral CPU 75 %, `DCG-119`) |
 
 Los tres Deployments escalados **no declaran `spec.replicas`**: el dueño del número de
 réplicas es el HPA. Si el Deployment fijara `replicas`, cada `kubectl apply -k` lo devolvería

@@ -6,6 +6,8 @@ package com.circleguard.identity.service;
 import com.circleguard.identity.model.IdentityMapping;
 import com.circleguard.identity.repository.IdentityMappingRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Service;
@@ -19,9 +21,11 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @RequiredArgsConstructor
 public class IdentityVaultService {
+    private static final Logger log = LoggerFactory.getLogger(IdentityVaultService.class);
+
     private final IdentityMappingRepository repository;
 
-    @Value("${vault.hash-salt:circleguard-default-salt}")
+    @Value("${vault.hash-salt}")
     private String hashSalt;
 
     /**
@@ -30,9 +34,12 @@ public class IdentityVaultService {
     @Transactional
     public UUID getOrCreateAnonymousId(String realIdentity) {
         String hash = computeHash(realIdentity);
-        
+
         return repository.findByIdentityHash(hash)
-                .map(IdentityMapping::getAnonymousId)
+                .map(existing -> {
+                    log.debug("Resolved existing anonymousId={} via blind index", existing.getAnonymousId());
+                    return existing.getAnonymousId();
+                })
                 .orElseGet(() -> {
                     String salt = KeyGenerators.string().generateKey();
                     IdentityMapping mapping = IdentityMapping.builder()
@@ -40,7 +47,9 @@ public class IdentityVaultService {
                             .identityHash(hash)
                             .salt(salt)
                             .build();
-                    return repository.save(mapping).getAnonymousId();
+                    UUID createdId = repository.save(mapping).getAnonymousId();
+                    log.info("Created new encrypted identity vault mapping: anonymousId={}", createdId);
+                    return createdId;
                 });
     }
 
@@ -57,6 +66,9 @@ public class IdentityVaultService {
     public String resolveRealIdentity(UUID anonymousId) {
         return repository.findById(anonymousId)
                 .map(IdentityMapping::getRealIdentity)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Identity not found"));
+                .orElseThrow(() -> {
+                    log.warn("Identity vault lookup failed: anonymousId={} not found", anonymousId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Identity not found");
+                });
     }
 }

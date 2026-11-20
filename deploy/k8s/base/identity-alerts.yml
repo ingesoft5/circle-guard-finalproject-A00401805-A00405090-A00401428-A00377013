@@ -1,0 +1,50 @@
+# CG-DOC: Prometheus alerting rules for circleguard-identity-service (HU-ID-05 / DCG-122).
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-prometheus-alerts
+  labels:
+    app: identity
+    app.kubernetes.io/part-of: circleguard
+data:
+  identity-alerts.rules.yml: |
+    groups:
+      - name: circleguard.identity.availability
+        interval: 30s
+        rules:
+          - alert: IdentityServiceDown
+            expr: up{app="identity"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: identity
+            annotations:
+              summary: "CircleGuard identity-service is DOWN"
+              description: "The identity-service instance ({{ $labels.instance }} in namespace {{ $labels.namespace }}) has been unreachable for more than 1 minute."
+
+      - name: circleguard.identity.resilience
+        interval: 30s
+        rules:
+          - alert: IdentityAuditCircuitBreakerOpen
+            expr: resilience4j_circuitbreaker_state{name="identityAuditKafka", state="open"} == 1
+            for: 30s
+            labels:
+              severity: critical
+              service: identity
+            annotations:
+              summary: "Circuit Breaker identityAuditKafka is OPEN in identity-service"
+              description: "The Resilience4j circuit breaker towards Kafka audit topic has remained OPEN for 30 seconds; fallback logging is active."
+
+      - name: circleguard.identity.security
+        interval: 30s
+        rules:
+          - alert: IdentityHighLookupFailureRate
+            expr: rate(circleguard_identity_lookups_total{status!="success"}[5m]) > 0.2
+            for: 2m
+            labels:
+              severity: warning
+              service: identity
+            annotations:
+              summary: "High rate of failed PII vault lookups in identity-service"
+              description: "More than 0.2 failed identity vault lookup attempts per second over the last 5 minutes."
