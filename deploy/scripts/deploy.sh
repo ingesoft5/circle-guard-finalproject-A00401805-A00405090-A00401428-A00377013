@@ -12,7 +12,7 @@ DIR="${COMPOSE_ROOT}/${ENV}"
 
 cd "${DIR}"
 export TAG
-docker compose pull auth identity promotion form gateway web
+docker compose pull auth identity promotion form gateway web file
 docker compose up -d --remove-orphans
 
 check_health() {
@@ -37,5 +37,6 @@ check_health identity 8083
 check_health promotion 8088
 check_health form 8086
 check_health web 8081 "/"
+check_health file 8085
 
-echo "Despliegue OK: ${ENV} tag=${TAG} servicios=5 núcleo + web"
+echo "Despliegue OK: ${ENV} tag=${TAG} servicios=5 núcleo + web + file"
