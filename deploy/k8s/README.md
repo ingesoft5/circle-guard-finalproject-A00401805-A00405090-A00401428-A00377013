@@ -13,7 +13,7 @@ deploy/k8s/
 │   ├── middleware.yml   # postgres, redis, neo4j, kafka, openldap + ConfigMaps
 │   ├── apps.yml         # 8 servicios + web (con anotaciones prometheus.io/*)
 │   ├── ingress.yml      # rutas del API y del cliente web (Traefik)
-│   ├── hpa.yml          # autoscaling de gateway, web y auth
+│   ├── hpa.yml          # autoscaling de gateway, web, auth y promotion
 │   └── auth-alerts.yml  # reglas de alerta Prometheus para auth-service
 ├── monitoring/
 │   ├── kustomization.yml
@@ -269,25 +269,18 @@ requisito de sondas alimentadas por Actuator del entregable E2.2 (`DCG-102` / `D
 
 ## Autoscaling (HPA)
 
-`base/hpa.yml` define cuatro `HorizontalPodAutoscaler` sobre CPU al 70 %:
 
-| Servicio | Mínimo | Máximo | Motivo |
-|---|---|---|---|
-| `gateway` | 1 | 3 | Es la puerta de entrada del API y el que recibe la carga de la demostración |
-| `web` | 1 | 2 | Cliente estático; su límite de memoria es el más bajo del stack |
-| `auth` | 1 | 2 | Emite los JWT de todas las peticiones autenticadas |
-| `form` | 1 | 2 | Recibe cuestionarios y adjuntos; las réplicas comparten el PVC local del mismo nodo |
-`base/hpa.yml` define tres `HorizontalPodAutoscaler` sobre utilización promedio de CPU:
+`base/hpa.yml` define cinco `HorizontalPodAutoscaler` basados en la utilización promedio de CPU:
 
 | Servicio | Mínimo | Máximo | Umbral CPU | Motivo |
 |---|---|---|---|---|
-| `gateway` | 1 | 3 | 70 % | Es la puerta de entrada del API y el que recibe la carga de la demostración |
+| `gateway` | 1 | 3 | 70 % | Es la puerta de entrada del API y recibe la carga de la demostración |
 | `web` | 1 | 2 | 70 % | Cliente estático; su límite de memoria es el más bajo del stack |
 | `auth` | 1 | 5 | 75 % | Emite y verifica los JWT/QR de todas las peticiones autenticadas (`DCG-102`) |
+| `form` | 1 | 2 | 70 % | Recibe cuestionarios y adjuntos; las réplicas comparten el PVC local del mismo nodo |
+| `promotion` | 1 | 5 | 75 % | Consume Neo4j, PostgreSQL, Kafka y Redis en la cascada de estados (`DCG-339`) |
 
-Los cuatro Deployments escalados **no declaran `spec.replicas` en la base**: el dueño del número de
-réplicas es el HPA. Si el Deployment fijara `replicas`, cada `kubectl apply -k` lo devolvería
-a 1 y pelearía con el autoscaler.
+Los cinco Deployments gestionados por HPA **no declaran `spec.replicas` en la base**: el dueño del número de réplicas es el HPA. Si el Deployment fijara `replicas: 1`, cada `kubectl apply -k` podría devolverlo a 1 y entrar en conflicto con el autoscaler.
 
 El overlay de stage excluye **solo** el HPA de Form y fija una réplica para su
 validación durante una promoción autorizada. Después, el operador puede escalar Form
@@ -384,7 +377,7 @@ kubectl -n monitoring get pods,svc
 
 - **Scraping automático:** `prometheus.yml` descubre pods en `cg-dev`, `cg-stage` y `cg-prod`
   mediante las anotaciones `prometheus.io/scrape: "true"`, `prometheus.io/path: "/actuator/prometheus"`
-  y `prometheus.io/port: "8180"` declaradas en `base/apps.yml`.
+  y `prometheus.io/port` declaradas en `base/apps.yml` (`auth` en `8180`, `promotion` en `8088`).
 - **Reglas de alerta cargadas:** El Deployment de Prometheus monta el ConfigMap
   `auth-prometheus-alerts` en `/etc/prometheus/rules/auth-alerts.rules.yml` y evalúa cada 15 s
   las alertas `AuthServiceDown`, `AuthHighUnauthorizedRate` y `AuthIdentityCircuitBreakerOpen`,
@@ -401,7 +394,7 @@ kubectl -n monitoring get pods,svc
 | Ingress | Cumplido | Traefik `:30080`, tres hosts |
 | Sondas liveness/readiness con Actuator | Cumplido | `apps.yml`, `/actuator/health/{liveness,readiness}` en `auth` (`DCG-103`) |
 | Clúster ligero (k3s/k3d) | Cumplido | k3d v5.9.0 / k3s v1.35.5 |
-| HPA | Cumplido | `base/hpa.yml` + `metrics-server`; gateway 1-3 (70 %), web 1-2 (70 %), auth 1-5 (75 %) (`DCG-102`) |
+| HPA | Cumplido | `base/hpa.yml` + `metrics-server`; gateway 1-3 (70 %), web 1-2 (70 %), auth 1-5 (75 %), promotion 1-5 (75 %) (`DCG-102` / `DCG-339`) |
 | Observabilidad y alertas | Cumplido | `deploy/k8s/monitoring/` (Prometheus, Alertmanager, Grafana y `auth-alerts.yml`) (`DCG-103` / `DCG-105` / `E2.4`) |
 | TLS en servicios expuestos | **Pendiente** | depende de DNS propio; hoy es HTTP interno |
 | RBAC de Kubernetes | Cumplido (Monitoreo) | `ClusterRole` / `ServiceAccount` para Prometheus SD en `monitoring/prometheus.yml` |

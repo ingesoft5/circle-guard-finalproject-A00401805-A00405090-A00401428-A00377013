@@ -85,7 +85,7 @@ class ControllersStandaloneTest {
                 new HealthStatusController(healthStatusService),
                 new FloorController(floorService, accessPointService),
                 new AccessPointController(accessPointService),
-                new EncounterController(userRepository, autoCircleService),
+                new EncounterController(userRepository, autoCircleService, new io.micrometer.core.instrument.simple.SimpleMeterRegistry()),
                 new MeshController(userRepository),
                 new SessionHandshakeController(sessionRegistry),
                 new LocationSignalController(locationResolutionService)
