@@ -183,6 +183,68 @@ kubectl -n cg-stage rollout restart deployment/auth deployment/identity \
 - Mantener `secrets.env` fuera de git; `.gitignore` cubre `deploy/k8s/overlays/*/secrets.env`.
 - El clúster depende de Docker: si se reinicia el servicio, usar `k3d cluster start cg`.
 
+### Backend de estado con Terraform (HU-INFRA-06)
+
+El único proyecto Terraform vigente es `infra/terraform/state-backend/`. No gestiona el clúster
+`cg` ni las aplicaciones: solo crea el bucket de MinIO y la tabla de DynamoDB Local que sirven
+de backend remoto. Los servicios `minio-iac` y `dynamodb-local` ya están levantados por
+`cg-tools`.
+
+1. Cargar credenciales y variables sin imprimir secretos:
+
+```bash
+set -a
+source deploy/compose/tools/.env.onpremise
+set +a
+export TF_VAR_minio_access_key="$TF_STATE_MINIO_USER"
+export TF_VAR_minio_secret_key="$TF_STATE_MINIO_PASSWORD"
+export TF_VAR_state_bucket="$TF_STATE_BUCKET"
+export TF_VAR_lock_table="$TF_LOCK_TABLE"
+export TF_VAR_aws_region="$AWS_REGION"
+export TF_VAR_s3_endpoint="$TF_MINIO_ENDPOINT"
+export TF_VAR_dynamodb_endpoint="$TF_DYNAMODB_ENDPOINT"
+```
+
+2. Aplicar:
+
+```bash
+cd infra/terraform/state-backend
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
+
+Si el host no tiene salida a internet, reutiliza el provider AWS ya cacheado en la máquina:
+
+```bash
+terraform init -plugin-dir=../bootstrap/.terraform/providers
+```
+
+3. Verificar idempotencia (debe devolver `0` = sin cambios) y ver los nombres:
+
+```bash
+terraform plan -detailed-exitcode
+terraform output
+```
+
+4. Opcional — probar el bloqueo: crear un root temporal en `/tmp` con un bloque
+   `backend "s3"` cargado desde `backend.hcl.example`, lanzar dos `terraform init` en paralelo
+   y comprobar que el segundo espera el lock de `circleguard-tf-lock`. Borrar el root temporal.
+
+Para un root futuro que sí use backend remoto:
+
+```bash
+cp infra/terraform/state-backend/backend.hcl.example <root>/backend.hcl
+export AWS_ACCESS_KEY_ID="$TF_STATE_MINIO_USER"
+export AWS_SECRET_ACCESS_KEY="$TF_STATE_MINIO_PASSWORD"
+terraform init -backend-config=backend.hcl
+```
+
+> `dynamodb-local` corre con `-inMemory`: si se reinicia ese contenedor, la tabla desaparece y
+> hay que repetir el `terraform apply`. El archivo `terraform.tfstate` local de este proyecto
+> no se borra: es la única referencia al bucket y la tabla creados.
+
 ## Parte 1 — Hosts de AWS (evidencia histórica)
 
 Estos comandos documentan la infraestructura original del pipeline. La cuenta de AWS ya no es
@@ -301,5 +363,7 @@ CONFIRM=yes ./infra/bootstrap/bootstrap-destroy.sh
 | SonarQube se queda en «starting» | PostgreSQL o memoria | Revisar logs; ampliar swap |
 | Nexus no abre | Puerto 8081 o memoria | Revisar logs |
 | El *pull* del registro falla | Registro HTTP no confiable | Verificar `insecure-registries` en el host del entorno |
+| Terraform: `AccessDenied` al crear el bucket | `TF_VAR_minio_*` no exportados o distintos de `.env.onpremise` | Repetir el `source` y los `export` del runbook; no usar credenciales de AWS |
+| Terraform: `ResourceNotFoundException` en DynamoDB | `dynamodb-local` se reinició con `-inMemory` y perdió la tabla | Volver a ejecutar `terraform apply` en `infra/terraform/state-backend` |
 | Gateway 401 (Parte 1) | Falta el JWT de personal | Enviar `Authorization: Bearer <jwt>` |
 | Gateway 503 (Parte 1) | Redis no disponible | Revisar `docker compose logs redis` |

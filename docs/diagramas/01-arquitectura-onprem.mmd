@@ -1,27 +1,24 @@
 flowchart TB
-  HOST["On-prem host 10.147.20.67"]
-  TOOLS["cg-tools docker compose"]
+  HOST["Host on-prem 10.147.20.67"]
+  TOOLS["Docker Compose cg-tools"]
   JENKINS["Jenkins :8080"]
-  NEXUS["Nexus :8081"]
   SONAR["SonarQube :9000"]
-  MINIO["MinIO IAC :9002 / console :9003"]
+  NEXUS["Nexus :8081 + registry :5000"]
+  MINIO["MinIO IAC :9002 / consola :9003"]
   DDB["DynamoDB Local :8000"]
-  K3D["k3d / k3s cluster"]
-  DEV["cg-dev"]
-  STAGE["cg-stage"]
-  PROD["cg-prod"]
-  TF["Terraform"]
+  K3D["k3d cg / Traefik :30080"]
+  ENVS["cg-dev · cg-stage · cg-prod (Kustomize)"]
+  TF["Terraform state-backend"]
 
   HOST --> TOOLS
+  HOST --> K3D
   TOOLS --> JENKINS
-  TOOLS --> NEXUS
   TOOLS --> SONAR
+  TOOLS --> NEXUS
   TOOLS --> MINIO
   TOOLS --> DDB
-  HOST --> K3D
-  K3D --> DEV
-  K3D --> STAGE
-  K3D --> PROD
-  TF --> MINIO
-  TF --> DDB
-  TF --> K3D
+  K3D --> ENVS
+  JENKINS -->|"kubectl apply -k"| ENVS
+  NEXUS -->|"imágenes"| ENVS
+  TF -->|"crea bucket"| MINIO
+  TF -->|"crea tabla"| DDB

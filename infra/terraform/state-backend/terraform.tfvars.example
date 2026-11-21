@@ -1,0 +1,9 @@
+# CG-DOC: Copy to terraform.tfvars on the on-prem host only. Never commit secrets.
+# The real MinIO credentials are injected as TF_VAR_minio_access_key and
+# TF_VAR_minio_secret_key from deploy/compose/tools/.env.onpremise.
+
+aws_region         = "us-east-1"
+state_bucket       = "circleguard-tfstate"
+lock_table         = "circleguard-tf-lock"
+s3_endpoint        = "http://127.0.0.1:9002"
+dynamodb_endpoint  = "http://127.0.0.1:8000"

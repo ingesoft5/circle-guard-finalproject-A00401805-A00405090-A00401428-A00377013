@@ -1,22 +1,8 @@
 flowchart LR
-  BOOT["bootstrap (local state)"]
-  S3["MinIO bucket circleguard-tfstate"]
-  LOCK["DynamoDB circleguard-tf-lock"]
-  BACKEND["backend s3 remoto con lock"]
-  NET["module network"]
-  COMP["module compute"]
-  REG["module registry"]
-  STO["module storage"]
-  OBS["module observability"]
-  LIVE["live dev / stage / prod"]
-
-  BOOT --> S3
-  BOOT --> LOCK
-  S3 --> BACKEND
+  ENV[".env.onpremise<br/>TF_STATE_* / TF_LOCK_TABLE"] --> VAR["TF_VAR_*"]
+  VAR --> TF["terraform init · validate · plan · apply"]
+  TF --> LOCAL["terraform.tfstate local (gitignored)"]
+  TF --> S3["aws_s3_bucket<br/>circleguard-tfstate + versioning"]
+  TF --> LOCK["aws_dynamodb_table<br/>circleguard-tf-lock (LockID)"]
+  S3 --> BACKEND["backend s3 para futuros roots"]
   LOCK --> BACKEND
-  BACKEND --> LIVE
-  LIVE --> COMP
-  LIVE --> NET
-  LIVE --> REG
-  LIVE --> STO
-  LIVE --> OBS

@@ -1,0 +1,7 @@
+flowchart TB
+  CREATOR["state-backend (este proyecto)"] -.->|"crea"| MINIO["MinIO :9002<br/>circleguard-tfstate"]
+  CREATOR -.->|"crea"| DDB["DynamoDB Local :8000<br/>circleguard-tf-lock"]
+  ROOT["Root futuro con backend s3"] -->|"estado"| MINIO
+  ROOT -->|"lock"| DDB
+  MINIO --> KEYS["onpremise/dev/terraform.tfstate<br/>onpremise/stage/terraform.tfstate<br/>onpremise/prod/terraform.tfstate"]
+  DDB --> ITEM["item LockID = onpremise/&lt;env&gt;/terraform.tfstate"]

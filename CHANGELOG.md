@@ -8,6 +8,7 @@ Semantic Versioning.
 
 ### Changed
 
+- **HU-INFRA-06 (Terraform)**: eliminados los módulos `network`, `compute`, `registry`, `storage` y `observability`, los tres roots `live/{dev,stage,prod}` y el bootstrap anterior. Terraform ya no gestiona el clúster k3d ni las aplicaciones: Kustomize sigue siendo el mecanismo de despliegue.
 - **File service (FS-CI-01)**: Implementado `loadFile` real y endpoint de descarga `GET /api/v1/files/download/{filename}`. Cobertura JaCoCo 85.71% (líneas), umbral 60% cumplido.
 - **File service (HU-FILE-03)**: el pipeline omite la republicación de artefactos Maven e imágenes Docker cuando el TAG semver ya existe, conservando el digest real; la política de inmutabilidad, si se activa en Nexus, aplica solo a `X.Y.Z` y nunca a `latest`, `dev` o `staging`. Documentado en `docs/informe/HU-FILE-03.md` y `docs/infra/migracion-onpremise.md` §3.7.
 - **Jenkins multibranch**: eliminado el filtro de ramas por convención de nombre. GitHub es la fuente de verdad: se indexan todas las ramas vivas y las borradas tras merge en `main` se limpian de inmediato con el evento `delete` del webhook y `orphanedItemStrategy` 0/0. Documentado en `docs/infra/migracion-onpremise.md` §3.8.
@@ -15,6 +16,7 @@ Semantic Versioning.
 
 ### Added
 
+- **HU-INFRA-06 (Terraform)**: `infra/terraform/state-backend/` crea el bucket de MinIO con versioning y la tabla de DynamoDB Local con `LockID` como backend remoto; incluye `backend.hcl.example` con ambos endpoints y estado local del bootstrap ignorado por git. Runbook en `docs/infra/runbook.md` y diagramas simplificados en `docs/diagramas/`.
 - `infra/onpremise/rebuild-onpremise.sh`: wrapper idempotente de un comando que valida el token de SonarQube, ejecuta el bootstrap on-premise, asegura todos los proyectos del catálogo de la Shared Library (incluido `circleguard-file-service`) y converge el stack `cg-tools`.
 - `docs/informe/HU-FILE-03.md` y `docs/informe/evidencia/HU-FILE-03/README.md`: cierre P1.4, decisión de idempotencia/semver e índice de evidencia de la HU-FILE-03 (issue #135).
 - Jenkins image now ships `kubectl` v1.31.2, `kustomize` v5.4.3 and `k3d` v5.9.0 so the pipeline drives the on-premise cluster directly.
