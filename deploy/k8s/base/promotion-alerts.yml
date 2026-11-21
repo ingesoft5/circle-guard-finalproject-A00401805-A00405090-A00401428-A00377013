@@ -1,0 +1,50 @@
+# CG-DOC: Prometheus alerting rules for circleguard-promotion-service (HU-PROMO-05 / DCG-341).
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promotion-prometheus-alerts
+  labels:
+    app: promotion
+    app.kubernetes.io/part-of: circleguard
+data:
+  promotion-alerts.rules.yml: |
+    groups:
+      - name: circleguard.promotion.availability
+        interval: 30s
+        rules:
+          - alert: PromotionServiceDown
+            expr: up{app="promotion"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: promotion
+            annotations:
+              summary: "CircleGuard promotion-service is DOWN"
+              description: "The promotion-service instance ({{ $labels.instance }} in namespace {{ $labels.namespace }}) has been unreachable for more than 1 minute."
+
+      - name: circleguard.promotion.cascade
+        interval: 30s
+        rules:
+          - alert: PromotionNeo4jFailures
+            expr: rate(circleguard_promotion_encounters_total{result="failure"}[5m]) > 0.2
+            for: 2m
+            labels:
+              severity: warning
+              service: promotion
+            annotations:
+              summary: "Failed promotions in promotion-service (Neo4j / cascade)"
+              description: "More than 0.2 failed promotion encounters per second over the last 5 minutes on promotion-service. Probable fallo de Neo4j o de la cascada de estados (kotlin -> java -> backend -> fullstack -> cloud)."
+
+      - name: circleguard.promotion.load
+        interval: 30s
+        rules:
+          - alert: PromotionSpikeRate
+            expr: rate(circleguard_promotion_encounters_total{result="success"}[5m]) > 5
+            for: 3m
+            labels:
+              severity: warning
+              service: promotion
+            annotations:
+              summary: "Promotion spike detected in promotion-service"
+              description: "More than 5 successful promotion encounters per second sustained for 3 minutes — alerta de pico de promociones, revisar capacidad del HPA y de Neo4j."

@@ -123,6 +123,14 @@ The `Jenkinsfile` is branch-aware: the multibranch job discovers `main`, feature
 14. **Deploy** (optional): dev, E2E, stage, production approval, production, rollback. Only when `DEPLOY=true` on `main`.
 15. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt` and release notes.
 
+### Security gates
+
+The `Jenkinsfile` runs three additional stages; a failure in any of them stops the build before `Approval prod`.
+
+- `Trivy IaC Security Gate`: `trivy config` over `deploy/k8s/`, blocking on `CRITICAL`.
+- `Trivy Image Security Gate`: `trivy image --severity CRITICAL --ignore-unfixed --exit-code 1` over every image built in the run (`service.docker`), including `promotion`.
+- `OWASP ZAP Security Gate`: `zap-baseline.py` inside `cg-stage`, one pod per target — `http://auth:8180/actuator/health` and `http://promotion:8088/actuator/health`. The per-target logs are appended to `build/reports/security/zap-stage.txt`, and the build fails when the aggregate report contains a `FAIL-NEW` line.
+
 ### Selective execution
 
 - `SERVICE=auto`: services touched under `services/<service>/`; global files (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `Jenkinsfile`, `sonar-project.properties`, `gradlew`, `gradle/`, `jenkins/`, `mobile/`, `deploy/`) select every service.
