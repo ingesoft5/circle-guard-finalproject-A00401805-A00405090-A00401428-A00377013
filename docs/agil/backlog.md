@@ -42,24 +42,27 @@ aceptación, el estado que soporta la entrega y la evidencia enlazada.
 > `SpatialServiceTest`, `BuildingServiceTest` y `AccessPointServiceTest`, y la de los demás
 > núcleos supera el 60 % tras excluir el código generado por Lombok (PR #53).
 
-## Parte 2 — Backlog preliminar (on-prem)
+> **Estado actual del repositorio (20 de noviembre de 2026):** `main` en `4e359c1` (incluye PR [#89](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/89), `feat(file): implement download endpoint and unit tests for FS-CI-01`). PRs abiertos relevantes al backlog: [#93](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/93) (`feat/HU-AUTH-05-k8s-resiliencia-observabilidad`, alcance P2-02 a P2-06, en revisión) y [#95](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/95) (`feat/HU-CICD-04-multibranch-active-branches`, filtro de escaneo multibranch activo para P1.4, en inglés). GitHub Project `circle-guard-dasf` actualizado para reflejar el estado de P2-01 a P2-10.
+
+## Parte 2 — Backlog Sprint 2 (on-prem, Kubernetes, resiliencia, observabilidad y seguridad)
 
 La Parte 2 migra la plataforma a infraestructura on-premise con Kubernetes, añade
 resiliencia, observabilidad y seguridad, y automatiza el aprovisionamiento. Los ítems se
-gestionan en el GitHub Project `circle-guard-dasf`.
+gestionan de forma integrada entre Jira (`DCG-*`), los códigos del plan (`P2-*`) y los
+entregables del enunciado (`E2.*`).
 
-| ID | Historia | Criterios de aceptación | Prioridad | Pts | Sprint | Estado |
-|---|---|---|---|---|---|---|
-| P2-01 | Infraestructura como código (Terraform) | Recursos de los tres ambientes declarados, backend remoto y `terraform plan` reproducible | Alta | 13 | 2 | Pendiente |
-| P2-02 | Despliegue en Kubernetes (k3d) | Manifiestos para 8 servicios, namespaces `cg-dev`/`cg-stage`/`cg-prod`, secrets e ingress | Alta | 13 | 2 | Pendiente |
-| P2-03 | Patrones de resiliencia | Tres patrones implementados (p. ej. circuit breaker, retry, bulkhead) con configuración externalizada | Alta | 8 | 2 | Pendiente |
-| P2-04 | Observabilidad | Prometheus, Grafana con dashboards y al menos tres alertas operativas | Alta | 8 | 2 | Pendiente |
-| P2-05 | Trazas y logs centralizados | Jaeger y Loki integrados con los servicios desplegados | Media | 5 | 2 | Pendiente |
-| P2-06 | Seguridad y calidad | Trivy sobre imágenes y ZAP sobre el flujo principal, sin hallazgos críticos abiertos | Alta | 8 | 2 | Pendiente |
-| P2-07 | Pruebas de carga | Locust con escenario documentado y resultados contra `cg-stage` | Media | 5 | 2 | Pendiente |
-| P2-08 | Pipeline con IaC y Kubernetes | Jenkins aplica Terraform y despliega con `kubectl`, con rollback verificable | Alta | 8 | 2 | Pendiente |
-| P2-09 | Documentación y Sprint 2 | Sprint 2 planning/review/retrospective, runbook on-prem, costos y resumen en inglés | Media | 8 | 2 | Pendiente |
-| P2-10 | Demostración final | Guion de sustentación, evidencias enlazadas y ensayo completo del flujo | Alta | 5 | 2 | Pendiente |
+| ID Plan / Entregable | ID Jira / HU | Historia | Criterios de aceptación | Prioridad | Pts | Sprint | Estado | Evidencia |
+|---|---|---|---|---|---|---|---|---|
+| P2-01 (`E2.1`) | — | Infraestructura como código (Terraform) | Recursos de los tres ambientes declarados, backend remoto y `terraform plan` reproducible | Alta | 13 | 2 | En progreso | `infra/onpremise/` |
+| P2-02 (`E2.2`) | `DCG-81` (`HU-AUTH-05` / `DCG-102`) | Despliegue en Kubernetes (k3d) y HPA | Manifiestos para 8 servicios, namespaces `cg-dev`/`cg-stage`/`cg-prod`, secrets sin defaults en repo, sondas `/actuator/health/{liveness,readiness}` y HPA (`auth` 1–5 réplicas @ 75 % CPU) | Alta | 13 | 2 | En revisión | PR [#93](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/93), `deploy/k8s/base/apps.yml`, `deploy/k8s/base/hpa.yml`, `deploy/k8s/README.md` |
+| P2-03 (`E2.3`) | `DCG-81` (`HU-AUTH-05` / `DCG-104`) | Patrones de resiliencia | Circuit Breaker y Retry con Resilience4j en `IdentityClient`, propagación real por proxy AOP, fallback determinista y umbrales externalizados (`10/5/50`) | Alta | 8 | 2 | En revisión | PR [#93](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/93), `IdentityClient.java`, `IdentityClientResilienceTest.java`, `application.yml` |
+| P2-04 (`E2.4`) | `DCG-81` (`HU-AUTH-05` / `DCG-103`, `DCG-105`) | Observabilidad y alertas | Stack `deploy/k8s/monitoring/` (Prometheus, Alertmanager, Grafana), scrape `/actuator/prometheus` y 3 alertas cargadas (`AuthServiceDown`, `AuthHighUnauthorizedRate`, `AuthIdentityCircuitBreakerOpen`) | Alta | 8 | 2 | En revisión | PR [#93](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/93), `deploy/k8s/monitoring/`, `deploy/k8s/base/auth-alerts.yml`, `LoginController.java` |
+| P2-05 (`E2.4`) | `DCG-81` (`HU-AUTH-05` / `DCG-105`) | Trazas y logs estructurados | Logs estructurados SLF4J sin exposición de secretos ni `System.out` en `auth-service`, listos para recolección centralizada | Media | 5 | 2 | En revisión | PR [#93](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/93), `LoginController.java`, `CustomUserDetailsService.java`, `IdentityClient.java` |
+| P2-06 (`E2.5`) | `DCG-81` (`HU-AUTH-05` / `DCG-105`) | Seguridad y calidad en pipeline | Etapas bloqueantes de Trivy (IaC + imágenes con `--exit-code 1` en `CRITICAL`) y compuerta DAST OWASP ZAP sobre `stage` antes de `Approval prod` / `Deploy prod` | Alta | 8 | 2 | En revisión | PR [#93](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/93), `Jenkinsfile`, `jenkins/vars/ci.groovy`, `deploy/compose/tools/jenkins/Dockerfile` |
+| P2-07 (`E2.5`) | — | Pruebas de carga | Locust con escenario documentado y resultados contra `cg-stage` | Media | 5 | 2 | Pendiente | — |
+| P2-08 (`E2.1`/`E2.2`) | `HU-CICD-03` | Pipeline con IaC y Kubernetes | Jenkins despliega con `kubectl`/`kustomize` sobre `k3d`, con E2E contra Ingress `:30080` y rollback verificable | Alta | 8 | 2 | Done | PR [#92](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/92), `Jenkinsfile`, `jenkins/vars/ci.groovy` |
+| P2-09 (`E2.6`) | — | Documentación y Sprint 2 | Sprint 2 planning/review/retrospective, runbook on-prem, costos, bitácora IAG y resumen en inglés | Media | 8 | 2 | En progreso | `IAG_REGISTRO.md`, `deploy/k8s/README.md`, `infra/onpremise/README.md` |
+| P2-10 (`E2.6`) | — | Demostración final | Guion de sustentación, evidencias enlazadas y ensayo completo del flujo | Alta | 5 | 2 | Pendiente | — |
 
 ## Definition of Done
 
