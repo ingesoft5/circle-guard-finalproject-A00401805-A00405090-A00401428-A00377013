@@ -85,7 +85,10 @@ pipeline {
                         set -eu
                         export PATH="/usr/local/bin:${WORKSPACE}/.trivy-bin:${PATH}"
                         mkdir -p build/reports/security
-                        trivy config --severity CRITICAL --exit-code 1 \
+                        # The pinned Trivy 0.57.1 ships embedded checks. Its remote
+                        # policy update currently contains an incompatible AWS rule;
+                        # keep the embedded Kubernetes checks active and fail on CRITICAL.
+                        trivy config --skip-check-update --severity CRITICAL --exit-code 1 \
                           deploy/k8s/form06-dev/ > build/reports/security/trivy-form06-dev.txt
                     '''
                 }
