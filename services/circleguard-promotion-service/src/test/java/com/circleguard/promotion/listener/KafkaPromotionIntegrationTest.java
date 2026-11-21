@@ -1,6 +1,10 @@
 package com.circleguard.promotion.listener;
 
 import com.circleguard.promotion.service.HealthStatusService;
+import io.micrometer.tracing.Tracer;
+import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
 import org.mockito.Mockito;
@@ -11,6 +15,7 @@ import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,11 +27,16 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doAnswer;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * End-to-end Kafka contract for promotion-service: a real broker receives the
@@ -43,10 +53,14 @@ import static org.mockito.Mockito.verify;
                 "spring.kafka.consumer.properties.spring.json.trusted.packages=*",
                 "spring.kafka.consumer.properties.spring.json.value.default.type=java.util.Map",
                 "spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer",
-                "spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer"
+                "spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer",
+                "spring.kafka.listener.observation-enabled=true",
+                "management.tracing.enabled=true",
+                "management.tracing.sampling.probability=1.0"
         })
 @Testcontainers(disabledWithoutDocker = true)
 @Tag("integration")
+@AutoConfigureObservability
 class KafkaPromotionIntegrationTest {
 
     @Container
@@ -73,6 +87,7 @@ class KafkaPromotionIntegrationTest {
         HealthStatusService healthStatusService() {
             return Mockito.mock(HealthStatusService.class);
         }
+        @Bean SpanExporter spanExporter() { return InMemorySpanExporter.create(); }
     }
 
     @Autowired
@@ -80,6 +95,9 @@ class KafkaPromotionIntegrationTest {
 
     @Autowired
     private HealthStatusService healthStatusService;
+
+    @Autowired
+    private Tracer tracer;
 
     @Test
     void surveyWithSymptoms_promotesUserToSuspect() {
@@ -108,5 +126,27 @@ class KafkaPromotionIntegrationTest {
 
         await().atMost(Duration.ofSeconds(60)).untilAsserted(() ->
                 verify(healthStatusService).updateStatus("user-3", "ACTIVE"));
+    }
+
+    @Test
+    void surveyListenerExtractsFormTraceparentFromRealKafkaRecord() throws Exception {
+        String traceId = "abcdef0123456789abcdef0123456789";
+        var observedTrace = new AtomicReference<String>();
+        doAnswer(invocation -> {
+            assertNotNull(tracer.currentSpan());
+            observedTrace.set(tracer.currentSpan().context().traceId());
+            return null;
+        }).when(healthStatusService).updateStatus("trace-user", "SUSPECT");
+
+        var record = new ProducerRecord<String, Object>("survey.submitted", "trace-user",
+                Map.of("anonymousId", "trace-user", "hasSymptoms", true));
+        record.headers().add("traceparent",
+                ("00-" + traceId + "-0123456789abcdef-01").getBytes(StandardCharsets.UTF_8));
+        kafkaTemplate.send(record).get();
+
+        await().atMost(Duration.ofSeconds(60)).untilAsserted(() -> {
+            verify(healthStatusService).updateStatus("trace-user", "SUSPECT");
+            assertEquals(traceId, observedTrace.get());
+        });
     }
 }
