@@ -21,3 +21,16 @@ spring:
 
 server:
   port: 8086
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    tags:
+      service: form
+      environment: ${FORM_ENVIRONMENT:local}
