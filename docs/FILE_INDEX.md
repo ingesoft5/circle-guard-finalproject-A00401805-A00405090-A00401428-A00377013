@@ -83,7 +83,9 @@ English purpose of every tracked repository file.
 
 - `deploy/k8s/base/apps.yml` — Deployments and Services for the eight services and the web client.
 
-- `deploy/k8s/base/hpa.yml` — HorizontalPodAutoscalers for gateway, web, and auth.
+- `deploy/k8s/base/form-storage.yml` — Per-namespace local-path persistent volume claim for Form certificate uploads.
+
+- `deploy/k8s/base/hpa.yml` — HorizontalPodAutoscalers for gateway, web, auth, and Form; stage excludes Form autoscaling.
 
 - `deploy/k8s/base/ingress.yml` — Traefik Ingress routed by the `Host` header.
 
@@ -182,6 +184,8 @@ English purpose of every tracked repository file.
 - `docs/informe/Gateway-Cobertura.md` — Gateway coverage, integration, E2E, and quality evidence report.
 
 - `docs/informe/HU-DASH-02.md` — Dashboard unit-test, JaCoCo coverage, and Promotion failure-response evidence.
+
+- `docs/informe/HU-FORM-05.md` — Form Kubernetes audit, persistent upload configuration, and pending deployment evidence.
 
 - `docs/informe/HU-FILE-03.md` — File-service CI quality gate, idempotent publishing, semver tag policy, and on-prem rebuild evidence.
 
