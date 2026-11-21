@@ -260,12 +260,12 @@ Documentar esto evita que un despliegue nuevo repita el mismo diagnóstico.
 ## Sondas y salud
 
 Los servicios declaran `livenessProbe` y `readinessProbe` HTTP alimentadas por Spring Boot
-Actuator (`auth` utiliza las sondas nativas especializadas `/actuator/health/readiness` con
+Actuator (`auth` e `identity` utilizan las sondas nativas especializadas `/actuator/health/readiness` con
 `initialDelaySeconds: 30`, `periodSeconds: 10`, `failureThreshold: 3` y
 `/actuator/health/liveness` con `initialDelaySeconds: 60`, `periodSeconds: 15`,
 `failureThreshold: 3`; los demás servicios apuntan a `/actuator/health`). El middleware usa
 sondas `tcpSocket` (Postgres, Redis, Kafka, OpenLDAP) y HTTP en Neo4j. Esto cubre el
-requisito de sondas alimentadas por Actuator del entregable E2.2 (`DCG-102` / `DCG-103`).
+requisito de sondas alimentadas por Actuator del entregable E2.2 (`DCG-102` / `DCG-103` y `DCG-119` / `DCG-120`).
 
 ## Autoscaling (HPA)
 

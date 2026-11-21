@@ -19,9 +19,11 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security") // for encryption utils
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.flywaydb:flyway-core")
     runtimeOnly("org.postgresql:postgresql")
     implementation("org.springframework.kafka:spring-kafka")

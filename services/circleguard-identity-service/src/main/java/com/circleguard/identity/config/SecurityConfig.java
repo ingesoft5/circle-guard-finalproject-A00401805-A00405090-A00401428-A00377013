@@ -4,6 +4,7 @@
 package com.circleguard.identity.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -15,6 +16,9 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpStatus;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -23,19 +27,27 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
 
+    @Value("${cors.allowed-origins:http://localhost:8081,http://localhost:8080}")
+    private String allowedOrigins;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+
         http
             .cors(cors -> cors.configurationSource(request -> {
                 var config = new org.springframework.web.cors.CorsConfiguration();
-                config.setAllowedOrigins(java.util.List.of("http://localhost:8081", "http://localhost:8080"));
+                config.setAllowedOrigins(origins);
                 config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(java.util.List.of("*"));
                 return config;
             }))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/api/v1/identities/visitor", "/api/v1/identities/map").permitAll()
                 .anyRequest().authenticated()
             )
