@@ -1,0 +1,1 @@
+{"Test":["CMD-SHELL","wget -qO- http://127.0.0.1:8085/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"],"Interval":30000000000,"Timeout":5000000000,"StartPeriod":45000000000,"Retries":3}
