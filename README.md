@@ -70,7 +70,7 @@ CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Mod
 | **Message Bus** | Apache Kafka 3.7.0 (KRaft) | Persistent, audit-trailed event log for status dispatches. |
 | **Caching** | Redis 7.2 | L2 distributed cache for rapid entry-gate status validation. |
 | **Mobile/Web** | Expo (React Native) | Unified codebase across iOS, Android, and Browser. |
-| **Infra** | Docker Compose on-prem (`cg-tools`) + k3d cluster (`cg`) | Host propio, sin sudo ni exponer puertos; ver `infra/onpremise/README.md`. |
+| **Infra** | Docker Compose on-prem (`cg-tools`) + k3d cluster (`cg`) | k3d ejecuta k3s (Kubernetes certificado por la CNCF): la API es idéntica a K8s, pero se empaqueta sobre Docker para operar un host compartido sin `sudo` ni exponer puertos; ver [CI/CD](#cicd-platform) y `infra/onpremise/README.md`. |
 
 ---
 
@@ -247,6 +247,17 @@ La plataforma corre on-premise en un único host (accesible por ZeroTier):
 
 - `cg-tools` (Docker Compose): Jenkins, SonarQube, Nexus, registro `circleguard-docker` y el relay smee.io del webhook.
 - Clúster k3d `cg`: namespaces `cg-dev`, `cg-stage` y `cg-prod` con PostgreSQL, Neo4j, Kafka, Redis, OpenLDAP, los cinco servicios núcleo, los tres reportes y el cliente web; Ingress de Traefik en `:30080` ruteado por `Host` (`<env>.circleguard.local`).
+
+**Por qué k3d y no Kubernetes instalado en el host.** No es una decisión entre «k3s y k8s»: k3d ejecuta k3s, una distribución de Kubernetes certificada por la CNCF, así que la API y los manifiestos son los mismos. La elección es de empaquetado y operación. El host es compartido con otros proyectos y el usuario `docker` no tiene `sudo`; instalar `kubelet`/`containerd` o un clúster `kubeadm` exigiría privilegios y puertos adicionales. k3d corre el `controlplane` y los `agents` como contenedores, expone solo el Ingress en `:30080` y reutiliza el mirror HTTP del registro (`10.147.20.67:5000`).
+
+| Alternativa | Resultado | Motivo |
+|:---|:---|:---|
+| **k3d (k3s en Docker)** | **Elegida** | Sin `sudo`, sin puertos de API expuestos, mirror de registro ya configurado. |
+| k3s nativo en el host | Descartada | Requiere `systemd`/root y puertos `6443`/`10250` en un host compartido. |
+| minikube / kind | Descartadas | Añaden una VM o un nodo Docker extra con su propio networking; no aportan sobre k3d aquí. |
+| kubeadm / clúster externo (EKS) | Descartadas | Requieren privilegios, automatización IaC adicional o salida a nube; la API es la misma. |
+
+Detalle completo: [`deploy/k8s/README.md`](deploy/k8s/README.md).
 
 Levantar desde cero en el host on-premise:
 

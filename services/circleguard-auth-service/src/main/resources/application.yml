@@ -5,7 +5,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/circleguard_auth}
     username: ${SPRING_DATASOURCE_USERNAME:admin}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -20,7 +20,7 @@ spring:
     urls: ${SPRING_LDAP_URLS:ldap://localhost:389}
     base: ${SPRING_LDAP_BASE:dc=circleguard,dc=edu}
     username: ${SPRING_LDAP_USERNAME:cn=admin,dc=circleguard,dc=edu}
-    password: ${SPRING_LDAP_PASSWORD:admin}
+    password: ${SPRING_LDAP_PASSWORD}
 
 identity:
   service:
@@ -28,11 +28,11 @@ identity:
     fallback-enabled: ${IDENTITY_SERVICE_FALLBACK_ENABLED:false}
 
 jwt:
-  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:3600000}
 
 qr:
-  secret: ${QR_SECRET:5367566B5970337336763979244226452948404D635166546A576E5A72347537}
+  secret: ${QR_SECRET}
   expiration: ${QR_EXPIRATION:300}
 
 cors:
@@ -45,10 +45,37 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
+    prometheus:
+      enabled: true
     health:
       show-details: always
+      probes:
+        enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
   health:
     ldap:
       enabled: ${MANAGEMENT_HEALTH_LDAP_ENABLED:false}
+
+resilience4j:
+  circuitbreaker:
+    circuit-breaker-aspect-order: 1
+    instances:
+      identityClient:
+        register-health-indicator: true
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: ${CB_IDENTITY_SLIDING_WINDOW_SIZE:10}
+        minimum-number-of-calls: ${CB_IDENTITY_MIN_CALLS:5}
+        failure-rate-threshold: ${CB_IDENTITY_FAILURE_RATE_THRESHOLD:50}
+        wait-duration-in-open-state: ${CB_IDENTITY_WAIT_DURATION_OPEN:10s}
+        permitted-number-of-calls-in-half-open-state: ${CB_IDENTITY_HALF_OPEN_CALLS:3}
+  retry:
+    retry-aspect-order: 2
+    instances:
+      identityClient:
+        max-attempts: ${RETRY_IDENTITY_MAX_ATTEMPTS:3}
+        wait-duration: ${RETRY_IDENTITY_WAIT_DURATION:500ms}

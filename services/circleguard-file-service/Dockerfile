@@ -2,7 +2,15 @@
 # CG-DOC: Multi-stage, non-root, immutable image for circleguard-file-service.
 # Build context is the repository root:
 #   docker build -f services/circleguard-file-service/Dockerfile .
-FROM gradle:8.14-jdk21 AS build
+# CG-DOC: Las imágenes base se sobreescriben desde Jenkins con --build-arg para usar
+# el mirror de Nexus (circleguard-base/*) en el host on-premise (sin IPv6 a Docker Hub).
+ARG GRADLE_IMAGE=gradle:8.14-jdk21
+ARG JDK_IMAGE=eclipse-temurin:21-jdk
+ARG ALPINE_IMAGE=eclipse-temurin:21-jre-alpine
+ARG JAMMY_IMAGE=eclipse-temurin:21-jre-jammy
+ARG NODE_IMAGE=node:22-alpine
+ARG WEB_IMAGE=nginxinc/nginx-unprivileged:1.27-alpine
+FROM ${GRADLE_IMAGE} AS build
 WORKDIR /workspace
 
 COPY --chown=gradle:gradle settings.gradle.kts build.gradle.kts gradlew lombok.config ./
@@ -13,7 +21,7 @@ RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
     --mount=type=cache,target=/home/gradle/.gradle/wrapper/dists \
     ./gradlew :services:circleguard-file-service:bootJar --no-daemon --console=plain
 
-FROM eclipse-temurin:21-jre-alpine
+FROM ${ALPINE_IMAGE}
 
 ARG VERSION=dev
 ARG GIT_COMMIT=unknown
