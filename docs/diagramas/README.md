@@ -14,8 +14,8 @@ flowchart TB
   TF["Terraform E2.1"]
   MOD["network · compute · registry · storage · observability"]
   ENVS["envs dev · stage · prod"]
-  K3D["k3d por ambiente + Traefik"]
-  APPS["Namespaces cg-* (Kustomize)"]
+  K3D["k3d cg único + Traefik :30080 · ruteo por Host"]
+  APPS["Namespaces cg-dev · cg-stage · cg-prod (Kustomize)"]
 
   HOST --> TOOLS --> MINIO
   TOOLS --> DDB
@@ -45,12 +45,13 @@ Fuente: [`02-flujo-terraform.mmd`](02-flujo-terraform.mmd).
 
 ```mermaid
 flowchart TB
-  HOST["Host 10.147.20.67 :5000"] --> DEV["dev: cg-dev + cg-obs-dev"]
-  HOST --> STAGE["stage: cg-stage + cg-obs-stage"]
-  HOST --> PROD["prod: cg-prod + cg-obs-prod"]
-  DEV --> TRAEFIK["Traefik por ambiente"]
-  STAGE --> TRAEFIK
-  PROD --> TRAEFIK
+  HOST["Host 10.147.20.67 :5000"] --> CLUSTER["k3d cg único · Traefik :30080"]
+  CLUSTER --> DEV["dev: cg-dev"]
+  CLUSTER --> STAGE["stage: cg-stage"]
+  CLUSTER --> PROD["prod: cg-prod"]
+  DEV --> OBS["cg-obs: Prometheus + Grafana + Loki"]
+  STAGE --> OBS
+  PROD --> OBS
 ```
 
 Fuente: [`03-red-y-ambientes.mmd`](03-red-y-ambientes.mmd). Las claves de estado

@@ -9,7 +9,7 @@ flowchart TB
   TF["Terraform E2.1"]
   MOD["modules: network · compute · registry · storage · observability"]
   ENVS["envs: dev · stage · prod"]
-  K3D["k3d circleguard-dev :30080<br/>circleguard-stage :30081 · circleguard-prod :30082"]
+  K3D["k3d cg único<br/>Traefik :30080 · ruteo por Host"]
   APPS["Namespaces cg-dev · cg-stage · cg-prod<br/>Kustomize + Ingress + HPA + sondas"]
 
   HOST --> TOOLS

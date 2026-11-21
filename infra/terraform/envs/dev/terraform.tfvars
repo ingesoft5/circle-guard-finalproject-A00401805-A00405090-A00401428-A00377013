@@ -2,10 +2,10 @@
 env                = "dev"
 namespace          = "cg-dev"
 obs_namespace      = "cg-obs-dev"
-cluster_name       = "circleguard-dev"
+cluster_name       = "cg"
 agents             = 1
-k3s_version        = "v1.35.5+k3s1"
-kube_context       = "k3d-circleguard-dev"
+k3s_version        = "v1.35.5-k3s1"
+kube_context       = "k3d-cg"
 file_bucket_name   = "circleguard-files-dev"
 backup_bucket_name = "circleguard-backups-dev"
 pvc_size           = "10Gi"
