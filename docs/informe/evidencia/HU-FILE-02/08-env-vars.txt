@@ -1,0 +1,8 @@
+7:  port: ${SERVER_PORT:8085}
+21:    endpoint: ${AWS_S3_ENDPOINT:http://minio:9000}
+22:    bucket: ${AWS_S3_BUCKET:circleguard-files}
+23:    region: ${AWS_REGION:us-east-1}
+24:    path-style-access-enabled: ${AWS_S3_PATH_STYLE_ACCESS:true}
+25:    access-key: ${AWS_ACCESS_KEY_ID:}
+26:    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+30:    path: ${FILE_STORAGE_PATH:/app/uploads}

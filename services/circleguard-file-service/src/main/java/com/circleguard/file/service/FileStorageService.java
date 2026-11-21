@@ -3,6 +3,8 @@
  */
 package com.circleguard.file.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,11 @@ public class FileStorageService {
 
     public FileStorageService() {
         this(Paths.get("uploads"));
+    }
+
+    @Autowired
+    public FileStorageService(@Value("${file.storage.path:uploads}") String path) {
+        this(Paths.get(path));
     }
 
     public FileStorageService(Path root) {

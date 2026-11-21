@@ -18,3 +18,5 @@ infra/state
 *.png
 README.md
 dashboard_test_output.txt
+**/secrets.env*
+**/uploads

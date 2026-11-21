@@ -1,14 +1,30 @@
-# CG-DOC: Runtime resource for the file service: application.yml.
+# CG-DOC: Runtime configuration for the file service. No secrets are stored here.
 spring:
   application:
     name: circleguard-file-service
 
-# Placeholder for S3/MinIO configuration if needed later
-# aws:
-#   s3:
-#     endpoint: http://localhost:9000
-#     access-key: minioadmin
-#     secret-key: minioadmin
-
 server:
-  port: 8085
+  port: ${SERVER_PORT:8085}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+# S3/MinIO connection. Consumed by the future S3 HU; values come only from the environment.
+aws:
+  s3:
+    endpoint: ${AWS_S3_ENDPOINT:http://minio:9000}
+    bucket: ${AWS_S3_BUCKET:circleguard-files}
+    region: ${AWS_REGION:us-east-1}
+    path-style-access-enabled: ${AWS_S3_PATH_STYLE_ACCESS:true}
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+
+file:
+  storage:
+    path: ${FILE_STORAGE_PATH:/app/uploads}
