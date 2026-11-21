@@ -22,8 +22,7 @@ public class AuditLogService {
     private static final String TOPIC_AUDIT = "notification.audit";
 
     public void logDelivery(String userId, String channel, String status, String correlationId) {
-        log.info("Logging notification audit: User={}, Channel={}, Status={}, CorrelationId={}", 
-                userId, channel, status, correlationId);
+        log.info("Logging notification audit");
         
         Map<String, Object> auditEvent = new HashMap<>();
         auditEvent.put("eventId", UUID.randomUUID().toString());

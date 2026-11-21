@@ -47,13 +47,13 @@ public class SmsServiceImpl implements SmsService {
     public CompletableFuture<Void> sendAsync(String userId, String messageContent) {
         String correlationId = java.util.UUID.randomUUID().toString();
         if (accountSid.startsWith("AC_MOCK")) {
-            log.info("[MOCK SMS] To: {}, Content: {}", userId, messageContent);
+            log.info("[MOCK SMS] Delivery simulated");
             auditLogService.logDelivery(userId, "SMS", "SUCCESS", correlationId);
             return CompletableFuture.completedFuture(null);
         }
 
         try {
-            log.debug("Attempting to send SMS to user: {}", userId);
+            log.debug("Attempting to send SMS");
             // Mocking phone number lookup
             String toPhone = "+15551112222"; 
             
@@ -63,11 +63,11 @@ public class SmsServiceImpl implements SmsService {
                 messageContent
             ).create();
 
-            log.info("SMS sent successfully to user: {}", userId);
+            log.info("SMS sent successfully");
             auditLogService.logDelivery(userId, "SMS", "SUCCESS", correlationId);
             return CompletableFuture.completedFuture(null);
         } catch (Exception e) {
-            log.warn("Failed to send SMS to user {} (correlationId: {}): {}", userId, correlationId, e.getMessage());
+            log.warn("SMS delivery failed (correlationId: {}, error: {})", correlationId, e.getClass().getSimpleName());
             auditLogService.logDelivery(userId, "SMS", "RETRY", correlationId);
             throw e;
         }
@@ -75,7 +75,7 @@ public class SmsServiceImpl implements SmsService {
 
     @org.springframework.retry.annotation.Recover
     public CompletableFuture<Void> recover(Exception e, String userId, String messageContent) {
-        log.error("SMS delivery failed after max retries for user: {}. Error: {}", userId, e.getMessage());
+        log.error("SMS delivery failed after max retries ({})", e.getClass().getSimpleName());
         auditLogService.logDelivery(userId, "SMS", "FAILED", null);
         return CompletableFuture.failedFuture(e);
     }

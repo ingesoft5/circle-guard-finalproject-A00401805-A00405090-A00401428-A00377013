@@ -21,7 +21,7 @@ public class NotificationDispatcher {
     private final TemplateService templateService;
 
     public void dispatch(String userId, String status) {
-        log.info("Dispatching contextual multi-channel notifications for user: {} with status: {}", userId, status);
+        log.info("Dispatching multi-channel health notification");
         
         String emailContent = templateService.generateEmailContent(status, userId);
         String pushContent = templateService.generatePushContent(status);
@@ -34,9 +34,9 @@ public class NotificationDispatcher {
             pushService.sendAsync(userId, pushContent, pushMetadata)
         ).handle((result, ex) -> {
             if (ex != null) {
-                log.error("Error during multi-channel dispatch for user {}: {}", userId, ex.getMessage());
+                log.error("Multi-channel dispatch failed ({})", ex.getClass().getSimpleName());
             } else {
-                log.info("Multi-channel dispatch completed successfully for user: {}", userId);
+                log.info("Multi-channel dispatch completed");
             }
             return result;
         });
