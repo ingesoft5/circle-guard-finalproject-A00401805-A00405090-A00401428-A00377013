@@ -14,7 +14,7 @@ import java.util.Set;
 /** Export only operational attributes; exception events may contain health data. */
 public final class PrivacySpanExporter implements SpanExporter {
     private static final Set<String> ALLOWED = Set.of("http.method", "http.status_code", "http.route",
-            "method", "status", "uri", "outcome", "exception", "error", "messaging.system",
+            "method", "outcome", "messaging.system",
             "messaging.operation", "messaging.destination.name", "spring.kafka.template.name", "bean.name");
     private final SpanExporter delegate;
 

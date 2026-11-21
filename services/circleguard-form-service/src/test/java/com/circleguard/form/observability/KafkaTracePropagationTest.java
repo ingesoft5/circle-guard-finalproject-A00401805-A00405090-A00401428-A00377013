@@ -55,6 +55,7 @@ class KafkaTracePropagationTest {
             var span = tracing.sdk.getTracer("form-test").spanBuilder("operation").startSpan();
             span.setAttribute("http.method", "POST");
             span.setAttribute("http.url", "https://app/surveys?token=secret-token");
+            span.setAttribute("uri", "/surveys?token=secret-token");
             span.setAttribute("messaging.kafka.message.key", "private-user");
             span.setAttribute("responses", "private-health");
             span.recordException(new IllegalStateException("secret-token"));
