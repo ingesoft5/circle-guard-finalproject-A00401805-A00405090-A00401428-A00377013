@@ -9,7 +9,7 @@
 | Subtarea | Estado | Evidencia y pendiente |
 |---|---|---|
 | Actuator, Micrometer y Prometheus | Parcial | Registro y endpoint implementados y probados sin PostgreSQL/Kafka. Falta desplegar esta versión y comprobar el scrape real. |
-| Grafana y logs centralizados | Parcial | Panel, montajes Kustomize y logs operativos correlacionables preparados. Faltan activación, panel con datos y colector central. |
+| Grafana y logs centralizados | Parcial | Panel y reglas conectados a los manifiestos compartidos de #93; logs operativos correlacionables implementados. Falta despliegue, panel con datos y colector central. |
 | OpenTelemetry y Kafka | Parcial | W3C y exportador OTLP con filtro de privacidad implementados. Pasan las pruebas con KafkaTemplate/MockProducer y con broker Kafka real temporal, incluida la recepción de `traceparent`. Falta evidencia desplegada y la traza completa hasta Notification. |
 | Form → Promotion → Notification | Pendiente | Existe el flujo funcional, pero falta instrumentación coordinada y una traza completa en Jaeger. La integración actual termina en Promotion. |
 | Alerta en Alertmanager | Parcial | Regla y pruebas promtool pasan. Faltan carga, disparo controlado, entrega al receptor y recuperación real. |
@@ -23,7 +23,9 @@ La lectura mostró aproximadamente 31 GiB de RAM total y 14,8 GiB disponibles; F
 
 El HTTP 200 de `/actuator/prometheus` por Ingress era HTML de Nginx, no métricas. La consulta a la IP del pod desde el host no obtuvo respuesta. El endpoint nuevo se verificó localmente mediante MockMvc.
 
-La PR #93 sigue abierta y prepara la pila compartida. Sus manifiestos en `850a854eb30934f9d5377fcf89c00114a5d054fd` se utilizaron en una copia temporal para validar compatibilidad. La rama actual parte de `main` en `fa0c767`; no incorpora los cambios pendientes de HU-FORM-05 ni copia la infraestructura de #93.
+En el diagnóstico inicial, #93 seguía abierta y sus manifiestos en `850a854eb30934f9d5377fcf89c00114a5d054fd` se utilizaron en una copia temporal. Después de su merge, se incorporó `origin/main` en `f651093` a esta rama sin conflictos. La configuración compartida ya está presente; HU-FORM-05 sigue siendo una PR independiente y no se copian sus cambios.
+
+La consulta SSH de continuación confirmó que monitoring aún no estaba desplegado y Form seguía en `1.4.0` en dev/prod, con stage en cero réplicas. El merge no equivale a un despliegue ni habilita automáticamente Jaeger o logs centralizados.
 
 ## Funcionamiento y configuración
 
@@ -46,10 +48,10 @@ La instrumentación propia no registra usuarios, respuestas, certificados, crede
 
 ## Integración compartida preparada
 
-Ver los [componentes de Form](../../deploy/k8s/components/form-observability/README.md). Son opcionales y aún no están seleccionados por los overlays predeterminados, para respetar HU-FORM-05 y #93 pendientes.
+Ver los [componentes de Form](../../deploy/k8s/components/form-observability/README.md). Los overlays de dev, stage y prod ya seleccionan el componente de aplicación; `monitoring/kustomization.yml` selecciona el componente de monitoring. Falta desplegar la configuración mediante una acción autorizada.
 
 - Aplicación: scrape interno en 8086 y ambiente por namespace; no agrega rutas públicas ni cambia réplicas/HPA/persistencia.
-- Monitoring: ConfigMaps con hash y montajes en Prometheus/Grafana existentes; no crea servidores adicionales.
+- Monitoring: ConfigMaps con hash combinados con los de Auth en los volúmenes proyectados existentes de Prometheus/Grafana. Se conservan archivos y montajes de Auth, sin servidores adicionales ni montajes anidados.
 - Panel: scrape disponible, tráfico, errores 5xx, latencia HTTP media, heap JVM y publicaciones Kafka por resultado; filtro por namespace.
 - Alerta: tres publicaciones fallidas en cinco minutos, sostenidas un minuto; dev/prod. Excluye stage y no detecta por sí sola servicio caído o scrape ausente.
 - Alertmanager: reutiliza el enlace de #93. Su receptor actual carece de destino externo; entrega pendiente del equipo.
@@ -66,10 +68,10 @@ Ver los [componentes de Form](../../deploy/k8s/components/form-observability/REA
 | W3C con KafkaTemplate real/MockProducer | PASS: header válido, span hijo con igual trace ID, clave/cuerpo conservados. |
 | Privacidad | PASS para casos automatizados de logs propios y atributos/eventos sensibles en spans. |
 | `integrationTest` | PASS tras iniciar Docker Desktop: dos pruebas, cero fallos y cero omitidas. Adjuntos utiliza PostgreSQL temporal real; Form–Promotion utiliza Kafka temporal real y verifica `traceparent`, con persistencia y HealthStatusService simulados. |
-| Kustomize dev/stage/prod con componente | PASS en copia temporal con secretos ficticios; solo cambian anotaciones y ambiente de Form. |
-| Monitoring con #93 | PASS: reglas/panel montados y ConfigMaps resueltos; tres servidores compartidos conservados. |
+| Kustomize dev/stage/prod con componente | PASS mediante `verify.py`, sobre los overlays conectados y secretos ficticios; solo cambian anotaciones y ambiente de Form. Réplicas/HPA/persistencia permanecen iguales. |
+| Monitoring fusionado de #93 | PASS mediante `verify.py`: proyecciones resuelven ConfigMaps con hash y conservan reglas/panel de Auth. Sin cambios en el resto de los recursos compartidos. |
 | Panel Grafana | PASS JSON: seis paneles, IDs únicos y filtros; visualización real pendiente. |
-| Promtool 2.51.2 | PASS: regla válida, disparo, recuperación, ausencia de errores y exclusión de stage. |
+| Promtool 2.51.2 | PASS: las tres reglas de Auth y la de Form renderizadas juntas; disparo, recuperación, ausencia de errores y exclusión de stage para Form. |
 
 Promtool fue un binario temporal oficial comprobado contra `sha256sums.txt`; no se agregó al repositorio. No se desplegó, reinició ni modificó ningún recurso del servidor.
 
@@ -87,13 +89,16 @@ Start-Process 'services/circleguard-form-service/build/reports/jacoco/test/html/
 promtool check rules deploy/k8s/components/form-observability/monitoring/form-alerts.yml
 promtool test rules deploy/k8s/components/form-observability/monitoring/form-alerts.test.yml
 git diff --check
+python deploy/k8s/components/form-observability/verify.py
 ```
 
-Para conectar/renderizar los componentes, seguir su README después de integrar las PR dependientes. Usar secretos ficticios en una copia aislada y no publicar renders con Secrets como evidencia.
+Los componentes ya están conectados. `verify.py` renderiza copias aisladas con secretos ficticios y verifica que los cambios se limitan a la integración de Form. No publicar renders con Secrets como evidencia.
+
+Tras incorporar main también se ejecutaron `:services:circleguard-form-service:check`, `:services:circleguard-form-service:integrationTest` y `:services:circleguard-dashboard-service:check`: `BUILD SUCCESSFUL`, con reutilización de tareas válidas por Gradle. La conexión Kustomize posterior se validó con `verify.py` y promtool.
 
 ## Pendientes operativos y coordinación
 
-1. Integrar HU-FORM-05 y #93, revisar los parches contra sus versiones finales y activar los componentes mediante cambios revisados y despliegue autorizado. Mantener stage apagado.
+1. Revisar e integrar esta rama y desplegar monitoring y Form mediante acciones autorizadas. #93 ya está integrada; coordinar HU-FORM-05 separadamente. No aplicar el overlay completo de stage como parte de esta validación: su estado remoto intencional es cero réplicas, mientras el overlay mantiene la política existente para promociones.
 2. Acordar backend Jaeger/OTLP, colector de logs, memoria, retención, acceso y receptor de Alertmanager con plataforma. La lectura de RAM no autoriza instalar una pila nueva.
 3. Verificar endpoint desde acceso interno, Prometheus Targets/series y los seis paneles con el namespace correcto. Un 200 HTML no es evidencia válida.
 4. Coordinar observación de listeners con Promotion y Notification y del productor `promotion.status.changed` en Promotion. Sanear sus logs de eventos completos/identificadores; conservar contexto al cambiar de hilo en ejecutores.

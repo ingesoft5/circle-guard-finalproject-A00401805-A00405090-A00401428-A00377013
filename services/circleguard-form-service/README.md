@@ -7,7 +7,7 @@ Este documento explica el funcionamiento, la estructura y las dependencias actua
 
 Form expone `/actuator/prometheus`, observa publicaciones Kafka y permite exportar trazas OpenTelemetry mediante configuración externa. La exportación de trazas está desactivada por defecto hasta disponer del backend compartido.
 
-El [informe HU-FORM-06](../../docs/informe/HU-FORM-06.md) incluye configuración, pruebas, cobertura, privacidad y pendientes operativos. Los [componentes Kustomize opcionales](../../deploy/k8s/components/form-observability/README.md) preparan el scrape, el panel Grafana y la alerta; aún requieren activación tras integrar las PR dependientes.
+El [informe HU-FORM-06](../../docs/informe/HU-FORM-06.md) incluye configuración, pruebas, cobertura, privacidad y pendientes operativos. Los [componentes Kustomize](../../deploy/k8s/components/form-observability/README.md) ya conectan el scrape, el panel Grafana y la alerta con la pila compartida de #93; falta desplegar y validar esa configuración en ejecución.
 
 ## Cómo funciona form-service
 

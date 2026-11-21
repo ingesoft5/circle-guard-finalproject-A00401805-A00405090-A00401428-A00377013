@@ -1,19 +1,19 @@
 # Form observability components
 
-These optional Kustomize components extend the shared stack from PR #93. They do not create Prometheus, Grafana, Alertmanager, a log collector, or a tracing backend.
+These Kustomize components extend the shared stack merged in PR #93. They are selected by the application overlays and monitoring configuration in this branch. They do not create additional monitoring servers, a log collector, or a tracing backend.
 
-## Activation prerequisites
+## Integration and deployment
 
-Merge HU-FORM-05 before changing the application overlays, and merge the shared monitoring resources from PR #93 before enabling the monitoring component. Neither dependency is included by this directory. Components are prepared and validated locally; they are not currently selected by the default overlays.
+PR #93 has been incorporated from main. The components are wired into the repository configuration; deployment remains a separate, authorized action. HU-FORM-05 remains an independent PR: these changes do not copy its HPA or storage configuration. Offline verification confirms replicas, HPA and storage are preserved when applying this component.
 
-After those prerequisites are met, add to each application overlay's `kustomization.yml` (dev, stage and prod):
+Each application overlay's `kustomization.yml` (dev, stage and prod) includes:
 
 ```yaml
 components:
   - ../../components/form-observability/app
 ```
 
-Add to `deploy/k8s/monitoring/kustomization.yml`:
+`deploy/k8s/monitoring/kustomization.yml` includes:
 
 ```yaml
 components:
@@ -22,9 +22,9 @@ components:
 
 The application component adds pod scrape annotations and derives `FORM_ENVIRONMENT` from the pod namespace. It does not change replicas, HPA, volumes or public ingress routes. Scraping uses the internal pod port 8086 and the shared Kubernetes service discovery; no public Actuator route is needed. It does not restrict access by other workloads inside the cluster.
 
-The monitoring component generates hashed ConfigMaps and mounts the Form rules and dashboard in the existing Prometheus and Grafana Deployments. The shared Prometheus `rule_files` glob reads `/etc/prometheus/rules/*.yml`; the shared Grafana provider reads `/var/lib/grafana/dashboards`. Preserve the default Prometheus datasource or select it when importing the dashboard. The dashboard includes a namespace selector and uses the shared `app` and `namespace` target labels.
+The monitoring component generates hashed ConfigMaps and combines the Auth and Form ConfigMaps in the existing `alert-rules` and `dashboards` projected volumes. Mount paths remain unchanged: Prometheus reads `/etc/prometheus/rules/*.yml`; the Grafana provider reads `/var/lib/grafana/dashboards`. No nested mounts or additional servers are introduced. Preserve the default Prometheus datasource or select it when importing the dashboard. The dashboard includes a namespace selector and uses the shared `app` and `namespace` target labels.
 
-ConfigMap name changes update the pod template; the alert mount uses `subPath`, so rule updates require the normal authorized monitoring rollout. This component does not implement hot reload. Validate Prometheus/Grafana health after activation.
+Generated ConfigMap name changes update the projected-volume reference and pod template, so rule updates follow the normal authorized monitoring rollout. This component does not implement Prometheus hot reload. Validate Prometheus/Grafana health after deployment.
 
 ## Alert
 
@@ -41,7 +41,15 @@ promtool check rules form-alerts.yml
 promtool test rules form-alerts.test.yml
 ```
 
-The rule test covers firing in dev, recovery, no failures in prod, and exclusion of stage. After wiring the components into the shared configuration, render locally (do not apply as part of this verification):
+The rule test covers firing in dev, recovery, no failures in prod, and exclusion of stage. Run the offline verifier from the repository root (Python with PyYAML and kubectl required):
+
+```powershell
+python deploy/k8s/components/form-observability/verify.py
+```
+
+The verifier creates temporary copies with dummy Secrets, renders all three environments and monitoring, checks generated ConfigMap references and preserved Auth files, and compares against the same configuration without the components. It never contacts the cluster or prints rendered Secrets.
+
+For individual renders with your local configuration (do not apply as part of verification):
 
 ```powershell
 kubectl kustomize deploy/k8s/overlays/dev
