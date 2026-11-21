@@ -289,6 +289,22 @@ escaneo de 20 minutos queda solo como respaldo.
 actual (ver `docs/informe/P1.1-Branching-GitHub-Flow.md`). Por eso el criterio es la
 existencia de la rama en GitHub, no su prefijo ni su merge en un branch `dev`.
 
+### 3.9 Política de revisión de PR en `main`
+
+La protección de `main` exige **1 aprobación** y el check
+`continuous-integration/jenkins/pr-merge` con `strict=true` (la rama debe estar
+actualizada con `main`). `dismiss_stale_reviews=true` significa que un nuevo push
+invalida aprobaciones anteriores: el aprobador debe revisar la última revisión.
+También se exige resolver conversaciones y se bloquean force push y borrado de rama.
+
+`infra/bootstrap/bootstrap-github.sh` versiona esa misma política
+(`required_approving_review_count: 1`). Ejecutar el script tras una reconstrucción
+reasienta el valor en GitHub; una versión anterior del script (con `2`) lo
+revertiría, así que hay que usar siempre la versión del repo.
+
+Este apartado deja documentado el valor aplicado en el repo, según E1.2:
+no se acepta configuración manual no documentada.
+
 ## 4. Reglas de operación
 
 1. No detener, reiniciar ni borrar los contenedores ajenos `k8s-worker` e `icesi-inn`.
