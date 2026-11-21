@@ -129,20 +129,37 @@ def trivyScanImagesLocal(List images, String tag) {
 
 def owaspZapGateLocal(String environment) {
     def namespace = "cg-${environment}"
-    def zapPod = "zap-gate-${env.BUILD_NUMBER ?: 'local'}"
+    def buildNumber = env.BUILD_NUMBER ?: 'local'
+    // Every API surface that reaches production is scanned by its own baseline run;
+    // the blocking check below reads the aggregate report, so adding a target can
+    // never weaken the existing auth scan.
+    def targets = [
+            'auth'     : 'http://auth:8180/actuator/health',
+            'promotion': 'http://promotion:8088/actuator/health'
+    ]
     sh """
         set -eu
         mkdir -p build/reports/security
-        kubectl -n ${namespace} delete pod ${zapPod} --ignore-not-found >/dev/null 2>&1 || true
-        trap 'kubectl -n ${namespace} delete pod ${zapPod} --ignore-not-found >/dev/null 2>&1 || true' EXIT
-        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway --timeout=180s
-        kubectl -n ${namespace} run ${zapPod} \\
-          --image=ghcr.io/zaproxy/zaproxy:stable \\
-          --restart=Never \\
-          --labels="ci-security-gate=true" \\
-          --command -- zap-baseline.py -t http://auth:8180/actuator/health -m 1
-        kubectl -n ${namespace} wait "pod/${zapPod}" --for=jsonpath='{.status.phase}'=Succeeded --timeout=300s
-        kubectl -n ${namespace} logs ${zapPod} | tee build/reports/security/zap-${environment}.txt
+        : > build/reports/security/zap-${environment}.txt
+        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion --timeout=180s
+    """
+    targets.each { short, target ->
+        def zapPod = "zap-gate-${short}-${buildNumber}".toString()
+        sh """
+            set -eu
+            kubectl -n ${namespace} delete pod ${zapPod} --ignore-not-found >/dev/null 2>&1 || true
+            trap 'kubectl -n ${namespace} delete pod ${zapPod} --ignore-not-found >/dev/null 2>&1 || true' EXIT
+            kubectl -n ${namespace} run ${zapPod} \\
+              --image=ghcr.io/zaproxy/zaproxy:stable \\
+              --restart=Never \\
+              --labels="ci-security-gate=true" \\
+              --command -- zap-baseline.py -t ${target} -m 1
+            kubectl -n ${namespace} wait "pod/${zapPod}" --for=jsonpath='{.status.phase}'=Succeeded --timeout=300s
+            kubectl -n ${namespace} logs ${zapPod} | tee -a build/reports/security/zap-${environment}.txt
+        """
+    }
+    sh """
+        set -eu
         if grep -qE '^FAIL-NEW:[[:space:]]*[1-9]' build/reports/security/zap-${environment}.txt; then
             echo "OWASP ZAP detectó vulnerabilidades bloqueantes en ${namespace} antes de promover a prod." >&2
             exit 1
