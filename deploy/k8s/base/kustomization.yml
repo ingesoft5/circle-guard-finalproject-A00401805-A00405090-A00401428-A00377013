@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - middleware.yml
   - apps.yml
+  - form-storage.yml
   - ingress.yml
   - hpa.yml
   - auth-alerts.yml

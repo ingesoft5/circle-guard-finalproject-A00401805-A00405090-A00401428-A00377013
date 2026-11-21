@@ -269,6 +269,14 @@ requisito de sondas alimentadas por Actuator del entregable E2.2 (`DCG-102` / `D
 
 ## Autoscaling (HPA)
 
+`base/hpa.yml` define cuatro `HorizontalPodAutoscaler` sobre CPU al 70 %:
+
+| Servicio | Mínimo | Máximo | Motivo |
+|---|---|---|---|
+| `gateway` | 1 | 3 | Es la puerta de entrada del API y el que recibe la carga de la demostración |
+| `web` | 1 | 2 | Cliente estático; su límite de memoria es el más bajo del stack |
+| `auth` | 1 | 2 | Emite los JWT de todas las peticiones autenticadas |
+| `form` | 1 | 2 | Recibe cuestionarios y adjuntos; las réplicas comparten el PVC local del mismo nodo |
 `base/hpa.yml` define tres `HorizontalPodAutoscaler` sobre utilización promedio de CPU:
 
 | Servicio | Mínimo | Máximo | Umbral CPU | Motivo |
@@ -277,9 +285,19 @@ requisito de sondas alimentadas por Actuator del entregable E2.2 (`DCG-102` / `D
 | `web` | 1 | 2 | 70 % | Cliente estático; su límite de memoria es el más bajo del stack |
 | `auth` | 1 | 5 | 75 % | Emite y verifica los JWT/QR de todas las peticiones autenticadas (`DCG-102`) |
 
-Los tres Deployments escalados **no declaran `spec.replicas`**: el dueño del número de
+Los cuatro Deployments escalados **no declaran `spec.replicas` en la base**: el dueño del número de
 réplicas es el HPA. Si el Deployment fijara `replicas`, cada `kubectl apply -k` lo devolvería
 a 1 y pelearía con el autoscaler.
+
+El overlay de stage excluye **solo** el HPA de Form y fija una réplica para su
+validación durante una promoción autorizada. Después, el operador puede escalar Form
+a cero; seguirá en cero hasta una nueva promoción o escalado explícito. Excluirlo del
+render no elimina un HPA que se hubiera creado previamente: comprobar su ausencia antes
+de dormir stage. Esta HU no cambia la política de los otros HPA ni ejecuta cambios remotos.
+
+Form monta `form-uploads` en `/tmp/circleguard-uploads`, con PVC independiente por
+namespace. La migración inicial de archivos, las limitaciones de `local-path` y los
+pendientes de ejecución están en [HU-FORM-05](../../docs/informe/HU-FORM-05.md).
 
 Requisito previo, `metrics-server` (no viene con k3d):
 

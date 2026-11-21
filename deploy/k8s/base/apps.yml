@@ -303,7 +303,6 @@ metadata:
   labels:
     app: form
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: form
@@ -333,6 +332,9 @@ spec:
                   key: POSTGRES_PASSWORD
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: kafka:9092
+          volumeMounts:
+            - name: uploads
+              mountPath: /tmp/circleguard-uploads
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -352,6 +354,13 @@ spec:
               memory: 320Mi
             limits:
               memory: 512Mi
+      securityContext:
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: form-uploads
 ---
 apiVersion: v1
 kind: Service

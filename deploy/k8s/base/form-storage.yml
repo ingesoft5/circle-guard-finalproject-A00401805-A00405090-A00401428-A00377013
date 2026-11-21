@@ -1,0 +1,14 @@
+# CG-DOC: Persistent certificate uploads for form-service, isolated per namespace.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: form-uploads
+  labels:
+    app: form
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
