@@ -11,9 +11,9 @@
 | Actuator, Micrometer y Prometheus | Parcial | Registro y endpoint implementados y probados sin PostgreSQL/Kafka. Falta desplegar esta versión y comprobar el scrape real. |
 | Grafana y logs centralizados | Parcial | Panel y reglas conectados a los manifiestos compartidos de #93; logs operativos correlacionables implementados. Falta despliegue, panel con datos y colector central. |
 | OpenTelemetry y Kafka | Parcial | W3C y exportador OTLP con filtro de privacidad implementados. Pasan las pruebas con KafkaTemplate/MockProducer y con broker Kafka real temporal, incluida la recepción de `traceparent`. Falta evidencia desplegada y la traza completa hasta Notification. |
-| Form → Promotion → Notification | Pendiente | Existe el flujo funcional, pero falta instrumentación coordinada y una traza completa en Jaeger. La integración actual termina en Promotion. |
-| Alerta en Alertmanager | Parcial | Regla y pruebas promtool pasan. Faltan carga, disparo controlado, entrega al receptor y recuperación real. |
-| Privacidad | Parcial | Casos automatizados de logs y spans propios pasan. Faltan revisión desplegada y saneamiento de los servicios relacionados. |
+| Form → Promotion → Notification | Parcial | Los dos consumidores y el productor de Promotion ya tienen instrumentación local; pruebas con Kafka real verifican la continuidad W3C en cada salto. Falta una traza completa de los tres servicios en Jaeger. |
+| Alerta en Alertmanager | Parcial | Regla y pruebas promtool pasan; una alerta sintética llegó al receptor interno de Alertmanager local. Faltan disparo por Prometheus, receptor externo aprobado, entrega y recuperación desplegada. |
+| Privacidad | Parcial | Pruebas automatizadas de logs y spans pasan en los tres servicios y el colector local elimina el marcador sensible. Falta inspección de métricas, logs y trazas en el ambiente desplegado. |
 
 ## Infraestructura auditada: solo lectura
 
@@ -55,7 +55,7 @@ Ver los [componentes de Form](../../deploy/k8s/components/form-observability/REA
 - Panel: scrape disponible, tráfico, errores 5xx, latencia HTTP media, heap JVM y publicaciones Kafka por resultado; filtro por namespace.
 - Alerta: tres publicaciones fallidas en cinco minutos, sostenidas un minuto; dev/prod. Excluye stage y no detecta por sí sola servicio caído o scrape ausente.
 - Alertmanager: reutiliza el enlace de #93. Su receptor actual carece de destino externo; entrega pendiente del equipo.
-- Logs centrales y Jaeger: dependencias compartidas, sin instalación en esta HU.
+- Logs centrales y Jaeger: preparados en el overlay aislado de prueba; aún no instalados en el clúster.
 
 ## Validación local ejecutada
 
@@ -101,10 +101,10 @@ Tras incorporar main también se ejecutaron `:services:circleguard-form-service:
 1. Revisar e integrar esta rama y desplegar monitoring y Form mediante acciones autorizadas. #93 ya está integrada; coordinar HU-FORM-05 separadamente. No aplicar el overlay completo de stage como parte de esta validación: su estado remoto intencional es cero réplicas, mientras el overlay mantiene la política existente para promociones.
 2. Acordar backend Jaeger/OTLP, colector de logs, memoria, retención, acceso y receptor de Alertmanager con plataforma. La lectura de RAM no autoriza instalar una pila nueva.
 3. Verificar endpoint desde acceso interno, Prometheus Targets/series y los seis paneles con el namespace correcto. Un 200 HTML no es evidencia válida.
-4. Coordinar observación de listeners con Promotion y Notification y del productor `promotion.status.changed` en Promotion. Sanear sus logs de eventos completos/identificadores; conservar contexto al cambiar de hilo en ejecutores.
+4. Coordinar el despliegue separado de las versiones instrumentadas de Promotion y Notification. Las pruebas locales comprueban recepción W3C y publicación con `traceparent`, pero no sustituyen una traza completa desplegada. Verificar también los ejecutores asíncronos de notificación antes de atribuirles spans hijos.
 5. Preparar datos sintéticos acordados: cuestionario activo, respuesta con síntomas y usuario de prueba presente en el grafo. Confirmar que Promotion publica `promotion.status.changed` y Notification lo procesa. Aislar destinos de notificación. No crear datos ni activar este flujo sin autorización.
 6. Con muestreo 1.0 temporal, capturar contexto de ambos saltos Kafka y traza Jaeger con relaciones padre/hijo verificables en los tres servicios. Form–Promotion no sustituye esta evidencia.
-7. Probar la alerta con fallo controlado autorizado, sin detener Kafka compartido. Comprobar firing en Prometheus, recepción en Alertmanager, entrega y recuperación. Promtool solo demuestra la lógica local.
+7. Probar la alerta con fallo controlado autorizado, sin detener Kafka compartido. Comprobar firing en Prometheus, recepción en Alertmanager, entrega y recuperación. Promtool y el smoke test de Alertmanager prueban solo la lógica y la ruta locales.
 8. Buscar datos sintéticos sensibles en métricas, trazas y logs centrales sin copiar datos reales a Git/Jira; restaurar el muestreo acordado.
 
 Los cambios locales en Promotion y Notification están autorizados para esta HU. La activación remota y las pruebas que escriban datos en el clúster requieren autorización específica. No hacer nuevos pushes ni abrir PR sin autorización del usuario. No marcar la HU completa como Done hasta obtener las evidencias pendientes.
@@ -120,7 +120,7 @@ La comprobación SSH de solo lectura confirmó que `cg-dev` y `cg-prod` tienen S
 | 1. Métricas | `check` pasa; promtool valida la configuración de scrape del canario. | Endpoint y serie real `up` en Prometheus desplegado. |
 | 2. Panel y logs | Dashboard de Form conservado; overlay reutiliza Loki de #138 y agrega Alloy limitado al canario. Configuración Alloy validada con su binario. | Panel con datos y línea segura visible en Loki. |
 | 3. OpenTelemetry/Kafka | Dos integraciones pasan de nuevo con broker temporal y `traceparent`. Jaeger está preparado localmente. | Spans OTLP reales de Form en Jaeger. |
-| 4. Traza completa | Se identificaron listeners y productores. Promotion y Notification registran actualmente cuerpos de eventos o identificadores; se autorizó preparar sus cambios locales. | Traza de los tres servicios y destinos externos de prueba aislados. |
+| 4. Traza completa | Se instrumentaron listeners y productores de Promotion y Notification; pruebas locales con broker real confirman extracción W3C en ambos consumidores. Se retiraron logs de cuerpos e identificadores del recorrido. | Una única traza de los tres servicios en Jaeger y destinos externos de prueba aislados. |
 | 5. Alerta | promtool valida cuatro reglas renderizadas, incluida Form. | Receptor autorizado, firing, entrega y recuperación reales. |
 | 6. Privacidad | Pipeline de logs del canario filtra y reconstruye campos permitidos; no recolecta logs de Promotion/Notification. | Prueba con marcador sintético sobre métricas, logs y spans desplegados. |
 
@@ -134,6 +134,31 @@ Después de incorporar #138 se repitió `smoke_logs.py` con la configuración y 
 
 `smoke_traces.py` envió un span sintético por OTLP HTTP a Jaeger local y lo recuperó por ID; confirmó la ingestión y consulta del backend sin usar datos reales. Retiró el contenedor. La prueba no verifica aún que Form exporte spans al Jaeger desplegado ni que Promotion y Notification compartan la traza.
 
-El `bootJar` de Form también finalizó con `BUILD SUCCESSFUL`. Se preparó `Jenkinsfile.form06-dev` como script optativo para un job aislado: incluye pruebas, cobertura, Sonar, integración, Trivy y publicación de una imagen Form con versión de prueba, sin despliegue. Su sintaxis Groovy se analizó localmente; el job no se ha creado ni ejecutado, y esta comprobación no sustituye la validación declarativa de Jenkins. El flujo compartido sigue intacto.
+El `bootJar` de Form también finalizó con `BUILD SUCCESSFUL`. Se preparó `Jenkinsfile.form06-dev` como script optativo para un job aislado: incluye pruebas, cobertura, Sonar, integración, Trivy y publicación de una imagen Form con versión de prueba, sin despliegue. Su sintaxis Groovy se analizó localmente; el job no se ha creado ni ejecutado. Por decisión del equipo, Jenkins queda en espera mientras sus dos ejecutores atienden otros PR. El flujo compartido sigue intacto.
 
 El escaneo local IaC con Trivy 0.57.1 y sus checks incorporados procesó cinco archivos de configuración y devolvió cero hallazgos CRITICAL, sin errores de análisis. La actualización remota de políticas de esa versión produjo un error de parseo en una regla AWS ajena al overlay; por eso el job optativo fija los checks incorporados para mantener un resultado reproducible. Aún falta ejecutar el gate en Jenkins.
+
+## Continuación local: Promotion, Notification y receptor interno
+
+La rama de HU-FORM-06 incorporó `origin/main` en `4acb786` después del merge de #138. La revisión de PR abiertos encontró #137 (Form/Kubernetes), #139 (Identity y `deploy/k8s/monitoring/alertmanager.yml`) y #140 (capacidad de Jenkins). Los cambios nuevos de esta continuación se limitan a Promotion, Notification, este informe y el smoke test aislado; no editan archivos modificados por esos PR. El README de Form ya modificado por la HU antes de esta continuación coincide con #137 y requiere revisión al integrar la PR.
+
+Promotion añade el puente Micrometer–OpenTelemetry, extracción W3C en sus listeners Kafka cuando `PROMOTION_TRACING_ENABLED=true`, observación de sus `KafkaTemplate` y un exportador OTLP que permite solo atributos operativos. También declara serialización JSON para los eventos salientes; las claves y cuerpos de `survey.submitted`, `certificate.validated` y `promotion.status.changed` no cambian. Los logs del recorrido dejan de imprimir eventos completos, identificadores o descripciones de excepciones. El valor predeterminado de trazabilidad sigue siendo `false` para no enviar spans a un colector inexistente.
+
+Notification aplica la misma configuración optativa mediante `NOTIFICATION_TRACING_ENABLED=true`, recibe el contexto W3C de `promotion.status.changed` y observa las publicaciones de auditoría. Declara la serialización JSON de auditoría sin alterar su contrato. Se limpiaron los logs del listener de estados y de los caminos de email, SMS, push, LMS, alertas y cancelación de salas que podían mostrar identificadores, contenido o mensajes de error. No se desplegó este servicio ni se enviaron notificaciones externas en las pruebas.
+
+| Variable | Valor predeterminado | Uso |
+|---|---|---|
+| `PROMOTION_TRACING_ENABLED` | `false` | Activa exportación OTLP y observación Kafka de Promotion. |
+| `PROMOTION_TRACING_SAMPLING_PROBABILITY` | `0.1` | Muestreo de Promotion. |
+| `PROMOTION_OTLP_TRACING_ENDPOINT` | `http://localhost:4318/v1/traces` | URL OTLP HTTP para Promotion. |
+| `NOTIFICATION_TRACING_ENABLED` | `false` | Activa exportación OTLP y observación Kafka de Notification. |
+| `NOTIFICATION_TRACING_SAMPLING_PROBABILITY` | `0.1` | Muestreo de Notification. |
+| `NOTIFICATION_OTLP_TRACING_ENDPOINT` | `http://localhost:4318/v1/traces` | URL OTLP HTTP para Notification. |
+
+Evidencia local: los tres `check` de Form, Promotion y Notification pasaron. Los XML registran 44 pruebas unitarias de Form, 100 de Promotion y 12 de Notification, sin fallos ni omisiones. JaCoCo registra 80,41 % de líneas en Form y 76,94 % en Promotion; ambos gates pasan. Las pruebas de integración Kafka registran cuatro casos de Promotion y tres de Notification, sin fallos ni omisiones. La prueba de Promotion verificó con broker temporal la recepción de `survey.submitted`, la llamada de negocio y la conservación del `traceId` entrante. La de Notification verificó que el broker entrega el header `traceparent`, que el listener llama al dispatcher con el payload original y que su span conserva el `traceId`. Las pruebas de productor verifican headers W3C salientes sin exponer claves o cuerpos en spans; las pruebas de logs usan marcadores sintéticos. Estas pruebas comprueban contratos por salto, no una ejecución simultánea del recorrido completo en tres despliegues.
+
+`python deploy/k8s/form06-dev/smoke_alertmanager.py` validó la configuración renderizada mediante `amtool`, arrancó Alertmanager local, publicó una alerta sintética `FormEventPublicationFailures` y confirmó que el receptor interno `default-receiver` fue seleccionado. Retiró el contenedor. No existe un webhook externo aprobado; esta prueba no demuestra entrega externa, disparo por Prometheus ni recuperación desplegada.
+
+La consulta SSH de solo lectura del 21 de noviembre de 2026 confirmó que `cg-dev` aún ejecuta Form, Promotion y Notification 1.4.0 y que no existe namespace de monitoring. No se creó ni ejecutó el job aislado de Jenkins por la capacidad limitada de sus dos ejecutores. No se publicó una imagen ni se modificó Kubernetes. El push de estos cambios locales también sigue pendiente de autorización específica.
+
+Antes de integrar, volver a renderizar el overlay si #139 se fusiona: ese PR modifica el Alertmanager compartido y añade reglas de Identity. El smoke test y `verify.py` deben comprobar la composición final sin sobrescribir Auth, Promotion o Identity.

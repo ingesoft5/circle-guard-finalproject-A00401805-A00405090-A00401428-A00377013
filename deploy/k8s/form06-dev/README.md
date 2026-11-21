@@ -11,8 +11,8 @@ image build through the existing Shared Library, then scans the image. It
 never deploys. A failed image scan can leave an unused image in Nexus because
 the current `ci.dockerBuildPush` publishes before that scan; the image must
 not be selected for the release generator or Kubernetes unless the entire
-Jenkins run succeeds. Creating or configuring the Jenkins job requires
-separate approval.
+Jenkins run succeeds. Job creation and execution are on hold while the shared
+Jenkins controller has only two busy executors.
 
 ## Isolation and impact
 
@@ -58,6 +58,8 @@ kubectl kustomize deploy/k8s/form06-dev/canary
 python deploy/k8s/form06-dev/smoke_logs.py
 # Optional synthetic OTLP ingestion test; requires local Docker Engine:
 python deploy/k8s/form06-dev/smoke_traces.py
+# Optional synthetic Alertmanager route test; requires local Docker Engine:
+python deploy/k8s/form06-dev/smoke_alertmanager.py
 ```
 
 The Kustomize output contains configuration but no Secret values. Do not apply
