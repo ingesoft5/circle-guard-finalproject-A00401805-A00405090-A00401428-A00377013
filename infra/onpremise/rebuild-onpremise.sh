@@ -22,7 +22,7 @@ curl -fsS -u "$ADMIN_TOKEN:" \
 
 bash infra/onpremise/bootstrap-onpremise.sh
 
-mapfile -t KEYS < <(grep -oP "projectKey:'\K[^']+" jenkins/vars/ciServices.groovy | sort -u)
+mapfile -t KEYS < <(grep -oP "projectKey\s*:\s*'\K[^']+" jenkins/vars/ciServices.groovy | sort -u)
 if (( ${#KEYS[@]} == 0 )); then
   echo "No se encontraron projectKey en jenkins/vars/ciServices.groovy" >&2
   exit 1
