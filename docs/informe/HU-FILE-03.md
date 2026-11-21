@@ -63,6 +63,12 @@ grep -E "already|existe|skipped|Created|updated|Running|Up to date" /tmp/rebuild
 Criterio: la segunda corrida no crea duplicados, no pide secretos nuevos y no cambia
 credenciales.
 
+El wrapper también ejecuta `infra/bootstrap/bootstrap-github.sh`, que ahora lee
+`deploy/compose/tools/.env.onpremise` como tercer origen de entorno. Así el evento
+`delete` y el check obligatorio de `main` quedan aplicados en la misma corrida.
+El archivo puente temporal `infra/state/tools.env` puede eliminarse después de
+este cambio; conservarlo podría hacer que credenciales rotadas queden ocultas.
+
 ## 5. Evidencia
 
 Los artefactos se organizan en `docs/informe/evidencia/HU-FILE-03/`. El índice de capturas

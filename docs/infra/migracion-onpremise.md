@@ -261,6 +261,13 @@ no está en la lista histórica de `bootstrap-tools.sh`— y termina con `docker
 config -q` + `up -d --remove-orphans`. La segunda corrida es la prueba de convergencia:
 no debe crear duplicados, pedir secretos nuevos ni cambiar credenciales.
 
+Además, el wrapper re-registra el webhook y la branch protection ejecutando
+`infra/bootstrap/bootstrap-github.sh`. Ese script acepta ahora tres orígenes de
+entorno, en orden: `infra/state/tools.env`, `deploy/compose/tools/.env` y
+`deploy/compose/tools/.env.onpremise`. En este host el válido es el tercero, por
+lo que ya no hace falta el archivo puente temporal `infra/state/tools.env`; si
+llega a crearse, debe borrarse para evitar que un valor antiguo tape al actual.
+
 La inmutabilidad de tags, si se activa en el repositorio Docker hosted de Nexus, se aplica
 solo al patrón `^\d+\.\d+\.\d+$`. `latest`, `dev`, `staging` y los tags de PR siguen siendo
 mutables. El pipeline conserva el skip de publicación: sin él, un rerun con el mismo tag

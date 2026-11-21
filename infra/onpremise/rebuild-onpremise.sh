@@ -37,6 +37,10 @@ for key in "${KEYS[@]}"; do
       bash infra/bootstrap/configure-sonar-identity.sh
 done
 
+# Re-registers the webhook (including the `delete` event) and branch protection
+# using the same .env.onpremise file, so the one-command rebuild is complete.
+bash infra/bootstrap/bootstrap-github.sh
+
 docker compose -p cg-tools -f deploy/compose/tools/docker-compose.onpremise.yml config -q
 docker compose -p cg-tools -f deploy/compose/tools/docker-compose.onpremise.yml up -d --remove-orphans
 
