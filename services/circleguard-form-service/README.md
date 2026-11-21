@@ -3,6 +3,8 @@
 
 Este documento explica el funcionamiento, la estructura y las dependencias actuales de `circleguard-form-service` para el diagnóstico de HU-FORM-01.
 
+El despliegue Kubernetes, la persistencia de certificados y la evidencia pendiente de HU-FORM-05 se describen en [el informe de la HU](../../docs/informe/HU-FORM-05.md).
+
 ## Cómo funciona form-service
 
 `form-service` administra cuestionarios de salud dinámicos y recibe las respuestas asociadas a un identificador anónimo. También permite subir un certificado o resultado de prueba y registrar su validación. La entidad `HealthSurvey` usa `anonymousId` y no contiene campos de nombre o correo.
