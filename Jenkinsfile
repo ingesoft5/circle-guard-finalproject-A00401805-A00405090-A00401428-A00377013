@@ -143,8 +143,8 @@ def owaspZapGateLocal(String environment) {
         : > build/reports/security/zap-${environment}.txt
         kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion --timeout=180s
     """
-    targets.each { short, target ->
-        def zapPod = "zap-gate-${short}-${buildNumber}".toString()
+    targets.each { svc, target ->
+        def zapPod = "zap-gate-${svc}-${buildNumber}".toString()
         sh """
             set -eu
             kubectl -n ${namespace} delete pod ${zapPod} --ignore-not-found >/dev/null 2>&1 || true
