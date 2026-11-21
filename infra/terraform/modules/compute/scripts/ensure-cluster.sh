@@ -15,7 +15,8 @@ if [ ! -f "${HOME}/.config/k3d/registries.yaml" ]; then
   echo "CG-DOC: installed k3d registry mirror from infra/onpremise/registries.yaml."
 fi
 
-if k3d cluster list --no-headers | awk '{print $1}' | grep -qx "${CLUSTER_NAME}"; then
+# CG-DOC: Use `k3d cluster get` so detection is not sensitive to list formatting.
+if k3d cluster get "${CLUSTER_NAME}" >/dev/null 2>&1; then
   echo "CG-DOC: cluster ${CLUSTER_NAME} already exists; skipping creation."
   exit 0
 fi
