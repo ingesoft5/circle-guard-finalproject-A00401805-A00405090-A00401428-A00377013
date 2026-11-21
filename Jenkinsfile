@@ -310,9 +310,9 @@ def registryDigest(String repository, String tag) {
 }
 
 // ---------- Terraform (E2.1 / E2.3) ------------------------------------------
-// Estas funciones viven aquí, no en la Shared Library: el pipeline de un PR
-// carga `@Library('circleguard@main')` y no vería métodos recién añadidos en la
-// rama. Cada Stage usa credenciales de Jenkins, nunca secretos en el repo.
+// These helpers live here instead of the Shared Library: a PR pipeline loads
+// `@Library('circleguard@main')` and cannot see methods added in the same branch.
+// Every stage reads Jenkins credentials; no secrets are stored in the repository.
 def terraformPlanEnvironment(String environment) {
     withCredentials([
             usernamePassword(credentialsId: 'terraform-minio-creds',
@@ -336,10 +336,10 @@ def terraformPlanEnvironment(String environment) {
             rc=\$?
             set -e
             if [ "\$rc" -eq 1 ]; then
-              echo "terraform plan falló para ${environment}"
+              echo "terraform plan failed for ${environment}"
               exit 1
             fi
-            echo "terraform plan ${environment}: codigo \$rc (0=sin cambios, 2=cambios pendientes)"
+            echo "terraform plan ${environment}: exit \$rc (0=no changes, 2=pending changes)"
         """
     }
 }
@@ -439,7 +439,7 @@ pipeline {
             steps {
                 script {
                     ['dev', 'stage', 'prod'].each { environment ->
-                        echo "Terraform plan del ambiente ${environment}..."
+                        echo "Terraform plan for environment ${environment}..."
                         terraformPlanEnvironment(environment)
                     }
                 }
