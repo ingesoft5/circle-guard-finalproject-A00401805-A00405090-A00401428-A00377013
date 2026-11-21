@@ -1,0 +1,22 @@
+flowchart LR
+  BOOT["bootstrap (local state)"]
+  S3["MinIO bucket circleguard-tfstate"]
+  LOCK["DynamoDB circleguard-tf-lock"]
+  BACKEND["backend s3 remoto con lock"]
+  NET["module network"]
+  COMP["module compute"]
+  REG["module registry"]
+  STO["module storage"]
+  OBS["module observability"]
+  LIVE["live dev / stage / prod"]
+
+  BOOT --> S3
+  BOOT --> LOCK
+  S3 --> BACKEND
+  LOCK --> BACKEND
+  BACKEND --> LIVE
+  LIVE --> COMP
+  LIVE --> NET
+  LIVE --> REG
+  LIVE --> STO
+  LIVE --> OBS

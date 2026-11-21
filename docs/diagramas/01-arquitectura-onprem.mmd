@@ -1,0 +1,27 @@
+flowchart TB
+  HOST["On-prem host 10.147.20.67"]
+  TOOLS["cg-tools docker compose"]
+  JENKINS["Jenkins :8080"]
+  NEXUS["Nexus :8081"]
+  SONAR["SonarQube :9000"]
+  MINIO["MinIO IAC :9002 / console :9003"]
+  DDB["DynamoDB Local :8000"]
+  K3D["k3d / k3s cluster"]
+  DEV["cg-dev"]
+  STAGE["cg-stage"]
+  PROD["cg-prod"]
+  TF["Terraform"]
+
+  HOST --> TOOLS
+  TOOLS --> JENKINS
+  TOOLS --> NEXUS
+  TOOLS --> SONAR
+  TOOLS --> MINIO
+  TOOLS --> DDB
+  HOST --> K3D
+  K3D --> DEV
+  K3D --> STAGE
+  K3D --> PROD
+  TF --> MINIO
+  TF --> DDB
+  TF --> K3D

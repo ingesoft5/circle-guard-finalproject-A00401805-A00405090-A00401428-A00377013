@@ -1,0 +1,27 @@
+flowchart TB
+  K3S["k3s cluster"]
+  DEV["Namespace cg-dev"]
+  STAGE["Namespace cg-stage"]
+  PROD["Namespace cg-prod"]
+  OBSDEV["Namespace cg-obs-dev"]
+  OBSSTAGE["Namespace cg-obs-stage"]
+  OBSPROD["Namespace cg-obs-prod"]
+  NP["NetworkPolicy default-deny"]
+  REG["Registry :5000"]
+  PVC["PVC por ambiente"]
+
+  K3S --> DEV
+  K3S --> STAGE
+  K3S --> PROD
+  K3S --> OBSDEV
+  K3S --> OBSSTAGE
+  K3S --> OBSPROD
+  DEV --> NP
+  STAGE --> NP
+  PROD --> NP
+  DEV --> REG
+  STAGE --> REG
+  PROD --> REG
+  DEV --> PVC
+  STAGE --> PVC
+  PROD --> PVC
