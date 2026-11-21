@@ -3,6 +3,12 @@
 
 Este documento explica el funcionamiento, la estructura y las dependencias actuales de `circleguard-form-service` para el diagnóstico de HU-FORM-01.
 
+## Observabilidad — HU-FORM-06
+
+Form expone `/actuator/prometheus`, observa publicaciones Kafka y permite exportar trazas OpenTelemetry mediante configuración externa. La exportación de trazas está desactivada por defecto hasta disponer del backend compartido.
+
+El [informe HU-FORM-06](../../docs/informe/HU-FORM-06.md) incluye configuración, pruebas, cobertura, privacidad y pendientes operativos. Los [componentes Kustomize opcionales](../../deploy/k8s/components/form-observability/README.md) preparan el scrape, el panel Grafana y la alerta; aún requieren activación tras integrar las PR dependientes.
+
 ## Cómo funciona form-service
 
 `form-service` administra cuestionarios de salud dinámicos y recibe las respuestas asociadas a un identificador anónimo. También permite subir un certificado o resultado de prueba y registrar su validación. La entidad `HealthSurvey` usa `anonymousId` y no contiene campos de nombre o correo.
