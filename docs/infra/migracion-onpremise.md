@@ -239,6 +239,22 @@ Receta para este host (proyecto `cg-tools`):
 Ojo: el `status=OK` de GitHub solo significa que smee.io aceptó el evento; sin el
 relay conectado el evento se pierde y el PR no compila.
 
+### 3.7 Política de revisión de PR en `main`
+
+La protección de `main` exige **1 aprobación** y el check
+`continuous-integration/jenkins/pr-merge` con `strict=true` (la rama debe estar
+actualizada con `main`). `dismiss_stale_reviews=true` significa que un nuevo push
+invalida aprobaciones anteriores: el aprobador debe revisar la última revisión.
+También se exige resolver conversaciones y se bloquean force push y borrado de rama.
+
+`infra/bootstrap/bootstrap-github.sh` versiona esa misma política
+(`required_approving_review_count: 1`). Ejecutar el script tras una reconstrucción
+reasienta el valor en GitHub; una versión anterior del script (con `2`) lo
+revertiría, así que hay que usar siempre la versión del repo.
+
+Este apartado deja documentado el valor aplicado en el repo, según E1.2:
+no se acepta configuración manual no documentada.
+
 ## 4. Reglas de operación
 
 1. No detener, reiniciar ni borrar los contenedores ajenos `k8s-worker` e `icesi-inn`.
