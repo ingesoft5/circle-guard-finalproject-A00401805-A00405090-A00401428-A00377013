@@ -171,7 +171,10 @@ def changed() {
                 path.startsWith('gradle/') ||
                 path.startsWith('jenkins/') ||
                 path.startsWith('mobile/') ||
-                path.startsWith('deploy/')
+                // Tools de CI (deploy/compose/tools) no alteran ningún binario de
+                // servicio: no fuerzan el build global. deploy/k8s y el resto de
+                // deploy/ sí lo hacen porque afectan el despliegue de todos.
+                (path.startsWith('deploy/') && !path.startsWith('deploy/compose/tools/'))
     }
     if (globalChange) {
         echo "Cambio global detectado; se construyen todos los servicios: ${files.join(', ')}"
