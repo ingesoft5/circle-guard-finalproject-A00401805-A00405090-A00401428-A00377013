@@ -41,6 +41,8 @@ kubectl kustomize deploy/k8s/form06-dev/monitoring
 kubectl kustomize deploy/k8s/form06-dev/canary
 # Optional synthetic log privacy test; requires local Docker Engine:
 python deploy/k8s/form06-dev/smoke_logs.py
+# Optional synthetic OTLP ingestion test; requires local Docker Engine:
+python deploy/k8s/form06-dev/smoke_traces.py
 ```
 
 The Kustomize output contains configuration but no Secret values. Do not apply
