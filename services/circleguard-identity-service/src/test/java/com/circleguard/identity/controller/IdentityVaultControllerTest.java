@@ -4,10 +4,13 @@
 package com.circleguard.identity.controller;
 
 import com.circleguard.identity.config.SecurityConfig;
+import com.circleguard.identity.event.IdentityAccessEvent;
+import com.circleguard.identity.service.IdentityAuditPublisher;
 import com.circleguard.identity.service.IdentityVaultService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,7 +18,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,10 +25,11 @@ import org.springframework.web.server.ResponseStatusException;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -47,7 +50,7 @@ class IdentityVaultControllerTest {
     private IdentityVaultService vaultService;
 
     @MockBean
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private IdentityAuditPublisher auditPublisher;
 
     @Test
     @WithMockUser(authorities = "identity:lookup")
@@ -59,8 +62,8 @@ class IdentityVaultControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.realIdentity").value("user@example.com"));
 
-        // Verify Kafka event was emitted
-        verify(kafkaTemplate).send(eq("audit.identity.accessed"), any());
+        // Verify resilient audit publisher was invoked
+        verify(auditPublisher).publishAuditEvent(any(IdentityAccessEvent.class));
     }
 
     @Test
@@ -73,7 +76,7 @@ class IdentityVaultControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.realIdentity").value("user@example.com"));
 
-        verify(kafkaTemplate).send(eq("audit.identity.accessed"), any());
+        verify(auditPublisher).publishAuditEvent(any(IdentityAccessEvent.class));
     }
 
     @Test
@@ -115,8 +118,27 @@ class IdentityVaultControllerTest {
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.detail").value("Identity not found"));
 
-        // Verify Kafka event was emitted even on failure
-        verify(kafkaTemplate).send(eq("audit.identity.accessed"), any());
+        // Verify resilient audit publisher was invoked even on failure
+        verify(auditPublisher).publishAuditEvent(any(IdentityAccessEvent.class));
+    }
+
+    @Test
+    void shouldRecordMicrometerCountersAcrossMappingAndLookupOperations() {
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        IdentityVaultController controller = new IdentityVaultController(vaultService, auditPublisher, registry);
+
+        UUID id = UUID.randomUUID();
+        when(vaultService.getOrCreateAnonymousId("user@example.com")).thenReturn(id);
+        when(vaultService.getOrCreateAnonymousId("VISITOR|v@example.com|V|Visit")).thenReturn(id);
+        when(vaultService.resolveRealIdentity(id)).thenReturn("user@example.com");
+
+        controller.mapIdentity(Map.of("realIdentity", "user@example.com"));
+        controller.registerVisitor(Map.of("name", "V", "email", "v@example.com", "reason_for_visit", "Visit"));
+        controller.lookupIdentity(id);
+
+        assertEquals(1.0, registry.counter("circleguard_identity_mappings_total", "type", "user").count());
+        assertEquals(1.0, registry.counter("circleguard_identity_mappings_total", "type", "visitor").count());
+        assertEquals(1.0, registry.counter("circleguard_identity_lookups_total", "status", "success").count());
     }
 
     @Test

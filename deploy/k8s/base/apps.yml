@@ -125,7 +125,6 @@ metadata:
   labels:
     app: identity
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: identity
@@ -133,6 +132,10 @@ spec:
     metadata:
       labels:
         app: identity
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8083"
     spec:
       containers:
         - name: identity
@@ -175,17 +178,18 @@ spec:
                   key: JWT_SECRET
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8083
-            initialDelaySeconds: 40
+            initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 6
+            failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8083
-            initialDelaySeconds: 90
-            periodSeconds: 20
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
           resources:
             requests:
               cpu: 100m

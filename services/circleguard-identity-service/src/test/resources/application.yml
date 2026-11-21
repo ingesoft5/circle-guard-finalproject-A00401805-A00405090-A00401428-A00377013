@@ -24,3 +24,42 @@ vault:
 
 jwt:
   secret: "test-jwt-secret-32-chars-long-12345678"
+
+cors:
+  allowed-origins: "http://localhost:8081,http://localhost:8080"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+resilience4j:
+  circuitbreaker:
+    circuit-breaker-aspect-order: 1
+    instances:
+      identityAuditKafka:
+        register-health-indicator: true
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+  retry:
+    retry-aspect-order: 2
+    instances:
+      identityAuditKafka:
+        max-attempts: 3
+        wait-duration: 10ms
