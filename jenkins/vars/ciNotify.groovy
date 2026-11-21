@@ -63,16 +63,19 @@ def githubComment(String body) {
     withEnv(["GITHUB_ENDPOINT=${endpoint}"]) {
         withCredentials([usernamePassword(credentialsId: 'github-creds',
                 usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
-            sh '''
+            def status = sh(script: '''
                 set +x
-                body_json=$(jq -Rs . < .ci-notification.md)
-                payload=$(jq -n --argjson body "$body_json" '{body:$body}')
+                body_json=$(jq -Rs . < .ci-notification.md) || exit 20
+                payload=$(jq -n --argjson body "$body_json" '{body:$body}') || exit 21
                 curl -fsS -X POST \
                   -H "Authorization: token ${GH_TOKEN}" \
                   -H "Accept: application/vnd.github+json" \
                   -H "Content-Type: application/json" \
-                  -d "$payload" "$GITHUB_ENDPOINT" >/dev/null
-            '''
+                  -d "$payload" "$GITHUB_ENDPOINT" >/dev/null || exit 22
+            ''', returnStatus: true)
+            if (status != 0) {
+                echo "No se pudo comentar en GitHub (código ${status}); el error real del pipeline se muestra al final."
+            }
         }
     }
 }

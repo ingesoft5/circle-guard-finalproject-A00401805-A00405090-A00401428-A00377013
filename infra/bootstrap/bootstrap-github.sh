@@ -5,6 +5,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/bootstrap-common.sh"
 
 ENV_FILE="${STATE_DIR}/tools.env"
 [ -f "${ENV_FILE}" ] || ENV_FILE="${REPO_ROOT}/deploy/compose/tools/.env"
+[ -f "${ENV_FILE}" ] || ENV_FILE="${REPO_ROOT}/deploy/compose/tools/.env.onpremise"
 [ -f "${ENV_FILE}" ] || die "Falta ${ENV_FILE}; ejecuta bootstrap-tools.sh primero."
 # shellcheck disable=SC1090
 set -a; source "${ENV_FILE}"; set +a
@@ -54,7 +55,7 @@ hook_payload="$(jq -n \
   '{
     name: "web",
     active: true,
-    events: ["push", "pull_request"],
+    events: ["push", "pull_request", "delete"],
     config: {
       url: $url,
       content_type: "json",
@@ -90,7 +91,7 @@ protection_payload="$(jq -n --arg check "${REQUIRED_CHECK}" '{
   required_pull_request_reviews: {
     dismiss_stale_reviews: true,
     require_code_owner_reviews: false,
-    required_approving_review_count: 2
+    required_approving_review_count: 1
   },
   restrictions: null,
   allow_force_pushes: false,

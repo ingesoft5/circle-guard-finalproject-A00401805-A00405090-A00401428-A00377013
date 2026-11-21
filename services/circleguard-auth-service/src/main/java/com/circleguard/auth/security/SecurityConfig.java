@@ -34,7 +34,7 @@ public class SecurityConfig {
             .cors(org.springframework.security.config.Customizer.withDefaults())
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/qr/verify", "/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/qr/verify", "/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/api/v1/auth/qr/generate").authenticated()
                 .anyRequest().permitAll())
             .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
@@ -70,7 +70,7 @@ public class SecurityConfig {
             @Value("${spring.ldap.urls:ldap://localhost:389}") String ldapUrl,
             @Value("${spring.ldap.base:dc=circleguard,dc=edu}") String ldapBase,
             @Value("${spring.ldap.username:cn=admin,dc=circleguard,dc=edu}") String ldapUserDn,
-            @Value("${spring.ldap.password:admin}") String ldapPassword) {
+            @Value("${spring.ldap.password}") String ldapPassword) {
         LdapContextSource contextSource = new LdapContextSource();
         contextSource.setUrl(ldapUrl);
         contextSource.setBase(ldapBase);

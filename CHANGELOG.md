@@ -8,10 +8,16 @@ Semantic Versioning.
 
 ### Changed
 
+- Los Dockerfiles toman las imágenes base desde `$NEXUS_REGISTRY/circleguard-base` mediante `--build-arg`; el host on-premise no tiene ruta IPv6 al CDN de Docker Hub. Sembrar con `./infra/onpremise/seed-base-images.sh`. Se retiró el pin por digest del Dockerfile de `form` porque el mirror publica sus propios digests.
 - **File service (FS-CI-01)**: Implementado `loadFile` real y endpoint de descarga `GET /api/v1/files/download/{filename}`. Cobertura JaCoCo 85.71% (líneas), umbral 60% cumplido.
+- **File service (HU-FILE-03)**: el pipeline omite la republicación de artefactos Maven e imágenes Docker cuando el TAG semver ya existe, conservando el digest real; la política de inmutabilidad, si se activa en Nexus, aplica solo a `X.Y.Z` y nunca a `latest`, `dev` o `staging`. Documentado en `docs/informe/HU-FILE-03.md` y `docs/infra/migracion-onpremise.md` §3.7.
+- **Jenkins multibranch**: eliminado el filtro de ramas por convención de nombre. GitHub es la fuente de verdad: se indexan todas las ramas vivas y las borradas tras merge en `main` se limpian de inmediato con el evento `delete` del webhook y `orphanedItemStrategy` 0/0. Documentado en `docs/infra/migracion-onpremise.md` §3.8.
+- **On-premise rebuild wrapper**: `bootstrap-github.sh` acepta `deploy/compose/tools/.env.onpremise` como origen de entorno y es invocado por `rebuild-onpremise.sh`, de modo que un solo comando reconstruye el stack, asegura los proyectos SonarQube y re-registra webhook/branch protection. Documentado en `docs/infra/migracion-onpremise.md` §3.7 y `docs/informe/HU-FILE-03.md` §4.
 
 ### Added
 
+- `infra/onpremise/rebuild-onpremise.sh`: wrapper idempotente de un comando que valida el token de SonarQube, ejecuta el bootstrap on-premise, asegura todos los proyectos del catálogo de la Shared Library (incluido `circleguard-file-service`) y converge el stack `cg-tools`.
+- `docs/informe/HU-FILE-03.md` y `docs/informe/evidencia/HU-FILE-03/README.md`: cierre P1.4, decisión de idempotencia/semver e índice de evidencia de la HU-FILE-03 (issue #135).
 - Jenkins image now ships `kubectl` v1.31.2, `kustomize` v5.4.3 and `k3d` v5.9.0 so the pipeline drives the on-premise cluster directly.
 - On-premise playbook `infra/onpremise/README.md` (host → cg-tools Compose → k3d `cg` → verify) plus `infra/onpremise/verify-onpremise.sh`, a read-only health check for the on-premise platform.
 - Traefik Ingress now routes `/api/v1/gate` → gateway (`8087`).
@@ -43,7 +49,7 @@ Semantic Versioning.
 - `Jenkinsfile` no longer expects `DEV/STAGE/PROD_PRIVATE_IP`; `tests/e2e` defaults to the ingress.
 - Documentation audit: `docs/infra/tutorial-e1.2.md`, `docs/arquitectura/despliegue-auth-service.md` and `despliegue-identity-service.md` are now marked Parte 1 históricos; `docs/FILE_INDEX.md` tags `aws-free-tier-validation.md`, `ci-cd-setup.md`, `environments.md`, `evidence/README.md` and `evidence/idempotency/README.md` as Parte 1 históricos.
 - `docs/agil/plan-circle-guard-5.0.md` marks the webhook and SSH risks as mitigated (live verification 2026-11-18) and adds annex §6 with the P1.4 multibranch status; the `main` build (item 8) stays pending until it is green.
-- PR approval policy changed from 2 to 1 required approving review on `main` (ruleset `github-actions`), effective for Sprint 2, to cut approval latency — waiting for two reviewers was too slow and delayed PRs. The status check `continuous-integration/jenkins/pr-merge` remains mandatory, pushes dismiss stale approvals, and the approver must approve the latest revision. `BRANCHING-STRATEGY.md`, `docs/agil/README.md` and `docs/agil/backlog.md` updated; historical Parte 1 records (`docs/informe/P1.1-Branching-GitHub-Flow.md`, `docs/informe/HU-GATEWAY-04.md`, `IAG_REGISTRO.md`) annotated, not rewritten.
+- PR approval policy changed from 2 to 1 required approving review on `main` (ruleset `github-actions`), effective for Sprint 2, to cut approval latency — waiting for two reviewers was too slow and delayed PRs. The status check `continuous-integration/jenkins/pr-merge` remains mandatory, pushes dismiss stale approvals, and the approver must approve the latest revision. `BRANCHING-STRATEGY.md`, `docs/agil/README.md` and `docs/agil/backlog.md` updated; historical Parte 1 records (`docs/informe/P1.1-Branching-GitHub-Flow.md`, `docs/informe/HU-GATEWAY-04.md`, `IAG_REGISTRO.md`) annotated, not rewritten. `infra/bootstrap/bootstrap-github.sh` now versions the same 1-review value and `docs/infra/migracion-onpremise.md` §3.7 documents it per E1.2.
 - SonarQube now covers promotion and identity in addition to gateway, auth, and form.
 - Kafka exposes an external listener on `29092` for end-to-end tests.
 - Nginx web client runs as a non-root user on port `8080`.

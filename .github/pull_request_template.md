@@ -19,4 +19,4 @@
 3. 
 
 ---
-*Note for the reviewer: Please ensure the branch name follows our GitHub Flow convention and the code does not contain hardcoded credentials.*
+*Note for the reviewer: PRs and reviews must be written in English. Please ensure the branch name follows our GitHub Flow convention and the code does not contain hardcoded credentials.*

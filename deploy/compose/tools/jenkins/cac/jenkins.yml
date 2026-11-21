@@ -108,6 +108,9 @@ jobs:
                   gitHubPullRequestDiscovery {
                     strategyId(1)
                   }
+                  // Sin filtro por convención: GitHub es la única fuente de verdad.
+                  // Toda rama existente se indexa; la que se mergea en main y se borra
+                  // desaparece en el próximo index (ver orphanedItemStrategy abajo).
                 }
               }
             }
@@ -120,13 +123,13 @@ jobs:
         }
         orphanedItemStrategy {
           discardOldItems {
-            numToKeep(10)
+            daysToKeep(0)
+            numToKeep(0)
           }
         }
-        // El webhook es el disparador primario (push/PR en GitHub -> smee.io ->
-        // /github-webhook/), pero si no alcanza o Jenkins no procesa el evento,
-        // el multibranch nunca ve ramas nuevas. Este es el respaldo: escaneo
-        // cada 20 minutos como máximo, para que la rama aparezca sin intervención.
+        // El webhook es el disparador primario: push/PR/delete en GitHub -> smee.io
+        // -> /github-webhook/. El evento delete permite limpiar de inmediato la rama
+        // borrada tras merge en main. Este escaneo de 20 min es el respaldo.
         triggers {
           periodicFolderTrigger {
             interval('20m')

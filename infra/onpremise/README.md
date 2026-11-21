@@ -78,6 +78,22 @@ Notas:
 
 - Máximo dos entornos completos encendidos a la vez (RAM del host; ver `deploy/k8s/README.md`).
 
+## Imágenes base desde Nexus (sin Docker Hub)
+
+El build de `main` ya no descarga `gradle`, `eclipse-temurin`, `node` ni `nginx` de Docker Hub: el host compartido no tiene ruta IPv6 hacia el CDN de Docker. Las imágenes base se siembran una vez en `circleguard-base/` y los Dockerfiles reciben `ARG` desde el pipeline:
+
+```bash
+./infra/onpremise/seed-base-images.sh
+```
+
+El script lee `NEXUS_REGISTRY`, `NEXUS_USER` y `NEXUS_PASSWORD` de `deploy/compose/tools/.env.onpremise`, hace pull por IPv4, etiqueta como `$NEXUS_REGISTRY/circleguard-base/<nombre>:<tag>` y hace push. Verificar con:
+
+```bash
+curl -sS "http://$NEXUS_REGISTRY/v2/_catalog" | jq -r '.repositories[]' | grep circleguard-base
+```
+
+Si la etapa `Docker` falla con `network is unreachable` hacia `production.cloudfront.docker.com`, faltó este paso. El pin por digest de `circleguard-form-service` se retiró porque el mirror publica sus propios digests.
+
 ## Qué verificar al final
 
 `./infra/onpremise/verify-onpremise.sh` cubre, en orden:

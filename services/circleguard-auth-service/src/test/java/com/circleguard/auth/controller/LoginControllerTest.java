@@ -119,4 +119,37 @@ public class LoginControllerTest {
                 .content("{}"))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void shouldRecordMicrometerCountersAcrossLoginAndVisitorHandoffOutcomes() {
+        io.micrometer.core.instrument.simple.SimpleMeterRegistry registry =
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry();
+        LoginController controller = new LoginController(authManager, jwtService, identityClient, registry);
+
+        UUID anonymousId = UUID.randomUUID();
+        Authentication auth = Mockito.mock(Authentication.class);
+        Mockito.when(authManager.authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(auth)
+                .thenThrow(new BadCredentialsException("Bad credentials"));
+        Mockito.when(identityClient.getAnonymousId("testuser")).thenReturn(anonymousId);
+        Mockito.when(jwtService.generateToken(Mockito.eq(anonymousId), Mockito.any(Authentication.class)))
+                .thenReturn("jwt-token");
+
+        controller.login(java.util.Map.of("username", "testuser", "password", "password123"));
+        controller.login(java.util.Map.of("username", "testuser", "password", "wrong"));
+        controller.generateVisitorHandoff(java.util.Map.of("anonymousId", anonymousId.toString()));
+
+        org.junit.jupiter.api.Assertions.assertEquals(
+                1.0,
+                registry.counter("circleguard_auth_login_attempts_total", "result", "success").count()
+        );
+        org.junit.jupiter.api.Assertions.assertEquals(
+                1.0,
+                registry.counter("circleguard_auth_login_attempts_total", "result", "failure").count()
+        );
+        org.junit.jupiter.api.Assertions.assertEquals(
+                1.0,
+                registry.counter("circleguard_auth_visitor_handoff_total").count()
+        );
+    }
 }
