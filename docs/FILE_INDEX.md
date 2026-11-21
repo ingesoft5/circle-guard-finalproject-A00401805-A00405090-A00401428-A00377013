@@ -85,7 +85,7 @@ English purpose of every tracked repository file.
 
 - `deploy/k8s/base/form-storage.yml` — Per-namespace local-path persistent volume claim for Form certificate uploads.
 
-- `deploy/k8s/base/hpa.yml` — HorizontalPodAutoscalers for gateway, web, and auth.
+- `deploy/k8s/base/hpa.yml` — HorizontalPodAutoscalers for gateway, web, auth, and Form; stage excludes Form autoscaling.
 
 - `deploy/k8s/base/ingress.yml` — Traefik Ingress routed by the `Host` header.
 

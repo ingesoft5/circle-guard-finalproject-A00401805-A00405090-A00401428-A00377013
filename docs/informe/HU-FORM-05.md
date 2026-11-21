@@ -11,7 +11,7 @@ Rama: `feat/HU-FORM-05-kubernetes-form`. Auditoría SSH de solo lectura realizad
 | 2. Configuración PostgreSQL y Kafka | Done | El Deployment referencia `cg-config`, `cg-secrets/POSTGRES_PASSWORD` y `kafka:9092`. Se comprobaron las referencias del Deployment; no se leyeron valores del Secret. |
 | 3. Readiness y liveness | Done | Ambas sondas usan `/actuator/health:8086`. En la auditoría, Form tenía una réplica Ready en dev y prod; stage estaba en cero. |
 | 4. Persistencia de adjuntos | Parcial | El cambio local añade el PVC y su montaje. El servidor todavía no tiene PVC ni volumen de Form. Falta demostrar escritura y conservación tras recrear el pod. |
-| 5. Ingress y HPA | Parcial | Las cuatro rutas de Form existen y se verificaron en los tres namespaces. Falta incorporar y verificar el HPA de Form. |
+| 5. Ingress y HPA | Parcial | Las cuatro rutas existen y se verificaron en los tres namespaces. El cambio local añade HPA de Form en dev/prod y lo excluye en stage; falta aplicarlo y verificar el escalado. |
 | 6. Despliegue y promoción Jenkins | Parcial | `Jenkinsfile` contiene dev, E2E, stage, aprobación y prod. `ci.deploy` incluye Form. La API anónima de Jenkins respondió 403: no se confirmó una ejecución satisfactoria. El fallo Docker indicado queda como dependencia compartida hasta revisar su log. |
 | 7. Rollback ejecutado | Pendiente | Existe `ROLLBACK_TAG`, pero las revisiones observadas de Form usan todas `1.4.0`; no demuestran regreso a una versión anterior. |
 
@@ -39,11 +39,23 @@ La persistencia cubre la recreación del pod y los cambios de imagen que conserv
 
 **Antes del primer despliegue:** un responsable autorizado debe inventariar y respaldar cualquier archivo existente dentro de los pods de dev/prod antes de reemplazarlos, y preparar su copia al PVC. El montaje nuevo oculta la ruta anterior y no migra su contenido. Esta auditoría no comprobó si existen adjuntos actuales: no se ejecutó `kubectl exec` ni se leyó su contenido. No sustituir el pod antes de resolver este paso.
 
+## Autoscaling y operación de stage
+
+El HPA `form` usa `autoscaling/v2`, CPU al 70 %, mínimo 1 y máximo 2 réplicas, con una ventana de estabilización de scale-down de 300 segundos. El Deployment ya solicita `100m` de CPU; no se añade un límite de CPU porque no es necesario para calcular la utilización. La base deja de declarar `spec.replicas` para que el HPA controle dev y prod. Las dos réplicas deben poder ejecutarse en el nodo del PV local; no se añade afinidad que las fuerce a nodos distintos.
+
+El overlay de stage elimina el HPA **solo del render de Form** y fija `replicas: 1`. Esto permite que una promoción autorizada active Form para su validación. Una vez terminada, el responsable del ambiente puede devolverlo a cero: sin HPA de Form, no existe un autoscaler de esta HU que lo reactive. Una nueva aplicación del overlay vuelve a solicitar una réplica deliberadamente. No se pretende que aplicar stage conserve su apagado.
+
+Actualmente stage no tiene HPA. Si se hubiera creado uno de Form por otro medio, excluirlo del render no lo borraría del clúster: antes de apagar stage, comprobar su ausencia y coordinar su retirada con autorización. Los HPA compartidos de auth, gateway y web se mantienen sin cambios en el repositorio; el procedimiento de suspensión de todo el ambiente sigue siendo responsabilidad de plataforma.
+
+Una promoción necesita PostgreSQL y Kafka de stage disponibles y suficiente capacidad. En la auditoría ambos estaban en cero. Coordinar la ventana con plataforma: no encender un tercer ambiente completo cuando dev y prod ya consumen el host, ni apagar otro ambiente sin aprobación.
+
 ## Validaciones locales
 
 Se analizaron los manifiestos YAML y se renderizaron los tres overlays con `kubectl kustomize` (Kustomize v5.7.1). Se utilizaron copias temporales fuera del repositorio, con valores ficticios para `secrets.env`; los Secrets renderizados no se imprimieron ni se guardaron como evidencia.
 
 Resultado del cambio de persistencia: PASS para dev, stage y prod. Se verificaron el PVC, montaje, permisos declarados, CPU solicitada, sondas, Service, Ingress, referencias a ConfigMaps/Secrets y aislamiento por namespace. Los recursos renderizados ajenos a Form coinciden con los anteriores al cambio. Esto comprueba sintaxis y estructura local, no admisión del API, permisos efectivos del volumen ni ejecución del clúster.
+
+Resultado del cambio de autoscaling: PASS para los tres overlays. Dev/prod renderizan el HPA de Form con objetivo, límites, estabilización y Deployment destino correctos, sin `spec.replicas` en Form. Stage renderiza una réplica y ningún HPA de Form. Se repitieron las comprobaciones de persistencia y referencias; los recursos ajenos a Form permanecen iguales. `git diff --check` pasó antes de cada commit. No se modificó Java ni se ejecutaron pruebas Gradle por estos cambios de manifiestos.
 
 Para repetir únicamente el renderizado sin secretos reales desde PowerShell en la raíz del repositorio (requiere Python y kubectl):
 
@@ -73,6 +85,13 @@ kubectl get deployments,statefulsets,hpa -n cg-dev
 kubectl get deployments,statefulsets,hpa -n cg-stage
 kubectl get deployments,statefulsets,hpa -n cg-prod
 kubectl get pvc,pv,storageclass -A
+kubectl -n cg-dev describe hpa form
+kubectl -n cg-prod describe hpa form
+# No debe aparecer un HPA llamado form en stage.
+kubectl -n cg-stage get hpa
+kubectl -n cg-dev get pvc form-uploads
+kubectl -n cg-prod get pvc form-uploads
+kubectl -n cg-prod rollout history deployment/form
 for ns in cg-dev cg-stage cg-prod; do
   kubectl -n "$ns" get deployment form -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}{.spec.template.spec.volumes}{"\n"}{.spec.template.spec.securityContext}{"\n"}'
   kubectl -n "$ns" get ingress circleguard
@@ -85,3 +104,5 @@ curl -s -o /dev/null -w 'prod questionnaires HTTP %{http_code}\n' -H 'Host: prod
 Pendientes con autorización separada: migración de posibles adjuntos, primer despliegue, prueba de escritura y persistencia tras recrear el pod, promoción por Jenkins y rollback. Para la prueba de persistencia se deben comparar el nombre y el hash del mismo archivo antes y después de recrear el pod, conservando el PVC y sin publicar el contenido del certificado.
 
 El rollback debe conservar el PVC y mostrar la imagen/digest anterior, el resultado de la recuperación y una comprobación funcional. El parámetro compartido `ROLLBACK_TAG` redespliega el conjunto de servicios, no solo Form: requiere coordinación de plataforma y aprobación explícita. El acceso SSH de esta HU es de solo lectura.
+
+La prueba de escalado requiere `metrics-server`, métricas disponibles y una carga autorizada; crear el HPA no demuestra que haya escalado. Para comprobar la persistencia con dos réplicas, verificar también que ambas montan el mismo PVC y acceden al archivo de prueba desde el nodo del PV. El PVC no se debe borrar durante estas pruebas.

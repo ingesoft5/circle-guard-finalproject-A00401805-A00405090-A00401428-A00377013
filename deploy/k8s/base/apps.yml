@@ -298,7 +298,6 @@ metadata:
   labels:
     app: form
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: form
