@@ -106,6 +106,41 @@ services:
     mem_limit: 2g
     networks: [tools-net]
 
+  minio-iac:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: cg-minio-iac
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${TF_STATE_MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${TF_STATE_MINIO_PASSWORD}
+      # CG-DOC: SonarQube already publishes host port 9000; MinIO API is exposed on 9002.
+    command: server /data --console-address :9001
+    ports:
+        - "127.0.0.1:9002:9000"
+        - "127.0.0.1:9003:9001"
+    volumes:
+      - minio_iac_data:/data
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 512m
+    networks: [ tools-net ]
+
+  dynamodb-local:
+    image: amazon/dynamodb-local:2.6.1
+    container_name: cg-dynamodb-local
+    restart: unless-stopped
+    # CG-DOC: Use -dbPath instead of -inMemory so the lock table survives restarts.
+    command: -jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data -port 8000
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - dynamodb_local_data:/home/dynamodblocal/data
+    mem_limit: 256m
+    networks: [ tools-net ]
+
 volumes:
   jenkins_home:
   sonar_db:
@@ -113,6 +148,8 @@ volumes:
   sonarqube_extensions:
   sonarqube_logs:
   nexus_data:
+  minio_iac_data:
+  dynamodb_local_data:
 
 networks:
   tools-net:
