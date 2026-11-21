@@ -9,6 +9,7 @@ Semantic Versioning.
 ### Changed
 
 - **E2.1 (Terraform)**: restaurados los módulos reutilizables `network`, `compute`, `registry`, `storage` y `observability` y los tres ambientes, ahora en `infra/terraform/envs/{dev,stage,prod}`. Terraform vuelve a declarar la plataforma completa conforme al enunciado; `state-backend/` queda como bootstrap del backend remoto.
+- **E2.1/E2.3 (Terraform)**: el apply de cada ambiente es ahora en dos fases (`apply -target=module.compute` antes del plan completo) para crear el contexto de Kubernetes antes de configurar el provider; el `Jenkinsfile` y el runbook documentan este bootstrap.
 - **File service (FS-CI-01)**: Implementado `loadFile` real y endpoint de descarga `GET /api/v1/files/download/{filename}`. Cobertura JaCoCo 85.71% (líneas), umbral 60% cumplido.
 - **File service (HU-FILE-03)**: el pipeline omite la republicación de artefactos Maven e imágenes Docker cuando el TAG semver ya existe, conservando el digest real; la política de inmutabilidad, si se activa en Nexus, aplica solo a `X.Y.Z` y nunca a `latest`, `dev` o `staging`. Documentado en `docs/informe/HU-FILE-03.md` y `docs/infra/migracion-onpremise.md` §3.7.
 - **Jenkins multibranch**: eliminado el filtro de ramas por convención de nombre. GitHub es la fuente de verdad: se indexan todas las ramas vivas y las borradas tras merge en `main` se limpian de inmediato con el evento `delete` del webhook y `orphanedItemStrategy` 0/0. Documentado en `docs/infra/migracion-onpremise.md` §3.8.

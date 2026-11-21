@@ -331,6 +331,9 @@ def terraformPlanEnvironment(String environment) {
             export TF_VAR_kubeconfig="\${KUBECONFIG}"
             terraform init -input=false -backend-config=backend.hcl
             terraform validate
+            # CG-DOC: Create the cluster first so the Kubernetes provider can load
+            # its kubeconfig context before the full plan is evaluated.
+            terraform apply -input=false -auto-approve -target=module.compute
             set +e
             terraform plan -input=false -detailed-exitcode -out=tfplan
             rc=\$?
@@ -361,6 +364,8 @@ def terraformApplyEnvironment(String environment) {
             export TF_VAR_grafana_admin_password="\$TF_GRAFANA_PASS"
             export TF_VAR_kubeconfig="\${KUBECONFIG}"
             terraform init -input=false -backend-config=backend.hcl
+            # CG-DOC: Keep the two-phase bootstrap idempotent when this stage runs alone.
+            terraform apply -input=false -auto-approve -target=module.compute
             terraform apply -input=false -auto-approve tfplan
         """
     }

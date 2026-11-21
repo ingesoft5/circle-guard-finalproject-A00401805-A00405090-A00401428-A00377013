@@ -246,18 +246,24 @@ for env in dev stage prod; do
   cp -f backend.hcl.example backend.hcl
   terraform init -backend-config=backend.hcl
   terraform validate
+  # El provider de Kubernetes necesita el contexto del clúster antes del plan completo.
+  terraform apply -auto-approve -target=module.compute
   terraform plan -detailed-exitcode
 done
 ```
 
 `plan -detailed-exitcode`: `0` = sin cambios, `2` = cambios pendientes, `1` = error.
 Para aplicar un ambiente: `terraform apply` dentro de `infra/terraform/envs/<env>`.
-El apply de `compute` crea un clúster k3d por ambiente si aún no existe: `circleguard-dev`
-(Traefik `:30080`), `circleguard-stage` (`:30081`) y `circleguard-prod` (`:30082`).
+
+El apply es **en dos fases**: primero `terraform apply -target=module.compute` crea el clúster
+k3d del ambiente; después el plan/apply completo puede cargar el contexto de Kubernetes.
+Si se omite la primera fase, el plan falla con `context "k3d-circleguard-<env>" does not exist`.
+Los clústeres son `circleguard-dev` (Traefik `:30080`), `circleguard-stage` (`:30081`) y
+`circleguard-prod` (`:30082`).
 
 #### 3. Pipeline (E2.3)
 
-Jenkins ejecuta `init → validate → plan → Trivy IaC → apply` para los tres ambientes, con
+Jenkins ejecuta `init → validate → bootstrap compute → plan → Trivy IaC → apply` para los tres ambientes, con
 `Approval prod` antes del apply de producción. Las credenciales se leen de los credentials
 `terraform-minio-creds` y `terraform-grafana-password`, definidos en `jenkins/cac/jenkins.yml`
 y alimentados por `.env.onpremise`.
