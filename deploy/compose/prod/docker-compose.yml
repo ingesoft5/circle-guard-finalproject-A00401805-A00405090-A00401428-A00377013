@@ -277,7 +277,58 @@ services:
     networks: [prod-net]
     mem_limit: 64m
 
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: cg-minio-prod
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?requerido}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?requerido}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_prod:/data
+    networks: [prod-net]
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
+
+  file:
+    image: ${NEXUS_REGISTRY}/circleguard-docker/file:${TAG}
+    container_name: cg-file-prod
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8085
+      AWS_S3_ENDPOINT: http://minio:9000
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-circleguard-files}
+      AWS_REGION: us-east-1
+      AWS_S3_PATH_STYLE_ACCESS: "true"
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:?requerido}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?requerido}
+      FILE_STORAGE_PATH: /app/uploads
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8085/actuator/health | grep -q UP || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
+    networks: [prod-net]
+    mem_limit: 384m
+
 volumes:
+  minio_prod:
   redis_prod:
   postgres_prod:
   neo4j_prod:
