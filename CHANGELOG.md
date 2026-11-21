@@ -9,9 +9,12 @@ Semantic Versioning.
 ### Changed
 
 - **File service (FS-CI-01)**: Implementado `loadFile` real y endpoint de descarga `GET /api/v1/files/download/{filename}`. Cobertura JaCoCo 85.71% (líneas), umbral 60% cumplido.
+- **File service (HU-FILE-03)**: el pipeline omite la republicación de artefactos Maven e imágenes Docker cuando el TAG semver ya existe, conservando el digest real; la política de inmutabilidad, si se activa en Nexus, aplica solo a `X.Y.Z` y nunca a `latest`, `dev` o `staging`. Documentado en `docs/informe/HU-FILE-03.md` y `docs/infra/migracion-onpremise.md` §3.7.
 
 ### Added
 
+- `infra/onpremise/rebuild-onpremise.sh`: wrapper idempotente de un comando que valida el token de SonarQube, ejecuta el bootstrap on-premise, asegura todos los proyectos del catálogo de la Shared Library (incluido `circleguard-file-service`) y converge el stack `cg-tools`.
+- `docs/informe/HU-FILE-03.md` y `docs/informe/evidencia/HU-FILE-03/README.md`: cierre P1.4, decisión de idempotencia/semver e índice de evidencia de la HU-FILE-03 (issue #135).
 - Jenkins image now ships `kubectl` v1.31.2, `kustomize` v5.4.3 and `k3d` v5.9.0 so the pipeline drives the on-premise cluster directly.
 - On-premise playbook `infra/onpremise/README.md` (host → cg-tools Compose → k3d `cg` → verify) plus `infra/onpremise/verify-onpremise.sh`, a read-only health check for the on-premise platform.
 - Traefik Ingress now routes `/api/v1/gate` → gateway (`8087`).

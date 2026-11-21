@@ -239,6 +239,35 @@ Receta para este host (proyecto `cg-tools`):
 Ojo: el `status=OK` de GitHub solo significa que smee.io aceptó el evento; sin el
 relay conectado el evento se pierde y el PR no compila.
 
+### 3.7 Reconstrucción on-premise en un comando
+
+Los scripts Bash ya eran idempotentes por construcción (`ensure_env_*`, `ensure_secret`,
+existence checks y `docker compose up -d`), pero la frase literal de P1.2 —*“scripts
+idempotentes que reconstruyen Jenkins, SonarQube y registro desde cero con un comando”*—
+no tenía un entry point único en este host: `bootstrap-onpremise.sh` levanta Compose y
+`configure-sonar-identity.sh` asegura proyectos/gate, pero el primero no llamaba al segundo.
+
+Ese cierre se versiona en `infra/onpremise/rebuild-onpremise.sh`. Desde la raíz del repo,
+en el host y con el usuario `docker`:
+
+```bash
+bash infra/onpremise/rebuild-onpremise.sh 2>&1 | tee /tmp/rebuild-run-1.log
+bash infra/onpremise/rebuild-onpremise.sh 2>&1 | tee /tmp/rebuild-run-2.log
+```
+
+El wrapper valida el token de SonarQube, ejecuta el bootstrap, recorre todos los
+`projectKey` del catálogo de la Shared Library —incluido `circleguard-file-service`, que
+no está en la lista histórica de `bootstrap-tools.sh`— y termina con `docker compose
+config -q` + `up -d --remove-orphans`. La segunda corrida es la prueba de convergencia:
+no debe crear duplicados, pedir secretos nuevos ni cambiar credenciales.
+
+La inmutabilidad de tags, si se activa en el repositorio Docker hosted de Nexus, se aplica
+solo al patrón `^\d+\.\d+\.\d+$`. `latest`, `dev`, `staging` y los tags de PR siguen siendo
+mutables. El pipeline conserva el skip de publicación: sin él, un rerun con el mismo tag
+semver intentaría republicar y Nexus respondería `400/409`, haciendo fallar P1.4. Esta
+política queda así documentada conforme a E1.2 (*no se acepta configuración manual no
+documentada*).
+
 ## 4. Reglas de operación
 
 1. No detener, reiniciar ni borrar los contenedores ajenos `k8s-worker` e `icesi-inn`.
