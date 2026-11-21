@@ -8,6 +8,7 @@ resources:
   - form-storage.yml
   - ingress.yml
   - hpa.yml
+  - auth-alerts.yml
 
 commonLabels:
   app.kubernetes.io/part-of: circleguard
