@@ -1,0 +1,259 @@
+# Ephemeral, cluster-internal observability for the Form HU-06 cg-dev canary.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: form06-loki-config
+  namespace: monitoring
+data:
+  loki.yml: |
+    auth_enabled: false
+    server:
+      http_listen_port: 3100
+    common:
+      path_prefix: /loki
+      ring:
+        instance_addr: 127.0.0.1
+        kvstore:
+          store: inmemory
+      replication_factor: 1
+    schema_config:
+      configs:
+        - from: 2024-01-01
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+    storage_config:
+      filesystem:
+        directory: /loki/chunks
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      securityContext:
+        fsGroup: 10001
+      containers:
+        - name: loki
+          image: grafana/loki:3.7.0
+          args: [-config.file=/etc/loki/loki.yml]
+          ports:
+            - containerPort: 3100
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3100
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki
+              readOnly: true
+            - name: data
+              mountPath: /loki
+      volumes:
+        - name: config
+          configMap:
+            name: form06-loki-config
+        - name: data
+          emptyDir:
+            sizeLimit: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  selector:
+    app: loki
+  ports:
+    - name: http
+      port: 3100
+      targetPort: 3100
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: form06-alloy-config
+  namespace: monitoring
+data:
+  config.alloy: |
+    discovery.kubernetes "form_canary" {
+      role = "pod"
+      namespaces {
+        names = ["cg-dev"]
+      }
+      selectors {
+        role  = "pod"
+        label = "app=form-hu6"
+      }
+    }
+
+    discovery.relabel "form_canary" {
+      targets = discovery.kubernetes.form_canary.targets
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        regex         = "form"
+        action        = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+      rule {
+        target_label = "app"
+        replacement  = "form-hu6"
+      }
+    }
+
+    loki.source.kubernetes "form_canary" {
+      targets    = discovery.relabel.form_canary.output
+      forward_to = [loki.process.safe_form_events.receiver]
+    }
+
+    // Fail closed: centralize only FormEventPublisher's bounded operational lines.
+    // Framework exceptions and arbitrary request or event content are discarded.
+    loki.process "safe_form_events" {
+      forward_to = [loki.write.dev.receiver]
+      stage.match {
+        selector = "{app=\"form-hu6\"} !~ \"event_type=(survey[.]submitted|certificate[.]validated) result=(success|failure) trace_id=([0-9a-f]{32}|none)$\""
+        action   = "drop"
+      }
+      stage.drop {
+        longer_than = "2KB"
+      }
+      stage.regex {
+        expression = "event_type=(?P<event_type>survey[.]submitted|certificate[.]validated) result=(?P<result>success|failure) trace_id=(?P<trace_id>[0-9a-f]{32}|none)$"
+      }
+      stage.template {
+        source   = "safe_line"
+        template = "event_type={{ .event_type }} result={{ .result }} trace_id={{ .trace_id }}"
+      }
+      stage.output {
+        source = "safe_line"
+      }
+      stage.label_keep {
+        values = ["app", "namespace", "pod"]
+      }
+    }
+
+    loki.write "dev" {
+      endpoint {
+        url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: form06-alloy
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: form06-alloy
+  template:
+    metadata:
+      labels:
+        app: form06-alloy
+    spec:
+      serviceAccountName: form06-alloy
+      containers:
+        - name: alloy
+          image: grafana/alloy:v1.22.0
+          args: [run, /etc/alloy/config.alloy]
+          ports:
+            - containerPort: 12345
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 12345
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 192Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: form06-alloy-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+        - name: jaeger
+          image: cr.jaegertracing.io/jaegertracing/jaeger:2.23.0
+          ports:
+            - containerPort: 16686
+            - containerPort: 4318
+            - containerPort: 13133
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 13133
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: monitoring
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - name: query
+      port: 16686
+      targetPort: 16686
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
