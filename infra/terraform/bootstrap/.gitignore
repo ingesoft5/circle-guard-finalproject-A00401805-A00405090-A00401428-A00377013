@@ -1,0 +1,8 @@
+# CG-DOC: Keep Terraform runtime files and real credentials out of Git.
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+backend.hcl
+terraform.tfvars
+.env.onpremise

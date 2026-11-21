@@ -1,0 +1,8 @@
+# CG-DOC: Copy to terraform.tfvars on the on-prem host only; never commit real credentials.
+minio_endpoint    = "http://127.0.0.1:9002"
+dynamodb_endpoint = "http://127.0.0.1:8000"
+aws_region        = "us-east-1"
+state_bucket_name = "circleguard-tfstate"
+lock_table_name   = "circleguard-tf-lock"
+minio_user        = "__TF_STATE_MINIO_USER__"
+minio_password    = "__TF_STATE_MINIO_PASSWORD__"
