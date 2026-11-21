@@ -187,6 +187,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/HU-FORM-05.md` — Form Kubernetes audit, persistent upload configuration, and pending deployment evidence.
 
+- `docs/informe/HU-FILE-03.md` — File-service CI quality gate, idempotent publishing, semver tag policy, and on-prem rebuild evidence.
+
 - `docs/informe/HU-ID-03.md` — Identity service Docker packaging, CI integration, semver, and acceptance evidence report.
 
 - `docs/informe/P1.1-Branching-GitHub-Flow.html` — Repository file.
@@ -438,6 +440,8 @@ English purpose of every tracked repository file.
 - `infra/onpremise/README.md` — On-premise platform guide: host → cg-tools Compose → k3d `cg` → verified, with rules and secrets.
 
 - `infra/onpremise/bootstrap-onpremise.sh` — Provisions the on-premise tools stack: generates `.env.onpremise` (permissions 600), detects the ZeroTier IP, replaces GitHub credentials, and starts the `cg-tools` Compose project including the smee.io relay.
+
+- `infra/onpremise/rebuild-onpremise.sh` — Idempotent one-command rebuild: validates the Sonar token, runs the bootstrap, ensures every Shared Library Sonar project, and converges the `cg-tools` Compose stack.
 
 - `infra/onpremise/k3d-cluster-create.sh` — Creates the on-premise k3d cluster `cg` with Traefik published on port 30080 and the HTTP registry mirrored into the nodes.
 
