@@ -17,8 +17,13 @@ fi
 
 # CG-DOC: Use `k3d cluster get` so detection is not sensitive to list formatting.
 if k3d cluster get "${CLUSTER_NAME}" >/dev/null 2>&1; then
-  echo "CG-DOC: cluster ${CLUSTER_NAME} already exists; skipping creation."
-  exit 0
+  # CG-DOC: A stale cluster without a server node cannot provide a kubeconfig.
+  if k3d kubeconfig get "${CLUSTER_NAME}" >/dev/null 2>&1; then
+    echo "CG-DOC: cluster ${CLUSTER_NAME} already exists; skipping creation."
+    exit 0
+  fi
+  echo "CG-DOC: stale cluster ${CLUSTER_NAME} has no server node; deleting it."
+  k3d cluster delete "${CLUSTER_NAME}"
 fi
 
 echo "CG-DOC: creating cluster ${CLUSTER_NAME} with ${AGENTS} agents."
