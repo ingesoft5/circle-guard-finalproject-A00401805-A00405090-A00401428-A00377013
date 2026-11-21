@@ -268,6 +268,20 @@ semver intentaría republicar y Nexus respondería `400/409`, haciendo fallar P1
 política queda así documentada conforme a E1.2 (*no se acepta configuración manual no
 documentada*).
 
+### 3.8 Limpieza dinámica de ramas en Jenkins
+
+El job multibranch **no filtra ramas por convención de nombre**. GitHub es la única fuente
+de verdad: se indexan todas las ramas y PRs existentes, y la rama que se mergea en `main`
+y se borra en GitHub deja de analizarse en el siguiente index. Para que la limpieza sea
+inmediata, `infra/bootstrap/bootstrap-github.sh` registra el evento `delete` además de
+`push` y `pull_request`; el script actualiza el hook existente de forma idempotente
+(GET → PATCH/POST). La estrategia de huérfanos usa `daysToKeep(0)` y `numToKeep(0)`, y el
+escaneo de 20 minutos queda solo como respaldo.
+
+`main` es la rama de integración; `dev` es un entorno del pipeline, no una rama del flujo
+actual (ver `docs/informe/P1.1-Branching-GitHub-Flow.md`). Por eso el criterio es la
+existencia de la rama en GitHub, no su prefijo ni su merge en un branch `dev`.
+
 ## 4. Reglas de operación
 
 1. No detener, reiniciar ni borrar los contenedores ajenos `k8s-worker` e `icesi-inn`.

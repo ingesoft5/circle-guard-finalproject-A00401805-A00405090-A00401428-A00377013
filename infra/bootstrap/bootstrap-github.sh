@@ -54,7 +54,7 @@ hook_payload="$(jq -n \
   '{
     name: "web",
     active: true,
-    events: ["push", "pull_request"],
+    events: ["push", "pull_request", "delete"],
     config: {
       url: $url,
       content_type: "json",

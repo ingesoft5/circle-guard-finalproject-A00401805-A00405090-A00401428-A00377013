@@ -13,6 +13,7 @@
 | JaCoCo | `services/circleguard-file-service/build.gradle.kts`: plugin `jacoco`, `jacocoTestReport`, `jacocoTestCoverageVerification` con mínimo `0.60`, conectado a `check` | Cumplido |
 | Quality gate bloqueante | `jenkins/vars/ci.groovy` líneas 44-63: `waitForQualityGate abortPipeline: true` dentro de `timeout(5)` + verificación por API con `jq -e '.projectStatus.status == "OK"'` | Cumplido |
 | Ejecución selectiva | Parámetro `SERVICE` en `Jenkinsfile` y `ciServices.resolve()`; ejecución previa con `SERVICE=circleguard-file-service`, `TAG=1.0.0-<sha>-file`, `SKIP_INTEGRATION=true` | Cumplido |
+| Limpieza dinámica de ramas | Sin `headWildcardFilter`; webhook con `delete`; `orphanedItemStrategy` con `daysToKeep(0)`/`numToKeep(0)`; la rama borrada tras merge en `main` deja de indexarse y las demás se conservan | Versionado; verificación on-prem pendiente |
 
 No se modifica `jenkins/vars/` en este PR: la librería está fijada a `main` y los cambios
 de la rama no serían visibles para el job.
