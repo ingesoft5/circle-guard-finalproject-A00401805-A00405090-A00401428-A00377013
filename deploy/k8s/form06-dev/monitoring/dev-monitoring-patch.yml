@@ -61,10 +61,14 @@ data:
         isDefault: true
         editable: false
       - name: Loki
+        uid: loki
         type: loki
         url: http://loki:3100
         access: proxy
+        isDefault: false
         editable: false
+        jsonData:
+          maxLines: 1000
       - name: Jaeger
         type: jaeger
         url: http://jaeger:16686
@@ -85,7 +89,27 @@ spec:
             - --config.file=/etc/prometheus/prometheus.yml
             - --storage.tsdb.path=/prometheus
             - --storage.tsdb.retention.time=2h
+          volumeMounts:
+            - $patch: replace
+            - name: config
+              mountPath: /etc/prometheus
+            - name: alert-rules
+              mountPath: /etc/prometheus/rules
+            - name: storage
+              mountPath: /prometheus
       volumes:
+        - name: alert-rules
+          configMap: null
+          projected:
+            sources:
+              - configMap:
+                  name: auth-prometheus-alerts
+              - configMap:
+                  name: form-prometheus-alerts
+              - configMap:
+                  name: promotion-prometheus-alerts
+        - name: promotion-alert-rules
+          $patch: delete
         - name: storage
           emptyDir:
             sizeLimit: 512Mi

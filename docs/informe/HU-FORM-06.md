@@ -107,28 +107,30 @@ Tras incorporar main también se ejecutaron `:services:circleguard-form-service:
 7. Probar la alerta con fallo controlado autorizado, sin detener Kafka compartido. Comprobar firing en Prometheus, recepción en Alertmanager, entrega y recuperación. Promtool solo demuestra la lógica local.
 8. Buscar datos sintéticos sensibles en métricas, trazas y logs centrales sin copiar datos reales a Git/Jira; restaurar el muestreo acordado.
 
-Los cambios en otros servicios, infraestructura, activación remota y pruebas que escriban datos requieren autorización específica. El push de esta rama está autorizado; el merge o PR no forma parte de esta continuación. No marcar la HU completa como Done hasta obtener las evidencias pendientes.
+Los cambios locales en Promotion y Notification están autorizados para esta HU. La activación remota y las pruebas que escriban datos en el clúster requieren autorización específica. No hacer nuevos pushes ni abrir PR sin autorización del usuario. No marcar la HU completa como Done hasta obtener las evidencias pendientes.
 
 ## Continuación: validación aislada de cg-dev
 
-Se preparó un [overlay optativo de prueba](../../deploy/k8s/form06-dev/README.md) sin cambiar el despliegue compartido. Crea un canario `form-hu6` sin Ingress y una pila de monitoring reutilizando #93. El colector Alloy observa únicamente el contenedor Form del canario en `cg-dev` y entrega a Loki solo líneas operativas acotadas; Jaeger recibe OTLP HTTP. La configuración no se ha aplicado al clúster.
+Se preparó un [overlay optativo de prueba](../../deploy/k8s/form06-dev/README.md) sin cambiar el despliegue compartido. Crea un canario `form-hu6` sin Ingress y reutiliza el monitoring de #93 y #138, incluido Loki. Excluye Promtail, cuyo manifiesto compartido vigila dev, stage y prod; Alloy observa únicamente el contenedor Form del canario en `cg-dev` y entrega a Loki solo líneas operativas acotadas. Jaeger recibe OTLP HTTP. La configuración no se ha aplicado al clúster.
 
 La comprobación SSH de solo lectura confirmó que `cg-dev` y `cg-prod` tienen StatefulSets y PVC distintos para PostgreSQL y Kafka, nueve aplicaciones operativas en cada uno, `cg-stage` en cero y ningún namespace `monitoring`. El canario apunta únicamente a los Services de `cg-dev`, no ejecuta Flyway y usa Hibernate `validate`. El clúster no recibió cambios.
 
 | Subtarea | Nueva evidencia local | Evidencia operativa pendiente |
 |---|---|---|
 | 1. Métricas | `check` pasa; promtool valida la configuración de scrape del canario. | Endpoint y serie real `up` en Prometheus desplegado. |
-| 2. Panel y logs | Dashboard de Form conservado; overlay agrega Loki y Alloy limitado al canario. Configuración Alloy validada con su binario. | Panel con datos y línea segura visible en Loki. |
+| 2. Panel y logs | Dashboard de Form conservado; overlay reutiliza Loki de #138 y agrega Alloy limitado al canario. Configuración Alloy validada con su binario. | Panel con datos y línea segura visible en Loki. |
 | 3. OpenTelemetry/Kafka | Dos integraciones pasan de nuevo con broker temporal y `traceparent`. Jaeger está preparado localmente. | Spans OTLP reales de Form en Jaeger. |
-| 4. Traza completa | Se identificaron listeners y productores. Promotion y Notification registran actualmente cuerpos de eventos o identificadores; sus cambios requieren autorización específica. | Traza de los tres servicios y destinos externos de prueba aislados. |
+| 4. Traza completa | Se identificaron listeners y productores. Promotion y Notification registran actualmente cuerpos de eventos o identificadores; se autorizó preparar sus cambios locales. | Traza de los tres servicios y destinos externos de prueba aislados. |
 | 5. Alerta | promtool valida cuatro reglas renderizadas, incluida Form. | Receptor autorizado, firing, entrega y recuperación reales. |
 | 6. Privacidad | Pipeline de logs del canario filtra y reconstruye campos permitidos; no recolecta logs de Promotion/Notification. | Prueba con marcador sintético sobre métricas, logs y spans desplegados. |
 
-Validaciones ejecutadas en esta continuación: `python deploy/k8s/form06-dev/verify.py` pasa; Kustomize renderiza 28 recursos de monitoring y solo dos del canario, sin RBAC global ni recursos de stage/prod. `grafana/alloy:v1.22.0 validate` y `grafana/loki:3.7.0 -verify-config=true` pasan en contenedores locales. `promtool check config` valida el scrape y cuatro reglas renderizadas. `:services:circleguard-form-service:check :services:circleguard-form-service:integrationTest --no-build-cache --rerun-tasks` termina `BUILD SUCCESSFUL`: 44 pruebas unitarias y dos integraciones, sin fallos ni omisiones. Ninguna subtarea se declara Done hasta reunir su evidencia en el servidor.
+Validaciones ejecutadas en esta continuación: `python deploy/k8s/form06-dev/verify.py` pasa; tras integrar #138, Kustomize renderiza 30 recursos de monitoring y solo dos del canario, sin RBAC global ni recursos de stage/prod. Conserva Auth, Promotion y el Loki compartido. `grafana/alloy:v1.22.0 validate` y la verificación local de Loki pasan. El patrón anidado de reglas incorporado por #138 no es válido para Prometheus 2.51; el overlay de prueba monta las tres reglas en el directorio raíz sin alterar su contenido. `promtool check config` dentro de `prom/prometheus:v2.51.0` confirma siete reglas cargadas: tres de Auth, tres de Promotion y una de Form. `:services:circleguard-form-service:check :services:circleguard-form-service:integrationTest --no-build-cache --rerun-tasks` termina `BUILD SUCCESSFUL`: 44 pruebas unitarias y dos integraciones, sin fallos ni omisiones. Ninguna subtarea se declara Done hasta reunir su evidencia en el servidor.
 
 Pruebas de arranque locales adicionales: Loki respondió HTTP 200 en `/ready`, Jaeger HTTP 200 en su interfaz, y Grafana provisionó ambos paneles (`circleguard-auth-overview` y `circleguard-form-overview`) con seis paneles cada uno. Todos los contenedores de esas pruebas se retiraron al finalizar. Estas comprobaciones prueban arranque y provisión local, no ingestión de logs o trazas ni scraping en `cg-dev`.
 
 `smoke_logs.py` ejecutó el bloque real de procesamiento Alloy con Loki local y tres líneas sintéticas: conservó dos resultados de publicación permitidos, descartó una línea arbitraria y eliminó un marcador sensible inyectado antes de un resultado válido. Retiró ambos contenedores y su red al terminar. Esto aporta evidencia de privacidad para el pipeline de logs del canario, pero no certifica los logs de otros servicios ni la ejecución en Kubernetes.
+
+Después de incorporar #138 se repitió `smoke_logs.py` con la configuración y la imagen Loki 2.9.6 compartidas: volvió a conservar dos líneas permitidas y a descartar/sanear las entradas con el marcador sensible. Se retiraron los contenedores y la red local.
 
 `smoke_traces.py` envió un span sintético por OTLP HTTP a Jaeger local y lo recuperó por ID; confirmó la ingestión y consulta del backend sin usar datos reales. Retiró el contenedor. La prueba no verifica aún que Form exporte spans al Jaeger desplegado ni que Promotion y Notification compartan la traza.
 

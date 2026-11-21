@@ -42,7 +42,10 @@ def main():
         (HERE / "monitoring" / "loki-alloy-jaeger.yml").read_text(encoding="utf-8")) if obj]
     configs = {obj["metadata"]["name"]: obj["data"] for obj in documents
                if obj["kind"] == "ConfigMap"}
-    loki_config = configs["form06-loki-config"]["loki.yml"]
+    shared = [obj for obj in yaml.safe_load_all(
+        (HERE.parent / "monitoring" / "loki.yml").read_text(encoding="utf-8")) if obj]
+    loki_config = next(obj["data"]["loki.yml"] for obj in shared
+                       if obj["kind"] == "ConfigMap" and obj["metadata"]["name"] == "loki-config")
     alloy_config = configs["form06-alloy-config"]["config.alloy"]
     process_and_writer = 'loki.process "safe_form_events" {' + alloy_config.split(
         'loki.process "safe_form_events" {', 1)[1]
@@ -71,7 +74,7 @@ def main():
                           "--network-alias", "loki", "--label", "cg.form06.smoke=true",
                           "-p", "127.0.0.1::3100",
                           "--tmpfs", "/loki:rw,size=1073741824,mode=1777",
-                          "-v", f"{directory}:/etc/loki:ro", "grafana/loki:3.7.0",
+                          "-v", f"{directory}:/etc/loki:ro", "grafana/loki:2.9.6",
                           "-config.file=/etc/loki/loki.yml")
             containers.append(loki)
             loki_port = docker("port", loki, "3100/tcp").split(":")[-1]

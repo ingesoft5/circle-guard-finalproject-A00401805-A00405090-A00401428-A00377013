@@ -38,22 +38,45 @@ def main():
     assert ("Ingress", "cg-dev", "circleguard") not in canary
 
     removed = set(shared) - set(dev)
-    assert removed == {("ClusterRole", None, "prometheus"),
-                       ("ClusterRoleBinding", None, "prometheus")}, removed
+    assert removed == {
+        ("ClusterRole", None, "prometheus"),
+        ("ClusterRoleBinding", None, "prometheus"),
+        ("ClusterRole", None, "promtail"),
+        ("ClusterRoleBinding", None, "promtail"),
+        ("ServiceAccount", "monitoring", "promtail"),
+        ("ConfigMap", "monitoring", "promtail-config"),
+        ("DaemonSet", "monitoring", "promtail"),
+    }, removed
     changed = {key for key in set(shared) & set(dev) if shared[key] != dev[key]}
     assert changed == {("ConfigMap", "monitoring", "prometheus-config"),
                        ("ConfigMap", "monitoring", "grafana-datasources"),
                        ("Deployment", "monitoring", "prometheus")}, changed
 
-    for name in ("auth-prometheus-alerts", "grafana-dashboard-circleguard",
+    for name in ("auth-prometheus-alerts", "promotion-prometheus-alerts",
+                 "grafana-dashboard-circleguard", "loki-config",
                  "alertmanager-config", "grafana-dashboards-provider"):
         key = ("ConfigMap", "monitoring", name)
         assert dev[key] == shared[key], f"Shared {name} was changed"
-    for name in ("grafana", "alertmanager"):
+    for name in ("grafana", "alertmanager", "loki"):
         key = ("Deployment", "monitoring", name)
         assert dev[key] == shared[key], f"Shared {name} deployment was changed"
+    assert dev[("Service", "monitoring", "loki")] == shared[("Service", "monitoring", "loki")]
+    assert dev[("PersistentVolumeClaim", "monitoring", "loki-data")] == shared[
+        ("PersistentVolumeClaim", "monitoring", "loki-data")]
 
     scrape = yaml.safe_load(dev[("ConfigMap", "monitoring", "prometheus-config")]["data"]["prometheus.yml"])
+    assert scrape["rule_files"] == ["/etc/prometheus/rules/*.yml"]
+    prometheus_pod = dev[("Deployment", "monitoring", "prometheus")]["spec"]["template"]["spec"]
+    rules_volume = next(volume for volume in prometheus_pod["volumes"]
+                        if volume["name"] == "alert-rules")
+    rule_sources = [source["configMap"]["name"] for source in rules_volume["projected"]["sources"]]
+    assert "auth-prometheus-alerts" in rule_sources
+    assert "promotion-prometheus-alerts" in rule_sources
+    assert any(name.startswith("form-prometheus-alerts-") for name in rule_sources)
+    assert len(rule_sources) == 3
+    assert "promotion-alert-rules" not in [volume["name"] for volume in prometheus_pod["volumes"]]
+    assert {mount["name"] for mount in prometheus_pod["containers"][0]["volumeMounts"]} == {
+        "config", "alert-rules", "storage"}
     jobs = {job["job_name"]: job for job in scrape["scrape_configs"]}
     assert set(jobs) == {"form06-canary", "prometheus"}
     job = jobs["form06-canary"]
@@ -64,7 +87,7 @@ def main():
     sources = yaml.safe_load(dev[("ConfigMap", "monitoring", "grafana-datasources")]["data"]["datasource.yaml"])
     assert {source["name"] for source in sources["datasources"]} == {"Prometheus", "Loki", "Jaeger"}
     original = yaml.safe_load(shared[("ConfigMap", "monitoring", "grafana-datasources")]["data"]["datasource.yaml"])
-    assert sources["datasources"][0] == original["datasources"][0]
+    assert sources["datasources"][:2] == original["datasources"]
 
     deployment = canary[("Deployment", "cg-dev", "form-hu6")]
     pod = deployment["spec"]["template"]
@@ -92,16 +115,13 @@ def main():
         ("Role", "cg-dev", "form06-alloy-logs"),
         ("RoleBinding", "cg-dev", "form06-alloy-logs"),
         ("ServiceAccount", "monitoring", "form06-alloy"),
-        ("ConfigMap", "monitoring", "form06-loki-config"),
         ("ConfigMap", "monitoring", "form06-alloy-config"),
-        ("Deployment", "monitoring", "loki"),
         ("Deployment", "monitoring", "form06-alloy"),
         ("Deployment", "monitoring", "jaeger"),
-        ("Service", "monitoring", "loki"),
         ("Service", "monitoring", "jaeger"),
     }, additions
     print("PASS: cg-dev-only canary and namespaced discovery/log RBAC")
-    print("PASS: shared Auth rules/dashboard, Grafana deployment and Alertmanager unchanged")
+    print("PASS: shared Auth/Promotion rules, dashboards and Loki unchanged; Promtail excluded")
     print("PASS: canary has no public route, schema update or Flyway migration")
     print("PASS: scoped scrape and log collection; only Form operations are eligible")
     print(json.dumps({"monitoring_resources": len(dev), "canary_resources": len(canary),

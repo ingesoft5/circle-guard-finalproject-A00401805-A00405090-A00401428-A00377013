@@ -1,6 +1,6 @@
 # HU-FORM-06: isolated cg-dev validation assets
 
-This opt-in overlay reuses the monitoring stack from PR #93. It has not been
+This opt-in overlay reuses the monitoring stack from merged PRs #93 and #138. It has not been
 deployed. It is deliberately separate from the normal dev/stage/prod overlays
 and the shared Jenkinsfile.
 
@@ -24,19 +24,24 @@ separate approval.
   questionnaire submission would still write to the **dev** database and emit
   events to the **dev** broker; do not send production data or real identities.
 - `monitoring/` renders the existing Prometheus, Grafana, Alertmanager, Auth
-  rule/dashboard, plus Form assets, Loki, Alloy and Jaeger. It replaces global
-  Prometheus RBAC with a Role in `cg-dev`. Alloy has only a `cg-dev` Role and
+  and Promotion rules/dashboard, plus Form assets, the existing Loki, Alloy and
+  Jaeger. It does not create another Loki instance. It removes the inherited
+  Promtail DaemonSet and its global RBAC because that collector watches all
+  three environments. Prometheus RBAC is replaced with a Role in `cg-dev`.
+  Alloy has only a `cg-dev` Role and
   selects `app=form-hu6`. The log pipeline drops all lines except bounded
   `FormEventPublisher` outcomes and rewrites accepted lines from allowlisted
   fields. No host log mounts, DaemonSet, public Ingress, prod or stage resources.
 - The overlay limits Prometheus discovery to the canary in `cg-dev` and keeps
-  the original Prometheus datasource, Auth rule and Auth dashboard unchanged.
-  Auth panels are provisioned but remain empty in this isolated trial.
-- Loki and Jaeger use ephemeral storage. Prometheus retention is two hours and
-  its `emptyDir` is capped at 512 MiB; Loki's `emptyDir` is capped at 1 GiB.
-  A restart may erase trial evidence. The new components and canary request
-  about 1.1 GiB RAM and 400m CPU in total; actual use must be checked again
-  before deployment.
+  the original Prometheus and Loki datasources, Auth/Promotion rules and their
+  dashboards unchanged. Their panels are provisioned but remain empty in this
+  isolated trial. Prometheus 2.51 rejects the shared nested rule glob
+  `/etc/prometheus/rules/*/*.yml`; this trial projects all three existing rule
+  ConfigMaps into the root rules mount without changing their contents.
+- The shared Loki from #138 uses a 2 GiB PVC. Jaeger is in-memory. Prometheus
+  retention is two hours and its `emptyDir` is capped at 512 MiB. The total
+  resource budget must be checked again before deployment. The shared Loki
+  PVC must never be deleted as part of a Form rollback.
 - The default Alertmanager receiver from #93 has no external destination.
   Delivery is **not** complete until an approved receiver is configured through
   a Secret and a real notification is observed.

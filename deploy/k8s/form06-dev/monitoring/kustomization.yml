@@ -7,4 +7,5 @@ resources:
   - loki-alloy-jaeger.yml
 patches:
   - path: remove-cluster-rbac.yml
+  - path: remove-promtail.yml
   - path: dev-monitoring-patch.yml
