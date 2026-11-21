@@ -128,12 +128,10 @@ services:
     image: amazon/dynamodb-local:2.6.1
     container_name: cg-dynamodb-local
     restart: unless-stopped
-    # CG-DOC: Use -dbPath instead of -inMemory so the lock table survives restarts.
-    command: -jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data -port 8000
+    # CG-DOC: In-memory mode avoids SQLite file locks; Terraform recreates the lock table on bootstrap.
+    command: -jar DynamoDBLocal.jar -inMemory -port 8000
     ports:
       - "127.0.0.1:8000:8000"
-    volumes:
-      - dynamodb_local_data:/home/dynamodblocal/data
     mem_limit: 256m
     networks: [ tools-net ]
 
@@ -145,7 +143,6 @@ volumes:
   sonarqube_logs:
   nexus_data:
   minio_iac_data:
-  dynamodb_local_data:
 
 networks:
   tools-net:
