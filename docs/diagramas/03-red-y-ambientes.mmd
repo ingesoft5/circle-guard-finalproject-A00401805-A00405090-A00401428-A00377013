@@ -1,0 +1,37 @@
+flowchart TB
+  subgraph DEV["Ambiente dev"]
+    C1["k3d circleguard-dev<br/>Traefik :30080"]
+    N1["cg-dev: quota + default-deny<br/>ingress kube-system · egress 10.0.0.0/8, host :5000"]
+    R1["registry:2 :5000"]
+    M1["MinIO circleguard-files-dev<br/>circleguard-backups-dev"]
+    O1["cg-obs-dev<br/>Prometheus + Grafana + Loki"]
+    C1 --> N1 --> R1
+    N1 --> M1
+    N1 --> O1
+  end
+
+  subgraph STAGE["Ambiente stage"]
+    C2["k3d circleguard-stage<br/>Traefik :30081"]
+    N2["cg-stage: quota + default-deny"]
+    R2["registry:2 :5000"]
+    M2["MinIO circleguard-files-stage<br/>circleguard-backups-stage"]
+    O2["cg-obs-stage<br/>Prometheus + Grafana + Loki"]
+    C2 --> N2 --> R2
+    N2 --> M2
+    N2 --> O2
+  end
+
+  subgraph PROD["Ambiente prod"]
+    C3["k3d circleguard-prod<br/>Traefik :30082"]
+    N3["cg-prod: quota + default-deny"]
+    R3["registry:2 :5000"]
+    M3["MinIO circleguard-files-prod<br/>circleguard-backups-prod"]
+    O3["cg-obs-prod<br/>Prometheus + Grafana + Loki"]
+    C3 --> N3 --> R3
+    N3 --> M3
+    N3 --> O3
+  end
+
+  HOST["Host 10.147.20.67<br/>registro HTTP :5000"] --> DEV
+  HOST --> STAGE
+  HOST --> PROD

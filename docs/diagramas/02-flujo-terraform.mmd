@@ -1,8 +1,11 @@
 flowchart LR
-  ENV[".env.onpremise<br/>TF_STATE_* / TF_LOCK_TABLE"] --> VAR["TF_VAR_*"]
-  VAR --> TF["terraform init · validate · plan · apply"]
-  TF --> LOCAL["terraform.tfstate local (gitignored)"]
-  TF --> S3["aws_s3_bucket<br/>circleguard-tfstate + versioning"]
-  TF --> LOCK["aws_dynamodb_table<br/>circleguard-tf-lock (LockID)"]
-  S3 --> BACKEND["backend s3 para futuros roots"]
-  LOCK --> BACKEND
+  ENV[".env.onpremise<br/>TF_STATE_* / TF_GRAFANA_ADMIN_PASSWORD"] --> BOOT["state-backend<br/>init · plan · apply (estado local)"]
+  BOOT --> S3["MinIO :9002<br/>circleguard-tfstate + versioning"]
+  BOOT --> LOCK["DynamoDB Local :8000<br/>circleguard-tf-lock (LockID)"]
+  S3 --> BACK["backend remoto s3"]
+  LOCK --> BACK
+  BACK --> HC["backend.hcl por ambiente<br/>platform/dev|stage|prod/terraform.tfstate"]
+  HC --> ROOTS["envs/dev · envs/stage · envs/prod"]
+  ROOTS --> MODS["módulos reutilizables<br/>network · compute · registry · storage · observability"]
+  MODS --> CI["Jenkins: init · validate · plan · Trivy IaC · apply"]
+  CI --> APPLY["apply dev → apply stage → Approval prod → apply prod"]

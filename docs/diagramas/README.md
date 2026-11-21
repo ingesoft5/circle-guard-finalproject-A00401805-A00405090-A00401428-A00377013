@@ -1,7 +1,7 @@
-# Infrastructure diagrams
+# Infrastructure diagrams (Parte 2, E2.1)
 
-Terraform cubre únicamente el backend de estado (bucket S3 + tabla de lock). El despliegue de
-aplicaciones sigue siendo Kustomize sobre el clúster k3d `cg`.
+Los diagramas describen la infraestructura declarada con Terraform: módulos
+reutilizables, tres ambientes parametrizados y el backend remoto del estado.
 
 ## 01 On-prem architecture
 
@@ -9,27 +9,19 @@ aplicaciones sigue siendo Kustomize sobre el clúster k3d `cg`.
 flowchart TB
   HOST["Host on-prem 10.147.20.67"]
   TOOLS["Docker Compose cg-tools"]
-  JENKINS["Jenkins :8080"]
-  SONAR["SonarQube :9000"]
-  NEXUS["Nexus :8081 + registry :5000"]
-  MINIO["MinIO IAC :9002 / consola :9003"]
+  MINIO["MinIO IAC :9002"]
   DDB["DynamoDB Local :8000"]
-  K3D["k3d cg / Traefik :30080"]
-  ENVS["cg-dev · cg-stage · cg-prod (Kustomize)"]
-  TF["Terraform state-backend"]
+  TF["Terraform E2.1"]
+  MOD["network · compute · registry · storage · observability"]
+  ENVS["envs dev · stage · prod"]
+  K3D["k3d por ambiente + Traefik"]
+  APPS["Namespaces cg-* (Kustomize)"]
 
-  HOST --> TOOLS
-  HOST --> K3D
-  TOOLS --> JENKINS
-  TOOLS --> SONAR
-  TOOLS --> NEXUS
-  TOOLS --> MINIO
+  HOST --> TOOLS --> MINIO
   TOOLS --> DDB
-  K3D --> ENVS
-  JENKINS -->|"kubectl apply -k"| ENVS
-  NEXUS -->|"imágenes"| ENVS
-  TF -->|"crea bucket"| MINIO
-  TF -->|"crea tabla"| DDB
+  TF --> MOD --> ENVS --> K3D --> APPS
+  MINIO --> TF
+  DDB --> TF
 ```
 
 Fuente: [`01-arquitectura-onprem.mmd`](01-arquitectura-onprem.mmd).
@@ -38,28 +30,29 @@ Fuente: [`01-arquitectura-onprem.mmd`](01-arquitectura-onprem.mmd).
 
 ```mermaid
 flowchart LR
-  ENV[".env.onpremise<br/>TF_STATE_* / TF_LOCK_TABLE"] --> VAR["TF_VAR_*"]
-  VAR --> TF["terraform init · validate · plan · apply"]
-  TF --> LOCAL["terraform.tfstate local (gitignored)"]
-  TF --> S3["aws_s3_bucket<br/>circleguard-tfstate + versioning"]
-  TF --> LOCK["aws_dynamodb_table<br/>circleguard-tf-lock (LockID)"]
-  S3 --> BACKEND["backend s3 para futuros roots"]
-  LOCK --> BACKEND
+  BOOT["state-backend"] --> S3["MinIO circleguard-tfstate"]
+  BOOT --> LOCK["DynamoDB Local circleguard-tf-lock"]
+  S3 --> BACK["backend remoto s3"]
+  LOCK --> BACK
+  BACK --> ENVS["envs/dev · stage · prod"]
+  ENVS --> MODS["5 módulos"]
+  MODS --> CI["Jenkins: init · validate · plan · Trivy · apply"]
 ```
 
 Fuente: [`02-flujo-terraform.mmd`](02-flujo-terraform.mmd).
 
-## 03 Backend and endpoints
+## 03 Red y ambientes
 
 ```mermaid
 flowchart TB
-  CREATOR["state-backend (este proyecto)"] -.->|"crea"| MINIO["MinIO :9002<br/>circleguard-tfstate"]
-  CREATOR -.->|"crea"| DDB["DynamoDB Local :8000<br/>circleguard-tf-lock"]
-  ROOT["Root futuro con backend s3"] -->|"estado"| MINIO
-  ROOT -->|"lock"| DDB
-  MINIO --> KEYS["onpremise/dev/terraform.tfstate<br/>onpremise/stage/terraform.tfstate<br/>onpremise/prod/terraform.tfstate"]
-  DDB --> ITEM["item LockID = onpremise/&lt;env&gt;/terraform.tfstate"]
+  HOST["Host 10.147.20.67 :5000"] --> DEV["dev: cg-dev + cg-obs-dev"]
+  HOST --> STAGE["stage: cg-stage + cg-obs-stage"]
+  HOST --> PROD["prod: cg-prod + cg-obs-prod"]
+  DEV --> TRAEFIK["Traefik por ambiente"]
+  STAGE --> TRAEFIK
+  PROD --> TRAEFIK
 ```
 
-Fuente: [`03-backend-y-endpoints.mmd`](03-backend-y-endpoints.mmd). La plantilla de configuración
-para esos roots es `infra/terraform/state-backend/backend.hcl.example`.
+Fuente: [`03-red-y-ambientes.mmd`](03-red-y-ambientes.mmd). Las claves de estado
+son `platform/<env>/terraform.tfstate` y se configuran desde
+`infra/terraform/envs/<env>/backend.hcl.example`.

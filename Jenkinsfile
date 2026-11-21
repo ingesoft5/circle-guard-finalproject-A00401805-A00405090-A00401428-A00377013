@@ -309,6 +309,63 @@ def registryDigest(String repository, String tag) {
     return digest
 }
 
+// ---------- Terraform (E2.1 / E2.3) ------------------------------------------
+// Estas funciones viven aquí, no en la Shared Library: el pipeline de un PR
+// carga `@Library('circleguard@main')` y no vería métodos recién añadidos en la
+// rama. Cada Stage usa credenciales de Jenkins, nunca secretos en el repo.
+def terraformPlanEnvironment(String environment) {
+    withCredentials([
+            usernamePassword(credentialsId: 'terraform-minio-creds',
+                    usernameVariable: 'TF_MINIO_USER', passwordVariable: 'TF_MINIO_PASS'),
+            string(credentialsId: 'terraform-grafana-password', variable: 'TF_GRAFANA_PASS')
+    ]) {
+        sh """
+            set -eu
+            cd infra/terraform/envs/${environment}
+            cp -f backend.hcl.example backend.hcl
+            export AWS_ACCESS_KEY_ID="\$TF_MINIO_USER"
+            export AWS_SECRET_ACCESS_KEY="\$TF_MINIO_PASS"
+            export TF_VAR_minio_access_key="\$TF_MINIO_USER"
+            export TF_VAR_minio_secret_key="\$TF_MINIO_PASS"
+            export TF_VAR_grafana_admin_password="\$TF_GRAFANA_PASS"
+            export TF_VAR_kubeconfig="\${KUBECONFIG}"
+            terraform init -input=false -backend-config=backend.hcl
+            terraform validate
+            set +e
+            terraform plan -input=false -detailed-exitcode -out=tfplan
+            rc=\$?
+            set -e
+            if [ "\$rc" -eq 1 ]; then
+              echo "terraform plan falló para ${environment}"
+              exit 1
+            fi
+            echo "terraform plan ${environment}: codigo \$rc (0=sin cambios, 2=cambios pendientes)"
+        """
+    }
+}
+
+def terraformApplyEnvironment(String environment) {
+    withCredentials([
+            usernamePassword(credentialsId: 'terraform-minio-creds',
+                    usernameVariable: 'TF_MINIO_USER', passwordVariable: 'TF_MINIO_PASS'),
+            string(credentialsId: 'terraform-grafana-password', variable: 'TF_GRAFANA_PASS')
+    ]) {
+        sh """
+            set -eu
+            cd infra/terraform/envs/${environment}
+            cp -f backend.hcl.example backend.hcl
+            export AWS_ACCESS_KEY_ID="\$TF_MINIO_USER"
+            export AWS_SECRET_ACCESS_KEY="\$TF_MINIO_PASS"
+            export TF_VAR_minio_access_key="\$TF_MINIO_USER"
+            export TF_VAR_minio_secret_key="\$TF_MINIO_PASS"
+            export TF_VAR_grafana_admin_password="\$TF_GRAFANA_PASS"
+            export TF_VAR_kubeconfig="\${KUBECONFIG}"
+            terraform init -input=false -backend-config=backend.hcl
+            terraform apply -input=false -auto-approve tfplan
+        """
+    }
+}
+
 pipeline {
     agent any
 
@@ -369,6 +426,39 @@ pipeline {
                         echo "Servicios a construir: ${env.SERVICES ?: 'ninguno'}"
                     }
                 }
+            }
+        }
+
+        stage('Terraform Plan') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script {
+                    ['dev', 'stage', 'prod'].each { environment ->
+                        echo "Terraform plan del ambiente ${environment}..."
+                        terraformPlanEnvironment(environment)
+                    }
+                }
+            }
+        }
+
+        stage('Trivy IaC') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                sh '''
+                    trivy fs --exit-code 1 --severity CRITICAL \
+                      --skip-dirs "infra/terraform/state-backend/.terraform,infra/terraform/envs/dev/.terraform,infra/terraform/envs/stage/.terraform,infra/terraform/envs/prod/.terraform" \
+                      infra/terraform
+                '''
             }
         }
 
@@ -557,6 +647,16 @@ pipeline {
             }
         }
 
+        stage('Terraform Apply dev') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps { script { terraformApplyEnvironment('dev') } }
+        }
+
         stage('Deploy dev') {
             when {
                 allOf {
@@ -575,6 +675,16 @@ pipeline {
                 }
             }
             steps { script { ci.e2e() } }
+        }
+
+        stage('Terraform Apply stage') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps { script { terraformApplyEnvironment('stage') } }
         }
 
         stage('Deploy stage') {
@@ -597,6 +707,16 @@ pipeline {
             steps {
                 input message: 'Aprobar despliegue a producción', ok: 'Desplegar'
             }
+        }
+
+        stage('Terraform Apply prod') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps { script { terraformApplyEnvironment('prod') } }
         }
 
         stage('Deploy prod') {

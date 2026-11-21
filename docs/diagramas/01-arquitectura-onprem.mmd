@@ -6,19 +6,24 @@ flowchart TB
   NEXUS["Nexus :8081 + registry :5000"]
   MINIO["MinIO IAC :9002 / consola :9003"]
   DDB["DynamoDB Local :8000"]
-  K3D["k3d cg / Traefik :30080"]
-  ENVS["cg-dev · cg-stage · cg-prod (Kustomize)"]
-  TF["Terraform state-backend"]
+  TF["Terraform E2.1"]
+  MOD["modules: network · compute · registry · storage · observability"]
+  ENVS["envs: dev · stage · prod"]
+  K3D["k3d circleguard-dev :30080<br/>circleguard-stage :30081 · circleguard-prod :30082"]
+  APPS["Namespaces cg-dev · cg-stage · cg-prod<br/>Kustomize + Ingress + HPA + sondas"]
 
   HOST --> TOOLS
-  HOST --> K3D
+  HOST --> TF
   TOOLS --> JENKINS
   TOOLS --> SONAR
   TOOLS --> NEXUS
   TOOLS --> MINIO
   TOOLS --> DDB
-  K3D --> ENVS
-  JENKINS -->|"kubectl apply -k"| ENVS
-  NEXUS -->|"imágenes"| ENVS
-  TF -->|"crea bucket"| MINIO
-  TF -->|"crea tabla"| DDB
+  TF --> MOD
+  MOD --> ENVS
+  ENVS --> K3D
+  K3D --> APPS
+  JENKINS -->|"terraform plan/apply + kubectl apply -k"| TF
+  JENKINS -->|"kubectl apply -k"| APPS
+  NEXUS -->|"imágenes"| APPS
+  MINIO -->|"buckets files/backups"| APPS
