@@ -44,6 +44,7 @@ class PrometheusEndpointTest {
     }
 
     @Configuration(proxyBeanMethods = false)
+    @org.springframework.context.annotation.Import(FormObservabilityConfiguration.class)
     @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
             HibernateJpaAutoConfiguration.class, FlywayAutoConfiguration.class, KafkaAutoConfiguration.class})
     static class Application { }

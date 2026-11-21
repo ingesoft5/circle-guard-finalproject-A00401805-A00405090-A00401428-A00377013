@@ -9,6 +9,14 @@ import com.circleguard.form.model.QuestionType;
 import com.circleguard.form.model.Questionnaire;
 import com.circleguard.form.repository.HealthSurveyRepository;
 import com.circleguard.form.service.HealthSurveyService;
+import com.circleguard.form.service.FormEventPublisher;
+import com.circleguard.form.observability.TracingFixture;
+import com.circleguard.form.observability.FormObservabilityConfiguration;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.tracing.Tracer;
+import java.nio.charset.StandardCharsets;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.circleguard.form.service.QuestionnaireService;
 import com.circleguard.form.service.SymptomMapper;
 import com.circleguard.promotion.listener.SurveyListener;
@@ -88,6 +96,9 @@ class FormPromotionKafkaIntegrationTest {
     @Autowired
     private HealthSurveyService healthSurveyService;
 
+    @Autowired
+    private TracingFixture tracing;
+
     @MockBean
     private HealthSurveyRepository repository;
 
@@ -117,10 +128,18 @@ class FormPromotionKafkaIntegrationTest {
         when(questionnaireService.getActiveQuestionnaire()).thenReturn(Optional.of(questionnaire));
         when(repository.save(any(HealthSurvey.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        healthSurveyService.submitSurvey(survey);
+        var parent = tracing.tracer.nextSpan().name("survey-request").start();
+        try (var scope = tracing.tracer.withSpan(parent)) {
+            healthSurveyService.submitSurvey(survey);
+        } finally { parent.end(); }
 
         ConsumerRecord<String, String> record = receiveSurveyEvent();
         assertEquals(TOPIC, record.topic());
+        var header = record.headers().lastHeader("traceparent");
+        assertTrue(header != null, "Kafka must transport W3C trace context");
+        String traceparent = new String(header.value(), StandardCharsets.UTF_8);
+        assertTrue(traceparent.matches("00-[0-9a-f]{32}-[0-9a-f]{16}-01"));
+        assertEquals(parent.context().traceId(), traceparent.split("-")[1]);
         assertEquals(anonymousId.toString(), record.key());
 
         JsonNode event = new ObjectMapper().readTree(record.value());
@@ -160,8 +179,13 @@ class FormPromotionKafkaIntegrationTest {
     @SpringBootConfiguration
     @EnableKafka
     @ImportAutoConfiguration(KafkaAutoConfiguration.class)
-    @Import({HealthSurveyService.class, SymptomMapper.class, SurveyListener.class})
+    @Import({HealthSurveyService.class, FormEventPublisher.class, SymptomMapper.class, SurveyListener.class,
+            FormObservabilityConfiguration.class})
     static class KafkaTestApplication {
+        @Bean(destroyMethod = "close") TracingFixture tracing() { return new TracingFixture(); }
+        @Bean ObservationRegistry observationRegistry(TracingFixture fixture) { return fixture.observations; }
+        @Bean Tracer tracer(TracingFixture fixture) { return fixture.tracer; }
+        @Bean MeterRegistry meters() { return new SimpleMeterRegistry(); }
 
         @Bean
         NewTopic surveySubmittedTopic() {
