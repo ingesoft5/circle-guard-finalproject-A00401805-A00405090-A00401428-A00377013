@@ -19,6 +19,26 @@ patches:
       - op: replace
         path: /spec/rules/0/host
         value: stage.circleguard.local
+  # No Form autoscaler in stage: an operator may keep it at zero between validations.
+  - target:
+      group: autoscaling
+      version: v2
+      kind: HorizontalPodAutoscaler
+      name: form
+    patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: form
+      $patch: delete
+  # Applying stage during an authorized promotion starts Form for validation.
+  - target:
+      kind: Deployment
+      name: form
+    patch: |-
+      - op: add
+        path: /spec/replicas
+        value: 1
 
 secretGenerator:
   - name: cg-secrets

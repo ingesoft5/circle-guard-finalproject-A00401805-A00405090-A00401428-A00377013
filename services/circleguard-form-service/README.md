@@ -3,6 +3,8 @@
 
 Este documento explica el funcionamiento, la estructura y las dependencias actuales de `circleguard-form-service` para el diagnóstico de HU-FORM-01.
 
+El despliegue Kubernetes, la persistencia de certificados y la evidencia pendiente de HU-FORM-05 se describen en [el informe de la HU](../../docs/informe/HU-FORM-05.md).
+
 ## Observabilidad — HU-FORM-06
 
 Form expone `/actuator/prometheus`, observa publicaciones Kafka y permite exportar trazas OpenTelemetry mediante configuración externa. La exportación de trazas está desactivada por defecto hasta disponer del backend compartido.
