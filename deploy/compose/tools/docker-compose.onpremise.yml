@@ -11,7 +11,7 @@ services:
       - .env.onpremise
     environment:
       CASC_JENKINS_CONFIG: /var/jenkins_home/cac/jenkins.yml
-      JAVA_OPTS: "-Xms512m -Xmx2g"
+      JAVA_OPTS: "-Xms512m -Xmx3g"
       TESTCONTAINERS_HOST_OVERRIDE: "10.147.20.67"
       TESTCONTAINERS_RYUK_DISABLED: "true"
       KUBECONFIG: /var/jenkins_home/.kube/config
@@ -27,7 +27,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
-    mem_limit: 4g
+    mem_limit: 6g
+  # margen para 2-3 builds gradle/trivy paralelos; k3d y cg-tools comparten el host de 31 GiB
 
   smee-client:
     build: ./smee-client
