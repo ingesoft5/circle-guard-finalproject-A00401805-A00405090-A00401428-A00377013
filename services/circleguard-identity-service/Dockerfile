@@ -1,5 +1,13 @@
 # CG-DOC: Immutable multi-stage container image for the identity service.
-FROM eclipse-temurin:21-jdk AS build
+# CG-DOC: Las imágenes base se sobreescriben desde Jenkins con --build-arg para usar
+# el mirror de Nexus (circleguard-base/*) en el host on-premise (sin IPv6 a Docker Hub).
+ARG GRADLE_IMAGE=gradle:8.14-jdk21
+ARG JDK_IMAGE=eclipse-temurin:21-jdk
+ARG ALPINE_IMAGE=eclipse-temurin:21-jre-alpine
+ARG JAMMY_IMAGE=eclipse-temurin:21-jre-jammy
+ARG NODE_IMAGE=node:22-alpine
+ARG WEB_IMAGE=nginxinc/nginx-unprivileged:1.27-alpine
+FROM ${JDK_IMAGE} AS build
 WORKDIR /workspace
 COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts gradle.properties lombok.config ./
 COPY gradle ./gradle
@@ -7,7 +15,7 @@ COPY services ./services
 RUN chmod +x gradlew \
     && ./gradlew :services:circleguard-identity-service:bootJar --no-daemon
 
-FROM eclipse-temurin:21-jre-alpine
+FROM ${ALPINE_IMAGE}
 ARG VERSION=dev
 ARG GIT_COMMIT=unknown
 ARG SOURCE_URL=unknown

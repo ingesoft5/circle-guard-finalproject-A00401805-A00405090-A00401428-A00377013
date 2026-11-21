@@ -8,6 +8,7 @@ Semantic Versioning.
 
 ### Changed
 
+- Los Dockerfiles toman las imágenes base desde `$NEXUS_REGISTRY/circleguard-base` mediante `--build-arg`; el host on-premise no tiene ruta IPv6 al CDN de Docker Hub. Sembrar con `./infra/onpremise/seed-base-images.sh`. Se retiró el pin por digest del Dockerfile de `form` porque el mirror publica sus propios digests.
 - **File service (FS-CI-01)**: Implementado `loadFile` real y endpoint de descarga `GET /api/v1/files/download/{filename}`. Cobertura JaCoCo 85.71% (líneas), umbral 60% cumplido.
 - **File service (HU-FILE-03)**: el pipeline omite la republicación de artefactos Maven e imágenes Docker cuando el TAG semver ya existe, conservando el digest real; la política de inmutabilidad, si se activa en Nexus, aplica solo a `X.Y.Z` y nunca a `latest`, `dev` o `staging`. Documentado en `docs/informe/HU-FILE-03.md` y `docs/infra/migracion-onpremise.md` §3.7.
 - **Jenkins multibranch**: eliminado el filtro de ramas por convención de nombre. GitHub es la fuente de verdad: se indexan todas las ramas vivas y las borradas tras merge en `main` se limpian de inmediato con el evento `delete` del webhook y `orphanedItemStrategy` 0/0. Documentado en `docs/infra/migracion-onpremise.md` §3.8.

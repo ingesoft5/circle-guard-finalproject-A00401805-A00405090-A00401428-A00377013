@@ -6,6 +6,8 @@ package com.circleguard.auth.service;
 import com.circleguard.auth.model.*;
 import com.circleguard.auth.repository.LocalUserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,22 +18,24 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(CustomUserDetailsService.class);
+
     private final LocalUserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println("Looking up user in database: " + username);
+        log.debug("Looking up local user in database: username={}", username);
         LocalUser user = userRepository.findByUsername(username)
                 .orElseThrow(() -> {
-                    System.err.println("User NOT found in database: " + username);
+                    log.warn("Local user not found in database: username={}", username);
                     return new UsernameNotFoundException("User not found: " + username);
                 });
 
-        System.out.println("User found: " + user.getUsername() + ", active: " + user.getIsActive());
+        log.debug("Local user found: username={}, active={}", user.getUsername(), user.getIsActive());
 
         if (!user.getIsActive()) {
-            System.err.println("User account is DISABLED: " + username);
+            log.warn("Local user account is disabled: username={}", username);
             throw new DisabledException("User account is disabled");
         }
 

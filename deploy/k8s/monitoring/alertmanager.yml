@@ -1,0 +1,131 @@
+# CG-DOC: Alertmanager deployment and Prometheus alert rules mounted into /etc/prometheus/rules.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-prometheus-alerts
+  namespace: monitoring
+  labels:
+    app: auth
+    app.kubernetes.io/part-of: circleguard
+data:
+  auth-alerts.rules.yml: |
+    groups:
+      - name: circleguard.auth.availability
+        interval: 30s
+        rules:
+          - alert: AuthServiceDown
+            expr: up{app="auth"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: auth
+            annotations:
+              summary: "CircleGuard auth-service is DOWN"
+              description: "The auth-service instance ({{ $labels.instance }} in namespace {{ $labels.namespace }}) has been unreachable for more than 1 minute."
+
+      - name: circleguard.auth.security
+        interval: 30s
+        rules:
+          - alert: AuthHighUnauthorizedRate
+            expr: rate(circleguard_auth_login_attempts_total{result="failure"}[5m]) > 0.5
+            for: 2m
+            labels:
+              severity: warning
+              service: auth
+            annotations:
+              summary: "High rate of failed login attempts (HTTP 401) in auth-service"
+              description: "More than 0.5 failed authentication attempts per second detected over the last 5 minutes on auth-service."
+
+      - name: circleguard.auth.resilience
+        interval: 30s
+        rules:
+          - alert: AuthIdentityCircuitBreakerOpen
+            expr: resilience4j_circuitbreaker_state{name="identityClient", state="open"} == 1
+            for: 30s
+            labels:
+              severity: critical
+              service: auth
+            annotations:
+              summary: "Circuit Breaker identityClient is OPEN in auth-service"
+              description: "The Resilience4j circuit breaker towards identity-service has remained in OPEN state for at least 30 seconds."
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      group_by: ['alertname', 'namespace', 'service']
+      group_wait: 15s
+      group_interval: 2m
+      repeat_interval: 1h
+      receiver: 'default-receiver'
+
+    receivers:
+      - name: 'default-receiver'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app: alertmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          args:
+            - "--config.file=/etc/alertmanager/alertmanager.yml"
+            - "--storage.path=/alertmanager"
+          ports:
+            - containerPort: 9093
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9093
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: config
+          configMap:
+            name: alertmanager-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app: alertmanager
+spec:
+  selector:
+    app: alertmanager
+  ports:
+    - name: http
+      port: 9093
+      targetPort: 9093
