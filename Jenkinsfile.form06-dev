@@ -1,0 +1,139 @@
+// Opt-in, Form-only prerelease validation. This file is not the shared pipeline.
+// A separate, explicitly approved Jenkins job must point to this script.
+@Library('circleguard@main') _
+
+def formService = [:]
+
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    parameters {
+        string(name: 'FORM_HU6_TAG', defaultValue: '',
+               description: 'Unused semantic prerelease tag, for example 1.4.1-hu6.1')
+    }
+
+    stages {
+        stage('Checkout and scope') {
+            steps {
+                script {
+                    ci.checkoutRepo()
+                    def expectedBranch = 'feat/HU-FORM-06-observabilidad-form'
+                    def actualBranch = env.BRANCH_NAME ?: (env.GIT_BRANCH ?: '').replaceFirst('^origin/', '')
+                    if (actualBranch != expectedBranch) {
+                        error "This job only accepts ${expectedBranch}; found ${actualBranch}"
+                    }
+                    def requested = (params.FORM_HU6_TAG ?: '').trim()
+                    if (!(requested ==~ /\d+\.\d+\.\d+-hu6\.\d+/)) {
+                        error 'FORM_HU6_TAG must be an unused X.Y.Z-hu6.N semantic prerelease'
+                    }
+                    env.TAG = requested
+                    env.NEXUS_REGISTRY = sh(script: 'printenv NEXUS_REGISTRY', returnStdout: true).trim()
+                    env.NEXUS_URL = sh(script: 'printenv NEXUS_URL', returnStdout: true).trim()
+                    if (!env.NEXUS_REGISTRY || !env.NEXUS_URL) {
+                        error 'Nexus environment is missing on the Jenkins agent'
+                    }
+                    formService = ciServices.catalog().find { it.short == 'form' }
+                    if (!formService || !formService.jacoco || !formService.integration) {
+                        error 'The Form catalog does not declare JaCoCo and integration gates'
+                    }
+                    withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+                            usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+                        def status = sh(script: """
+                            set +x
+                            curl --silent --output /dev/null --write-out '%{http_code}' \
+                              -u \"\$NEXUS_USER:\$NEXUS_PASSWORD\" \
+                              -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' \
+                              \"http://${env.NEXUS_REGISTRY}/v2/circleguard-docker/form/manifests/${env.TAG}\"
+                        """, returnStdout: true).trim()
+                        if (status != '404') {
+                            error "Reserved Form image tag is not confirmed unused (HTTP ${status})"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Form unit tests and JaCoCo') {
+            steps { script { ci.unitTest(formService) } }
+        }
+
+        stage('Form build and Sonar quality gate') {
+            steps {
+                script {
+                    ci.build(formService)
+                    ci.sonarScan(formService)
+                    ci.qualityGate(formService)
+                }
+            }
+        }
+
+        stage('Form integration tests') {
+            steps { script { ci.integrationTest(formService) } }
+        }
+
+        stage('Dev overlay security gate') {
+            steps {
+                script {
+                    ci.ensureTrivyBinary()
+                    sh '''
+                        set -eu
+                        export PATH="/usr/local/bin:${WORKSPACE}/.trivy-bin:${PATH}"
+                        mkdir -p build/reports/security
+                        trivy config --severity CRITICAL --exit-code 1 \
+                          deploy/k8s/form06-dev/ > build/reports/security/trivy-form06-dev.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Package and publish Form image only') {
+            steps {
+                script {
+                    ci.packageService(formService)
+                    def digest = ci.dockerBuildPush(formService, env.TAG)
+                    if (!digest || !digest.contains('sha256:')) {
+                        error 'Nexus did not return a usable image digest'
+                    }
+                    echo "Form prerelease image digest: ${digest}"
+                }
+            }
+        }
+
+        stage('Image security gate') {
+            steps {
+                script {
+                    ci.ensureTrivyBinary()
+                    sh """
+                        set -eu
+                        export PATH=\"/usr/local/bin:\${WORKSPACE}/.trivy-bin:\${PATH}\"
+                        trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 \
+                          \"${env.NEXUS_REGISTRY}/circleguard-docker/form:${env.TAG}\" \
+                          > build/reports/security/trivy-form-image.txt
+                    """
+                }
+            }
+        }
+
+        stage('No deployment') {
+            steps {
+                echo 'Image validation complete. Kubernetes deployment needs a separate approval.'
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                if (formService) {
+                    ci.archive([formService])
+                }
+            }
+        }
+    }
+}

@@ -4,6 +4,16 @@ This opt-in overlay reuses the monitoring stack from PR #93. It has not been
 deployed. It is deliberately separate from the normal dev/stage/prod overlays
 and the shared Jenkinsfile.
 
+`Jenkinsfile.form06-dev` is a separate, dormant pipeline script in the repo root.
+It restricts checkout to this feature branch, requires a unique `X.Y.Z-hu6.N`
+tag, runs Form unit/JaCoCo, Sonar gate, integration, IaC scan, packaging and
+image build through the existing Shared Library, then scans the image. It
+never deploys. A failed image scan can leave an unused image in Nexus because
+the current `ci.dockerBuildPush` publishes before that scan; the image must
+not be selected for the release generator or Kubernetes unless the entire
+Jenkins run succeeds. Creating or configuring the Jenkins job requires
+separate approval.
+
 ## Isolation and impact
 
 - `canary/` creates only `Service/cg-dev/form-hu6` and
