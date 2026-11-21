@@ -319,6 +319,65 @@ def publishGitHubRelease(String version) {
     }
 }
 
+// ---------- Idempotencia de publicación -------------------------------------------
+// Un rerun del mismo commit conserva el TAG. Los destinos inmutables (Nexus) y
+// los mutables (Docker registry) deben omitir lo que ya existe, sin fallar ni
+// duplicar evidencia.
+def nexusArtifactExists(String artifact, String version) {
+    def repository = version.endsWith('SNAPSHOT') ? 'maven-snapshots' : 'maven-releases'
+    def count = 0
+    withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+            usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+        def raw = sh(
+                script: """
+                    curl -fsS -u \$NEXUS_USER:\$NEXUS_PASSWORD \
+                      "${env.NEXUS_URL}/service/rest/v1/search/assets?repository=${repository}&maven.groupId=com.circleguard&maven.artifactId=${artifact}&maven.version=${version}" \
+                      | jq '.items | length'
+                """,
+                returnStdout: true
+        ).trim()
+        count = raw ? raw.toInteger() : 0
+    }
+    return count > 0
+}
+
+def dockerImageExists(String repository, String tag) {
+    def status = ''
+    withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+            usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+        status = sh(
+                script: """
+                    set +e
+                    curl -fsS -o /dev/null \
+                      -u \$NEXUS_USER:\$NEXUS_PASSWORD \
+                      -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' \
+                      "http://${env.NEXUS_REGISTRY}/v2/${repository}/manifests/${tag}"
+                    echo \$?
+                """,
+                returnStdout: true
+        ).trim()
+    }
+    return status == '0'
+}
+
+def registryDigest(String repository, String tag) {
+    def digest = ''
+    withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+            usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+        digest = sh(
+                script: """
+                    curl -fsSI -u \$NEXUS_USER:\$NEXUS_PASSWORD \
+                      -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' \
+                      "http://${env.NEXUS_REGISTRY}/v2/${repository}/manifests/${tag}" \
+                      | tr -d '\\r' \
+                      | awk -F': ' 'tolower(\$1) == "docker-content-digest" { print \$2 }'
+                """,
+                returnStdout: true
+        ).trim()
+    }
+    return digest
+}
+
 pipeline {
     agent any
 
@@ -361,7 +420,12 @@ pipeline {
         stage('Resolve services') {
             steps {
                 script {
-                    loadEnvironment('NEXUS_REGISTRY', 'TOOLS_IP', 'GITHUB_OWNER', 'GITHUB_REPO')
+                    loadEnvironment('NEXUS_REGISTRY', 'NEXUS_URL', 'TOOLS_IP', 'GITHUB_OWNER', 'GITHUB_REPO')
+
+                    // Un rerun no debe duplicar enlaces ni digests en los artefactos.
+                    writeFile file: 'sonar-links.txt', text: ''
+                    writeFile file: 'image-digest.txt', text: ''
+
                     if (params.ROLLBACK_TAG?.trim()) {
                         env.TAG = normalizeSemver(params.ROLLBACK_TAG.trim())
                         services = []
@@ -506,7 +570,13 @@ pipeline {
             }
             steps {
                 script {
-                    services.each { service -> ci.publish(service) }
+                    services.each { service ->
+                        if (service.publish && nexusArtifactExists(service.name, env.TAG)) {
+                            echo "Publicación omitida: ${service.name}:${env.TAG} ya existe en Nexus (reintento idempotente)."
+                        } else {
+                            ci.publish(service)
+                        }
+                    }
                 }
             }
         }
@@ -520,21 +590,23 @@ pipeline {
             }
             steps {
                 script {
-                    def catalogOk = sh(
-                        script: "curl -fsS http://${env.NEXUS_REGISTRY}/v2/_catalog | grep -q circleguard-base",
-                        returnStatus: true
-                    )
-                    if (catalogOk != 0) {
-                        error 'Faltan imágenes base en Nexus: ejecuta ./infra/onpremise/seed-base-images.sh en el host on-premise.'
-                    }
-                    // Todo servicio con Dockerfile se empaqueta, no solo el gateway.
+                    // Preserve idempotent retries: existing images need no base-image catalog lookup.
+                    // New builds still use the Nexus mirror through ci.dockerBuildPush.
                     def images = services.findAll { it.docker }
                     if (!images) {
                         echo 'Ningún servicio seleccionado publica imagen.'
                     }
                     images.each { service ->
-                        def digest = ci.dockerBuildPush(service, env.TAG)
-                        echo "Digest publicado (${service.short}): ${digest}"
+                        def repository = "circleguard-docker/${service.short}"
+                        if (dockerImageExists(repository, env.TAG)) {
+                            def digest = registryDigest(repository, env.TAG) ?: 'sha256:<desconocido>'
+                            def commit = env.GIT_COMMIT ?: 'unknown'
+                            echo "Docker omitido: ${env.NEXUS_REGISTRY}/${repository}:${env.TAG} ya publicado (${digest})."
+                            sh "printf '%s\\n%s\\ncommit=%s\\n' '${env.NEXUS_REGISTRY}/${repository}:${env.TAG}' '${digest}' '${commit}' >> image-digest.txt"
+                        } else {
+                            def digest = ci.dockerBuildPush(service, env.TAG)
+                            echo "Digest publicado (${service.short}): ${digest}"
+                        }
                     }
                 }
             }
@@ -549,8 +621,16 @@ pipeline {
             }
             steps {
                 script {
-                    def digest = dockerBuildPushClientLocal(env.TAG)
-                    echo "Digest publicado (web): ${digest}"
+                    def repository = 'circleguard-docker/web'
+                    if (dockerImageExists(repository, env.TAG)) {
+                        def digest = registryDigest(repository, env.TAG) ?: 'sha256:<desconocido>'
+                        def commit = env.GIT_COMMIT ?: 'unknown'
+                        echo "Docker client omitido: ${env.NEXUS_REGISTRY}/${repository}:${env.TAG} ya publicado (${digest})."
+                        sh "printf '%s\\n%s\\ncommit=%s\\n' '${env.NEXUS_REGISTRY}/${repository}:${env.TAG}' '${digest}' '${commit}' >> image-digest.txt"
+                    } else {
+                        def digest = dockerBuildPushClientLocal(env.TAG)
+                        echo "Digest publicado (web): ${digest}"
+                    }
                 }
             }
         }
