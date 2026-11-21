@@ -10,7 +10,7 @@
 |---|---|---|
 | Actuator, Micrometer y Prometheus | Parcial | Registro y endpoint implementados y probados sin PostgreSQL/Kafka. Falta desplegar esta versión y comprobar el scrape real. |
 | Grafana y logs centralizados | Parcial | Panel, montajes Kustomize y logs operativos correlacionables preparados. Faltan activación, panel con datos y colector central. |
-| OpenTelemetry y Kafka | Parcial | W3C y exportador OTLP con filtro de privacidad implementados. Prueba con KafkaTemplate/MockProducer pasa. Broker real pendiente por Docker local no disponible. |
+| OpenTelemetry y Kafka | Parcial | W3C y exportador OTLP con filtro de privacidad implementados. Pasan las pruebas con KafkaTemplate/MockProducer y con broker Kafka real temporal, incluida la recepción de `traceparent`. Falta evidencia desplegada y la traza completa hasta Notification. |
 | Form → Promotion → Notification | Pendiente | Existe el flujo funcional, pero falta instrumentación coordinada y una traza completa en Jaeger. La integración actual termina en Promotion. |
 | Alerta en Alertmanager | Parcial | Regla y pruebas promtool pasan. Faltan carga, disparo controlado, entrega al receptor y recuperación real. |
 | Privacidad | Parcial | Casos automatizados de logs y spans propios pasan. Faltan revisión desplegada y saneamiento de los servicios relacionados. |
@@ -65,13 +65,15 @@ Ver los [componentes de Form](../../deploy/k8s/components/form-observability/REA
 | Publicación de ambos eventos | PASS: éxito confirmado, fallo síncrono/asíncrono y rechazo de tipos arbitrarios. |
 | W3C con KafkaTemplate real/MockProducer | PASS: header válido, span hijo con igual trace ID, clave/cuerpo conservados. |
 | Privacidad | PASS para casos automatizados de logs propios y atributos/eventos sensibles en spans. |
-| `integrationTest` | BLOQUEADA: dos errores de inicialización de Testcontainers porque Docker Engine local no está accesible. No se verificó broker/PostgreSQL real. |
+| `integrationTest` | PASS tras iniciar Docker Desktop: dos pruebas, cero fallos y cero omitidas. Adjuntos utiliza PostgreSQL temporal real; Form–Promotion utiliza Kafka temporal real y verifica `traceparent`, con persistencia y HealthStatusService simulados. |
 | Kustomize dev/stage/prod con componente | PASS en copia temporal con secretos ficticios; solo cambian anotaciones y ambiente de Form. |
 | Monitoring con #93 | PASS: reglas/panel montados y ConfigMaps resueltos; tres servidores compartidos conservados. |
 | Panel Grafana | PASS JSON: seis paneles, IDs únicos y filtros; visualización real pendiente. |
 | Promtool 2.51.2 | PASS: regla válida, disparo, recuperación, ausencia de errores y exclusión de stage. |
 
 Promtool fue un binario temporal oficial comprobado contra `sha256sums.txt`; no se agregó al repositorio. No se desplegó, reinició ni modificó ningún recurso del servidor.
+
+La primera ejecución de integración quedó bloqueada porque Docker Engine no estaba disponible. Después de iniciar Docker Desktop, se repitió `integrationTest` y finalizó con `BUILD SUCCESSFUL`. Los XML de `AttachmentControllerTest` y `FormPromotionKafkaIntegrationTest` registran una prueba correcta cada uno. Esta evidencia sustituye el bloqueo local anterior; no prueba una traza distribuida de los tres servicios desplegados.
 
 ### Comandos reproducibles desde la raíz
 
@@ -80,6 +82,7 @@ Promtool fue un binario temporal oficial comprobado contra `sha256sums.txt`; no 
 # Requiere Docker Engine accesible:
 .\gradlew.bat :services:circleguard-form-service:integrationTest --console=plain
 Start-Process 'services/circleguard-form-service/build/reports/tests/test/index.html'
+Start-Process 'services/circleguard-form-service/build/reports/tests/integrationTest/index.html'
 Start-Process 'services/circleguard-form-service/build/reports/jacoco/test/html/index.html'
 promtool check rules deploy/k8s/components/form-observability/monitoring/form-alerts.yml
 promtool test rules deploy/k8s/components/form-observability/monitoring/form-alerts.test.yml
