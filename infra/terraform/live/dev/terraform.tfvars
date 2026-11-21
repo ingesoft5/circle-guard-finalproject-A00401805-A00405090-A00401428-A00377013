@@ -1,0 +1,14 @@
+# CG-DOC: Non-secret parameter values for the dev environment.
+env                = "dev"
+namespace          = "cg-dev"
+obs_namespace      = "cg-obs-dev"
+cluster_name       = "circleguard-dev"
+agents             = 1
+k3s_version        = "v1.35.5+k3s1"
+kube_context       = "k3d-circleguard-dev"
+file_bucket_name   = "circleguard-files-dev"
+backup_bucket_name = "circleguard-backups-dev"
+pvc_size           = "10Gi"
+registry_size      = "5Gi"
+prometheus_version = "61.7.0"
+loki_version       = "2.17.4"
