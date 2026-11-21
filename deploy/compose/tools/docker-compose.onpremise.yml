@@ -11,7 +11,10 @@ services:
       - .env.onpremise
     environment:
       CASC_JENKINS_CONFIG: /var/jenkins_home/cac/jenkins.yml
-      JAVA_OPTS: "-Xms512m -Xmx3g"
+      # JAVA_OPTS queda exportado y cada build de gradlew lo hereda (gradlew evalúa
+  # $JAVA_OPTS para su JVM); el heap del controller va aparte en JENKINS_JAVA_OPTS.
+  JAVA_OPTS: ""
+  JENKINS_JAVA_OPTS: "-Xms512m -Xmx3g"
       TESTCONTAINERS_HOST_OVERRIDE: "10.147.20.67"
       TESTCONTAINERS_RYUK_DISABLED: "true"
       KUBECONFIG: /var/jenkins_home/.kube/config
@@ -27,8 +30,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
-    mem_limit: 6g
-  # margen para 2-3 builds gradle/trivy paralelos; k3d y cg-tools comparten el host de 31 GiB
+    # 4 executors: cada build corre gradle+sonar+trivy dentro de este cgroup;
+  # 8g cubre el peor caso (revisar free -h antes de recrear con dev+stage arriba).
+  mem_limit: 8g
 
   smee-client:
     build: ./smee-client
