@@ -221,6 +221,15 @@ Si el host no tiene salida a internet, reutiliza el provider AWS ya cacheado en 
 terraform init -plugin-dir=../bootstrap/.terraform/providers
 ```
 
+Si el bucket o la tabla ya existen porque se aplicó el bootstrap anterior, impórtalos en vez de
+crearlos y vuelve a ejecutar `terraform apply`:
+
+```bash
+terraform import aws_s3_bucket.tfstate "$TF_STATE_BUCKET"
+terraform import aws_s3_bucket_versioning.tfstate "$TF_STATE_BUCKET"
+terraform import aws_dynamodb_table.state_lock "$TF_LOCK_TABLE"
+```
+
 3. Verificar idempotencia (debe devolver `0` = sin cambios) y ver los nombres:
 
 ```bash
