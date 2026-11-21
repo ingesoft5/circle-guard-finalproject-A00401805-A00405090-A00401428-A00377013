@@ -8,7 +8,7 @@ resources:
   - ingress.yml
   - hpa.yml
   - auth-alerts.yml
-  - identity-alerts.yml
+  - promotion-alerts.yml
 
 commonLabels:
   app.kubernetes.io/part-of: circleguard

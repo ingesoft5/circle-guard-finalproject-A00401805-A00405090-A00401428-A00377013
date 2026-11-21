@@ -51,6 +51,7 @@ data:
 
     rule_files:
       - /etc/prometheus/rules/*.yml
+      - /etc/prometheus/rules/*/*.yml
 
     scrape_configs:
       - job_name: 'circleguard-services'
@@ -118,6 +119,8 @@ spec:
               mountPath: /etc/prometheus
             - name: alert-rules
               mountPath: /etc/prometheus/rules
+            - name: promotion-alert-rules
+              mountPath: /etc/prometheus/rules/promotion
             - name: storage
               mountPath: /prometheus
           readinessProbe:
@@ -145,6 +148,9 @@ spec:
         - name: alert-rules
           configMap:
             name: auth-prometheus-alerts
+        - name: promotion-alert-rules
+          configMap:
+            name: promotion-prometheus-alerts
         - name: storage
           emptyDir: {}
 ---

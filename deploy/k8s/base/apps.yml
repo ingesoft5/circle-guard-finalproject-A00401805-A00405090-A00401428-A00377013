@@ -218,7 +218,6 @@ metadata:
   labels:
     app: promotion
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: promotion
@@ -226,6 +225,10 @@ spec:
     metadata:
       labels:
         app: promotion
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8088"
     spec:
       containers:
         - name: promotion
