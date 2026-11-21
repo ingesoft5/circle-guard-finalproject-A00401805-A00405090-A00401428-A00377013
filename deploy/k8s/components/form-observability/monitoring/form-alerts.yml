@@ -1,0 +1,13 @@
+groups:
+  - name: circleguard.form
+    interval: 30s
+    rules:
+      - alert: FormKafkaPublicationFailures
+        expr: sum by (namespace) (increase(circleguard_form_event_publications_total{app="form",namespace=~"cg-dev|cg-prod",result="failure"}[5m])) >= 3
+        for: 1m
+        labels:
+          severity: warning
+          service: form
+        annotations:
+          summary: Form Kafka publications are failing
+          description: At least three failed publications in five minutes, sustained for one minute. Check Form and Kafka health.

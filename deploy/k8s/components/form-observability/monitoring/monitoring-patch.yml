@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  template:
+    spec:
+      containers:
+        - name: prometheus
+          volumeMounts:
+            - name: form-alerts
+              mountPath: /etc/prometheus/rules/form-alerts.yml
+              subPath: form-alerts.yml
+              readOnly: true
+      volumes:
+        - name: form-alerts
+          configMap:
+            name: form-prometheus-alerts
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  template:
+    spec:
+      containers:
+        - name: grafana
+          volumeMounts:
+            - name: form-dashboard
+              mountPath: /var/lib/grafana/dashboards/form
+              readOnly: true
+      volumes:
+        - name: form-dashboard
+          configMap:
+            name: grafana-dashboard-form
