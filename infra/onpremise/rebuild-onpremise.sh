@@ -37,7 +37,7 @@ for key in "${KEYS[@]}"; do
       bash infra/bootstrap/configure-sonar-identity.sh
 done
 
-docker compose -f deploy/compose/tools/docker-compose.onpremise.yml config -q
-docker compose -f deploy/compose/tools/docker-compose.onpremise.yml up -d --remove-orphans
+docker compose -p cg-tools -f deploy/compose/tools/docker-compose.onpremise.yml config -q
+docker compose -p cg-tools -f deploy/compose/tools/docker-compose.onpremise.yml up -d --remove-orphans
 
 echo "Rebuild on-premise convergente completado: ${#KEYS[@]} proyectos SonarQube verificados."
