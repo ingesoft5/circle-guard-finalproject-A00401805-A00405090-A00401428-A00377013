@@ -2,6 +2,7 @@
 FROM jenkins/jenkins:lts-jdk21
 
 USER root
+# CG-DOC: Trivy is pinned to v0.70.0 because v0.58.1 has no published release assets.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        ca-certificates curl gnupg git jq unzip \
@@ -27,7 +28,7 @@ RUN apt-get update \
     && curl -fsSL "https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip" -o /tmp/terraform.zip \
     && unzip /tmp/terraform.zip -d /usr/local/bin \
     && rm -f /tmp/terraform.zip \
-    && curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v0.58.1/trivy_0.58.1_Linux-64bit.tar.gz" -o /tmp/trivy.tar.gz \
+    && curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v0.70.0/trivy_0.70.0_Linux-64bit.tar.gz" -o /tmp/trivy.tar.gz \
     && tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy \
     && rm -f /tmp/trivy.tar.gz \
     && terraform version \

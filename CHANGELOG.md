@@ -17,7 +17,7 @@ Semantic Versioning.
 ### Added
 
 - **E2.1 (Terraform)**: `infra/terraform/state-backend/` crea el bucket de MinIO con versioning y la tabla de DynamoDB Local con `LockID`; los tres ambientes usan `backend "s3" {}` con `backend.hcl` que incluye ambos endpoints y claves `platform/<env>/terraform.tfstate`. Runbook, diagramas y evidencia en `docs/infra/runbook.md`, `docs/diagramas/` y `docs/infra/evidencia/E2.1-terraform.md`.
-- **E2.3 (pipeline)**: el `Jenkinsfile` ejecuta `terraform init/validate/plan/apply` por ambiente con aprobación en prod y `Trivy` bloqueante sobre IaC; la imagen de Jenkins incluye Terraform 1.9.8 y Trivy 0.58.1.
+- **E2.3 (pipeline)**: el `Jenkinsfile` ejecuta `terraform init/validate/plan/apply` por ambiente con aprobación en prod y `Trivy` bloqueante sobre IaC; la imagen de Jenkins incluye Terraform 1.9.8 y Trivy 0.70.0.
 - `infra/onpremise/rebuild-onpremise.sh`: wrapper idempotente de un comando que valida el token de SonarQube, ejecuta el bootstrap on-premise, asegura todos los proyectos del catálogo de la Shared Library (incluido `circleguard-file-service`) y converge el stack `cg-tools`.
 - `docs/informe/HU-FILE-03.md` y `docs/informe/evidencia/HU-FILE-03/README.md`: cierre P1.4, decisión de idempotencia/semver e índice de evidencia de la HU-FILE-03 (issue #135).
 - Jenkins image now ships `kubectl` v1.31.2, `kustomize` v5.4.3 and `k3d` v5.9.0 so the pipeline drives the on-premise cluster directly.
