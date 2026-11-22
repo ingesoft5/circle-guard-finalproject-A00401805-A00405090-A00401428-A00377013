@@ -1,5 +1,5 @@
 // CG-DOC: Failure notifications through GitHub (PR/commit comment) plus the channels
-// required by the assignment (E1.5): Slack, Discord or email. GitHub is extra, not the
+// required by the assignment (E1.5): Slack or Discord. GitHub is extra, not the
 // only channel. The real failing stage comes from FAILED_STAGE, captured at stage entry
 // by the Jenkinsfile: in post.failure, Jenkins has already replaced STAGE_NAME with
 // "Declarative: Post Actions".
@@ -61,16 +61,8 @@ def notifyAll(String status, String text) {
             echo "Could not notify Discord: ${ex.message}"
         }
     }
-    if (env.EMAIL_RECIPIENTS?.trim()) {
-        try {
-            email(status, text)
-            sent = true
-        } catch (Exception ex) {
-            echo "Could not notify by email: ${ex.message}"
-        }
-    }
     if (!sent) {
-        echo 'No assignment notification channel configured (SLACK_WEBHOOK_URL, DISCORD_WEBHOOK_URL or EMAIL_RECIPIENTS); notification is incomplete.'
+        echo 'No assignment notification channel configured (SLACK_WEBHOOK_URL or DISCORD_WEBHOOK_URL); notification is incomplete.'
     }
 }
 
@@ -153,10 +145,4 @@ def discord(String status, String text) {
               --data @.ci-discord.json "$DISCORD_WEBHOOK_URL"
         '''
     }
-}
-
-// Sends the notification by email to EMAIL_RECIPIENTS (comma-separated).
-def email(String status, String text) {
-    def subject = status == 'success' ? 'CircleGuard: pipeline succeeded' : 'CircleGuard: pipeline failed'
-    mail to: env.EMAIL_RECIPIENTS.trim(), subject: subject, body: text
 }
