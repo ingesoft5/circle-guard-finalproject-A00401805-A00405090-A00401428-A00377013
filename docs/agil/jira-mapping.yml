@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "source": "Evidencia en docs/agil/backlog.md, docs/agil/IAG_REGISTRO.md, docs/arquitectura/ y titulos de PR. Solo se registran claves DCG con evidencia en el repositorio; no se inventan claves para HU sin mapear.",
+  "transitions": {
+    "opened": "In Progress",
+    "reopened": "In Progress",
+    "synchronize": "In Progress",
+    "ready_for_review": "In Review",
+    "closed_merged": "Done",
+    "closed_unmerged": "To Do"
+  },
+  "issues": {
+    "HU-AUTH-01": {"jira": "DCG-77", "aliases": ["HU-AUTH-1", "AUTH-01"]},
+    "HU-AUTH-02": {"jira": "DCG-78", "aliases": ["HU-AUTH-2", "AUTH-02"]},
+    "HU-AUTH-03": {"jira": "DCG-79", "aliases": ["HU-AUTH-3", "AUTH-03"]},
+    "HU-AUTH-04": {"jira": "DCG-80", "aliases": ["HU-AUTH-4", "AUTH-04"]},
+    "HU-AUTH-05": {"jira": "DCG-81", "aliases": ["HU-AUTH-5", "AUTH-05"], "subtasks": ["DCG-102", "DCG-103", "DCG-104", "DCG-105"]},
+    "HU-ID-04": {"jira": "DCG-85", "aliases": ["HU-ID-4", "ID-04"], "subtasks": ["DCG-118", "DCG-119", "DCG-120", "DCG-121"]},
+    "HU-ID-05": {"jira": "DCG-86", "aliases": ["HU-ID-5", "ID-05"], "subtasks": ["DCG-119", "DCG-120", "DCG-121", "DCG-122"]},
+    "HU-PROMO-01": {"jira": "DCG-304", "aliases": ["HU-PROMO-1", "PROMO-01"]},
+    "HU-PROMO-02": {"jira": "DCG-307", "aliases": ["HU-PROMO-2", "PROMO-02"]},
+    "HU-PROMO-03": {"jira": "DCG-308", "aliases": ["HU-PROMO-3", "PROMO-03"]},
+    "HU-PROMO-04": {"jira": "DCG-309", "aliases": ["HU-PROMO-4", "PROMO-04"], "subtasks": ["DCG-335", "DCG-336", "DCG-337", "DCG-338"]},
+    "HU-PROMO-05": {"jira": "DCG-311", "aliases": ["HU-PROMO-5", "PROMO-05"], "subtasks": ["DCG-335", "DCG-336", "DCG-337", "DCG-338", "DCG-339", "DCG-340", "DCG-341"]},
+    "HU-NOTIF-01": {"jira": "DCG-314", "aliases": ["HU-NOTIF-1", "NOTIF-01"]},
+    "HU-NOTIF-02": {"jira": "DCG-316", "aliases": ["HU-NOTIF-2", "NOTIF-02"]},
+    "HU-NOTIF-04": {"jira": "DCG-318", "aliases": ["HU-NOTIF-4", "NOTIF-04"], "subtasks": ["DCG-354", "DCG-355", "DCG-356", "DCG-357"]},
+    "HU-NOTIF-05": {"jira": "DCG-319", "aliases": ["HU-NOTIF-5", "NOTIF-05"], "subtasks": ["DCG-358", "DCG-360"]}
+  },
+  "unmapped": [
+    "HU-FILE-01..05", "HU-FORM-01..06", "HU-GATEWAY-01..05", "HU-GATEWAY-CICD-01",
+    "HU-INFRA-01..06", "HU-CICD-01..04", "HU-DASH-01..02", "HU-SONAR-01..02",
+    "HU-PIPELINE-01", "HU-EVIDENCIA-05", "HU-DOCS-06..07", "HU-SPRINT-00",
+    "P2-01..P2-10", "HU-ID-03", "HU-NOTIF-03"
+  ]
+}
