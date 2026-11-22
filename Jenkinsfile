@@ -38,7 +38,7 @@ def loadEnvironment(String... names) {
 // que necesita la entrega sin bloquear el build del PR.
 def enrichServices(List services) {
     def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form']
-    def covered = ['gateway', 'auth', 'identity', 'promotion', 'form']
+    def covered = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification']
     services.each { service ->
         service.docker = true
         service.deploy = deployable.contains(service.short)
