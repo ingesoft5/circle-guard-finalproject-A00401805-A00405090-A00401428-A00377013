@@ -33,6 +33,23 @@ resource "helm_release" "prometheus" {
     name  = "nodeExporter.enabled"
     value = var.node_exporter_enabled ? "true" : "false"
   }
+
+  dynamic "set" {
+    # CG-DOC: On the on-prem host Grafana's SQLite migrations can take ~10 min.
+    # The chart's default liveness probe (60s delay, 10 failures) kills Grafana
+    # mid-migration and puts it in CrashLoopBackOff. Relax the probes when the
+    # environment opts in so Helm --wait can complete successfully.
+    for_each = var.grafana_slow_start ? [
+      { name = "grafana.livenessProbe.initialDelaySeconds", value = "600" },
+      { name = "grafana.livenessProbe.failureThreshold", value = "30" },
+      { name = "grafana.readinessProbe.timeoutSeconds", value = "5" },
+      { name = "grafana.readinessProbe.failureThreshold", value = "30" },
+    ] : []
+    content {
+      name  = set.value.name
+      value = set.value.value
+    }
+  }
 }
 
 resource "helm_release" "loki" {

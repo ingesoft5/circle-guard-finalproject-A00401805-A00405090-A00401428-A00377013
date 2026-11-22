@@ -123,3 +123,9 @@ variable "node_exporter_enabled" {
   type        = bool
   default     = true
 }
+
+variable "grafana_slow_start" {
+  description = "CG-DOC: Relax Grafana probes on slow on-prem SQLite storage."
+  type        = bool
+  default     = false
+}

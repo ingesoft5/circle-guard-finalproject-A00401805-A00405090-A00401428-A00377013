@@ -13,5 +13,6 @@ registry_size         = "20Gi"
 prometheus_version    = "61.7.0"
 loki_version          = "2.10.3"
 node_exporter_enabled = false
+grafana_slow_start    = true
 ingress_port          = 30080
 force_destroy         = false

@@ -44,5 +44,6 @@ module "observability" {
   prometheus_version     = var.prometheus_version
   loki_version           = var.loki_version
   node_exporter_enabled  = var.node_exporter_enabled
+  grafana_slow_start     = var.grafana_slow_start
   depends_on             = [module.network]
 }

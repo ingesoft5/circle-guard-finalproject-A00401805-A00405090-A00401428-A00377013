@@ -255,6 +255,17 @@ done
 `plan -detailed-exitcode`: `0` = sin cambios, `2` = cambios pendientes, `1` = error.
 Para aplicar un ambiente: `terraform apply` dentro de `infra/terraform/envs/<env>`.
 
+Notas de observabilidad en el host on-prem:
+
+- `node_exporter_enabled` debe ser `true` en un solo ambiente del clúster compartido: el
+  DaemonSet fija `hostPort 9100` y un segundo ambiente deja los pods `Pending`.
+- `loki.isDefault=false` es obligatorio porque `kube-prometheus-stack` ya registra
+  Prometheus como datasource `default`; dos defaults impiden que Grafana arranque.
+- `grafana_slow_start=true` (usado en prod) relaja `livenessProbe.initialDelaySeconds`
+  a 600 y los umbrales de fallo de las sondas. En este host las migraciones SQLite de
+  Grafana pueden tardar ~10 min y la sonda por defecto reinicia el contenedor a mitad
+  de la migración, dejando el `helm_release` en `pending-install`.
+
 El apply es **en dos fases**: primero `terraform apply -target=module.compute` verifica el
 clúster compartido `cg` y su kubeconfig; después el plan/apply completo puede cargar el
 contexto `k3d-cg`. Si se omite la primera fase, el plan falla con
