@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: cg-prod
 
+components:
+  - ../../components/form-observability/app
+
 resources:
   - namespace.yml
   - ../../base

@@ -20,6 +20,11 @@ spring:
       password: ${SPRING_NEO4J_AUTHENTICATION_PASSWORD}
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      observation-enabled: ${PROMOTION_TRACING_ENABLED:false}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
       group-id: promotion-service-group
       auto-offset-reset: earliest
@@ -42,6 +47,15 @@ server:
   port: ${SERVER_PORT:8088}
 
 management:
+  tracing:
+    enabled: ${PROMOTION_TRACING_ENABLED:false}
+    sampling:
+      probability: ${PROMOTION_TRACING_SAMPLING_PROBABILITY:0.1}
+    propagation:
+      type: w3c
+  otlp:
+    tracing:
+      endpoint: ${PROMOTION_OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
   endpoints:
     web:
       exposure:

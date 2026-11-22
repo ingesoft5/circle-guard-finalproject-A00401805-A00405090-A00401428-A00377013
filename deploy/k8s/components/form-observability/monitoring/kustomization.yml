@@ -1,0 +1,14 @@
+# Extension of the shared monitoring stack from PR #93; creates no monitoring servers.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+configMapGenerator:
+  - name: form-prometheus-alerts
+    namespace: monitoring
+    files:
+      - form-alerts.yml
+  - name: grafana-dashboard-form
+    namespace: monitoring
+    files:
+      - form-overview.json
+patches:
+  - path: monitoring-patch.yml

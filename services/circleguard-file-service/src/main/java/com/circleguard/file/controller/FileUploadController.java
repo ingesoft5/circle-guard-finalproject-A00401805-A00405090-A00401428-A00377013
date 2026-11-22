@@ -4,6 +4,7 @@
 package com.circleguard.file.controller;
 
 import com.circleguard.file.service.FileStorage;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -18,12 +19,24 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class FileUploadController {
+    // CG-DOC: Upload counter tagged by result so Prometheus can alert on failures.
+    private static final String UPLOAD_METRIC = "circleguard_file_uploads_total";
+    private static final String TAG_RESULT = "result";
+
+    // CG-DOC: FileStorage is the port shared by the local and S3/MinIO adapters (HU-FILE-04).
     private final FileStorage storageService;
+    private final MeterRegistry meterRegistry;
 
     @PostMapping("/upload")
     public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
-        String filename = storageService.saveFile(file);
-        return ResponseEntity.ok(Map.of("filename", filename));
+        try {
+            String filename = storageService.saveFile(file);
+            meterRegistry.counter(UPLOAD_METRIC, TAG_RESULT, "success").increment();
+            return ResponseEntity.ok(Map.of("filename", filename));
+        } catch (RuntimeException e) {
+            meterRegistry.counter(UPLOAD_METRIC, TAG_RESULT, "failure").increment();
+            throw e;
+        }
     }
 
     @GetMapping("/download/{filename}")

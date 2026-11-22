@@ -4,7 +4,9 @@
 package com.circleguard.file.controller;
 
 import com.circleguard.file.service.FileStorage;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(FileUploadController.class)
+@Import(SimpleMeterRegistry.class)
 class FileUploadControllerTest {
 
     @Autowired
@@ -27,6 +30,9 @@ class FileUploadControllerTest {
 
     @MockBean
     private FileStorage storageService;
+
+    @Autowired
+    private SimpleMeterRegistry meterRegistry;
 
     @Test
     void shouldUploadFileSuccessfully() throws Exception {
@@ -38,6 +44,8 @@ class FileUploadControllerTest {
         mockMvc.perform(multipart("/api/v1/files/upload").file(file))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.filename").value("certificate.pdf"));
+        org.junit.jupiter.api.Assertions.assertEquals(1.0,
+                meterRegistry.counter("circleguard_file_uploads_total", "result", "success").count());
     }
 
     @Test
@@ -73,6 +81,21 @@ class FileUploadControllerTest {
         mockMvc.perform(multipart("/api/v1/files/upload").file(file))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.filename").value("uuid_empty.pdf"));
+        org.junit.jupiter.api.Assertions.assertEquals(2.0,
+                meterRegistry.counter("circleguard_file_uploads_total", "result", "success").count());
+    }
+
+    @Test
+    void shouldCountFailedUpload() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "broken.pdf", "application/pdf", "mock content".getBytes());
+        Mockito.when(storageService.saveFile(Mockito.any())).thenThrow(new RuntimeException("storage error"));
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                jakarta.servlet.ServletException.class,
+                () -> mockMvc.perform(multipart("/api/v1/files/upload").file(file)));
+        org.junit.jupiter.api.Assertions.assertEquals(1.0,
+                meterRegistry.counter("circleguard_file_uploads_total", "result", "failure").count());
     }
 
     @Test

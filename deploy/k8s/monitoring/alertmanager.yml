@@ -143,6 +143,46 @@ data:
               summary: "Promotion spike detected in promotion-service"
               description: "More than 5 successful promotion encounters per second sustained for 3 minutes — alerta de pico de promociones, revisar capacidad del HPA y de Neo4j."
 ---
+# CG-DOC: Duplicate of deploy/k8s/base/notification-alerts.yml for the monitoring namespace.
+# CircleGuard's Prometheus runs in `monitoring`, so rules are duplicated here and mounted
+# into /etc/prometheus/rules/notification (see prometheus.yml volumes).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-prometheus-alerts
+  namespace: monitoring
+  labels:
+    app: notification
+    app.kubernetes.io/part-of: circleguard
+data:
+  notification-alerts.rules.yml: |
+    groups:
+      - name: circleguard.notification.availability
+        interval: 30s
+        rules:
+          - alert: NotificationServiceDown
+            expr: up{app="notification"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: notification
+            annotations:
+              summary: "CircleGuard notification-service is DOWN"
+              description: "The notification-service instance ({{ $labels.instance }} in namespace {{ $labels.namespace }}) has been unreachable for more than 1 minute."
+
+      - name: circleguard.notification.delivery
+        interval: 30s
+        rules:
+          - alert: NotificationDeliveryFailures
+            expr: rate(circleguard_notification_deliveries_total{result="failure"}[5m]) > 0.2
+            for: 2m
+            labels:
+              severity: warning
+              service: notification
+            annotations:
+              summary: "Failed notification deliveries in notification-service"
+              description: "More than 0.2 failed deliveries per second over the last 5 minutes on notification-service (channels email/sms/push/lms). Revisar credenciales del canal (SMTP, Twilio) y la salud de sus proveedores."
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:

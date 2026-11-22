@@ -24,7 +24,7 @@ public class ExposureNotificationListener {
      */
     @KafkaListener(topics = "promotion.status.changed", groupId = "notification-group")
     public void handleStatusChange(String eventJson) {
-        log.info("Received health status change event: {}", eventJson);
+        log.info("Received health status change event");
         try {
             JsonNode node = objectMapper.readTree(eventJson);
             String userId = node.path("anonymousId").asText("unknown");
@@ -35,7 +35,7 @@ public class ExposureNotificationListener {
                 lmsService.syncRemoteAttendance(userId, status);
             }
         } catch (Exception e) {
-            log.error("Failed to parse health status change event: {}", e.getMessage());
+            log.error("Failed to process health status change event ({})", e.getClass().getSimpleName());
         }
     }
 }
