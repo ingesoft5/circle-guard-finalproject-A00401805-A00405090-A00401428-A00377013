@@ -1,0 +1,21 @@
+# CG-DOC: Test profile for file-service integration tests backed by an ephemeral MinIO container.
+aws:
+  s3:
+    endpoint: ${AWS_S3_ENDPOINT:http://localhost:9000}
+    bucket: ${AWS_S3_BUCKET:circleguard-files}
+    region: ${AWS_REGION:us-east-1}
+    path-style-access-enabled: ${AWS_S3_PATH_STYLE_ACCESS:true}
+    access-key: ${AWS_ACCESS_KEY_ID:circleguard_test}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:circleguard_test_secret}
+
+# Activates the real S3/MinIO adapter for the whole Spring context under test.
+file:
+  storage:
+    mode: s3
+    path: ${FILE_STORAGE_PATH:build/integration-test/uploads}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

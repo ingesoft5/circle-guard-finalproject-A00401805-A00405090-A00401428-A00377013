@@ -3,8 +3,7 @@
  */
 package com.circleguard.file.controller;
 
-import com.circleguard.file.service.FileStorageService;
-import io.micrometer.core.instrument.Counter;
+import com.circleguard.file.service.FileStorage;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -24,7 +23,8 @@ public class FileUploadController {
     private static final String UPLOAD_METRIC = "circleguard_file_uploads_total";
     private static final String TAG_RESULT = "result";
 
-    private final FileStorageService storageService;
+    // CG-DOC: FileStorage is the port shared by the local and S3/MinIO adapters (HU-FILE-04).
+    private final FileStorage storageService;
     private final MeterRegistry meterRegistry;
 
     @PostMapping("/upload")
@@ -50,5 +50,12 @@ public class FileUploadController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
+    }
+
+    @DeleteMapping("/{filename}")
+    public ResponseEntity<Void> delete(@PathVariable String filename) {
+        return storageService.deleteFile(filename)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 }
