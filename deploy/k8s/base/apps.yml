@@ -375,6 +375,11 @@ metadata:
   name: gateway
   labels:
     app: gateway
+  annotations:
+    # Prometheus Kubernetes SD scrapes pods that opt in with these annotations.
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "8087"
 spec:
   selector:
     app: gateway
@@ -424,17 +429,20 @@ spec:
                   key: QR_SECRET
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              # Native readiness group: traffic is sent only when dependencies are ready.
+              path: /actuator/health/readiness
               port: 8087
             initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 6
+            failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              # Native liveness group: restarts the container only when the app is stuck.
+              path: /actuator/health/liveness
               port: 8087
-            initialDelaySeconds: 80
-            periodSeconds: 20
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
           resources:
             requests:
               cpu: 100m
