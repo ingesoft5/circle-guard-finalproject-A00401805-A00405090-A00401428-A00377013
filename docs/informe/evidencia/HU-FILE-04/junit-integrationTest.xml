@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.circleguard.file.integration.MinioStorageIntegrationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:17:12.048Z" hostname="fedora-daniela" time="3.256">
+<testsuite name="com.circleguard.file.integration.MinioStorageIntegrationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-22T21:15:44.756Z" hostname="fedora-daniela" time="3.917">
   <properties/>
-  <testcase name="deletesObject()" classname="com.circleguard.file.integration.MinioStorageIntegrationTest" time="2.801"/>
+  <testcase name="deletesObject()" classname="com.circleguard.file.integration.MinioStorageIntegrationTest" time="3.339"/>
   <testcase name="createsBucketAutomatically()" classname="com.circleguard.file.integration.MinioStorageIntegrationTest" time="0.059"/>
-  <testcase name="downloadsObject()" classname="com.circleguard.file.integration.MinioStorageIntegrationTest" time="0.162"/>
-  <testcase name="missingObjectReturnsNotFound()" classname="com.circleguard.file.integration.MinioStorageIntegrationTest" time="0.157"/>
-  <testcase name="uploadsObject()" classname="com.circleguard.file.integration.MinioStorageIntegrationTest" time="0.058"/>
-  <system-out><![CDATA[20:16:57.400 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.circleguard.file.integration.MinioStorageIntegrationTest]: MinioStorageIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-20:16:57.765 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.circleguard.file.FileApplication for test class com.circleguard.file.integration.MinioStorageIntegrationTest
-20:16:58.294 [Test worker] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
-20:16:58.306 [Test worker] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
-20:16:59.258 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
-20:17:00.063 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with local Unix socket (unix:///var/run/docker.sock)
-20:17:00.067 [Test worker] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
-20:17:00.109 [Test worker] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  <testcase name="downloadsObject()" classname="com.circleguard.file.integration.MinioStorageIntegrationTest" time="0.262"/>
+  <testcase name="missingObjectReturnsNotFound()" classname="com.circleguard.file.integration.MinioStorageIntegrationTest" time="0.161"/>
+  <testcase name="uploadsObject()" classname="com.circleguard.file.integration.MinioStorageIntegrationTest" time="0.075"/>
+  <system-out><![CDATA[16:15:27.105 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.circleguard.file.integration.MinioStorageIntegrationTest]: MinioStorageIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+16:15:27.466 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.circleguard.file.FileApplication for test class com.circleguard.file.integration.MinioStorageIntegrationTest
+16:15:28.053 [Test worker] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+16:15:28.067 [Test worker] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+16:15:29.275 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+16:15:30.415 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with local Unix socket (unix:///var/run/docker.sock)
+16:15:30.420 [Test worker] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+16:15:30.461 [Test worker] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
   Server Version: 29.10.0
   API Version: 1.57
   Operating System: Fedora Linux 45 (KDE Plasma Desktop Edition)
   Total Memory: 15720 MB
-20:17:00.722 [Test worker] INFO tc.testcontainers/ryuk:0.6.0 -- Creating container for image: testcontainers/ryuk:0.6.0
-20:17:01.299 [Test worker] INFO tc.testcontainers/ryuk:0.6.0 -- Container testcontainers/ryuk:0.6.0 is starting: 02065713c4b8e512dc752ab5371fc15ff38e26d68689e8d74c586b89a5054bc0
-20:17:01.905 [Test worker] INFO tc.testcontainers/ryuk:0.6.0 -- Container testcontainers/ryuk:0.6.0 started in PT1.182917899S
-20:17:01.915 [Test worker] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
-20:17:01.916 [Test worker] INFO org.testcontainers.DockerClientFactory -- Checking the system...
-20:17:01.919 [Test worker] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
-20:17:01.920 [Test worker] INFO tc.bitnamilegacy/minio:2025.4.22 -- Creating container for image: bitnamilegacy/minio:2025.4.22
-20:17:02.173 [Test worker] INFO tc.bitnamilegacy/minio:2025.4.22 -- Container bitnamilegacy/minio:2025.4.22 is starting: de7b75e6480ae3b369b7830333dbdc9513029feae08d882e724f017bac420930
-20:17:02.566 [Test worker] INFO org.testcontainers.containers.wait.strategy.HttpWaitStrategy -- /naughty_sutherland: Waiting for 60 seconds for URL: http://localhost:32779/minio/health/live (where port 32779 maps to container port 9000)
-20:17:03.593 [Test worker] INFO tc.bitnamilegacy/minio:2025.4.22 -- Container bitnamilegacy/minio:2025.4.22 started in PT1.672492129S
+16:15:31.184 [Test worker] INFO tc.testcontainers/ryuk:0.6.0 -- Creating container for image: testcontainers/ryuk:0.6.0
+16:15:32.845 [Test worker] INFO tc.testcontainers/ryuk:0.6.0 -- Container testcontainers/ryuk:0.6.0 is starting: dd94584845de75ca4c850d66bc97dc673699b26b8d03b578edb2ef89f3f1fa23
+16:15:33.759 [Test worker] INFO tc.testcontainers/ryuk:0.6.0 -- Container testcontainers/ryuk:0.6.0 started in PT2.574539027S
+16:15:33.769 [Test worker] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+16:15:33.770 [Test worker] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+16:15:33.772 [Test worker] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+16:15:33.774 [Test worker] INFO tc.bitnamilegacy/minio:2025.4.22 -- Creating container for image: bitnamilegacy/minio:2025.4.22
+16:15:34.199 [Test worker] INFO tc.bitnamilegacy/minio:2025.4.22 -- Container bitnamilegacy/minio:2025.4.22 is starting: 0321e13c761097c174eb19d9df3aa691509e9a4e4f21d3ad1503956304d3084c
+16:15:34.670 [Test worker] INFO org.testcontainers.containers.wait.strategy.HttpWaitStrategy -- /flamboyant_galileo: Waiting for 60 seconds for URL: http://localhost:32775/minio/health/live (where port 32775 maps to container port 9000)
+16:15:35.697 [Test worker] INFO tc.bitnamilegacy/minio:2025.4.22 -- Container bitnamilegacy/minio:2025.4.22 started in PT1.922761961S
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -37,19 +37,19 @@
  =========|_|==============|___/=/_/_/_/
  :: Spring Boot ::                (v3.2.4)
 
-2026-11-21T20:17:06.766-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] c.c.f.i.MinioStorageIntegrationTest      : Starting MinioStorageIntegrationTest using Java 21.0.13 with PID 154862 (started by danielacm in /run/media/danielacm/Datos/DANNIE/UNIVERSIDAD_ICESI_GRACIAS_A_DIOS/2026-2/INGENIERIA_DE_SOFTWARE_V/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/services/circleguard-file-service)
-2026-11-21T20:17:06.770-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] c.c.f.i.MinioStorageIntegrationTest      : The following 1 profile is active: "test"
-2026-11-21T20:17:09.941-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
-2026-11-21T20:17:09.983-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-11-21T20:17:09.984-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
-2026-11-21T20:17:10.126-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-11-21T20:17:10.128-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3296 ms
-2026-11-21T20:17:11.668-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoint(s) beneath base path '/actuator'
-2026-11-21T20:17:11.837-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 35247 (http) with context path ''
-2026-11-21T20:17:11.868-05:00  INFO 154862 --- [circleguard-file-service] [    Test worker] c.c.f.i.MinioStorageIntegrationTest      : Started MinioStorageIntegrationTest in 6.02 seconds (process running for 17.715)
-2026-11-21T20:17:14.050-05:00  INFO 154862 --- [circleguard-file-service] [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-11-21T20:17:14.051-05:00  INFO 154862 --- [circleguard-file-service] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-11-21T20:17:14.053-05:00  INFO 154862 --- [circleguard-file-service] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-11-22T16:15:39.005-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] c.c.f.i.MinioStorageIntegrationTest      : Starting MinioStorageIntegrationTest using Java 21.0.13 with PID 14131 (started by danielacm in /run/media/danielacm/Datos/DANNIE/UNIVERSIDAD_ICESI_GRACIAS_A_DIOS/2026-2/INGENIERIA_DE_SOFTWARE_V/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/services/circleguard-file-service)
+2026-11-22T16:15:39.009-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] c.c.f.i.MinioStorageIntegrationTest      : The following 1 profile is active: "test"
+2026-11-22T16:15:42.074-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
+2026-11-22T16:15:42.115-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-22T16:15:42.117-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
+2026-11-22T16:15:42.249-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-11-22T16:15:42.253-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3172 ms
+2026-11-22T16:15:43.920-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoint(s) beneath base path '/actuator'
+2026-11-22T16:15:44.563-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 40187 (http) with context path ''
+2026-11-22T16:15:44.595-05:00  INFO 14131 --- [circleguard-file-service] [    Test worker] [                                                 ] c.c.f.i.MinioStorageIntegrationTest      : Started MinioStorageIntegrationTest in 6.527 seconds (process running for 20.806)
+2026-11-22T16:15:47.219-05:00  INFO 14131 --- [circleguard-file-service] [o-auto-1-exec-1] [                                                 ] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-22T16:15:47.220-05:00  INFO 14131 --- [circleguard-file-service] [o-auto-1-exec-1] [                                                 ] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-22T16:15:47.224-05:00  INFO 14131 --- [circleguard-file-service] [o-auto-1-exec-1] [                                                 ] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms
 ]]></system-out>
   <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/home/danielacm/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.14.12/be4984cb6fd1ef1d11f218a648889dfda44b8a15/byte-buddy-agent-1.14.12.jar)
 WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning

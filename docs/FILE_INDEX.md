@@ -33,7 +33,7 @@ English purpose of every tracked repository file.
 
 - `CHANGELOG.md` — Markdown documentation: CHANGELOG.
 
-- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification.
+- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification (includes the `hu-file-04` entry under the CI/CD section).
 
 - `Jenkinsfile` — Shared Jenkins multibranch pipeline for CircleGuard services, quality gates, semver tags, and Docker publication; on-prem deploys via kubectl/kustomize to k3d.
 

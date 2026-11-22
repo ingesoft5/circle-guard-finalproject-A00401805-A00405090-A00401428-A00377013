@@ -755,6 +755,80 @@ El valor de esta HU estuvo menos en escribir pruebas nuevas y más en hacer expl
 
 ---
 
+<a id="hu-file-04"></a>
+## HU-FILE-04 — Integración File–MinIO con Testcontainers (22 de noviembre de 2026)
+
+- **Nivel de uso:** 3 (colaboración con IAG).
+- **Herramienta:** OpenCode / Big Pickle.
+- **Historia / Entregable:** `HU-FILE-04` — E1.6 (pruebas automatizadas) y E2.4 (patrones).
+- **Rama:** `feat/HU-FILE-04-integracion-file-minio-con-testcontainers`.
+- **Commit de cierre:** `440b96c` (merge de `origin/main` `9c4653e`), PR [#144](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/144).
+
+### A. Contenido propio entregado a la IAG
+
+1. **Contraste con el enunciado:** se verificaron las líneas 167, 180, 221-222, 240-260, 254, 260 y 351-370 de `Proyecto_Final_CircleGuard.tex`. El `file-service` es «almacenamiento compatible S3» (L180), pero en P1 solo se compila, prueba y empaqueta (L260); por eso **no se añadió despliegue** en esta HU y el seguimiento quedó para P2.
+2. **Decisión de diseño:** adaptador real `S3FileStorageService` (AWS SDK v2) detrás del puerto `FileStorage`, con modo `local` por defecto y activación `file.storage.mode=s3`. El controller depende del puerto y conserva `DELETE /api/v1/files/{filename}` (204/404), de modo que ambos adaptadores comparten contrato.
+3. **Estrategia de conflictos:** al integrar `origin/main` se conservaron el puerto y el `DELETE` de la rama, el `MeterRegistry` y el bloque `management` de `main`, y se combinaron las aserciones de métricas con los tests de borrado. Los auto-merges (`Jenkinsfile`, `ciServices.groovy`, `build.gradle.kts`) se revisaron sin marcadores residuales.
+4. **Restricciones y desviaciones:** imagen fijada `bitnamilegacy/minio:2025.4.22` porque `minio/minio` dejó de ser públicamente descargable; límite explícito de 3 minutos en la tarea `integrationTest`; flag de catálogo más override local (ambos vigentes); el bloque `TEMPORARY` provino de `main` y no se eliminó aquí.
+5. **Cierre de ciclo:** PR actualizado en inglés, revisores solicitados a compañeros, bitácora, reporte, evidencia regenerada y backlog en `Done`.
+
+### B. Prompts empleados
+
+```text
+Corrige los conflictos que hay, primero haz merge del main actual a esta rama y resuelve conflictos
+```
+
+```text
+Ejecuta el plan
+```
+
+```text
+Haz push y actualiza la PR en ingles
+```
+
+```text
+Contrasta con el enunciado del proyecto final si está bien esta HU y si falta algo
+```
+
+```text
+Dame un plan completo para cerrar esta HU cumpliendo el enunciado del proyecto final
+```
+
+```text
+Ejecuta el plan
+```
+
+```text
+Con lo que hay en main, consideras que deberia haber hecho reload configuration as code en la interfaz de Jenkins?
+```
+
+```text
+Que sugieres hacer en esta rama para cerrarla?
+```
+
+```text
+Ejecuta el plan
+```
+
+```text
+Continua y termina
+```
+
+### C. Validación humana y hallazgos
+
+- **Merge:** `git merge origin/main --no-edit` sobre `a47e7d1`; tres conflictos resueltos en `FileUploadController.java`, `application.yml` y `FileUploadControllerTest.java`; `git diff --check` limpio en los archivos tocados.
+- **Corridas sobre `440b96c`:** tres `integrationTest` con `--no-build-cache --rerun-tasks` en 50 s, 51 s y 54 s; XML final `tests=5 skipped=0 failures=0 errors=0 time="3.917"` (timestamp `2026-11-22T21:15:44.756Z`).
+- **Unitarias y cobertura:** `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde (46 s), 69.16 % de líneas (74/107), por encima del gate del 60 %.
+- **Limpieza:** `docker ps` sin contenedores Testcontainers activos tras la ventana de Ryuk.
+- **Trazabilidad:** PR #144 en inglés, `MERGEABLE`, con `FaiberDev` y `salejostrada` solicitados como revisores; check `continuous-integration/jenkins/pr-merge` publicado por el pipeline y pendiente de cierre en el momento de esta entrada.
+- **Hallazgo JCasC:** el `@Library('circleguard@main')` del Jenkinsfile hace innecesario un `Reload Configuration as Code` para esta HU; el cambio de JCasC en `main` (`6c20d8b`: 2 executors, SMTP) sí requiere reload/recreate como cierre de P1.4.
+
+### D. Reflexión crítica
+
+El riesgo principal no fue el código S3, sino la trazabilidad: dejar la evidencia del 21-11 después de mergear `main` habría hecho creíble una validación sobre un commit que ya no existía en la rama. Regenerar las tres corridas sobre `440b96c` y copiar el XML real evita esa deriva. Persisten decisiones conscientes: credenciales estáticas de prueba frente a IAM en P2, `local` como modo por defecto para no exigir S3 en P1, y una imagen Bitnami fijada hasta publicar un digest propio. También quedó claro que el bloque `TEMPORARY` heredado de `main` es hoy redundante —el fix de selección selectiva ya está integrado—, pero limpiarlo dentro de esta HU habría obligado a revalidar todo; se documenta y se deja para un PR separado. Finalmente, no mergear sin aprobación respeta la protección de `main` y evita disparar CD y tags semánticos sin revisión de par.
+
+---
+
 <a id="bitacora-e12"></a>
 ### 2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental (8 de noviembre de 2026)
 

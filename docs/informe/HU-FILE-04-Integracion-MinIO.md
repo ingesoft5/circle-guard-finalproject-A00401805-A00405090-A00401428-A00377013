@@ -5,9 +5,9 @@
 **Servicio:** `circleguard-file-service`  
 **Entregable relacionado:** E1.6 — Pruebas automatizadas  
 **Rama:** `feat/HU-FILE-04-integracion-file-minio-con-testcontainers`  
-**Fecha:** 21 de noviembre de 2026  
+**Fecha:** 22 de noviembre de 2026
 **Evidencia:** [`docs/informe/evidencia/HU-FILE-04/`](evidencia/HU-FILE-04/)  
-**Última verificación:** 21 de noviembre de 2026, tres corridas consecutivas + gate unitario/cobertura
+**Última verificación:** 22 de noviembre de 2026, merge `440b96c` (con `origin/main` `9c4653e`); tres corridas consecutivas + gate unitario/cobertura
 
 ---
 
@@ -21,11 +21,11 @@ Se valida el contrato de almacenamiento **S3-compatible real** usando el adaptad
 | Contrato de carga y descarga | ✅ | Casos `uploadsObject` y `downloadsObject` vía `/api/v1/files/upload` y `/api/v1/files/download/{filename}` contra MinIO real |
 | Borrado y archivo ausente «según el comportamiento actual» | ✅ | `DELETE /api/v1/files/{filename}` devuelve 204 al borrar y 404 si no existe; `missingObjectReturnsNotFound` valida 404 en S3 (HEAD/GET) y en HTTP (download/delete) |
 | Etapa de integración en Jenkins | ✅ | `stage('Integration Tests')` existente + flag de catálogo + override local en `Jenkinsfile`; ver §7 |
-| Menos de 3 minutos | ✅ | 41 s, 43 s y 44 s; límite explícito de 3 min en la tarea Gradle |
+| Menos de 3 minutos | ✅ | 50 s, 51 s y 54 s; límite explícito de 3 min en la tarea Gradle |
 | Reporte publicado | ✅ | XML/HTML de JUnit en `build/test-results/integrationTest` y `build/reports/integrationTest`; `ci.integrationTest` publica JUnit y archiva `build/integration-test/*.log` |
 | Sin contenedores residuales | ✅ | `docker ps` tras la ventana de Ryuk sin contenedores Testcontainers activos |
 | Tres ejecuciones consecutivas | ✅ | Tres `BUILD SUCCESSFUL`, 5 pruebas / 0 fallos / 0 errores; ver `3-runs.txt` |
-| Sin regresión unitaria ni de cobertura | ✅ | `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde |
+| Sin regresión unitaria ni de cobertura | ✅ | `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde; 69.16 % de líneas (gate ≥ 60 %) |
 
 ---
 
@@ -38,6 +38,7 @@ Por eso la implementación queda así:
 - **Producción/adaptador real:** `S3FileStorageService` usa AWS SDK v2 contra un endpoint S3-compatible (MinIO o AWS S3) cuando `file.storage.mode=s3`. Las credenciales, bucket, región, endpoint y path-style vienen por propiedades/entorno (`aws.s3.*`).
 - **Compatibilidad P1:** el modo por defecto sigue siendo `local` (`FileStorageService`) para no forzar infraestructura S3 en la Parte 1. El perfil de integración activa `s3`.
 - **Despliegue:** no se despliega el servicio en P1; esa responsabilidad sigue siendo Parte 2. La HU deja listo el contrato de almacenamiento y el borrado para ese despliegue.
+- **Observabilidad conservada de `main`:** el merge `440b96c` mantuvo el contador `circleguard_file_uploads_total{result="success"|"failure"}` (`MeterRegistry` en `FileUploadController`) y el bloque `management` de `application.yml` (Prometheus, health probes, métricas por tag y trazas OTLP), junto con `file.storage.mode` y `aws.s3.*` de esta rama.
 
 ---
 
@@ -49,7 +50,7 @@ Por eso la implementación queda así:
 - `FileStorageService` (modo `local`, `matchIfMissing=true`): mantiene el comportamiento filesystem existente y ahora soporta borrado con validación de traversal.
 - `S3FileStorageService` (modo `s3`): `S3Client` real con `endpointOverride`, credenciales estáticas, región y `pathStyleAccessEnabled`. PUT/GET/DELETE/HEAD contra el bucket configurado; 404 de S3 se traduce a `null/false`.
 - `FileUploadController`: usa `FileStorage`, conserva upload/download y agrega `DELETE /api/v1/files/{filename}` con 204/404.
-- `application.yml`: agrega `file.storage.mode=${FILE_STORAGE_MODE:local}`; mantiene `aws.s3.*` desde entorno.
+- `application.yml`: `file.storage.mode=${FILE_STORAGE_MODE:local}` y `file.storage.path=${FILE_STORAGE_PATH:/app/uploads}` de esta rama, junto con el bloque `management` de `main` (Prometheus, health probes, métricas y trazas OTLP) y `aws.s3.*` desde entorno.
 
 ### 3.2 Dependencias y tarea Gradle
 
@@ -60,7 +61,7 @@ Por eso la implementación queda así:
 - `integrationTest`: `includeTags("integration")`, `shouldRunAfter(test)`, `timeout.set(Duration.ofMinutes(3))`, `outputs.upToDateWhen { false }`, XML + HTML habilitados. `test` excluye `integration`.
 
 ```bash
-./gradlew :services:circleguard-file-service:integrationTest --no-daemon --console=plain
+./gradlew :services:circleguard-file-service:integrationTest --no-daemon --no-build-cache --rerun-tasks --console=plain
 ```
 
 ### 3.3 Clase base y perfil de prueba
@@ -75,6 +76,13 @@ Por eso la implementación queda así:
 `MinioStorageIntegrationTest` usa `@SpringBootTest(webEnvironment = RANDOM_PORT)`, `@Testcontainers`, `@Tag("integration")`, `@ActiveProfiles("test")`. Sube/descarga/borra por HTTP con `TestRestTemplate`, verifica que el bean activo sea `S3FileStorageService` y comprueba el 404 S3 subyacente para el caso de objeto ausente.
 
 `src/test/resources/application-test.yml` activa `file.storage.mode=s3` y define defaults de prueba; `docker-java.properties` fija `api.version=1.44`.
+
+### 3.4 Patrones aplicados (E2.4)
+
+| Patrón | Implementación | Trade-off y evidencia |
+|---|---|---|
+| **Port/Adapter (Hexagonal)** | `FileStorage` es el puerto; `FileStorageService` (local) y `S3FileStorageService` (S3) son adaptadores; `FileUploadController` depende solo del puerto. | Permite cambiar el backend sin tocar la capa HTTP, a costa de una interfaz y dos implementaciones. Evidencia: `@DynamicPropertySource` fija `file.storage.mode=s3` y el test verifica que el bean activo es `S3FileStorageService`. |
+| **Feature Toggle / External Configuration** | `file.storage.mode=${FILE_STORAGE_MODE:local}` mantiene `local` por defecto en P1 y activa S3 por entorno o perfil de prueba. | Evita exigir infraestructura S3 en P1 y reutiliza el mismo artefacto en P2; el riesgo de deriva de configuración se mitiga con `application-test.yml` y propiedades `aws.s3.*` externalizadas (sin secretos en el repo). |
 
 ---
 
@@ -102,15 +110,15 @@ Pruebas unitarias agregadas/actualizadas: `S3FileStorageServiceTest` (mock de `S
 
 ## 6. Ejecución y evidencia
 
-Tres corridas consecutivas en el mismo workspace, sin caché de resultados (`outputs.upToDateWhen { false }`):
+Tres corridas consecutivas sobre el merge `440b96c`, en el mismo workspace y sin caché de resultados (`--no-build-cache --rerun-tasks`, además de `outputs.upToDateWhen { false }`):
 
 | Corrida | Resultado | Tiempo total | XML JUnit |
 |---|---|---|---|
-| 1 | `BUILD SUCCESSFUL` | 41 s | - |
-| 2 | `BUILD SUCCESSFUL` | 43 s | - |
-| 3 | `BUILD SUCCESSFUL` | 44 s | `tests="5" skipped="0" failures="0" errors="0" time="3.256"` |
+| 1 | `BUILD SUCCESSFUL` | 50 s | - |
+| 2 | `BUILD SUCCESSFUL` | 51 s | - |
+| 3 | `BUILD SUCCESSFUL` | 54 s | `tests="5" skipped="0" failures="0" errors="0" time="3.917"` |
 
-`test` + `jacocoTestReport` + `jacocoTestCoverageVerification` también terminaron en verde (41 s).
+XML final con timestamp `2026-11-22T21:15:44.756Z`. `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` también terminaron en verde (46 s), con **69.16 % de cobertura de líneas** (74 cubiertas / 107 totales), por encima del gate del 60 %. Los logs completos de consola quedan como artefactos locales (`*.log` ignorado por `.gitignore`); el resumen versionado está en `3-runs.txt`.
 
 Archivos en `docs/informe/evidencia/HU-FILE-04/`:
 
@@ -134,13 +142,15 @@ Cambios complementarios:
 
 > La evidencia de Jenkins se entrega como configuración verificable en texto. La captura de la etapa ejecutándose en Jenkins on-prem queda pendiente de ejecutar el job sobre esta rama.
 
+Nota sobre el merge `440b96c`: el bloque `// TEMPORARY: the library is pinned to main ... REMOVE after merging to main` **no se eliminó en esta HU**; provino de `main` y sigue vigente allí (Jenkinsfile líneas 63-66). El fix de selección selectiva (`6c20d8b`) ya está en `main`, por lo que ese bloque y el override local de `enrichServices()` son redundantes; se propone limpiarlos en un PR aparte para no revalidar esta HU.
+
 ---
 
 ## 8. Reproducibilidad
 
 ```bash
 # Prueba de integración real contra MinIO efímero (requiere Docker)
-./gradlew :services:circleguard-file-service:integrationTest --no-daemon --console=plain
+./gradlew :services:circleguard-file-service:integrationTest --no-daemon --no-build-cache --rerun-tasks --console=plain
 
 # Solo unitarias + cobertura
 ./gradlew :services:circleguard-file-service:test \
