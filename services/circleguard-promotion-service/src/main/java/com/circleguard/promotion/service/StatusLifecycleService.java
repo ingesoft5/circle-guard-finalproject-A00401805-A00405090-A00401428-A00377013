@@ -51,7 +51,7 @@ public class StatusLifecycleService {
             "RETURN u.anonymousId as id, u.statusUpdatedAt as updated, $threshold as thresh";
 
         neo4jClient.query(query).bind(expirationThreshold).to("threshold").fetch().all().forEach(m -> {
-            log.info("User {} has statusUpdatedAt {} (Threshold: {})", m.get("id"), m.get("updated"), m.get("thresh"));
+            log.debug("Checking status lifecycle entry");
         });
 
         String updateQuery = 
@@ -69,7 +69,7 @@ public class StatusLifecycleService {
             @SuppressWarnings("unchecked")
             List<String> releasedIds = (List<String>) result.get().get("releasedIds");
             if (releasedIds != null && !releasedIds.isEmpty()) {
-                log.info("Automatically released users back to ACTIVE: {}", releasedIds);
+                log.info("Automatically released {} users back to ACTIVE", releasedIds.size());
                 
                 Map<String, String> cacheUpdates = new HashMap<>();
                 releasedIds.forEach(id -> {

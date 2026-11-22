@@ -30,18 +30,18 @@ public class EmailServiceImpl implements EmailService {
     public CompletableFuture<Void> sendAsync(String userId, String message) {
         String correlationId = java.util.UUID.randomUUID().toString();
         try {
-            log.debug("Attempting to send email to user: {}", userId);
+            log.debug("Attempting to send email");
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setTo(userId + "@example.com"); 
             mailMessage.setSubject("CircleGuard Health Alert");
             mailMessage.setText(message);
             
             mailSender.send(mailMessage);
-            log.info("Email sent successfully to user: {}", userId);
+            log.info("Email sent successfully");
             auditLogService.logDelivery(userId, "EMAIL", "SUCCESS", correlationId);
             return CompletableFuture.completedFuture(null);
         } catch (Exception e) {
-            log.warn("Failed to send email to user {} (correlationId: {}): {}", userId, correlationId, e.getMessage());
+            log.warn("Email delivery failed (correlationId: {}, error: {})", correlationId, e.getClass().getSimpleName());
             auditLogService.logDelivery(userId, "EMAIL", "RETRY", correlationId);
             throw e; // Rethrow to trigger retry
         }
@@ -49,7 +49,7 @@ public class EmailServiceImpl implements EmailService {
 
     @org.springframework.retry.annotation.Recover
     public CompletableFuture<Void> recover(Exception e, String userId, String message) {
-        log.error("Email delivery failed after max retries for user: {}. Error: {}", userId, e.getMessage());
+        log.error("Email delivery failed after max retries ({})", e.getClass().getSimpleName());
         auditLogService.logDelivery(userId, "EMAIL", "FAILED", null);
         return CompletableFuture.failedFuture(e);
     }

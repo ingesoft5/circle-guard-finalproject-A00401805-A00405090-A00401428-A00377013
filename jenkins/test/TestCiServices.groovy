@@ -33,6 +33,7 @@ try {
 }
 
 println '== selectFromFiles() =='
+// Pure file-to-service selection cases (no git involved).
 def pureCases = [
         ['promotion only', ['services/circleguard-promotion-service/src/main/java/P.java'], ['promotion']],
         ['promotion + form', ['services/circleguard-promotion-service/src/main/java/P.java', 'services/circleguard-form-service/src/main/java/F.java'], ['form', 'promotion']],
@@ -44,7 +45,11 @@ def pureCases = [
         ['CI-only: shared library', ['jenkins/vars/ci.groovy'], []],
         ['CI-only plus promotion', ['Jenkinsfile', 'services/circleguard-promotion-service/src/main/java/P.java'], ['promotion']],
         ['global Gradle file', ['build.gradle.kts'], ALL],
-        ['shared deploy config', ['deploy/k8s/base/apps.yml'], ALL]
+        ['shared deploy config selects no Java service', ['deploy/k8s/base/apps.yml'], []],
+        ['deploy overlay selects no Java service', ['deploy/k8s/overlays/dev/kustomization.yml'], []],
+        ['deploy monitoring selects no Java service', ['deploy/k8s/monitoring/prometheus.yml'], []],
+        ['deploy component infers form', ['deploy/k8s/components/form-observability/monitoring/form-alerts.yml'], ['form']],
+        ['numbered deploy dir infers form', ['deploy/k8s/form06-dev/canary/form-hu6.yml'], ['form']]
 ]
 pureCases.each { c ->
     def actual = script.selectFromFiles(c[1])*.short
@@ -54,13 +59,15 @@ pureCases.each { c ->
 }
 
 println '== changed() with stubbed git diff =='
+// changed() cases driven by a stubbed `git diff --name-only` output.
 def changedCases = [
         ['service diff', 'services/circleguard-promotion-service/README.md\n', ['promotion']],
         ['Jenkinsfile diff', 'Jenkinsfile\n', []],
         ['shared library diff', 'jenkins/vars/ci.groovy\n', []],
         ['CI plus service diff', 'Jenkinsfile\nservices/circleguard-promotion-service/README.md\n', ['promotion']],
         ['global Gradle diff', 'build.gradle.kts\n', ALL],
-        ['mobile diff', 'mobile/App.tsx\n', []]
+        ['mobile diff', 'mobile/App.tsx\n', []],
+        ['shared deploy overlay diff', 'deploy/k8s/overlays/dev/kustomization.yml\n', []]
 ]
 changedCases.each { c ->
     currentDiff = c[1]
