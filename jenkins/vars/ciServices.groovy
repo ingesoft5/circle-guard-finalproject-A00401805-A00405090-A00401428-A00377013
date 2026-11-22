@@ -120,6 +120,9 @@ def catalog() {
 }
 
 def resolve(String mode) {
+    // E1.4/P1.4 del enunciado: ejecución selectiva por servicio. La autoverificación
+    // evita que una ampliación futura del catálogo vuelva a disparar builds completos.
+    verifySelection()
     def requested = (mode ?: 'auto').trim()
     if (requested == 'all') {
         // "all" cubre todos los servicios del catálogo.
@@ -130,7 +133,7 @@ def resolve(String mode) {
     }
     def service = catalog().find { it.short == requested || it.name == requested }
     if (!service) {
-        error "Servicio no reconocido: ${requested}. Use auto, all o uno de: ${catalog()*.short.join(', ')}"
+        error "Servicio no reconocido: ${requested}. Use auto, all o uno de: ${catalog().collect { it.short }.join(', ')}"
     }
     return [service]
 }
@@ -160,28 +163,119 @@ def changed() {
         return []
     }
     def files = diff.readLines().findAll { it.trim() }
-    def globalChange = files.any { path ->
-        path == 'build.gradle.kts' ||
-                path == 'settings.gradle.kts' ||
-                path == 'gradle.properties' ||
-                path == 'Jenkinsfile' ||
-                path == 'sonar-project.properties' ||
-                path == 'gradlew' ||
-                path == 'gradlew.bat' ||
-                path.startsWith('gradle/') ||
-                path.startsWith('jenkins/') ||
-                path.startsWith('mobile/') ||
-                path.startsWith('deploy/')
-    }
-    if (globalChange) {
-        echo "Cambio global detectado; se construyen todos los servicios: ${files.join(', ')}"
-        return catalog()
-    }
-    def selected = catalog().findAll { service ->
-        files.any { path -> path.startsWith("${service.dir}/") }
-    }
+    def selected = selectFromFiles(files)
     if (!selected) {
-        echo "Cambios sin servicio asociado: ${files.join(', ')}"
+        echo "Cambios sin servicio Java asociado: ${files.join(', ')}"
     }
     return selected
+}
+
+// Solo estas rutas cambian la compilación de TODOS los módulos Gradle. mobile/, deploy/,
+// docs/, tests/, infra/ y la definición del pipeline NO son globales: mantenerlos aquí era
+// lo que saturaba el pipeline.
+def globalBuildPaths() {
+    return [
+            'build.gradle.kts',
+            'settings.gradle.kts',
+            'gradle.properties',
+            'gradlew',
+            'gradlew.bat',
+            'gradle/',
+            'sonar-project.properties'
+    ]
+}
+
+// Un cambio en Jenkinsfile o en la Shared Library no modifica ningún microservicio Java.
+// Se omite la validación de servicios, pero verifySelection() sigue comprobando la librería.
+def ciOnlyPaths() {
+    return ['Jenkinsfile', 'jenkins/']
+}
+
+def isGlobalBuildFile(String path) {
+    return globalBuildPaths().any { candidate ->
+        candidate.endsWith('/') ? path.startsWith(candidate) : path == candidate
+    }
+}
+
+def isCiOnlyFile(String path) {
+    return ciOnlyPaths().any { candidate ->
+        candidate.endsWith('/') ? path.startsWith(candidate) : path == candidate
+    }
+}
+
+// Selección pura (sin git), reutilizable por changed() y por la autoverificación.
+// - services/<servicio>/...            -> ese servicio
+// - deploy/**/<servicio>-*.yml          -> ese servicio (p. ej. promotion-alerts.yml)
+// - cualquier otro archivo de deploy/   -> todos, porque es configuración compartida
+// - Jenkinsfile, jenkins/...            -> ningún servicio Java (self-check de la librería)
+// - mobile/, docs/, tests/, infra/...   -> ningún servicio Java
+def selectFromFiles(List files) {
+    def catalog = catalog()
+    if (files.any { path -> isGlobalBuildFile(path) }) {
+        echo 'Cambio global en la build; se construyen todos los servicios.'
+        return catalog
+    }
+    def selected = []
+    def sharedDeployChange = false
+    files.each { path ->
+        if (path.startsWith('deploy/')) {
+            def fileName = path.tokenize('/').last()
+            def matched = catalog.findAll { service -> fileName.startsWith("${service.short}-") }
+            matched.each { service ->
+                if (!selected.contains(service)) selected << service
+            }
+            if (!matched) sharedDeployChange = true
+        } else if (isCiOnlyFile(path)) {
+            echo "Cambio solo de CI; no selecciona servicios Java: ${path}"
+        } else {
+            catalog.findAll { service -> path.startsWith("${service.dir}/") }.each { service ->
+                if (!selected.contains(service)) selected << service
+            }
+        }
+    }
+    if (sharedDeployChange) {
+        echo 'Cambio compartido en deploy/; se construyen todos los servicios.'
+        return catalog
+    }
+    // CPS-safe ordering: no comparator closure (Jenkins CPS .sort{} can return the
+    // comparator Integer instead of the list, which broke the spread below in main #36).
+    def ordered = []
+    catalog.each { svc ->
+        if (selected.contains(svc)) {
+            ordered << svc
+        }
+    }
+    return ordered
+}
+
+// Casos que deben cumplirse en cada build. Si fallan, el pipeline para aquí en vez
+// de ejecutar ocho validaciones innecesarias o, peor, dejar un servicio sin validar.
+def verifySelection() {
+    def assertSelection = { List files, List expected ->
+        def actual = selectFromFiles(files).collect { it.short }
+        if (actual != expected) {
+            error "Selección incorrecta para ${files}: esperado ${expected}, obtenido ${actual}"
+        }
+    }
+    assertSelection(['services/circleguard-promotion-service/src/main/java/PromotionService.java'], ['promotion'])
+    assertSelection([
+            'services/circleguard-promotion-service/src/main/java/PromotionService.java',
+            'services/circleguard-form-service/src/main/java/FormController.java'
+    ], ['form', 'promotion'])
+    assertSelection([
+            'services/circleguard-promotion-service/src/main/java/PromotionService.java',
+            'deploy/k8s/base/promotion-alerts.yml'
+    ], ['promotion'])
+    assertSelection(['deploy/k8s/base/form-storage.yml'], ['form'])
+    assertSelection(['mobile/App.tsx', 'docs/informe/HU-FORM-06.md'], [])
+    assertSelection(['docs/informe/HU-FORM-06.md', 'services/circleguard-form-service/src/test/FormTest.java'], ['form'])
+    assertSelection(['build.gradle.kts'], catalog().collect { it.short })
+    assertSelection(['deploy/k8s/base/apps.yml'], catalog().collect { it.short })
+    assertSelection(['Jenkinsfile'], [])
+    assertSelection(['jenkins/vars/ci.groovy'], [])
+    assertSelection([
+            'Jenkinsfile',
+            'services/circleguard-promotion-service/src/main/java/PromotionService.java'
+    ], ['promotion'])
+    echo 'Verificación de selección por servicio: OK.'
 }
