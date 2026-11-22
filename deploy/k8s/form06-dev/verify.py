@@ -65,18 +65,20 @@ def main():
         ("PersistentVolumeClaim", "monitoring", "loki-data")]
 
     scrape = yaml.safe_load(dev[("ConfigMap", "monitoring", "prometheus-config")]["data"]["prometheus.yml"])
-    assert scrape["rule_files"] == ["/etc/prometheus/rules/*.yml"]
+    shared_scrape = yaml.safe_load(shared[("ConfigMap", "monitoring", "prometheus-config")]["data"]["prometheus.yml"])
+    assert scrape["rule_files"] == shared_scrape["rule_files"] == [
+        "/etc/prometheus/rules/*.yml", "/etc/prometheus/rules/promotion/*.yml"]
     prometheus_pod = dev[("Deployment", "monitoring", "prometheus")]["spec"]["template"]["spec"]
-    rules_volume = next(volume for volume in prometheus_pod["volumes"]
-                        if volume["name"] == "alert-rules")
-    rule_sources = [source["configMap"]["name"] for source in rules_volume["projected"]["sources"]]
-    assert "auth-prometheus-alerts" in rule_sources
-    assert "promotion-prometheus-alerts" in rule_sources
-    assert any(name.startswith("form-prometheus-alerts-") for name in rule_sources)
-    assert len(rule_sources) == 3
-    assert "promotion-alert-rules" not in [volume["name"] for volume in prometheus_pod["volumes"]]
-    assert {mount["name"] for mount in prometheus_pod["containers"][0]["volumeMounts"]} == {
-        "config", "alert-rules", "storage"}
+    shared_pod = shared[("Deployment", "monitoring", "prometheus")]["spec"]["template"]["spec"]
+    rule_volumes = {"alert-rules", "promotion-alert-rules"}
+    for field, dev_spec, shared_spec in (
+        ("volumes", prometheus_pod, shared_pod),
+        ("volumeMounts", prometheus_pod["containers"][0], shared_pod["containers"][0]),
+    ):
+        dev_rules = {item["name"]: item for item in dev_spec[field] if item["name"] in rule_volumes}
+        shared_rules = {item["name"]: item for item in shared_spec[field] if item["name"] in rule_volumes}
+        assert set(dev_rules) == rule_volumes
+        assert dev_rules == shared_rules
     jobs = {job["job_name"]: job for job in scrape["scrape_configs"]}
     assert set(jobs) == {"form06-canary", "prometheus"}
     job = jobs["form06-canary"]

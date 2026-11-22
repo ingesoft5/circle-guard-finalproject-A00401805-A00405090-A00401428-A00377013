@@ -30,6 +30,9 @@ def main():
     objects = {(obj["kind"], obj["metadata"]["name"]): obj
                for obj in yaml.safe_load_all(rendered.stdout) if obj}
     config = objects[("ConfigMap", "alertmanager-config")]["data"]["alertmanager.yml"]
+    form_rules, = (obj["data"]["form-alerts.yml"] for (kind, name), obj in objects.items()
+                   if kind == "ConfigMap" and name.startswith("form-prometheus-alerts-"))
+    rule, = yaml.safe_load(form_rules)["groups"][0]["rules"]
     image = objects[("Deployment", "alertmanager")]["spec"]["template"]["spec"]["containers"][0]["image"]
     container = None
     with TemporaryDirectory(prefix="cg-form06-alert-") as directory:
@@ -56,9 +59,8 @@ def main():
                     time.sleep(1)
 
             now = datetime.now(timezone.utc)
-            alert = [{"labels": {"alertname": "FormEventPublicationFailures",
-                                 "namespace": "cg-dev", "service": "form-hu6",
-                                 "severity": "warning", "source": "local-hu6-smoke"},
+            alert = [{"labels": {**rule["labels"], "alertname": rule["alert"],
+                                 "namespace": "cg-dev", "source": "local-hu6-smoke"},
                       "annotations": {"summary": "synthetic local HU6 alert"},
                       "startsAt": now.isoformat(),
                       "endsAt": (now + timedelta(minutes=2)).isoformat()}]

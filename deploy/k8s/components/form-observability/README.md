@@ -4,7 +4,7 @@ These Kustomize components extend the shared stack merged in PR #93. They are se
 
 ## Integration and deployment
 
-PR #93 has been incorporated from main. The components are wired into the repository configuration; deployment remains a separate, authorized action. HU-FORM-05 remains an independent PR: these changes do not copy its HPA or storage configuration. Offline verification confirms replicas, HPA and storage are preserved when applying this component.
+The components extend the monitoring configuration from PR #93. Offline verification against main, including HU-FORM-05, confirms that the component preserves Form replicas, HPA and storage.
 
 Each application overlay's `kustomization.yml` (dev, stage and prod) includes:
 
@@ -22,7 +22,7 @@ components:
 
 The application component adds pod scrape annotations and derives `FORM_ENVIRONMENT` from the pod namespace. It does not change replicas, HPA, volumes or public ingress routes. Scraping uses the internal pod port 8086 and the shared Kubernetes service discovery; no public Actuator route is needed. It does not restrict access by other workloads inside the cluster.
 
-The monitoring component generates hashed ConfigMaps and combines the Auth and Form ConfigMaps in the existing `alert-rules` and `dashboards` projected volumes. Mount paths remain unchanged: Prometheus reads `/etc/prometheus/rules/*.yml`; the Grafana provider reads `/var/lib/grafana/dashboards`. No nested mounts or additional servers are introduced. Preserve the default Prometheus datasource or select it when importing the dashboard. The dashboard includes a namespace selector and uses the shared `app` and `namespace` target labels.
+The monitoring component projects hashed Form ConfigMaps alongside the existing rules and dashboards. Prometheus loads Auth, Identity and Form from `/etc/prometheus/rules/*.yml` and Promotion from `/etc/prometheus/rules/promotion/*.yml`. Grafana loads the dashboards from `/var/lib/grafana/dashboards`. The Form dashboard uses the shared `app` and `namespace` target labels and includes a namespace selector.
 
 Generated ConfigMap name changes update the projected-volume reference and pod template, so rule updates follow the normal authorized monitoring rollout. This component does not implement Prometheus hot reload. Validate Prometheus/Grafana health after deployment.
 
