@@ -16,6 +16,7 @@ Semantic Versioning.
 
 ### Added
 
+- **File service (HU-FILE-05)**: sondas nativas de Kubernetes (`/actuator/health/readiness` y `/actuator/health/liveness`), anotaciones de scrape Prometheus en el Service, dependencias Micrometer/OTel/OTLP, contador `circleguard_file_uploads_total` con tag `result` y configuración de management sin secretos. Evidencia en `docs/informe/HU-FILE-05.md` (issue #149).
 - `infra/onpremise/rebuild-onpremise.sh`: wrapper idempotente de un comando que valida el token de SonarQube, ejecuta el bootstrap on-premise, asegura todos los proyectos del catálogo de la Shared Library (incluido `circleguard-file-service`) y converge el stack `cg-tools`.
 - `docs/informe/HU-FILE-03.md` y `docs/informe/evidencia/HU-FILE-03/README.md`: cierre P1.4, decisión de idempotencia/semver e índice de evidencia de la HU-FILE-03 (issue #135).
 - Jenkins image now ships `kubectl` v1.31.2, `kustomize` v5.4.3 and `k3d` v5.9.0 so the pipeline drives the on-premise cluster directly.
