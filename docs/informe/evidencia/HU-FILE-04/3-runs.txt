@@ -1,21 +1,22 @@
-HU-FILE-04 v2 - Tres corridas integrationTest (S3 real adapter via controller)
+HU-FILE-04 v3 - Tres corridas integrationTest (S3 real adapter via controller)
 ============================================================
 Fecha: 22 de noviembre de 2026
-Commit verificado: 440b96c44e9c131011e3f088784bf587737bc1dc (merge de origin/main 9c4653e)
+Commit verificado: 21c406b63782f6d4bc755696870c87fece68347d (merge de origin/main af451ff en 826a359)
 Comando: ./gradlew :services:circleguard-file-service:integrationTest --no-daemon --no-build-cache --rerun-tasks --console=plain
 Logs de consola (artefactos locales, ignorados por .gitignore `*.log`): integrationTest-run1.log, integrationTest-run2.log, integrationTest-run3.log, unit-and-coverage.log
 
 | Corrida | Resultado | Tiempo de pared | Tiempo JUnit (XML final) |
 |---------|-----------|-----------------|--------------------------|
-| 1 | BUILD SUCCESSFUL | 50s | - |
-| 2 | BUILD SUCCESSFUL | 51s | - |
-| 3 | BUILD SUCCESSFUL | 54s | 3.917s |
+| 1 | BUILD SUCCESSFUL | 53s | - |
+| 2 | BUILD SUCCESSFUL | 52s | - |
+| 3 | BUILD SUCCESSFUL | 52s | 3.556s |
 
 XML final: tests=5 skipped=0 failures=0 errors=0
-Timestamp XML: 2026-11-22T21:15:44.756Z (hostname fedora-daniela)
+Timestamp XML: 2026-11-22T21:34:33.769Z (hostname fedora-daniela)
 Casos: deletesObject, createsBucketAutomatically, downloadsObject, missingObjectReturnsNotFound, uploadsObject
 
-Unit+coverage: BUILD SUCCESSFUL 46s (test, jacocoTestReport, jacocoTestCoverageVerification)
-Cobertura JaCoCo: 69.16% de líneas (74 cubiertas / 107 totales) — gate ≥60% superado
+Unit+coverage: BUILD SUCCESSFUL 46s (test, jacocoTestReport, jacocoTestCoverageVerification); 32 tests unitarios, 0 omitidos
+Cobertura JaCoCo: 81.31% de líneas (87 cubiertas / 107 totales) — gate ≥60% superado; ahora también aplica gradle/jacoco-convention.gradle de main
 Servidor: bitnamilegacy/minio:2025.4.22 (DEVELOPMENT.2025-04-22T22-12-26Z)
 Limpieza: docker ps sin contenedores Testcontainers activos tras la ventana de Ryuk.
+Conflictos del merge af451ff resueltos conservando los 3 tests de delete/traversal de esta rama y los 9 tests unitarios nuevos de main.

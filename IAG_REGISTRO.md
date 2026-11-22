@@ -762,13 +762,13 @@ El valor de esta HU estuvo menos en escribir pruebas nuevas y más en hacer expl
 - **Herramienta:** OpenCode / Big Pickle.
 - **Historia / Entregable:** `HU-FILE-04` — E1.6 (pruebas automatizadas) y E2.4 (patrones).
 - **Rama:** `feat/HU-FILE-04-integracion-file-minio-con-testcontainers`.
-- **Commit de cierre:** `440b96c` (merge de `origin/main` `9c4653e`), PR [#144](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/144).
+- **Commit de cierre:** `21c406b` (merge final de `origin/main` `af451ff`, después de `440b96c` con `9c4653e`), PR [#144](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/144).
 
 ### A. Contenido propio entregado a la IAG
 
 1. **Contraste con el enunciado:** se verificaron las líneas 167, 180, 221-222, 240-260, 254, 260 y 351-370 de `Proyecto_Final_CircleGuard.tex`. El `file-service` es «almacenamiento compatible S3» (L180), pero en P1 solo se compila, prueba y empaqueta (L260); por eso **no se añadió despliegue** en esta HU y el seguimiento quedó para P2.
 2. **Decisión de diseño:** adaptador real `S3FileStorageService` (AWS SDK v2) detrás del puerto `FileStorage`, con modo `local` por defecto y activación `file.storage.mode=s3`. El controller depende del puerto y conserva `DELETE /api/v1/files/{filename}` (204/404), de modo que ambos adaptadores comparten contrato.
-3. **Estrategia de conflictos:** al integrar `origin/main` se conservaron el puerto y el `DELETE` de la rama, el `MeterRegistry` y el bloque `management` de `main`, y se combinaron las aserciones de métricas con los tests de borrado. Los auto-merges (`Jenkinsfile`, `ciServices.groovy`, `build.gradle.kts`) se revisaron sin marcadores residuales.
+3. **Estrategia de conflictos:** al integrar `origin/main` se conservaron el puerto y el `DELETE` de la rama, el `MeterRegistry` y el bloque `management` de `main`, y se combinaron las aserciones de métricas con los tests de borrado. Cuando `main` avanzó con `af451ff` (#158) se resolvió el conflicto en `FileStorageServiceTest.java` conservando los 3 tests de delete/traversal y los 9 tests nuevos de `main`; los auto-merges (`Jenkinsfile`, `ciServices.groovy`, `build.gradle.kts`, con `apply(from = "$rootDir/gradle/jacoco-convention.gradle")`) se revisaron sin marcadores residuales.
 4. **Restricciones y desviaciones:** imagen fijada `bitnamilegacy/minio:2025.4.22` porque `minio/minio` dejó de ser públicamente descargable; límite explícito de 3 minutos en la tarea `integrationTest`; flag de catálogo más override local (ambos vigentes); el bloque `TEMPORARY` provino de `main` y no se eliminó aquí.
 5. **Cierre de ciclo:** PR actualizado en inglés, revisores solicitados a compañeros, bitácora, reporte, evidencia regenerada, backlog en `Done` y anexo B.1 incorporado a `CircleGuard_INFORME_FINAL.docx`.
 
@@ -811,14 +811,18 @@ Ejecuta el plan
 ```
 
 ```text
+La evidencia adjuntla al docx de informe final, ahi es donde realmente importante mas que todo
+```
+
+```text
 Continua y termina
 ```
 
 ### C. Validación humana y hallazgos
 
-- **Merge:** `git merge origin/main --no-edit` sobre `a47e7d1`; tres conflictos resueltos en `FileUploadController.java`, `application.yml` y `FileUploadControllerTest.java`; `git diff --check` limpio en los archivos tocados.
-- **Corridas sobre `440b96c`:** tres `integrationTest` con `--no-build-cache --rerun-tasks` en 50 s, 51 s y 54 s; XML final `tests=5 skipped=0 failures=0 errors=0 time="3.917"` (timestamp `2026-11-22T21:15:44.756Z`).
-- **Unitarias y cobertura:** `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde (46 s), 69.16 % de líneas (74/107), por encima del gate del 60 %.
+- **Merge:** primer `git merge origin/main --no-edit` sobre `a47e7d1` (3 conflictos: `FileUploadController.java`, `application.yml`, `FileUploadControllerTest.java`); segundo merge sobre `826a359` para incorporar `af451ff` (1 conflicto: `FileStorageServiceTest.java`); `git diff --check` limpio en los archivos tocados.
+- **Corridas sobre `21c406b`:** tres `integrationTest` con `--no-build-cache --rerun-tasks` en 53 s, 52 s y 52 s; XML final `tests=5 skipped=0 failures=0 errors=0 time="3.556"` (timestamp `2026-11-22T21:34:33.769Z`).
+- **Unitarias y cobertura:** `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde (46 s), 32 pruebas sin omisiones, 81.31 % de líneas (87/107), por encima del gate del 60 % con la convención compartida de `main`.
 - **Limpieza:** `docker ps` sin contenedores Testcontainers activos tras la ventana de Ryuk.
 - **Trazabilidad:** PR #144 en inglés, `MERGEABLE`, con `FaiberDev` y `salejostrada` solicitados como revisores; check `continuous-integration/jenkins/pr-merge` publicado por el pipeline y pendiente de cierre en el momento de esta entrada.
 - **Informe final:** `CircleGuard_INFORME_FINAL.docx` incorpora el anexo B.1 con criterios, tres corridas, XML JUnit, cobertura, rutas de evidencia y seguimiento P2; se validó con `python-docx` y `unzip -t` sin errores.
@@ -826,7 +830,7 @@ Continua y termina
 
 ### D. Reflexión crítica
 
-El riesgo principal no fue el código S3, sino la trazabilidad: dejar la evidencia del 21-11 después de mergear `main` habría hecho creíble una validación sobre un commit que ya no existía en la rama. Regenerar las tres corridas sobre `440b96c` y copiar el XML real evita esa deriva. Persisten decisiones conscientes: credenciales estáticas de prueba frente a IAM en P2, `local` como modo por defecto para no exigir S3 en P1, y una imagen Bitnami fijada hasta publicar un digest propio. También quedó claro que el bloque `TEMPORARY` heredado de `main` es hoy redundante —el fix de selección selectiva ya está integrado—, pero limpiarlo dentro de esta HU habría obligado a revalidar todo; se documenta y se deja para un PR separado. Finalmente, no mergear sin aprobación respeta la protección de `main` y evita disparar CD y tags semánticos sin revisión de par.
+El riesgo principal no fue el código S3, sino la trazabilidad: dejar la evidencia del 21-11 después de mergear `main` habría hecho creíble una validación sobre un commit que ya no existía en la rama. Regenerar las tres corridas primero sobre `440b96c` y, cuando `main` avanzó con #158, de nuevo sobre `21c406b`, y copiar el XML real evita esa deriva. La insistencia del usuario en el `.docx` final fue acertada: el informe no mencionaba HU-FILE-04 hasta que se añadió el anexo B.1, que es el entregable que realmente se lee. Persisten decisiones conscientes: credenciales estáticas de prueba frente a IAM en P2, `local` como modo por defecto para no exigir S3 en P1, y una imagen Bitnami fijada hasta publicar un digest propio. También quedó claro que el bloque `TEMPORARY` heredado de `main` es hoy redundante —el fix de selección selectiva ya está integrado—, pero limpiarlo dentro de esta HU habría obligado a revalidar todo; se documenta y se deja para un PR separado. Finalmente, no mergear sin aprobación respeta la protección de `main` y evita disparar CD y tags semánticos sin revisión de par.
 
 ---
 

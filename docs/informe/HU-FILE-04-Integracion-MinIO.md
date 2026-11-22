@@ -7,7 +7,7 @@
 **Rama:** `feat/HU-FILE-04-integracion-file-minio-con-testcontainers`  
 **Fecha:** 22 de noviembre de 2026
 **Evidencia:** [`docs/informe/evidencia/HU-FILE-04/`](evidencia/HU-FILE-04/)  
-**Última verificación:** 22 de noviembre de 2026, merge `440b96c` (con `origin/main` `9c4653e`); tres corridas consecutivas + gate unitario/cobertura
+**Última verificación:** 22 de noviembre de 2026, merge final `21c406b` (con `origin/main` `af451ff`, PR #158); tres corridas consecutivas + gate unitario/cobertura
 
 ---
 
@@ -21,11 +21,11 @@ Se valida el contrato de almacenamiento **S3-compatible real** usando el adaptad
 | Contrato de carga y descarga | ✅ | Casos `uploadsObject` y `downloadsObject` vía `/api/v1/files/upload` y `/api/v1/files/download/{filename}` contra MinIO real |
 | Borrado y archivo ausente «según el comportamiento actual» | ✅ | `DELETE /api/v1/files/{filename}` devuelve 204 al borrar y 404 si no existe; `missingObjectReturnsNotFound` valida 404 en S3 (HEAD/GET) y en HTTP (download/delete) |
 | Etapa de integración en Jenkins | ✅ | `stage('Integration Tests')` existente + flag de catálogo + override local en `Jenkinsfile`; ver §7 |
-| Menos de 3 minutos | ✅ | 50 s, 51 s y 54 s; límite explícito de 3 min en la tarea Gradle |
+| Menos de 3 minutos | ✅ | 53 s, 52 s y 52 s; límite explícito de 3 min en la tarea Gradle |
 | Reporte publicado | ✅ | XML/HTML de JUnit en `build/test-results/integrationTest` y `build/reports/integrationTest`; `ci.integrationTest` publica JUnit y archiva `build/integration-test/*.log` |
 | Sin contenedores residuales | ✅ | `docker ps` tras la ventana de Ryuk sin contenedores Testcontainers activos |
 | Tres ejecuciones consecutivas | ✅ | Tres `BUILD SUCCESSFUL`, 5 pruebas / 0 fallos / 0 errores; ver `3-runs.txt` |
-| Sin regresión unitaria ni de cobertura | ✅ | `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde; 69.16 % de líneas (gate ≥ 60 %) |
+| Sin regresión unitaria ni de cobertura | ✅ | `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde; 32 pruebas, 81.31 % de líneas (gate ≥ 60 %) |
 
 ---
 
@@ -38,7 +38,8 @@ Por eso la implementación queda así:
 - **Producción/adaptador real:** `S3FileStorageService` usa AWS SDK v2 contra un endpoint S3-compatible (MinIO o AWS S3) cuando `file.storage.mode=s3`. Las credenciales, bucket, región, endpoint y path-style vienen por propiedades/entorno (`aws.s3.*`).
 - **Compatibilidad P1:** el modo por defecto sigue siendo `local` (`FileStorageService`) para no forzar infraestructura S3 en la Parte 1. El perfil de integración activa `s3`.
 - **Despliegue:** no se despliega el servicio en P1; esa responsabilidad sigue siendo Parte 2. La HU deja listo el contrato de almacenamiento y el borrado para ese despliegue.
-- **Observabilidad conservada de `main`:** el merge `440b96c` mantuvo el contador `circleguard_file_uploads_total{result="success"|"failure"}` (`MeterRegistry` en `FileUploadController`) y el bloque `management` de `application.yml` (Prometheus, health probes, métricas por tag y trazas OTLP), junto con `file.storage.mode` y `aws.s3.*` de esta rama.
+- **Observabilidad conservada de `main`:** el merge final `21c406b` mantuvo el contador `circleguard_file_uploads_total{result="success"|"failure"}` (`MeterRegistry` en `FileUploadController`) y el bloque `management` de `application.yml` (Prometheus, health probes, métricas por tag y trazas OTLP), junto con `file.storage.mode` y `aws.s3.*` de esta rama.
+- **Convención JaCoCo de `main` (#158):** el merge conservó `apply(from = "$rootDir/gradle/jacoco-convention.gradle")` junto al bloque local; por eso el gate del 60 % y la verificación de pruebas no omitidas aplican también a `file-service`.
 
 ---
 
@@ -110,15 +111,15 @@ Pruebas unitarias agregadas/actualizadas: `S3FileStorageServiceTest` (mock de `S
 
 ## 6. Ejecución y evidencia
 
-Tres corridas consecutivas sobre el merge `440b96c`, en el mismo workspace y sin caché de resultados (`--no-build-cache --rerun-tasks`, además de `outputs.upToDateWhen { false }`):
+Tres corridas consecutivas sobre el merge final `21c406b`, en el mismo workspace y sin caché de resultados (`--no-build-cache --rerun-tasks`, además de `outputs.upToDateWhen { false }`):
 
 | Corrida | Resultado | Tiempo total | XML JUnit |
 |---|---|---|---|
-| 1 | `BUILD SUCCESSFUL` | 50 s | - |
-| 2 | `BUILD SUCCESSFUL` | 51 s | - |
-| 3 | `BUILD SUCCESSFUL` | 54 s | `tests="5" skipped="0" failures="0" errors="0" time="3.917"` |
+| 1 | `BUILD SUCCESSFUL` | 53 s | - |
+| 2 | `BUILD SUCCESSFUL` | 52 s | - |
+| 3 | `BUILD SUCCESSFUL` | 52 s | `tests="5" skipped="0" failures="0" errors="0" time="3.556"` |
 
-XML final con timestamp `2026-11-22T21:15:44.756Z`. `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` también terminaron en verde (46 s), con **69.16 % de cobertura de líneas** (74 cubiertas / 107 totales), por encima del gate del 60 %. Los logs completos de consola quedan como artefactos locales (`*.log` ignorado por `.gitignore`); el resumen versionado está en `3-runs.txt`.
+XML final con timestamp `2026-11-22T21:34:33.769Z`. `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` también terminaron en verde (46 s): 32 pruebas unitarias, 0 omitidas, y **81.31 % de cobertura de líneas** (87 cubiertas / 107 totales), por encima del gate del 60 %. Los logs completos de consola quedan como artefactos locales (`*.log` ignorado por `.gitignore`); el resumen versionado está en `3-runs.txt`.
 
 Archivos en `docs/informe/evidencia/HU-FILE-04/`:
 
@@ -133,7 +134,7 @@ Archivos en `docs/informe/evidencia/HU-FILE-04/`:
 
 ## 7. Etapa de integración en Jenkins
 
-El `Jenkinsfile` ya tenía `stage('Integration Tests')` (línea 425), que ejecuta `ci.integrationTest(service)` para servicios con `service.integration == true`. `jenkins/vars/ci.groovy` lanza la tarea Gradle, publica JUnit con `allowEmptyResults: false` y archiva `build/integration-test/*.log`.
+El `Jenkinsfile` ya tenía `stage('Integration Tests')` (línea 806), que ejecuta `ci.integrationTest(service)` para servicios con `service.integration == true`. `jenkins/vars/ci.groovy` lanza la tarea Gradle, publica JUnit con `allowEmptyResults: false` y archiva `build/integration-test/*.log`.
 
 Cambios complementarios:
 
@@ -142,7 +143,7 @@ Cambios complementarios:
 
 > La evidencia de Jenkins se entrega como configuración verificable en texto. La captura de la etapa ejecutándose en Jenkins on-prem queda pendiente de ejecutar el job sobre esta rama.
 
-Nota sobre el merge `440b96c`: el bloque `// TEMPORARY: the library is pinned to main ... REMOVE after merging to main` **no se eliminó en esta HU**; provino de `main` y sigue vigente allí (Jenkinsfile líneas 63-66). El fix de selección selectiva (`6c20d8b`) ya está en `main`, por lo que ese bloque y el override local de `enrichServices()` son redundantes; se propone limpiarlos en un PR aparte para no revalidar esta HU.
+Nota sobre los merges: el bloque `// TEMPORARY: the library is pinned to main ... REMOVE after merging to main` **no se eliminó en esta HU**; provino de `main` y sigue vigente allí (Jenkinsfile líneas 136-139 tras `af451ff`). El fix de selección selectiva (`6c20d8b`) ya está en `main`, por lo que ese bloque y el override local de `enrichServices()` (líneas 102-106) son redundantes; se propone limpiarlos en un PR aparte para no revalidar esta HU. El segundo merge (`21c406b`, con `af451ff`) resolvió el conflicto en `FileStorageServiceTest.java` conservando los 3 tests de delete/traversal de esta rama y los 9 tests nuevos de `main`.
 
 ---
 
