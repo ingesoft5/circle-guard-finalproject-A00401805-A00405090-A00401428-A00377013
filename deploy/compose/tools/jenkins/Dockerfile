@@ -1,8 +1,10 @@
 # CG-DOC: Jenkins controller image with Docker CLI, Node, and Sonar scanner.
+FROM aquasec/trivy:0.57.1 AS trivy-cli
 FROM jenkins/jenkins:lts-jdk21
 
 USER root
 # CG-DOC: Trivy is pinned to v0.70.0 because v0.58.1 has no published release assets.
+COPY --from=trivy-cli /usr/local/bin/trivy /usr/local/bin/trivy
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        ca-certificates curl gnupg git jq unzip \
@@ -36,6 +38,7 @@ RUN apt-get update \
     && kubectl version --client \
     && kustomize version \
     && k3d version \
+    && trivy --version \
     && rm -rf /var/lib/apt/lists/*
 
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt

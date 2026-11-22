@@ -65,8 +65,11 @@ def dockerBuildPushClientLocal(String tag) {
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
+        def registry = (env.NEXUS_REGISTRY ?: '').trim()
+        def base = registry ? "${registry}/circleguard-base" : ''
+        def baseArgs = base ? "--build-arg GRADLE_IMAGE=${base}/gradle:8.14-jdk21 --build-arg JDK_IMAGE=${base}/eclipse-temurin:21-jdk --build-arg ALPINE_IMAGE=${base}/eclipse-temurin:21-jre-alpine --build-arg JAMMY_IMAGE=${base}/eclipse-temurin:21-jre-jammy --build-arg NODE_IMAGE=${base}/node:22-alpine --build-arg WEB_IMAGE=${base}/nginx-unprivileged:1.27-alpine" : ''
         sh """
-            docker build \
+            docker build ${baseArgs} \
               --build-arg VERSION=${tag} \
               --build-arg GIT_COMMIT=${commit} \
               --build-arg SOURCE_URL=${source} \
@@ -80,6 +83,89 @@ def dockerBuildPushClientLocal(String tag) {
         sh "printf '%s\\n%s\\ncommit=%s\\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
     }
     return digest
+}
+
+def ensureTrivyBinaryLocal() {
+    sh '''
+        set -eu
+        if ! command -v trivy >/dev/null 2>&1 && [ ! -x "${WORKSPACE}/.trivy-bin/trivy" ]; then
+            echo "Extrayendo binario trivy desde aquasec/trivy:0.57.1..."
+            cid=$(docker create aquasec/trivy:0.57.1)
+            mkdir -p "${WORKSPACE}/.trivy-bin"
+            docker cp "$cid:/usr/local/bin/trivy" "${WORKSPACE}/.trivy-bin/trivy"
+            chmod 0755 "${WORKSPACE}/.trivy-bin/trivy"
+            cp "${WORKSPACE}/.trivy-bin/trivy" /usr/local/bin/trivy 2>/dev/null || true
+            docker rm -f "$cid" >/dev/null 2>&1 || true
+        fi
+    '''
+}
+
+def trivyScanIaCLocal() {
+    ensureTrivyBinaryLocal()
+    sh '''
+        set -eu
+        export PATH="/usr/local/bin:${WORKSPACE}/.trivy-bin:${PATH}"
+        mkdir -p build/reports/security
+        trivy config --severity HIGH,CRITICAL --format json --output build/reports/security/trivy-iac.json deploy/k8s/
+        trivy config --severity CRITICAL --exit-code 1 deploy/k8s/ | tee build/reports/security/trivy-iac.txt
+    '''
+    archiveArtifacts artifacts: 'build/reports/security/trivy-iac.*', allowEmptyArchive: true
+}
+
+def trivyScanImagesLocal(List images, String tag) {
+    ensureTrivyBinaryLocal()
+    images.each { service ->
+        def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${tag}"
+        sh """
+            set -eu
+            export PATH="/usr/local/bin:\${WORKSPACE}/.trivy-bin:\${PATH}"
+            mkdir -p build/reports/security
+            trivy image --severity HIGH,CRITICAL --ignore-unfixed --format json --output build/reports/security/trivy-${service.short}-${tag}.json "${image}"
+            trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 "${image}" | tee build/reports/security/trivy-${service.short}-${tag}.txt
+        """
+    }
+    archiveArtifacts artifacts: 'build/reports/security/trivy-*', allowEmptyArchive: true
+}
+
+def owaspZapGateLocal(String environment) {
+    def namespace = "cg-${environment}"
+    def buildNumber = env.BUILD_NUMBER ?: 'local'
+    // Every API surface that reaches production is scanned by its own baseline run;
+    // the blocking check below reads the aggregate report, so adding a target can
+    // never weaken the existing auth scan.
+    def targets = [
+            'auth'     : 'http://auth:8180/actuator/health',
+            'promotion': 'http://promotion:8088/actuator/health'
+    ]
+    sh """
+        set -eu
+        mkdir -p build/reports/security
+        : > build/reports/security/zap-${environment}.txt
+        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion --timeout=180s
+    """
+    targets.each { svc, target ->
+        def zapPod = "zap-gate-${svc}-${buildNumber}".toString()
+        sh """
+            set -eu
+            kubectl -n ${namespace} delete pod ${zapPod} --ignore-not-found >/dev/null 2>&1 || true
+            trap 'kubectl -n ${namespace} delete pod ${zapPod} --ignore-not-found >/dev/null 2>&1 || true' EXIT
+            kubectl -n ${namespace} run ${zapPod} \\
+              --image=ghcr.io/zaproxy/zaproxy:stable \\
+              --restart=Never \\
+              --labels="ci-security-gate=true" \\
+              --command -- zap-baseline.py -t ${target} -m 1
+            kubectl -n ${namespace} wait "pod/${zapPod}" --for=jsonpath='{.status.phase}'=Succeeded --timeout=300s
+            kubectl -n ${namespace} logs ${zapPod} | tee -a build/reports/security/zap-${environment}.txt
+        """
+    }
+    sh """
+        set -eu
+        if grep -qE '^FAIL-NEW:[[:space:]]*[1-9]' build/reports/security/zap-${environment}.txt; then
+            echo "OWASP ZAP detectó vulnerabilidades bloqueantes en ${namespace} antes de promover a prod." >&2
+            exit 1
+        fi
+    """
+    archiveArtifacts artifacts: "build/reports/security/zap-${environment}.txt", allowEmptyArchive: true
 }
 
 // Los tres flujos UI (login, cuestionario y acceso) viven en tests/e2e. El E2E
@@ -530,6 +616,13 @@ pipeline {
             }
         }
 
+        stage('Trivy IaC Security Gate') {
+            when { expression { !params.ROLLBACK_TAG?.trim() } }
+            steps {
+                script { trivyScanIaCLocal() }
+            }
+        }
+
         stage('Package') {
             when { expression { services && !params.ROLLBACK_TAG?.trim() } }
             steps {
@@ -609,6 +702,8 @@ pipeline {
             }
             steps {
                 script {
+                    // Preserve idempotent retries: existing images need no base-image catalog lookup.
+                    // New builds still use the Nexus mirror through ci.dockerBuildPush.
                     def images = services.findAll { it.docker }
                     if (!images) {
                         echo 'Ningún servicio seleccionado publica imagen.'
@@ -648,6 +743,21 @@ pipeline {
                         def digest = dockerBuildPushClientLocal(env.TAG)
                         echo "Digest publicado (web): ${digest}"
                     }
+                }
+            }
+        }
+
+        stage('Trivy Image Security Gate') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script {
+                    def images = services.findAll { it.docker }
+                    trivyScanImagesLocal(images, env.TAG)
                 }
             }
         }
@@ -700,6 +810,16 @@ pipeline {
                 }
             }
             steps { script { ci.deploy('stage', env.TAG) } }
+        }
+
+        stage('OWASP ZAP Security Gate') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps { script { owaspZapGateLocal('stage') } }
         }
 
         stage('Approval prod') {

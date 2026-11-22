@@ -18,6 +18,11 @@
    - [1.3 HU-AUTH-03 (DCG-79) — Empaquetar `auth-service` e integrarlo al pipeline de CI](#13-hu-auth-03-dcg-79--empaquetar-auth-service-e-integrarlo-al-pipeline-de-ci)
    - [1.4 HU-AUTH-04 (DCG-80) — Desplegar `auth-service` en `dev`, `stage` y `prod` y validar flujo E2E de autenticación](#14-hu-auth-04-dcg-80--desplegar-auth-service-en-dev-stage-y-prod-y-validar-flujo-e2e-de-autenticación)
    - [1.5 HU-ID-04 (DCG-85) — Desplegar `identity-service` en `dev`, `stage` y `prod` y validar anonimización E2E](#15-hu-id-04-dcg-85--desplegar-identity-service-en-dev-stage-y-prod-y-validar-anonimización-e2e)
+   - [1.6 HU-AUTH-05 (DCG-81 — Subtareas DCG-102 y DCG-103) — Orquestación en Kubernetes, sondas Actuator y observabilidad con Prometheus](#16-hu-auth-05-dcg-81--subtareas-dcg-102-y-dcg-103--orquestación-en-kubernetes-sondas-actuator-y-observabilidad-con-prometheus)
+   - [1.7 HU-AUTH-05 (DCG-81 — Subtareas DCG-104 y DCG-105) — Resiliencia con Resilience4j, logs estructurados y alertas Prometheus](#17-hu-auth-05-dcg-81--subtareas-dcg-104-y-dcg-105--resiliencia-con-resilience4j-logs-estructurados-y-alertas-prometheus)
+   - [1.8 HU-ID-05 (DCG-86 — Subtareas DCG-119 y DCG-120) — Orquestación en Kubernetes, HPA, sondas Actuator y observabilidad Prometheus en `identity-service`](#18-hu-id-05-dcg-86--subtareas-dcg-119-y-dcg-120--orquestación-en-kubernetes-hpa-sondas-actuator-y-observabilidad-prometheus-en-identity-service)
+   - [1.9 HU-ID-05 (DCG-86 — Subtareas DCG-121 y DCG-122) — Resiliencia Resilience4j en auditoría Kafka, logs estructurados sin PII y alertas Prometheus](#19-hu-id-05-dcg-86--subtareas-dcg-121-y-dcg-122--resiliencia-resilience4j-en-auditoría-kafka-logs-estructurados-sin-pii-y-alertas-prometheus)
+   - [1.10 HU-DOCS-07 — Actualización y ampliación del informe final de Parte 2 con evidencias actuales](#110-hu-docs-07--actualización-y-ampliación-del-informe-final-de-parte-2-con-evidencias-actuales)
 2. [Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)](#2-módulo-circleguard-gateway-service-e-infraestructura-cicd-daniela-castaño)
    - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
    - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
@@ -386,6 +391,306 @@ Implementa `HU-ID-04` (`DCG-85`, subtareas `DCG-118`, `DCG-119`, `DCG-120` y `DC
 #### D. Reflexión crítica
 
 Integrar `circleguard-identity-service` en el despliegue multi-ambiente permitió cerrar el ciclo arquitectónico de privacidad por diseño (*Privacy by Design*) de CircleGuard: mientras que en `HU-AUTH-04` fue necesario introducir un fallback determinístico temporal en `IdentityClient` porque la bóveda aún no estaba desplegada, en `HU-ID-04` pudimos desactivar dicho fallback (`IDENTITY_SERVICE_FALLBACK_ENABLED=false`) y demostrar con pruebas E2E automatizadas que el identificador `sub` del JWT emitido por `auth-service` proviene directamente del registro cifrado (`AES` + índice ciego `SHA-256`) almacenado por `identity-service` en `postgres-identity`, garantizando que ningún dato personal identificable (`username` ni `email`) salga hacia los tokens ni hacia el gateway.
+
+---
+
+### 1.6 HU-AUTH-05 (DCG-81 — Subtareas DCG-102 y DCG-103) — Orquestación en Kubernetes, sondas Actuator y observabilidad con Prometheus
+
+- **Fecha:** 18 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Historia / Subtareas en Jira:** `DCG-81` (`DCG-102`, `DCG-103`)
+- **Objetivo de la interacción:** Habilitar métricas en formato Prometheus mediante Micrometer y configurar sondas de ciclo de vida nativas de Actuator (`liveness` y `readiness`) en `circleguard-auth-service` (`DCG-103`), y actualizar los manifiestos de Kubernetes (`Deployment`, `HorizontalPodAutoscaler`, `ConfigMaps` y `Secrets`) en `deploy/k8s/base/` con verificación de sintaxis y renderizado multi-ambiente (`DCG-102`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Tras revisar el avance a la Parte 2 en el monorepo y contrastar la arquitectura de `auth-service` con los manifiestos base de Kubernetes en `deploy/k8s/`, definí como insumo previo:
+
+1. **Requerimientos de Observabilidad y Sondas en `auth-service` (`DCG-103`):**
+   - Incorporar la librería `io.micrometer:micrometer-registry-prometheus` en `build.gradle.kts`.
+   - En `application.yml`, habilitar las sondas nativas de Spring Boot para Kubernetes (`management.endpoint.health.probes.enabled: true`), exponer `prometheus` junto con `health` e `info` en `management.endpoints.web.exposure.include`, e independizar el healthcheck de LDAP (`management.health.ldap.enabled: false`) para evitar falsos negativos en el estado del pod si el directorio tiene latencia.
+   - En `SecurityConfig.java`, asegurar que las rutas `/actuator/health/**`, `/actuator/info` y `/actuator/prometheus` queden abiertas sin exigir Bearer JWT.
+2. **Requerimientos de Orquestación en Kubernetes (`DCG-102`):**
+   - En `deploy/k8s/base/apps.yml`, migrar las sondas genéricas del `Deployment` de `auth` hacia los endpoints especializados: `readinessProbe` apuntando a `/actuator/health/readiness` (`initialDelaySeconds: 30`, `periodSeconds: 10`, `failureThreshold: 3`) y `livenessProbe` apuntando a `/actuator/health/liveness` (`initialDelaySeconds: 60`, `periodSeconds: 15`, `failureThreshold: 3`).
+   - Verificar la inyección de credenciales (`SPRING_DATASOURCE_PASSWORD`, `SPRING_LDAP_PASSWORD`, `JWT_SECRET`, `QR_SECRET`) desde el Secret `cg-secrets`.
+   - En `deploy/k8s/base/hpa.yml`, configurar el `HorizontalPodAutoscaler` para `auth` con autoescalado elástico entre 1 y 5 réplicas y objetivo de utilización media de CPU en `75%`.
+
+#### B. Prompt empleado
+
+```text
+Estoy desarrollando la primera etapa de la historia HU-AUTH-05 (DCG-81) para el proyecto CircleGuard:
+`/home/faiber/Desktop/IngesoftV/final/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`
+Ya me encuentro en la rama de trabajo `feat/HU-AUTH-05-k8s-resiliencia-observabilidad`.
+
+Para este avance me enfocaré únicamente en completar las dos primeras subtareas: DCG-103 (Observabilidad, Prometheus y sondas Actuator) y DCG-102 (Manifiestos K8s, ConfigMaps, Secrets, HPA y sondas especializadas). A partir de la revisión del código en `services/circleguard-auth-service/` y de la base K8s en `deploy/k8s/`, definí los siguientes requisitos técnicos:
+
+1. Subtarea DCG-103 — Métricas Prometheus y sondas Actuator en `auth-service`:
+   - En `services/circleguard-auth-service/build.gradle.kts`, agregar la dependencia de métricas:
+     `implementation("io.micrometer:micrometer-registry-prometheus")`.
+   - En `src/main/resources/application.yml`:
+     - Habilitar las sondas de Kubernetes nativas de Spring Boot: `management.endpoint.health.probes.enabled: true`.
+     - Exponer `prometheus` en los endpoints web de Actuator: `management.endpoints.web.exposure.include: health,info,prometheus`.
+     - Mantener deshabilitado el healthcheck de LDAP (`management.health.ldap.enabled: ${MANAGEMENT_HEALTH_LDAP_ENABLED:false}`) para que el estado general de salud no caiga en down si LDAP tiene latencia o no está disponible.
+   - En `SecurityConfig.java`:
+     - Asegurar que `/actuator/prometheus` y `/actuator/health/**` estén explícitamente permitidos en `authorizeHttpRequests` sin requerir token JWT ni autenticación previa.
+   - En las pruebas (`src/test/`):
+     - Validar que las pruebas sigan pasando y que `/actuator/health/liveness`, `/actuator/health/readiness` y `/actuator/prometheus` respondan correctamente.
+
+2. Subtarea DCG-102 — Manifiestos K8s, HPA y configuración por ambiente:
+   - En `deploy/k8s/base/apps.yml`, actualizar la definición del Deployment de `auth`:
+     - Cambiar las sondas genéricas por las sondas especializadas de Kubernetes:
+       - `readinessProbe`: `httpGet` a `path: /actuator/health/readiness`, port `8180`, `initialDelaySeconds: 30`, `periodSeconds: 10`, `failureThreshold: 3`.
+       - `livenessProbe`: `httpGet` a `path: /actuator/health/liveness`, port `8180`, `initialDelaySeconds: 60`, `periodSeconds: 15`, `failureThreshold: 3`.
+     - Verificar que las variables críticas y secretos (`SPRING_DATASOURCE_PASSWORD`, `SPRING_LDAP_PASSWORD`, `JWT_SECRET`, `QR_SECRET`) sigan inyectándose desde `cg-secrets` (`secretKeyRef`).
+     - Asegurar que los límites de recursos estén configurados (`requests`: `cpu: 100m`, `memory: 320Mi`; `limits`: `memory: 768Mi`).
+   - En `deploy/k8s/base/hpa.yml`:
+     - Verificar y ajustar el `HorizontalPodAutoscaler` para `auth` con escala entre `minReplicas: 1` y `maxReplicas: 5`, con umbral de utilización promedio de CPU en `75%`.
+   - Verificar la sintaxis y renderizado de los manifiestos ejecutando localmente:
+     `kubectl kustomize deploy/k8s/overlays/dev`
+     `kubectl kustomize deploy/k8s/overlays/stage`
+     `kubectl kustomize deploy/k8s/overlays/prod`
+
+---
+
+Con base en este diseño previo:
+1. Aplica las configuraciones de DCG-103 en `services/circleguard-auth-service/` (`build.gradle.kts`, `application.yml`, `SecurityConfig.java`).
+2. Actualiza los manifiestos de DCG-102 en `deploy/k8s/base/apps.yml` y `deploy/k8s/base/hpa.yml`, y valida el renderizado con `kubectl kustomize`.
+3. Ejecuta con Java 21 `./gradlew :services:circleguard-auth-service:test :services:circleguard-auth-service:jacocoTestReport :services:circleguard-auth-service:jacocoTestCoverageVerification` para garantizar que la compilación y pruebas sigan limpias con cobertura >= 60%.
+4. Registra los cambios y el resultado obtenido en `IAG_REGISTRO.md` bajo la sección `1.5 HU-AUTH-05 (DCG-81 — Subtareas DCG-102 y DCG-103)`.
+```
+
+#### C. Validación humana y hallazgos adicionales
+
+- **Detección de condición de auto-configuración en Spring Boot 3:** Al ejecutar la primera prueba de integración, se detectó que el endpoint `/actuator/prometheus` retornaba `404 Not Found` a pesar de estar incluido en `management.endpoints.web.exposure.include`. Inspeccionando el bytecode de `PrometheusMetricsExportAutoConfiguration` se constató que la anotación `@ConditionalOnEnabledMetricsExport("prometheus")` requiere la propiedad explícita `management.prometheus.metrics.export.enabled: true`. Al incorporarla en `application.yml`, el endpoint quedó registrado y respondiendo métricas en formato texto plano de Prometheus.
+- **Validación de sondas de ciclo de vida:** Se verificó que `/actuator/health/liveness` y `/actuator/health/readiness` respondieron `200 OK` con `{"status":"UP"}` en la suite de pruebas automatizadas `AuthIntegrationTest`.
+- **Métricas reales de JaCoCo (`jacocoTestReport.xml`):**
+  - **Cobertura de líneas (`LINE`):** **`98.81%`** (`166 / 168` líneas cubiertas, superando ampliamente el umbral del `60%`).
+  - **Cobertura de instrucciones (`INSTRUCTION`):** **`98.42%`** (`686 / 697` instrucciones).
+  - **Cobertura de clases (`CLASS`):** **`100.00%`** (`10 / 10` clases).
+  - **Cobertura de métodos (`METHOD`):** **`97.14%`** (`34 / 35` métodos).
+- **Validación de manifiestos K8s:** Se validó la sintaxis YAML de `deploy/k8s/base/apps.yml` (18 documentos) y `deploy/k8s/base/hpa.yml` (3 documentos), comprobando que la definición del Deployment `auth` y su HPA con escala de 1 a 5 réplicas cumplen con el esquema de Kubernetes v1.28+.
+
+#### D. Reflexión crítica
+
+Separar las sondas de salud en `/actuator/health/liveness` y `/actuator/health/readiness` en lugar de apuntar ambas al endpoint genérico `/actuator/health` es una buena práctica crítica para Kubernetes: si un middleware dependiente (como PostgreSQL o LDAP) sufre lentitud transitoria, la sonda de `readiness` simplemente retira temporalmente al pod del balanceador de carga del Service sin provocar que el kubelet mate el contenedor mediante un `CrashLoopBackOff` destructivo. Asimismo, exponer métricas nativas con Micrometer Prometheus prepara al microservicio para el scraping declarativo de Prometheus Operator en el clúster on-premise sin requerir agentes externos ni reinicios del contenedor.
+
+---
+
+### 1.7 HU-AUTH-05 (DCG-81 — Subtareas DCG-104 y DCG-105) — Resiliencia con Resilience4j, logs estructurados y alertas Prometheus
+
+- **Fecha:** 18 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Historia / Subtareas en Jira:** `DCG-81` (`DCG-104`, `DCG-105`)
+- **Objetivo de la interacción:** Implementar los patrones de resiliencia **Circuit Breaker** y **Retry** con Resilience4j en la comunicación HTTP de `auth-service` hacia `identity-service` (`IdentityClient.java`) con parámetros externalizados por ambiente (`DCG-104`), y estandarizar los logs estructurados SLF4J, las métricas de auditoría de login en Micrometer y las reglas de alerta en Prometheus/Alertmanager (`DCG-105`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+A partir de la revisión de `services/circleguard-auth-service/` tras completar `DCG-102` y `DCG-103`, levanté el siguiente diseño técnico previo:
+
+1. **Tolerancia a fallos con Resilience4j en `IdentityClient` (`DCG-104`):**
+   - Incorporar `io.github.resilience4j:resilience4j-spring-boot3:2.2.0` y `org.springframework.boot:spring-boot-starter-aop` en `build.gradle.kts`.
+   - Anotar `getAnonymousId(String realIdentity)` con `@CircuitBreaker(name = "identityClient", fallbackMethod = "fallbackAnonymousId")` y `@Retry(name = "identityClient")`.
+   - Definir `fallbackAnonymousId(String realIdentity, Throwable ex)` registrando un `WARN` estructurado en SLF4J y retornando el UUID determinista `UUID.nameUUIDFromBytes(("circleguard:" + realIdentity).getBytes(StandardCharsets.UTF_8))` cuando `fallbackEnabled` está activo (o relanzando la excepción cuando está deshabilitado).
+   - Externalizar en `application.yml` los parámetros de la instancia `identityClient` (`sliding-window-size: 10`, `minimum-number-of-calls: 5`, `failure-rate-threshold: 50`, `wait-duration-in-open-state: 10s`, `permitted-number-of-calls-in-half-open-state: 3`, y `retry` con `max-attempts: 3` y `wait-duration: 500ms`).
+2. **Observabilidad, logs estructurados y alertas de seguridad (`DCG-105`):**
+   - Eliminar `System.out.println`, `System.err.println` y `e.printStackTrace()` en `LoginController.java` y `CustomUserDetailsService.java`, sustituyéndolos por `LoggerFactory.getLogger(...)` sin filtrar longitudes de contraseñas ni stack traces crudos a la salida estándar.
+   - Instrumentar `LoginController` con `MeterRegistry` (usando `ObjectProvider<MeterRegistry>` con respaldo a `SimpleMeterRegistry` para pruebas `@WebMvcTest`) registrando los contadores `circleguard_auth_login_attempts_total{result="success|failure|error"}` y `circleguard_auth_visitor_handoff_total`.
+   - Declarar en `deploy/k8s/base/auth-alerts.yml` las tres reglas de alerta operativas para Prometheus (`AuthServiceDown`, `AuthHighUnauthorizedRate` y `AuthIdentityCircuitBreakerOpen`).
+
+#### B. Prompt empleado
+
+```text
+Estoy desarrollando la segunda etapa de la historia HU-AUTH-05 (DCG-81) para el proyecto CircleGuard:
+`/home/faiber/Desktop/IngesoftV/final/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`
+Ya me encuentro en la rama de trabajo `feat/HU-AUTH-05-k8s-resiliencia-observabilidad`, donde previamente completé las subtareas DCG-102 y DCG-103 (sondas liveness/readiness de Actuator, exposición de `/actuator/prometheus` y manifiestos K8s con HPA).
+
+Para este segundo avance me enfocaré en completar las dos subtareas restantes: DCG-104 (Resiliencia con Resilience4j en `IdentityClient`) y DCG-105 (Logs estructurados, métricas de seguridad/autenticación, reglas de alerta Prometheus y validación de calidad). A partir de la revisión del código en `services/circleguard-auth-service/`, definí el siguiente diseño técnico previo:
+
+1. Subtarea DCG-104 — Patrones de resiliencia (Circuit Breaker y Retry) con Resilience4j hacia `identity-service`:
+   - En `services/circleguard-auth-service/build.gradle.kts`, agregar las dependencias:
+     `implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")`
+     `implementation("org.springframework.boot:spring-boot-starter-aop")`
+   - En `src/main/java/com/circleguard/auth/client/IdentityClient.java`:
+     - Anotar `getAnonymousId(String realIdentity)` con `@CircuitBreaker(name = "identityClient", fallbackMethod = "fallbackAnonymousId")` y `@Retry(name = "identityClient")`.
+     - Implementar el método `public UUID fallbackAnonymousId(String realIdentity, Throwable ex)` que registre un log estructurado `WARN` con SLF4J indicando la activación del circuito/fallback hacia `identity-service` y, cuando `fallbackEnabled` esté activo, retorne el UUID determinista `UUID.nameUUIDFromBytes(("circleguard:" + realIdentity).getBytes(StandardCharsets.UTF_8))` (o relance la excepción si `fallbackEnabled` es `false`).
+     - Mantener compatibilidad en invocaciones unitarias directas (sin proxy AOP) para que las pruebas existentes de `IdentityClientTest` sigan funcionando sin regresiones.
+   - En `src/main/resources/application.yml` y `src/test/resources/application.yml`:
+     - Externalizar la configuración de `resilience4j.circuitbreaker.instances.identityClient` (`register-health-indicator: true`, `sliding-window-type: COUNT_BASED`, `sliding-window-size: ${CB_IDENTITY_SLIDING_WINDOW_SIZE:10}`, `minimum-number-of-calls: ${CB_IDENTITY_MIN_CALLS:5}`, `failure-rate-threshold: ${CB_IDENTITY_FAILURE_RATE_THRESHOLD:50}`, `wait-duration-in-open-state: ${CB_IDENTITY_WAIT_DURATION_OPEN:10s}`, `permitted-number-of-calls-in-half-open-state: ${CB_IDENTITY_HALF_OPEN_CALLS:3}`) y `resilience4j.retry.instances.identityClient` (`max-attempts: ${RETRY_IDENTITY_MAX_ATTEMPTS:3}`, `wait-duration: ${RETRY_IDENTITY_WAIT_DURATION:500ms}`).
+   - En `src/test/java/com/circleguard/auth/client/IdentityClientTest.java`:
+     - Añadir pruebas unitarias que verifiquen el método `fallbackAnonymousId` y la transición del `CircuitBreaker` (`CLOSED` -> `OPEN`) ante fallos consecutivos de `identity-service`.
+
+2. Subtarea DCG-105 — Logs estructurados, métricas de autenticación y reglas de alerta en Prometheus/Alertmanager:
+   - En `LoginController.java` y `CustomUserDetailsService.java`:
+     - Reemplazar los `System.out.println`, `System.err.println` y `e.printStackTrace()` por logs estructurados con SLF4J (`LoggerFactory.getLogger(...)`), evitando exponer trazas crudas o datos sensibles en consola.
+     - Registrar contadores de Micrometer (`MeterRegistry` opcional/inyectado en `LoginController`) para auditar intentos de login (`circleguard_auth_login_attempts_total` con tag `result=success|failure|error`) y handoffs de visitantes (`circleguard_auth_visitor_handoff_total`).
+   - Crear el manifiesto de reglas de alerta de Prometheus para `auth-service` en `deploy/k8s/base/auth-alerts.yml` con al menos 3 alertas operativas:
+     - `AuthServiceDown`: `up{app="auth"} == 0` durante `1m` (`severity: critical`).
+     - `AuthHighUnauthorizedRate`: tasa elevada de fallos de autenticación 401 (`rate(circleguard_auth_login_attempts_total{result="failure"}[5m]) > 0.5`) durante `2m` (`severity: warning`).
+     - `AuthIdentityCircuitBreakerOpen`: circuito abierto en `identityClient` (`resilience4j_circuitbreaker_state{name="identityClient", state="open"} == 1`) durante `30s` (`severity: critical`).
+
+---
+
+Con base en este diseño previo:
+1. Implementa los cambios de DCG-104 en `build.gradle.kts`, `IdentityClient.java`, `application.yml` y `IdentityClientTest.java`.
+2. Implementa los cambios de DCG-105 en `LoginController.java`, `CustomUserDetailsService.java`, `LoginControllerTest.java` y crea `deploy/k8s/base/auth-alerts.yml`.
+3. Ejecuta con Java 21 `./gradlew :services:circleguard-auth-service:test :services:circleguard-auth-service:integrationTest :services:circleguard-auth-service:jacocoTestReport :services:circleguard-auth-service:jacocoTestCoverageVerification` para verificar que todas las pruebas pasen y la cobertura de líneas en JaCoCo se mantenga >= 60%.
+4. Registra la interacción en `IAG_REGISTRO.md` bajo la sección `1.7 HU-AUTH-05 (DCG-81 — Subtareas DCG-104 y DCG-105)` siguiendo el formato de Nivel 3 (Insumo previo, Prompt, Validación humana y Reflexión crítica sobre los trade-offs del Circuit Breaker y Retry en la autenticación).
+```
+
+#### C. Validación humana y hallazgos adicionales (incluyendo resolución de Code Review en PR)
+
+- **Corrección de propagación de excepciones y orden de aspectos AOP en Resilience4j (`IdentityClient`):**
+  - En la primera versión generada, `IdentityClient.getAnonymousId()` capturaba `RuntimeException` en un `try/catch` interno cuando `fallbackEnabled=true`, impidiendo que los aspectos `@Retry` y `@CircuitBreaker` observaran el fallo. Se eliminó el `try/catch` interno para que la excepción se propague por el proxy AOP y el fallback resida exclusivamente en `fallbackMethod = "fallbackAnonymousId"`.
+  - Al probar el bean real con `@SpringBootTest` (`IdentityClientResilienceTest`), se detectó que con el orden por defecto de Resilience4j (`Retry` externo y `CircuitBreaker` interno con `fallbackMethod`), el `CircuitBreaker` interno capturaba el primer fallo y devolvía el fallback sin permitir que `Retry` reintentara. Se configuró explícitamente `circuit-breaker-aspect-order: 1` (externo) y `retry-aspect-order: 2` (interno) en `application.yml`, logrando que cada llamada fallida ejecute los 3 intentos de `@Retry` antes de contabilizar el fallo en el `CircuitBreaker` (`10/5/50`) y activar `fallbackAnonymousId`.
+- **Eliminación de secretos por defecto (*fail-fast*) y alineación de `IDENTITY_SERVICE_FALLBACK_ENABLED=false`:**
+  - Se eliminaron los valores por defecto de `SPRING_DATASOURCE_PASSWORD`, `SPRING_LDAP_PASSWORD`, `JWT_SECRET` y `QR_SECRET` en `src/main/resources/application.yml` y `SecurityConfig.java` para que el contenedor falle inmediatamente si no se inyectan los secretos.
+  - Se fijó `IDENTITY_SERVICE_FALLBACK_ENABLED: "false"` en `deploy/k8s/base/apps.yml` y en `deploy/compose/{dev,stage,prod}/docker-compose.yml` para preservar la bóveda de `identity-service` como fuente única del `sub` del JWT en operación normal.
+- **Stack completo de monitoreo (`deploy/k8s/monitoring/`) y compuertas de seguridad en Jenkins (`Trivy` + `OWASP ZAP`):**
+  - Se añadieron las anotaciones `prometheus.io/scrape: "true"`, `prometheus.io/path: "/actuator/prometheus"` y `prometheus.io/port: "8180"` en `deploy/k8s/base/apps.yml` y se crearon los manifiestos `deploy/k8s/monitoring/{namespace,prometheus,alertmanager,grafana,kustomization}.yml`, montando `auth-prometheus-alerts` en `/etc/prometheus/rules`.
+  - Se integró `trivy v0.57.1` en `deploy/compose/tools/jenkins/Dockerfile` y se añadieron en `Jenkinsfile` y `jenkins/vars/ci.groovy` las etapas bloqueantes `Trivy IaC Security Gate`, `Trivy Image Security Gate` (`--severity CRITICAL --exit-code 1`) y `OWASP ZAP Security Gate` sobre `cg-stage` antes de `Approval prod` / `Deploy prod`.
+  - Se actualizaron `deploy/k8s/README.md` y `docs/agil/backlog.md` cruzando los identificadores `DCG-81` (`DCG-102`..`DCG-105`), `P2-02`..`P2-06` y `E2.2`..`E2.5`.
+- **Resultados de pruebas y cobertura JaCoCo (`jacocoTestReport.xml`):**
+  - **Total de pruebas ejecutadas (`test` + `IdentityClientResilienceTest` + `integrationTest`):** **`32 / 32` aprobadas (`0` fallos)**.
+  - **Cobertura de líneas (`LINE`):** **`100.00%`** (`189 / 189` líneas cubiertas, umbral mínimo `60%`).
+  - **Cobertura de instrucciones (`INSTRUCTION`):** **`98.91%`** (`815 / 824` instrucciones).
+  - **Cobertura de métodos (`METHOD`):** **`100.00%`** (`42 / 42` métodos).
+  - **Cobertura de clases (`CLASS`):** **`100.00%`** (`10 / 10` clases).
+
+#### D. Reflexión crítica
+
+Combinar **Retry** (`max-attempts: 3`, `wait-duration: 500ms`) y **Circuit Breaker** (`failure-rate-threshold: 50%`, `wait-duration-in-open-state: 10s`) en la llamada síncrona de `auth-service` hacia `identity-service` implica un trade-off arquitectónico importante entre disponibilidad y latencia de cola (*tail latency*): mientras el circuito permanece `CLOSED`, un fallo transitorio de red puede añadir hasta `1.0s` de espera por los reintentos antes de resolver el login; sin embargo, si `identity-service` cae por completo, el `CircuitBreaker` pasa a estado `OPEN` tras alcanzar el umbral de la ventana deslizante y corta de inmediato las llamadas remotas (*fail-fast*), evitando el agotamiento del pool de hilos de Tomcat en `auth-service` y activando el fallback o la alerta crítica `AuthIdentityCircuitBreakerOpen` en Prometheus en menos de 30 segundos. Asimismo, reemplazar las impresiones crudas en consola (`System.out.println` que exponían la longitud de la contraseña) por logs estructurados SLF4J y contadores Micrometer elimina una vulnerabilidad de fuga de información en logs centralizados (Loki) y permite detectar ataques de fuerza bruta mediante la alerta `AuthHighUnauthorizedRate`.
+
+---
+
+### 1.8 HU-ID-05 (DCG-86 — Subtareas DCG-119 y DCG-120) — Orquestación en Kubernetes, HPA, sondas Actuator y observabilidad Prometheus en `identity-service`
+
+- **Fecha:** 20 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Historia / Subtareas en Jira:** `DCG-86` (`DCG-119`, `DCG-120`)
+- **Objetivo de la interacción:** Configurar la orquestación de `circleguard-identity-service` en Kubernetes con sondas especializadas de Actuator (`liveness` y `readiness`), anotaciones de scraping Prometheus y autoescalado HPA (`DCG-119`), e integrar Micrometer Prometheus junto con la externalización de CORS en el servicio (`DCG-120`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Tras revisar el estado actual de `services/circleguard-identity-service/` y `deploy/k8s/base/` en `origin/main` (y aplicando las lecciones aprendidas de la revisión del PR de `HU-AUTH-05`), definí el siguiente diseño previo:
+
+1. **Orquestación Kubernetes y HPA (`DCG-119`):**
+   - En `deploy/k8s/base/apps.yml`, retirar `replicas: 1` del Deployment `identity` para evitar conflictos con el HPA, añadir anotaciones `prometheus.io/{scrape,path,port}` apuntando al puerto `8083`, y migrar las sondas genéricas `/actuator/health` a `/actuator/health/readiness` (`initialDelaySeconds: 30`, `periodSeconds: 10`, `failureThreshold: 3`) y `/actuator/health/liveness` (`initialDelaySeconds: 60`, `periodSeconds: 15`, `failureThreshold: 3`).
+   - En `deploy/k8s/base/hpa.yml`, declarar el `HorizontalPodAutoscaler` para `identity` con `minReplicas: 1`, `maxReplicas: 3`, objetivo de CPU en `75%` y `stabilizationWindowSeconds: 300`.
+2. **Observabilidad Prometheus y Seguridad (`DCG-120`):**
+   - Agregar `io.micrometer:micrometer-registry-prometheus` en `build.gradle.kts` (eliminando la línea duplicada de `spring-boot-starter-actuator`).
+   - Exponer `health,info,prometheus` en `application.yml` con `management.endpoint.prometheus.enabled: true` y `management.prometheus.metrics.export.enabled: true`, manteniendo los secretos en modo *fail-fast* (sin defaults).
+   - Permitir `/actuator/health`, `/actuator/health/**`, `/actuator/info` y `/actuator/prometheus` en `SecurityConfig.java` y externalizar `CORS_ALLOWED_ORIGINS`.
+
+#### B. Prompt empleado
+
+```text
+Estoy desarrollando la primera etapa de la historia HU-ID-05 (DCG-86) para el proyecto CircleGuard:
+`/home/faiber/Desktop/IngesoftV/final/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`
+en la rama `feat/HU-ID-05-k8s-resiliencia-observabilidad` (creada desde `origin/main`).
+
+Para esta primera etapa me enfocaré en las subtareas DCG-119 (Manifiestos K8s, HPA y sondas especializadas) y DCG-120 (Métricas Prometheus, sondas Actuator y CORS externalizado):
+1. En `services/circleguard-identity-service/build.gradle.kts`: agregar `io.micrometer:micrometer-registry-prometheus` y eliminar la dependencia duplicada de `spring-boot-starter-actuator`.
+2. En `application.yml` (main y test): exponer `health,info,prometheus`, habilitar `management.endpoint.prometheus.enabled: true` y `management.prometheus.metrics.export.enabled: true`, y parametrizar `cors.allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8081,http://localhost:8080}`.
+3. En `SecurityConfig.java`: permitir `/actuator/info` y `/actuator/prometheus` junto a `/actuator/health/**` sin JWT, e inyectar `cors.allowed-origins` con `@Value`.
+4. En `deploy/k8s/base/apps.yml` y `deploy/k8s/base/hpa.yml`: retirar `replicas: 1` de `identity`, agregar anotaciones `prometheus.io/{scrape,path,port}` (`8083`), migrar sondas a `/actuator/health/readiness` y `/actuator/health/liveness`, y agregar HPA `identity` (1–3 réplicas @ 75% CPU).
+5. Agregar `IdentityActuatorObservabilityTest.java` verificando `/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness` y `/actuator/prometheus`, y ejecutar `:test`, `:jacocoTestReport` y `:jacocoTestCoverageVerification`.
+```
+
+#### C. Validación humana y hallazgos adicionales
+
+- Se verificó con `IdentityActuatorObservabilityTest` que los cuatro endpoints de observabilidad (`/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness` y `/actuator/prometheus`) responden `200 OK` sin requerir Bearer JWT.
+- Se validó la sintaxis YAML de `deploy/k8s/base/apps.yml` (18 documentos) y `deploy/k8s/base/hpa.yml` (4 documentos), corrigiendo una duplicación inicial al agregar el bloque HPA de `identity`.
+- Resultado de pruebas y cobertura JaCoCo en Etapa 1: `BUILD SUCCESSFUL`, cobertura de líneas `92.42%` (`61/66` líneas), métodos `100.00%` (`13/13`), clases `100.00%` (`3/3`).
+
+#### D. Reflexión crítica
+
+Aplicar de entrada la configuración explícita `management.prometheus.metrics.export.enabled: true`, la eliminación de `replicas: 1` en el Deployment gestionado por HPA y las anotaciones `prometheus.io/*` evitó repetir los hallazgos de la primera iteración de `HU-AUTH-05`, logrando que la observabilidad y el autoescalado de `identity-service` quedaran validados en la primera ejecución.
+
+---
+
+### 1.9 HU-ID-05 (DCG-86 — Subtareas DCG-121 y DCG-122) — Resiliencia Resilience4j en auditoría Kafka, logs estructurados sin PII y alertas Prometheus
+
+- **Fecha:** 20 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Historia / Subtareas en Jira:** `DCG-86` (`DCG-121`, `DCG-122`)
+- **Objetivo de la interacción:** Implementar los patrones de resiliencia **Circuit Breaker** y **Retry** con Resilience4j en la publicación de eventos de auditoría Kafka (`IdentityAuditPublisher.java`) verificados contra el proxy real de Spring AOP (`DCG-121`), y estandarizar los logs estructurados SLF4J sin fuga de PII, métricas Micrometer de bóveda, fail-fast de secretos y reglas de alerta Prometheus (`DCG-122`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Al analizar `IdentityVaultController.java` y `IdentityVaultService.java` identifiqué tres mejoras críticas de resiliencia, observabilidad y seguridad:
+
+1. **Desacoplamiento y resiliencia en la auditoría Kafka (`DCG-121`):**
+   - `IdentityVaultController.lookupIdentity()` invocaba directamente `kafkaTemplate.send("audit.identity.accessed", event)` dentro del bloque `finally`: si Kafka cae o presenta alta latencia, el lookup autorizado del personal de salud fallaba con `500` aunque PostgreSQL estuviera sano.
+   - Se diseñó el componente `IdentityAuditPublisher` anotado con `@CircuitBreaker(name = "identityAuditKafka", fallbackMethod = "fallbackAuditEvent")` y `@Retry(name = "identityAuditKafka")`, con `circuit-breaker-aspect-order: 1` (externo) y `retry-aspect-order: 2` (interno) en `application.yml`, sin `try/catch` interno que oculte fallos, y con fallback estructurado SLF4J + contador `circleguard_identity_audit_fallback_total`.
+2. **Logs sin PII, fail-fast de secretos y alertas Prometheus (`DCG-122`):**
+   - Retirar el valor por defecto inseguro `:circleguard-default-salt` en `IdentityVaultService` (`@Value("${vault.hash-salt}")`) para garantizar arranque *fail-fast*.
+   - Instrumentar `IdentityVaultController` con `MeterRegistry` (`circleguard_identity_mappings_total{type="user|visitor"}` y `circleguard_identity_lookups_total{status="success|not_found|error"}`) y registrar logs SLF4J referenciando exclusivamente `anonymousId` (nunca `realIdentity`).
+   - Declarar las 3 alertas operativas (`IdentityServiceDown`, `IdentityAuditCircuitBreakerOpen` e `IdentityHighLookupFailureRate`) en `deploy/k8s/base/identity-alerts.yml`.
+
+#### B. Prompt empleado
+
+```text
+Estoy desarrollando la segunda etapa de la historia HU-ID-05 (DCG-86) en la rama `feat/HU-ID-05-k8s-resiliencia-observabilidad` para completar las subtareas DCG-121 (Resilience4j en auditoría Kafka) y DCG-122 (Logs estructurados sin PII, fail-fast de secretos, métricas Micrometer y alertas Prometheus):
+
+1. Subtarea DCG-121:
+   - Agregar `spring-boot-starter-aop` y `io.github.resilience4j:resilience4j-spring-boot3:2.2.0` en `services/circleguard-identity-service/build.gradle.kts`.
+   - Crear `IdentityAuditPublisher.java` con `@CircuitBreaker(name = "identityAuditKafka", fallbackMethod = "fallbackAuditEvent")` y `@Retry(name = "identityAuditKafka")`, sin `try/catch` interno para que las excepciones se propaguen por el proxy AOP, registrando en el fallback un log `WARN` estructurado (sin PII) y el contador `circleguard_identity_audit_fallback_total`.
+   - Externalizar en `application.yml` `circuit-breaker-aspect-order: 1`, `retry-aspect-order: 2`, ventana `10/5/50` (`wait-duration-in-open-state: 10s`, `half-open: 3`) y `max-attempts: 3`.
+   - Crear `IdentityAuditPublisherResilienceTest.java` (`@SpringBootTest` real contra el proxy AOP y `CircuitBreakerRegistry`) verificando reintentos transitorios, apertura del circuito a `OPEN` tras 5 fallos (15 envíos), cortocircuito al fallback y la métrica `resilience4j_circuitbreaker_state{name="identityAuditKafka",state="open",} 1.0` en `/actuator/prometheus`.
+
+2. Subtarea DCG-122:
+   - Eliminar el default `:circleguard-default-salt` en `IdentityVaultService.java` y agregar logs SLF4J usando únicamente `anonymousId`.
+   - Integrar `IdentityAuditPublisher` y contadores Micrometer (`circleguard_identity_mappings_total`, `circleguard_identity_lookups_total`) en `IdentityVaultController.java` y actualizar `IdentityVaultControllerTest.java`.
+   - Crear `deploy/k8s/base/identity-alerts.yml` (y registrarlo en `deploy/k8s/base/kustomization.yml`) con las alertas `IdentityServiceDown`, `IdentityAuditCircuitBreakerOpen` e `IdentityHighLookupFailureRate`.
+   - Ejecutar `:test`, `:jacocoTestReport`, `:jacocoTestCoverageVerification` y documentar ambas etapas en `IAG_REGISTRO.md`.
+```
+
+#### C. Validación humana y hallazgos adicionales
+
+- **Prueba real de resiliencia sobre Spring AOP (`IdentityAuditPublisherResilienceTest`):** Se comprobó mediante `AopUtils.isAopProxy(auditPublisher)` que las anotaciones `@CircuitBreaker` y `@Retry` operan con la configuración externalizada `10/5/50` y `maxAttempts=3`: 2 fallos transitorios de Kafka reintentan y tienen éxito en el 3er intento manteniendo el circuito `CLOSED`, mientras que 5 fallos sostenidos (`15` intentos a `KafkaTemplate`) abren el circuito a `OPEN`, cortocircuitan la 6ta llamada sin invocar Kafka y exponen `resilience4j_circuitbreaker_state{name="identityAuditKafka",state="open",} 1.0` y `circleguard_identity_audit_fallback_total` en `/actuator/prometheus`.
+- **Resultados de pruebas y cobertura JaCoCo (`jacocoTestReport.xml`):**
+  - **Total de pruebas ejecutadas:** **`20 / 20` aprobadas (`0` fallos)**.
+  - **Cobertura de líneas (`LINE`):** **`93.86%`** (`107 / 114` líneas cubiertas, umbral mínimo `60%`).
+  - **Cobertura de instrucciones (`INSTRUCTION`):** **`88.97%`** (`508 / 571` instrucciones).
+  - **Cobertura de métodos (`METHOD`):** **`100.00%`** (`23 / 23` métodos).
+  - **Cobertura de clases (`CLASS`):** **`100.00%`** (`4 / 4` clases).
+- **Validación de manifiestos K8s:** Validada la sintaxis YAML de `deploy/k8s/base/{apps,hpa,identity-alerts,kustomization}.yml`.
+
+#### D. Reflexión crítica
+
+Proteger la publicación de auditoría Kafka en `identity-service` con `@CircuitBreaker` (orden `1`) + `@Retry` (orden `2`) y fallback estructurado resuelve un acoplamiento crítico de disponibilidad: ante una interrupción del bróker Kafka, el personal del Centro de Salud puede seguir resolviendo identidades autorizadas (`GET /api/v1/identities/lookup/{id}`) sin degradación en cascada, mientras que el evento de auditoría queda registrado en los logs estructurados (sin exponer PII) y dispara la alerta crítica `IdentityAuditCircuitBreakerOpen` en Prometheus para intervención operativa inmediata.
+
+---
+
+### 1.10 HU-DOCS-07 — Actualización y ampliación del informe final de Parte 2 con evidencias actuales
+
+- **Fecha:** 21 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Rama / Entregable:** `docs/HU-DOCS-07-actualizar-informe-parte2` (`E2.4`, `E2.7`, `E2.8`, `E2.9`)
+- **Objetivo de la interacción:** Auditar la Sección 13 de `CircleGuard_INFORME_FINAL.docx` frente a los requisitos de la Parte 2 (`Proyecto_Final_CircleGuard.tex`), corregir imprecisiones factuales, incorporar las 14 capturas de evidencia actuales de la plataforma y redactar las subsecciones faltantes (`13.10` a `13.15`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Previo a la actualización del documento Word, definí el alcance y proporcioné las evidencias autenticadas necesarias:
+
+1. **Verificación visual previa:** Solicité exportar primero las capturas a una carpeta local (`Desktop/Capturas`) para revisar manualmente cada imagen antes de incorporarla al informe en una rama dedicada.
+2. **Credenciales y capturas autenticadas:** Suministré el acceso de Jenkins y las capturas actualizadas de SonarQube (`5/5 Passed` y detalle de Quality Gate `Passed`) y Jenkins Stage View para reemplazar vistas que requerían sesión o correspondían a ramas ya fusionadas.
+3. **Revisión del análisis de brechas:** Revisé y aprobé explícitamente el listado de hallazgos detectados en la Sección 13 antes de autorizar la edición programática de `CircleGuard_INFORME_FINAL.docx`.
+
+#### B. Prompt empleado
+
+```text
+Necesito que me ayudes a actualizar y ampliar el informe con capturas actuales, ten en cuenta todo lo que este pide y que ya estamos en la segunda fase del taller/parcial. Antes de agregar las capturas y editar el informe por favor déjalas en una carpeta en Desktop/Capturas para yo verlas y confirmarte si proseguir; en caso de proseguir crea una nueva rama para editar el informe. Primero analiza qué falta por actualizar en el informe y dime.
+```
+
+#### C. Validación humana y hallazgos adicionales
+
+- Se corrigió el error factual en la subsección `13.6` (que atribuía `IdentityClient` con Resilience4j al gateway en lugar de `auth-service`, y omitía `IdentityAuditPublisher` en `identity-service`, las 9 reglas de Alertmanager y el stack Loki/Promtail).
+- Se alineó la tabla de entregables `13.8` (`P2-01` a `P2-10`) con el estado real de `main` tras los merges de los PRs `#92`, `#93`, `#134`, `#136`, `#137`, `#138` y `#139` (`v1.14.0`), y se corrigió la ruta de `IAG_REGISTRO.md` en `13.9`.
+- Se añadieron las subsecciones obligatorias faltantes `13.10` (Patrones de diseño y arquitectura), `13.11` (Informe consolidado de pruebas y calidad), `13.12` (Change management y releases), `13.13` (Sprint 2 y retrospectiva), `13.14` (Análisis de costos AWS vs. on-premise) y `13.15` (Executive Summary en inglés), embebiendo las 14 capturas numeradas (`Figura 2` a `Figura 15`) sin alterar las Secciones 1–12 ni los Anexos A–C.
+
+#### D. Reflexión crítica
+
+Realizar una auditoría previa del documento frente al enunciado del proyecto y validar manualmente las evidencias antes de editar el `.docx` evitó introducir información desactualizada o imprecisa. El uso de un script reproducible con `python-docx` permitió preservar intacto el formato histórico de la Parte 1 mientras se integraban de forma consistente tablas, figuras y texto técnico verificado directamente contra el estado real del repositorio `main`.
 
 ---
 

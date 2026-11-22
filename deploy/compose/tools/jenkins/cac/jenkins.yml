@@ -1,7 +1,7 @@
 # CG-DOC: Jenkins Configuration as Code for security, credentials, library, and job.
 jenkins:
   systemMessage: "CircleGuard CI/CD"
-  numExecutors: 2
+  numExecutors: 4
   securityRealm:
     local:
       allowsSignup: false

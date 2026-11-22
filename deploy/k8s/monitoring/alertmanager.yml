@@ -1,0 +1,224 @@
+# CG-DOC: Alertmanager deployment and Prometheus alert rules mounted into /etc/prometheus/rules.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-prometheus-alerts
+  namespace: monitoring
+  labels:
+    app: auth
+    app.kubernetes.io/part-of: circleguard
+data:
+  auth-alerts.rules.yml: |
+    groups:
+      - name: circleguard.auth.availability
+        interval: 30s
+        rules:
+          - alert: AuthServiceDown
+            expr: up{app="auth"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: auth
+            annotations:
+              summary: "CircleGuard auth-service is DOWN"
+              description: "The auth-service instance ({{ $labels.instance }} in namespace {{ $labels.namespace }}) has been unreachable for more than 1 minute."
+
+      - name: circleguard.auth.security
+        interval: 30s
+        rules:
+          - alert: AuthHighUnauthorizedRate
+            expr: rate(circleguard_auth_login_attempts_total{result="failure"}[5m]) > 0.5
+            for: 2m
+            labels:
+              severity: warning
+              service: auth
+            annotations:
+              summary: "High rate of failed login attempts (HTTP 401) in auth-service"
+              description: "More than 0.5 failed authentication attempts per second detected over the last 5 minutes on auth-service."
+
+      - name: circleguard.auth.resilience
+        interval: 30s
+        rules:
+          - alert: AuthIdentityCircuitBreakerOpen
+            expr: resilience4j_circuitbreaker_state{name="identityClient", state="open"} == 1
+            for: 30s
+            labels:
+              severity: critical
+              service: auth
+            annotations:
+              summary: "Circuit Breaker identityClient is OPEN in auth-service"
+              description: "The Resilience4j circuit breaker towards identity-service has remained in OPEN state for at least 30 seconds."
+  identity-alerts.rules.yml: |
+    groups:
+      - name: circleguard.identity.availability
+        interval: 30s
+        rules:
+          - alert: IdentityServiceDown
+            expr: up{app="identity"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: identity
+            annotations:
+              summary: "CircleGuard identity-service is DOWN"
+              description: "The identity-service instance ({{ $labels.instance }} in namespace {{ $labels.namespace }}) has been unreachable for more than 1 minute."
+
+      - name: circleguard.identity.resilience
+        interval: 30s
+        rules:
+          - alert: IdentityAuditCircuitBreakerOpen
+            expr: resilience4j_circuitbreaker_state{name="identityAuditKafka", state="open"} == 1
+            for: 30s
+            labels:
+              severity: critical
+              service: identity
+            annotations:
+              summary: "Circuit Breaker identityAuditKafka is OPEN in identity-service"
+              description: "The Resilience4j circuit breaker towards Kafka audit topic has remained OPEN for 30 seconds; fallback logging is active."
+
+      - name: circleguard.identity.security
+        interval: 30s
+        rules:
+          - alert: IdentityHighLookupFailureRate
+            expr: rate(circleguard_identity_lookups_total{status!="success"}[5m]) > 0.2
+            for: 2m
+            labels:
+              severity: warning
+              service: identity
+            annotations:
+              summary: "High rate of failed PII vault lookups in identity-service"
+              description: "More than 0.2 failed identity vault lookup attempts per second over the last 5 minutes."
+---
+# CG-DOC: Duplicate of deploy/k8s/base/promotion-alerts.yml for the monitoring namespace.
+# CircleGuard's Prometheus runs in `monitoring`, so rules are duplicated here and mounted
+# into /etc/prometheus/rules/promotion (see prometheus.yml volumes).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promotion-prometheus-alerts
+  namespace: monitoring
+  labels:
+    app: promotion
+    app.kubernetes.io/part-of: circleguard
+data:
+  promotion-alerts.rules.yml: |
+    groups:
+      - name: circleguard.promotion.availability
+        interval: 30s
+        rules:
+          - alert: PromotionServiceDown
+            expr: up{app="promotion"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: promotion
+            annotations:
+              summary: "CircleGuard promotion-service is DOWN"
+              description: "The promotion-service instance ({{ $labels.instance }} in namespace {{ $labels.namespace }}) has been unreachable for more than 1 minute."
+
+      - name: circleguard.promotion.cascade
+        interval: 30s
+        rules:
+          - alert: PromotionNeo4jFailures
+            expr: rate(circleguard_promotion_encounters_total{result="failure"}[5m]) > 0.2
+            for: 2m
+            labels:
+              severity: warning
+              service: promotion
+            annotations:
+              summary: "Failed promotions in promotion-service (Neo4j / cascade)"
+              description: "More than 0.2 failed promotion encounters per second over the last 5 minutes on promotion-service. Probable fallo de Neo4j o de la cascada de estados (kotlin -> java -> backend -> fullstack -> cloud)."
+
+      - name: circleguard.promotion.load
+        interval: 30s
+        rules:
+          - alert: PromotionSpikeRate
+            expr: rate(circleguard_promotion_encounters_total{result="success"}[5m]) > 5
+            for: 3m
+            labels:
+              severity: warning
+              service: promotion
+            annotations:
+              summary: "Promotion spike detected in promotion-service"
+              description: "More than 5 successful promotion encounters per second sustained for 3 minutes — alerta de pico de promociones, revisar capacidad del HPA y de Neo4j."
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      group_by: ['alertname', 'namespace', 'service']
+      group_wait: 15s
+      group_interval: 2m
+      repeat_interval: 1h
+      receiver: 'default-receiver'
+
+    receivers:
+      - name: 'default-receiver'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app: alertmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          args:
+            - "--config.file=/etc/alertmanager/alertmanager.yml"
+            - "--storage.path=/alertmanager"
+          ports:
+            - containerPort: 9093
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9093
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: config
+          configMap:
+            name: alertmanager-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app: alertmanager
+spec:
+  selector:
+    app: alertmanager
+  ports:
+    - name: http
+      port: 9093
+      targetPort: 9093

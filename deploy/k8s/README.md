@@ -11,9 +11,16 @@ deploy/k8s/
 ├── base/
 │   ├── kustomization.yml
 │   ├── middleware.yml   # postgres, redis, neo4j, kafka, openldap + ConfigMaps
-│   ├── apps.yml         # 8 servicios + web
+│   ├── apps.yml         # 8 servicios + web (con anotaciones prometheus.io/*)
 │   ├── ingress.yml      # rutas del API y del cliente web (Traefik)
-│   └── hpa.yml          # autoscaling de gateway, web y auth
+│   ├── hpa.yml          # autoscaling de gateway, web, auth y promotion
+│   └── auth-alerts.yml  # reglas de alerta Prometheus para auth-service
+├── monitoring/
+│   ├── kustomization.yml
+│   ├── namespace.yml    # namespace monitoring
+│   ├── prometheus.yml   # RBAC, scrape SD y montaje de reglas /etc/prometheus/rules
+│   ├── alertmanager.yml # Alertmanager y ConfigMap auth-prometheus-alerts
+│   └── grafana.yml      # Datasource Prometheus y dashboard CircleGuard Auth
 └── overlays/
     ├── dev/              # namespace cg-dev, host dev.circleguard.local
     ├── stage/            # namespace cg-stage, host stage.circleguard.local
@@ -252,24 +259,38 @@ Documentar esto evita que un despliegue nuevo repita el mismo diagnóstico.
 
 ## Sondas y salud
 
-Cada aplicación declara `livenessProbe` y `readinessProbe` HTTP contra
-`/actuator/health`, con periodos de 10 s y umbrales conservadores. El middleware usa sondas
-`tcpSocket` (Postgres, Redis, Kafka, OpenLDAP) y HTTP en Neo4j. Esto cubre el requisito de
-sondas alimentadas por Actuator del entregable E2.2.
+Los servicios declaran `livenessProbe` y `readinessProbe` HTTP alimentadas por Spring Boot
+Actuator (`auth` e `identity` utilizan las sondas nativas especializadas `/actuator/health/readiness` con
+`initialDelaySeconds: 30`, `periodSeconds: 10`, `failureThreshold: 3` y
+`/actuator/health/liveness` con `initialDelaySeconds: 60`, `periodSeconds: 15`,
+`failureThreshold: 3`; los demás servicios apuntan a `/actuator/health`). El middleware usa
+sondas `tcpSocket` (Postgres, Redis, Kafka, OpenLDAP) y HTTP en Neo4j. Esto cubre el
+requisito de sondas alimentadas por Actuator del entregable E2.2 (`DCG-102` / `DCG-103` y `DCG-119` / `DCG-120`).
 
 ## Autoscaling (HPA)
 
-`base/hpa.yml` define tres `HorizontalPodAutoscaler` sobre CPU al 70 %:
 
-| Servicio | Mínimo | Máximo | Motivo |
-|---|---|---|---|
-| `gateway` | 1 | 3 | Es la puerta de entrada del API y el que recibe la carga de la demostración |
-| `web` | 1 | 2 | Cliente estático; su límite de memoria es el más bajo del stack |
-| `auth` | 1 | 2 | Emite los JWT de todas las peticiones autenticadas |
+`base/hpa.yml` define cinco `HorizontalPodAutoscaler` basados en la utilización promedio de CPU:
 
-Los tres Deployments escalados **no declaran `spec.replicas`**: el dueño del número de
-réplicas es el HPA. Si el Deployment fijara `replicas`, cada `kubectl apply -k` lo devolvería
-a 1 y pelearía con el autoscaler.
+| Servicio | Mínimo | Máximo | Umbral CPU | Motivo |
+|---|---|---|---|---|
+| `gateway` | 1 | 3 | 70 % | Es la puerta de entrada del API y recibe la carga de la demostración |
+| `web` | 1 | 2 | 70 % | Cliente estático; su límite de memoria es el más bajo del stack |
+| `auth` | 1 | 5 | 75 % | Emite y verifica los JWT/QR de todas las peticiones autenticadas (`DCG-102`) |
+| `form` | 1 | 2 | 70 % | Recibe cuestionarios y adjuntos; las réplicas comparten el PVC local del mismo nodo |
+| `promotion` | 1 | 5 | 75 % | Consume Neo4j, PostgreSQL, Kafka y Redis en la cascada de estados (`DCG-339`) |
+
+Los cinco Deployments gestionados por HPA **no declaran `spec.replicas` en la base**: el dueño del número de réplicas es el HPA. Si el Deployment fijara `replicas: 1`, cada `kubectl apply -k` podría devolverlo a 1 y entrar en conflicto con el autoscaler.
+
+El overlay de stage excluye **solo** el HPA de Form y fija una réplica para su
+validación durante una promoción autorizada. Después, el operador puede escalar Form
+a cero; seguirá en cero hasta una nueva promoción o escalado explícito. Excluirlo del
+render no elimina un HPA que se hubiera creado previamente: comprobar su ausencia antes
+de dormir stage. Esta HU no cambia la política de los otros HPA ni ejecuta cambios remotos.
+
+Form monta `form-uploads` en `/tmp/circleguard-uploads`, con PVC independiente por
+namespace. La migración inicial de archivos, las limitaciones de `local-path` y los
+pendientes de ejecución están en [HU-FORM-05](../../docs/informe/HU-FORM-05.md).
 
 Requisito previo, `metrics-server` (no viene con k3d):
 
@@ -345,18 +366,38 @@ El campo de login es `username`, no `email` (`LoginController` resuelve por
 `services/circleguard-auth-service/src/main/resources/db/migration/V2__seed_test_users.sql`
 y **no deben llegar a producción**.
 
-## Trazabilidad con el enunciado (E2.2)
+## Observabilidad (Prometheus, Alertmanager y Grafana)
+
+El stack de monitoreo vive en `deploy/k8s/monitoring/` (namespace `monitoring`):
+
+```bash
+kubectl apply -k deploy/k8s/monitoring
+kubectl -n monitoring get pods,svc
+```
+
+- **Scraping automático:** `prometheus.yml` descubre pods en `cg-dev`, `cg-stage` y `cg-prod`
+  mediante las anotaciones `prometheus.io/scrape: "true"`, `prometheus.io/path: "/actuator/prometheus"`
+  y `prometheus.io/port` declaradas en `base/apps.yml` (`auth` en `8180`, `promotion` en `8088`).
+- **Reglas de alerta cargadas:** El Deployment de Prometheus monta el ConfigMap
+  `auth-prometheus-alerts` en `/etc/prometheus/rules/auth-alerts.rules.yml` y evalúa cada 15 s
+  las alertas `AuthServiceDown`, `AuthHighUnauthorizedRate` y `AuthIdentityCircuitBreakerOpen`,
+  notificando a `alertmanager:9093`.
+- **Visualización:** Grafana (`grafana:3000`) provisiona automáticamente el datasource
+  `Prometheus` y el dashboard `CircleGuard Auth & Platform Observability`.
+
+## Trazabilidad con el enunciado (E2.2 – E2.5)
 
 | Criterio del enunciado | Estado | Evidencia |
 |---|---|---|
-| Namespaces por ambiente | Cumplido | `cg-dev`, `cg-stage`, `cg-prod` |
-| ConfigMaps y Secrets | Cumplido | `cg-config`, `postgres-init`, `cg-secrets` |
+| Namespaces por ambiente | Cumplido | `cg-dev`, `cg-stage`, `cg-prod` (`P2-02` / `E2.2`) |
+| ConfigMaps y Secrets | Cumplido | `cg-config`, `postgres-init`, `cg-secrets` (`DCG-102`) |
 | Ingress | Cumplido | Traefik `:30080`, tres hosts |
-| Sondas liveness/readiness con Actuator | Cumplido | `apps.yml`, `/actuator/health` |
+| Sondas liveness/readiness con Actuator | Cumplido | `apps.yml`, `/actuator/health/{liveness,readiness}` en `auth` (`DCG-103`) |
 | Clúster ligero (k3s/k3d) | Cumplido | k3d v5.9.0 / k3s v1.35.5 |
-| HPA | Cumplido | `base/hpa.yml` + `metrics-server`; gateway 1-3, web y auth 1-2 |
+| HPA | Cumplido | `base/hpa.yml` + `metrics-server`; gateway 1-3 (70 %), web 1-2 (70 %), auth 1-5 (75 %), promotion 1-5 (75 %) (`DCG-102` / `DCG-339`) |
+| Observabilidad y alertas | Cumplido | `deploy/k8s/monitoring/` (Prometheus, Alertmanager, Grafana y `auth-alerts.yml`) (`DCG-103` / `DCG-105` / `E2.4`) |
 | TLS en servicios expuestos | **Pendiente** | depende de DNS propio; hoy es HTTP interno |
-| RBAC de Kubernetes | **Pendiente** | hoy la operación es con el `kubeconfig` de k3d |
+| RBAC de Kubernetes | Cumplido (Monitoreo) | `ClusterRole` / `ServiceAccount` para Prometheus SD en `monitoring/prometheus.yml` |
 
 Las brechas están declaradas a propósito: el enunciado penaliza configuraciones que no se
 pueden explicar, no deudas documentadas con su plan de cierre.

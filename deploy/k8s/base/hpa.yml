@@ -5,6 +5,7 @@
 #     -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
 # El HPA es el dueno de spec.replicas: los Deployments escalados no lo declaran para que
 # `kubectl apply -k` no los devuelva a 1 en cada despliegue.
+# Stage excluye el HPA de Form y declara una replica para la promocion autorizada.
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -19,6 +20,30 @@ spec:
     name: gateway
   minReplicas: 1
   maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: form
+  labels:
+    app: form
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: form
+  minReplicas: 1
+  maxReplicas: 2
   metrics:
     - type: Resource
       resource:
@@ -66,14 +91,38 @@ spec:
     kind: Deployment
     name: auth
   minReplicas: 1
-  maxReplicas: 2
+  maxReplicas: 5
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: 75
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: promotion
+  labels:
+    app: promotion
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: promotion
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 300
