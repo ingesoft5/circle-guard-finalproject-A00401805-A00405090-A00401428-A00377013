@@ -9,6 +9,8 @@ plugins {
     `maven-publish`
 }
 
+apply(from = "$rootDir/gradle/jacoco-convention.gradle")
+
 jacoco {
     toolVersion = "0.8.12"
 }

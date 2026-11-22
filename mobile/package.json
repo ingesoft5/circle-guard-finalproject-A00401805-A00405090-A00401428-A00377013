@@ -7,7 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "jest"
+    "test": "jest",
+    "test:coverage": "jest --coverage --coverageReporters=lcov --coverageReporters=html --coverageReporters=text"
   },
   "dependencies": {
     "@react-navigation/native": "^7.1.33",
@@ -55,7 +56,26 @@
     "preset": "jest-expo",
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
-    ]
+    ],
+    "collectCoverageFrom": [
+      "hooks/**/*.{ts,tsx}",
+      "utils/**/*.{ts,tsx}",
+      "constants/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "!**/*.test.{ts,tsx}",
+      "!**/__tests__/**",
+      "!**/*.d.ts",
+      "!**/index.{ts,tsx}",
+      "!**/*.web.{ts,tsx}"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 60,
+        "statements": 60,
+        "functions": 60,
+        "branches": 60
+      }
+    }
   },
   "expo": {
     "install": {

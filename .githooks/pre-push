@@ -24,17 +24,23 @@ done
 # =====================================================================
 # 2. VALIDAR EL FORMATO DEL NOMBRE DE LA RAMA
 # =====================================================================
-# Formato esperado: [<tipo>/]HU-<MICROSERVICIO>-<numero>-<descripcion>
-# Ejemplo: feat/HU-GATEWAY-01-configurar-servidores
+# Formatos aceptados:
+#   [<tipo>/]HU-<MICROSERVICIO>-<numero>-<descripcion>  (historias de usuario)
+#   fix/<descripcion>                                  (correcciones sin HU)
+# Ejemplos: feat/HU-GATEWAY-01-configurar-servidores, fix/coverage-and-registry-login
 # Nota: Si estás en main (por ejemplo, para traer cambios), no validamos el nombre.
 if [ "$CURRENT_BRANCH" != "main" ]; then
-    if ! echo "$CURRENT_BRANCH" | grep -qE "^((feat|fix|docs|ci|chore|test|refactor|build|perf|style)/)?HU-[A-Z]+-[0-9]+(-[a-z0-9-]+)?$"; then
+    HU_FORMAT="^((feat|fix|docs|ci|chore|test|refactor|build|perf|style)/)?HU-[A-Z]+-[0-9]+(-[a-z0-9-]+)?$"
+    FIX_FORMAT="^fix/[a-z0-9][a-z0-9-]*$"
+    if ! echo "$CURRENT_BRANCH" | grep -qE "($HU_FORMAT|$FIX_FORMAT)"; then
         echo "======================================================"
         echo "⚠️ ADVERTENCIA: El nombre de tu rama no sigue la convención."
         echo "======================================================"
         echo "Tu rama actual es: $CURRENT_BRANCH"
-        echo "Formato esperado: [<tipo>/]HU-<MICROSERVICIO>-<numero>-<descripcion>"
-        echo "Ejemplo: feat/HU-GATEWAY-01-configurar-servidores"
+        echo "Formatos aceptados:"
+        echo "  [<tipo>/]HU-<MICROSERVICIO>-<numero>-<descripcion>"
+        echo "  fix/<descripcion> (correcciones sin HU)"
+        echo "Ejemplos: feat/HU-GATEWAY-01-configurar-servidores, fix/coverage-and-registry-login"
         echo ""
         echo "El push se cancelará en 5 segundos. Presiona Ctrl+C para abortar y renombrar tu rama."
         echo "======================================================"

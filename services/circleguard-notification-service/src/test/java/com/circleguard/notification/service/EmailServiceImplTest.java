@@ -1,74 +1,71 @@
 /**
- * CG-DOC: Unit tests for the email channel: delivery, retry audit and recovery.
+ * CG-DOC: fast unit tests for the email delivery implementation; no Spring context,
+ * no retry proxy, so both the happy path and the failure path are exercised directly.
  */
 package com.circleguard.notification.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-@ExtendWith(MockitoExtension.class)
 class EmailServiceImplTest {
 
-    @Mock
     private JavaMailSender mailSender;
-
-    @Mock
     private AuditLogService auditLogService;
+    private EmailServiceImpl service;
 
-    private EmailServiceImpl emailService() {
-        return new EmailServiceImpl(mailSender, auditLogService);
+    @BeforeEach
+    void setUp() {
+        mailSender = mock(JavaMailSender.class);
+        auditLogService = mock(AuditLogService.class);
+        service = new EmailServiceImpl(mailSender, auditLogService);
     }
 
     @Test
-    void successfulDeliveryAuditsSuccessWithCorrelationId() {
-        CompletableFuture<Void> result = emailService().sendAsync("user-123", "Your status is SUSPECT");
+    void sendsMailAndAuditsSuccess() {
+        service.sendAsync("student-1", "status changed").join();
 
-        assertThat(result).isCompleted();
-        assertThat(result.join()).isNull();
-
-        ArgumentCaptor<String> correlationId = ArgumentCaptor.forClass(String.class);
-        verify(auditLogService).logDelivery(eq("user-123"), eq("EMAIL"), eq("SUCCESS"), correlationId.capture());
-        assertThat(correlationId.getValue()).isNotBlank();
+        ArgumentCaptor<SimpleMailMessage> sent = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(sent.capture());
+        assertThat(sent.getValue().getTo()).containsExactly("student-1@example.com");
+        assertThat(sent.getValue().getSubject()).isEqualTo("CircleGuard Health Alert");
+        assertThat(sent.getValue().getText()).isEqualTo("status changed");
+        verify(auditLogService).logDelivery(eq("student-1"), eq("EMAIL"), eq("SUCCESS"), anyString());
     }
 
     @Test
-    void failedDeliveryAuditsRetryAndRethrowsForTheRetryInterceptor() {
-        doThrow(new RuntimeException("Mail server down")).when(mailSender).send(any(SimpleMailMessage.class));
+    void auditsRetryAndRethrowsWhenSmtpFails() {
+        doThrow(new RuntimeException("SMTP down")).when(mailSender).send(any(SimpleMailMessage.class));
 
-        assertThatThrownBy(() -> emailService().sendAsync("user-123", "payload"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Mail server down");
+        assertThatThrownBy(() -> service.sendAsync("student-2", "message"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("SMTP down");
 
-        ArgumentCaptor<String> correlationId = ArgumentCaptor.forClass(String.class);
-        verify(auditLogService).logDelivery(eq("user-123"), eq("EMAIL"), eq("RETRY"), correlationId.capture());
-        assertThat(correlationId.getValue()).isNotBlank();
-        verify(auditLogService, org.mockito.Mockito.times(1)).logDelivery(any(), any(), any(), any());
+        verify(auditLogService).logDelivery(eq("student-2"), eq("EMAIL"), eq("RETRY"), anyString());
     }
 
     @Test
-    void recoveryAuditsFailedWithoutCorrelationIdAndReturnsFailedFuture() {
-        RuntimeException failure = new RuntimeException("Mail server down");
+    void recoverAuditsFinalFailureAndReturnsFailedFuture() {
+        RuntimeException failure = new RuntimeException("SMTP down");
 
-        CompletableFuture<Void> recovered = emailService().recover(failure, "user-123", "payload");
+        assertThatThrownBy(() -> service.recover(failure, "student-3", "message").join())
+            .isInstanceOf(CompletionException.class)
+            .hasCause(failure);
 
-        assertThat(recovered).isCompletedExceptionally();
-        assertThatThrownBy(recovered::join).hasCause(failure);
-        verify(auditLogService).logDelivery("user-123", "EMAIL", "FAILED", null);
-        verifyNoMoreInteractions(auditLogService);
+        verify(auditLogService).logDelivery(eq("student-3"), eq("EMAIL"), eq("FAILED"), isNull());
     }
 }

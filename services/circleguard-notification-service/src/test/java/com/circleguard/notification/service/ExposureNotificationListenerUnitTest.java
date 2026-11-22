@@ -1,65 +1,58 @@
 /**
- * CG-DOC: Unit tests for the exposure listener status filter and its defensive floor.
+ * CG-DOC: plain unit tests for the exposure listener, complementing the tagged
+ * Spring context test. A real ObjectMapper keeps the JSON parsing meaningful while
+ * the dispatcher and LMS service are mocked.
  */
 package com.circleguard.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
-@ExtendWith(MockitoExtension.class)
 class ExposureNotificationListenerUnitTest {
 
-    @Mock
     private NotificationDispatcher dispatcher;
-
-    @Mock
     private LmsService lmsService;
-
     private ExposureNotificationListener listener;
 
     @BeforeEach
     void setUp() {
+        dispatcher = mock(NotificationDispatcher.class);
+        lmsService = mock(LmsService.class);
         listener = new ExposureNotificationListener(dispatcher, new ObjectMapper(), lmsService);
     }
 
     @Test
-    void dispatchesAndSyncsLmsForAnExposureStatus() {
-        listener.handleStatusChange("{\"anonymousId\":\"anon-42\",\"status\":\"PROBABLE\"}");
+    void nonActiveStatusIsDispatchedAndSyncedToLms() {
+        listener.handleStatusChange("{\"anonymousId\":\"student-1\",\"status\":\"EXPOSED\"}");
 
-        verify(dispatcher).dispatch("anon-42", "PROBABLE");
-        verify(lmsService).syncRemoteAttendance("anon-42", "PROBABLE");
+        verify(dispatcher).dispatch("student-1", "EXPOSED");
+        verify(lmsService).syncRemoteAttendance("student-1", "EXPOSED");
     }
 
     @Test
-    void ignoresTheActiveStatusBecauseThatIsNotAnExposure() {
-        listener.handleStatusChange("{\"anonymousId\":\"anon-42\",\"status\":\"ACTIVE\"}");
+    void activeStatusDoesNotTriggerNotifications() {
+        listener.handleStatusChange("{\"anonymousId\":\"student-2\",\"status\":\"ACTIVE\"}");
 
-        verify(dispatcher, never()).dispatch(any(), any());
-        verify(lmsService, never()).syncRemoteAttendance(any(), any());
+        verifyNoInteractions(dispatcher, lmsService);
     }
 
     @Test
-    void ignoresAnEventWithoutStatusBecauseItDefaultsToUnknown() {
-        listener.handleStatusChange("{\"anonymousId\":\"anon-42\"}");
+    void missingStatusDefaultsToUnknownAndDoesNotTriggerNotifications() {
+        listener.handleStatusChange("{\"anonymousId\":\"student-3\"}");
 
-        verify(dispatcher, never()).dispatch(any(), any());
-        verify(lmsService, never()).syncRemoteAttendance(any(), any());
+        verifyNoInteractions(dispatcher, lmsService);
     }
 
     @Test
-    void swallowsAMalformedEventWithoutDispatching() {
-        assertThatCode(() -> listener.handleStatusChange("not-a-json-payload"))
-                .doesNotThrowAnyException();
+    void malformedEventIsSwallowedWithoutDispatching() {
+        assertDoesNotThrow(() -> listener.handleStatusChange("{not json"));
 
-        verify(dispatcher, never()).dispatch(any(), any());
+        verifyNoInteractions(dispatcher, lmsService);
     }
 }

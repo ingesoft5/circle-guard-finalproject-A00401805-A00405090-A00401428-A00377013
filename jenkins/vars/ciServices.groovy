@@ -116,6 +116,22 @@ def catalog() {
                     publish       : true,
                     docker        : true,
                     deploy        : false
+            ],
+            [
+                    short         : 'mobile',
+                    name          : 'circleguard-mobile',
+                    path          : '',
+                    dir           : 'mobile',
+                    projectKey    : 'circleguard-mobile',
+                    display       : 'CircleGuard Mobile',
+                    sonarSettings : 'mobile/sonar-project.properties',
+                    type          : 'node',
+                    jacoco        : true,
+                    integration   : false,
+                    publish       : false,
+                    docker        : false,
+                    deploy        : false,
+                    healthcheck   : false
             ]
     ]
 }
@@ -166,7 +182,7 @@ def changed() {
     def files = diff.readLines().findAll { it.trim() }
     def selected = selectFromFiles(files)
     if (!selected) {
-        echo "Changes with no matching Java service: ${files.join(', ')}"
+        echo "Changes with no matching component: ${files.join(', ')}"
     }
     return selected
 }
@@ -230,8 +246,9 @@ def matchesDeployService(String path, String shortName) {
 // - deploy/** with the service name in the path -> that service
 // - shared deploy/** (overlays, monitoring, ...) -> no Java service;
 //   validated by the Trivy IaC gate instead of recompiling all eight modules.
-// - Jenkinsfile, jenkins/...            -> no Java service (library self-check)
-// - mobile/, docs/, tests/, infra/...   -> no Java service
+// - Jenkinsfile, jenkins/...            -> no component (library self-check)
+// - mobile/...                          -> the mobile component (Node/Jest coverage)
+// - docs/, tests/, infra/...            -> no component
 def selectFromFiles(List files) {
     def catalog = catalog()
     if (files.any { path -> isGlobalBuildFile(path) }) {
@@ -241,7 +258,9 @@ def selectFromFiles(List files) {
     def selected = []
     files.each { path ->
         if (path.startsWith('deploy/')) {
-            def matched = catalog.findAll { service -> matchesDeployService(path, service.short) }
+            def matched = catalog.findAll { service ->
+                service.type != 'node' && matchesDeployService(path, service.short)
+            }
             matched.each { service ->
                 if (!selected.contains(service)) selected << service
             }
@@ -286,7 +305,8 @@ def verifySelection() {
             'deploy/k8s/base/promotion-alerts.yml'
     ], ['promotion'])
     assertSelection(['deploy/k8s/base/form-storage.yml'], ['form'])
-    assertSelection(['mobile/App.tsx', 'docs/informe/HU-FORM-06.md'], [])
+    assertSelection(['mobile/App.tsx', 'docs/informe/HU-FORM-06.md'], ['mobile'])
+    assertSelection(['mobile/package.json'], ['mobile'])
     assertSelection(['docs/informe/HU-FORM-06.md', 'services/circleguard-form-service/src/test/FormTest.java'], ['form'])
     assertSelection(['build.gradle.kts'], catalog().collect { it.short })
     assertSelection(['deploy/k8s/base/apps.yml'], [])

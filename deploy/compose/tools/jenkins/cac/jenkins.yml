@@ -4,6 +4,13 @@ jenkins:
   # Two executors: four concurrent Gradle + Testcontainers builds pushed this host to
   # load ~13 with swap in use, which made container health checks time out.
   numExecutors: 2
+  # Pipelines need the recipients in env, not only in the Jenkins container process
+  # environment, so failure notifications work without a reload-time workaround.
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: "EMAIL_RECIPIENTS"
+            value: "${EMAIL_RECIPIENTS}"
   securityRealm:
     local:
       allowsSignup: false

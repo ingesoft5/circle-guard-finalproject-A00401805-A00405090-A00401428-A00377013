@@ -1,0 +1,87 @@
+// Shared JaCoCo configuration for the Java/Kotlin microservice modules.
+// Applied from each service build.gradle.kts with:
+//     apply(from = "$rootDir/gradle/jacoco-convention.gradle")
+// The script is additive: modules with their own inline JaCoCo settings keep them,
+// and this convention only reinforces the project-wide coverage invariants.
+
+import java.math.BigDecimal
+import org.gradle.api.GradleException
+
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+// Always emit coverage data after the unit suite, and let the report/verification
+// tasks pull the test task in when invoked directly.
+tasks.named('test') {
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+// The 60 % LINE floor is the project-wide rubric minimum. It is intentionally
+// declared here as a BigDecimal rather than a double to avoid rounding drift.
+tasks.named('jacocoTestCoverageVerification') {
+    dependsOn tasks.named('test')
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = new BigDecimal('0.60')
+            }
+        }
+    }
+}
+
+// A skipped test is a silent hole, not a pass. Read the JUnit XML directly so a
+// suite cannot escape the guard by being absent from the task graph: zero report
+// files means the unit suite never produced results, and any skipped="n" > 0
+// means at least one test did not actually execute.
+def verifyUnitTestsRan = tasks.register('verifyUnitTestsRan') {
+    group = 'verification'
+    description = 'Fails when no unit-test XML results exist or when any suite skipped tests.'
+    dependsOn tasks.named('test')
+
+    def resultsDir = layout.buildDirectory.dir('test-results/test')
+    doLast {
+        File dir = resultsDir.get().asFile
+        File[] reports = dir.listFiles({ File file ->
+            file.isFile() && file.name.startsWith('TEST-') && file.name.endsWith('.xml')
+        } as FileFilter)
+        if (reports == null || reports.length == 0) {
+            throw new GradleException(
+                "No test reports under ${dir}. The unit suite did not run, so nothing is verified."
+            )
+        }
+
+        List<String> skipped = reports.collect { File report ->
+            def suiteTag = (report.text =~ '<testsuite[^>]*>').find() ?: ''
+            def skippedMatcher = suiteTag =~ '\\bskipped="(\\d+)"'
+            int count = skippedMatcher.find() ? skippedMatcher.group(1).toInteger() : 0
+            count > 0
+                ? "${report.name.replaceFirst('^TEST-', '').replaceFirst('\\.xml$', '')} (${count} skipped)"
+                : null
+        }.findAll { it != null }
+
+        if (!skipped.isEmpty()) {
+            throw new GradleException(
+                "Tests were skipped: ${skipped.join(', ')}. A skipped test is not a pass; " +
+                    'fix the suite before trusting its coverage.'
+            )
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('jacocoTestCoverageVerification'), verifyUnitTestsRan
+}
