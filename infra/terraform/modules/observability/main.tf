@@ -25,6 +25,14 @@ resource "helm_release" "prometheus" {
     name  = "prometheus.persistence.enabled"
     value = "false"
   }
+
+  set {
+    # CG-DOC: node-exporter binds hostPort 9100 on every node. With a single
+    # shared k3d cluster only one environment may run it; stage and prod
+    # disable it so Helm --wait is not blocked by unschedulable DaemonSet pods.
+    name  = "nodeExporter.enabled"
+    value = var.node_exporter_enabled ? "true" : "false"
+  }
 }
 
 resource "helm_release" "loki" {

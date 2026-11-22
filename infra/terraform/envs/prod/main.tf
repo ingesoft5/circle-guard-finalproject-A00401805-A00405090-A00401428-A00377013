@@ -43,5 +43,6 @@ module "observability" {
   grafana_admin_password = var.grafana_admin_password
   prometheus_version     = var.prometheus_version
   loki_version           = var.loki_version
+  node_exporter_enabled  = var.node_exporter_enabled
   depends_on             = [module.network]
 }

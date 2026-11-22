@@ -117,3 +117,9 @@ variable "force_destroy" {
   type        = bool
   default     = false
 }
+
+variable "node_exporter_enabled" {
+  description = "CG-DOC: Whether this environment deploys the node-exporter DaemonSet."
+  type        = bool
+  default     = true
+}

@@ -25,3 +25,9 @@ variable "loki_version" {
   type        = string
   default     = "2.10.3"
 }
+
+variable "node_exporter_enabled" {
+  description = "CG-DOC: Deploy the node-exporter DaemonSet for this environment."
+  type        = bool
+  default     = true
+}
