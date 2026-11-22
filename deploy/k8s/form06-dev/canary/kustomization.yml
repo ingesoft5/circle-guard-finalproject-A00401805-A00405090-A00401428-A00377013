@@ -1,0 +1,6 @@
+# Apply only after the approved image tag is substituted by release tooling.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cg-dev
+resources:
+  - form-hu6.yml

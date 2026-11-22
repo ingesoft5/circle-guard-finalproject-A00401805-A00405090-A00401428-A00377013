@@ -22,7 +22,7 @@ public class CircleFencedListener {
 
     @KafkaListener(topics = "circle.fenced", groupId = "notification-group")
     public void handleCircleFenced(String message) {
-        log.info("Received circle.fenced event: {}", message);
+        log.info("Received circle.fenced event");
         try {
             Map<String, Object> payload = objectMapper.readValue(message, new TypeReference<Map<String, Object>>() {});
             String circleId = (String) payload.get("circleId");
@@ -31,10 +31,10 @@ public class CircleFencedListener {
             if (locationId != null && !locationId.isEmpty()) {
                 roomReservationService.cancelReservation(circleId, locationId);
             } else {
-                log.warn("Circle {} has no locationId. Skipping room cancellation.", circleId);
+                log.warn("Circle has no locationId. Skipping room cancellation.");
             }
         } catch (Exception e) {
-            log.error("Failed to parse circle.fenced event: {}", e.getMessage());
+            log.error("Failed to process circle.fenced event ({})", e.getClass().getSimpleName());
         }
     }
 }

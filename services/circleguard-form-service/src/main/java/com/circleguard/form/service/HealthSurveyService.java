@@ -8,7 +8,6 @@ import com.circleguard.form.model.Questionnaire;
 import com.circleguard.form.model.ValidationStatus;
 import com.circleguard.form.repository.HealthSurveyRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -22,7 +21,7 @@ public class HealthSurveyService {
     private final HealthSurveyRepository repository;
     private final QuestionnaireService questionnaireService;
     private final SymptomMapper symptomMapper;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final FormEventPublisher eventPublisher;
 
     private static final String TOPIC_SURVEY_SUBMITTED = "survey.submitted";
     private static final String TOPIC_CERTIFICATE_VALIDATED = "certificate.validated";
@@ -52,7 +51,7 @@ public class HealthSurveyService {
             "hasSymptoms", hasSymptoms,
             "timestamp", System.currentTimeMillis()
         );
-        kafkaTemplate.send(TOPIC_SURVEY_SUBMITTED, saved.getAnonymousId().toString(), event);
+        eventPublisher.publish(TOPIC_SURVEY_SUBMITTED, saved.getAnonymousId().toString(), event);
         
         return saved;
     }
@@ -78,7 +77,7 @@ public class HealthSurveyService {
                 "adminId", adminId,
                 "timestamp", System.currentTimeMillis()
             );
-            kafkaTemplate.send(TOPIC_CERTIFICATE_VALIDATED, survey.getAnonymousId().toString(), event);
+            eventPublisher.publish(TOPIC_CERTIFICATE_VALIDATED, survey.getAnonymousId().toString(), event);
         }
     }
 }

@@ -9,6 +9,8 @@ plugins {
     `maven-publish`
 }
 
+apply(from = "$rootDir/gradle/jacoco-convention.gradle")
+
 // Alinea los módulos y el núcleo de Testcontainers en el classpath de pruebas.
 extra["testcontainers.version"] = "1.21.4"
 
@@ -18,6 +20,10 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
+    testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.kafka:spring-kafka")
     implementation("org.flywaydb:flyway-core")

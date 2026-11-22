@@ -6,6 +6,9 @@
 @Library('circleguard@main') _
 
 def services = []
+def javaServices = []
+def resolvedFiles = []
+def autoDiffAvailable = false
 
 // The Jenkins container carries the environment addresses and the registry in its
 // process environment (deploy/compose/tools/.env), but a pipeline does not see those
@@ -28,61 +31,236 @@ def loadEnvironment(String... names) {
         if (value) {
             env."${name}" = value
         } else {
-            echo "Variable de entorno no definida en el contenedor: ${name}"
+            echo "Environment variable not set in the container: ${name}"
         }
     }
 }
 
-// La Shared Library pinneada a main puede ir un commit por detrás de este Jenkinsfile
-// (el PR no ve sus propios cambios de library). El catálogo local corrige los flags
-// que necesita la entrega sin bloquear el build del PR.
-def enrichServices(List services) {
-    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form']
-    def covered = ['gateway', 'auth', 'identity', 'promotion', 'form']
-    services.each { service ->
-        service.docker = true
-        service.deploy = deployable.contains(service.short)
+// The Docker daemon (not this container) resolves registry names. Nexus is published
+// on the host port 5000 over plain HTTP, and Docker only trusts loopback names by
+// default; using the host IP makes `docker login` negotiate HTTPS and fail with
+// "server gave HTTP response to HTTPS client". Map the local host alias to loopback
+// while keeping env.NEXUS_REGISTRY for Kubernetes manifests and evidence.
+def dockerRegistryForDaemon() {
+    def registry = (env.NEXUS_REGISTRY ?: '').trim()
+    if (!registry) return registry
+    def separator = registry.lastIndexOf(':')
+    if (separator <= 0 || registry.indexOf(']') > separator) return registry
+    def host = registry.substring(0, separator)
+    def port = registry.substring(separator + 1)
+    if (host == 'localhost' || host == '127.0.0.1' || host == '[::1]') return registry
+    def privateIp = (env.TOOLS_PRIVATE_IP ?: '').trim()
+    def publicIp = (env.TOOLS_IP ?: '').trim()
+    if (host == privateIp || host == publicIp) {
+        def loopback = "127.0.0.1:${port}"
+        echo "Registry ${registry} is the local plain-HTTP Nexus: Docker daemon will use ${loopback}."
+        return loopback
+    }
+    return registry
+}
+
+// The shared library pinned to main can be one commit behind this Jenkinsfile
+// (a PR cannot see its own library changes). The local catalog fixes the flags
+// needed for the deliverable without blocking the PR build. It also supplies the
+// mobile entry until the shared-library catalog reaches main.
+def localMobileService() {
+    return [
+            short         : 'mobile',
+            name          : 'circleguard-mobile',
+            path          : '',
+            dir           : 'mobile',
+            projectKey    : 'circleguard-mobile',
+            display       : 'CircleGuard Mobile',
+            sonarSettings : 'mobile/sonar-project.properties',
+            type          : 'node',
+            jacoco        : true,
+            integration   : false,
+            publish       : false,
+            docker        : false,
+            deploy        : false,
+            healthcheck   : false
+    ]
+}
+
+def enrichServices(List resolved, boolean includeMobile) {
+    def selected = resolved.findAll { it.short != 'mobile' || includeMobile }
+    if (includeMobile && !selected.any { it.short == 'mobile' }) {
+        selected << localMobileService()
+    }
+    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification']
+    def covered = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification',
+                   'file', 'dashboard', 'mobile']
+    selected.each { service ->
+        service.docker = service.type == 'node' ? false : true
+        service.deploy = service.type == 'node' ? false : deployable.contains(service.short)
         if (covered.contains(service.short)) {
             service.jacoco = true
         }
-        if (['gateway', 'auth', 'identity', 'promotion', 'form'].contains(service.short)) {
+        if (['gateway', 'auth', 'identity', 'promotion', 'form', 'notification'].contains(service.short)) {
             service.healthcheck = true
+        }
+        // HU-FILE-04: the shared library is pinned to main, so this PR cannot see the
+        // catalog flag change; enable the existing Integration Tests stage for file here.
+        if (service.short == 'file') {
+            service.integration = true
         }
         if (service.short == 'promotion') {
             service.sonarSettings = 'services/circleguard-promotion-service/sonar-project.properties'
         }
     }
-    return services
+    javaServices = selected.findAll { it.type != 'node' && it.short != 'mobile' }
+    return selected
 }
 
-// TEMPORAL: ciServices.resolve de la librería pinneada a main llama a verifySelection(),
-// que en main aún tiene el bug CPS del sort/spread (main #36). Este PR arregla la librería,
-// pero su propio build carga la versión de main, así que no puede usar su fix. Bypass local
-// con el mismo contrato que ciServices.resolve (sin el self-check roto de main).
-// ELIMINAR cuando la librería de main incluya el fix de ciServices (tras este merge).
+// Mobile is resolved from the same diff as the Java services. The library pinned
+// to main predates the mobile catalog entry, so this bridge keeps PR builds honest.
+def isMobileSelected(String mode) {
+    def requested = (mode ?: 'auto').trim()
+    if (requested == 'all' || requested == 'mobile') {
+        return true
+    }
+    if (requested != 'auto') {
+        return false
+    }
+    if ((env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') && !env.CHANGE_TARGET?.trim()) {
+        return true
+    }
+    if (!autoDiffAvailable) {
+        // The diff could not be computed; resolveServicesLocal() already fell back
+        // to every Java service, so mobile coverage must be included as well.
+        return true
+    }
+    return resolvedFiles.any { it == 'mobile' || it.startsWith('mobile/') }
+}
+
+// TEMPORARY: the library is pinned to main (@Library('circleguard@main')), so a PR
+// build cannot see the changes to jenkins/vars/ciServices.groovy that the PR itself
+// carries. Until the selective-execution fix reaches main, this local copy applies
+// the same rule (E1.4/P1.4) to the PR that fixes it. REMOVE after merging to main.
+// A deploy path matches a service when a segment equals the short name or starts
+// with it followed by -, _, . or a digit.
+def matchesDeployServiceLocal(String path, String shortName) {
+    return path.tokenize('/').any { segment ->
+        if (segment == shortName) {
+            return true
+        }
+        if (!segment.startsWith(shortName)) {
+            return false
+        }
+        def rest = segment.substring(shortName.length())
+        if (!rest) {
+            return false
+        }
+        def first = rest.substring(0, 1)
+        return first == '-' || first == '_' || first == '.' || first ==~ /[0-9]/
+    }
+}
+
+// True only for paths that change the Gradle build of every module.
+def isGlobalBuildFileLocal(String path) {
+    def candidates = ['build.gradle.kts', 'settings.gradle.kts', 'gradle.properties',
+                      'gradlew', 'gradlew.bat', 'gradle/', 'sonar-project.properties']
+    return candidates.any { candidate ->
+        candidate.endsWith('/') ? path.startsWith(candidate) : path == candidate
+    }
+}
+
+// Pure file-to-service selection, mirroring ciServices.selectFromFiles() from main.
+def selectServicesFromFilesLocal(List files) {
+    def catalog = ciServices.catalog()
+    if (files.any { path -> isGlobalBuildFileLocal(path) }) {
+        echo 'Global build change; building all services.'
+        return catalog
+    }
+    def selected = []
+    files.each { path ->
+        if (path.startsWith('deploy/')) {
+            def matched = catalog.findAll { service ->
+                service.type != 'node' && matchesDeployServiceLocal(path, service.short)
+            }
+            matched.each { service ->
+                if (!selected.contains(service)) selected << service
+            }
+            if (!matched) {
+                echo "Shared deploy change; no Java service matched: ${path}"
+            }
+        } else if (path == 'Jenkinsfile' || path.startsWith('jenkins/')) {
+            echo "CI-only change; no Java service selected: ${path}"
+        } else {
+            catalog.findAll { service -> path.startsWith("${service.dir}/") }.each { service ->
+                if (!selected.contains(service)) selected << service
+            }
+        }
+    }
+    // CPS-safe ordering: no comparator .sort{} and no spread (*.short); main build #36 died there.
+    def ordered = []
+    catalog.each { svc ->
+        if (selected.contains(svc)) ordered << svc
+    }
+    return ordered
+}
+
+// Resolves auto/all/<service> using the same contract as ciServices.resolve() on main.
 def resolveServicesLocal(String mode) {
     def requested = (mode ?: 'auto').trim()
+    if (requested == 'mobile') {
+        return [localMobileService()]
+    }
     if (requested == 'all') {
         return ciServices.catalog()
     }
     if (requested == 'auto') {
-        return ciServices.changed()
+        if ((env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') && !env.CHANGE_TARGET?.trim()) {
+            echo 'Main branch build: building all services.'
+            autoDiffAvailable = true
+            return ciServices.catalog()
+        }
+        def target = env.CHANGE_TARGET?.trim() ?: 'main'
+        def diff = ''
+        try {
+            // Multibranch workspaces use a restricted refspec, so create origin/<target> explicitly.
+            sh "git fetch --no-tags origin +refs/heads/${target}:refs/remotes/origin/${target}"
+            diff = sh(script: "git diff --name-only origin/${target}...HEAD", returnStdout: true).trim()
+        } catch (Exception ex) {
+            echo "Could not compute the diff against origin/${target}: ${ex.message}. Building all services."
+            autoDiffAvailable = false
+            resolvedFiles = []
+            return ciServices.catalog()
+        }
+        if (!diff) {
+            echo "No service changes relative to origin/${target}."
+            autoDiffAvailable = true
+            resolvedFiles = []
+            return []
+        }
+        def files = diff.readLines().findAll { it.trim() }
+        autoDiffAvailable = true
+        resolvedFiles = files
+        def selected = selectServicesFromFilesLocal(files)
+        if (!selected) {
+            echo "Changes with no matching Gradle service: ${files.join(', ')}"
+        }
+        return selected
     }
     def svc = ciServices.catalog().find { it.short == requested || it.name == requested }
-    return svc ? [svc] : []
+    if (!svc) {
+        error "Unknown service: ${requested}."
+    }
+    return [svc]
 }
 
-// El cliente Expo no es un módulo Gradle; se construye aparte y se publica con el
-// mismo tag semántico que las imágenes Java.
+// The Expo client is not a Gradle module; it is built separately and published with
+// the same semantic tag as the Java images.
 def dockerBuildPushClientLocal(String tag) {
-    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/web:${tag}"
+    def registry = dockerRegistryForDaemon()
+    def image = "${registry}/circleguard-docker/web:${tag}"
+    def publicImage = "${env.NEXUS_REGISTRY}/circleguard-docker/web:${tag}"
     def commit = env.GIT_COMMIT ?: 'unknown'
     def source = env.GITHUB_REPO_URL ?: 'unknown'
     def digest = ''
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
-        sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
-        def registry = (env.NEXUS_REGISTRY ?: '').trim()
+        sh "echo \$NEXUS_PASSWORD | docker login ${registry} -u \$NEXUS_USER --password-stdin"
         def base = registry ? "${registry}/circleguard-base" : ''
         def baseArgs = base ? "--build-arg GRADLE_IMAGE=${base}/gradle:8.14-jdk21 --build-arg JDK_IMAGE=${base}/eclipse-temurin:21-jdk --build-arg ALPINE_IMAGE=${base}/eclipse-temurin:21-jre-alpine --build-arg JAMMY_IMAGE=${base}/eclipse-temurin:21-jre-jammy --build-arg NODE_IMAGE=${base}/node:22-alpine --build-arg WEB_IMAGE=${base}/nginx-unprivileged:1.27-alpine" : ''
         sh """
@@ -97,7 +275,7 @@ def dockerBuildPushClientLocal(String tag) {
         if (!digest || digest == '<no value>') {
             digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
         }
-        sh "printf '%s\\n%s\\ncommit=%s\\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
+        sh "printf '%s\\n%s\\ncommit=%s\\n' '${publicImage}' '${digest}' '${commit}' >> image-digest.txt"
     }
     return digest
 }
@@ -106,7 +284,7 @@ def ensureTrivyBinaryLocal() {
     sh '''
         set -eu
         if ! command -v trivy >/dev/null 2>&1 && [ ! -x "${WORKSPACE}/.trivy-bin/trivy" ]; then
-            echo "Extrayendo binario trivy desde aquasec/trivy:0.57.1..."
+            echo "Extracting the Trivy binary from aquasec/trivy:0.57.1..."
             cid=$(docker create aquasec/trivy:0.57.1)
             mkdir -p "${WORKSPACE}/.trivy-bin"
             docker cp "$cid:/usr/local/bin/trivy" "${WORKSPACE}/.trivy-bin/trivy"
@@ -141,8 +319,9 @@ def trivyScanIaCLocal() {
 def trivyScanImagesLocal(List images, String tag) {
     ensureTrivyBinaryLocal()
     // CG-DOC: Scan each image once; jq keeps the CRITICAL gate blocking.
+    def registry = dockerRegistryForDaemon()
     images.each { service ->
-        def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${tag}"
+        def image = "${registry}/circleguard-docker/${service.short}:${tag}"
         sh """
             set -eu
             export PATH="/usr/local/bin:\${WORKSPACE}/.trivy-bin:\${PATH}"
@@ -165,14 +344,15 @@ def owaspZapGateLocal(String environment) {
     // the blocking check below reads the aggregate report, so adding a target can
     // never weaken the existing auth scan.
     def targets = [
-            'auth'     : 'http://auth:8180/actuator/health',
-            'promotion': 'http://promotion:8088/actuator/health'
+            'auth'        : 'http://auth:8180/actuator/health',
+            'promotion'   : 'http://promotion:8088/actuator/health',
+            'notification': 'http://notification:8082/actuator/health'
     ]
     sh """
         set -eu
         mkdir -p build/reports/security
         : > build/reports/security/zap-${environment}.txt
-        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion --timeout=180s
+        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion deployment/notification --timeout=180s
     """
     // CG-DOC: Each target uses its own pod name, so baseline scans can run in parallel.
     def zapBranches = [:]
@@ -197,16 +377,16 @@ def owaspZapGateLocal(String environment) {
     sh """
         set -eu
         if grep -qE '^FAIL-NEW:[[:space:]]*[1-9]' build/reports/security/zap-${environment}.txt; then
-            echo "OWASP ZAP detectó vulnerabilidades bloqueantes en ${namespace} antes de promover a prod." >&2
+            echo "OWASP ZAP found blocking vulnerabilities in ${namespace} before promotion to production." >&2
             exit 1
         fi
     """
     archiveArtifacts artifacts: "build/reports/security/zap-${environment}.txt", allowEmptyArchive: true
 }
 
-// Los tres flujos UI (login, cuestionario y acceso) viven en tests/e2e. El E2E
-// on-prem siembra Neo4j y publica survey.submitted vía kubectl exec y corre contra
-// el Ingress de k3d; ver jenkins/vars/ci.groovy y tests/e2e/playwright.config.ts.
+// The three UI flows (login, questionnaire, access) live in tests/e2e. The on-premise
+// E2E seeds Neo4j and publishes survey.submitted via kubectl exec, then runs against
+// the k3d Ingress; see jenkins/vars/ci.groovy and tests/e2e/playwright.config.ts.
 
 // Shared library vars added in the same PR are not visible to that PR build:
 // @Library loads from LIBRARY_BRANCH, not from the checked-out PR branch.
@@ -217,7 +397,7 @@ def normalizeSemver(String value) {
         candidate = candidate.substring(1)
     }
     if (!(candidate ==~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/)) {
-        error "Versión inválida '${value}'. Use el formato semver X.Y.Z o vX.Y.Z."
+        error "Invalid version '${value}'. Use semver format X.Y.Z or vX.Y.Z."
     }
     return candidate
 }
@@ -225,7 +405,7 @@ def normalizeSemver(String value) {
 def resolveSemver(String override) {
     def provided = (override ?: '').trim()
     if (provided) {
-        echo "Versión semántica recibida por parámetro: ${provided}."
+        echo "Semantic version supplied as a parameter: ${provided}."
         return normalizeSemver(provided)
     }
 
@@ -238,7 +418,7 @@ def resolveSemver(String override) {
     ).trim()
     if (exactTag) {
         def exactVersion = normalizeSemver(exactTag)
-        echo "HEAD ya tiene el tag exacto ${exactTag}; se publica la versión ${exactVersion}."
+        echo "HEAD already has the exact tag ${exactTag}; publishing version ${exactVersion}."
         return exactVersion
     }
 
@@ -247,7 +427,7 @@ def resolveSemver(String override) {
             returnStdout: true
     ).trim()
     if (!lastTag) {
-        echo 'No hay tags semver previos; la primera versión publicada será 1.0.0.'
+        echo 'No previous semver tags; the first published version will be 1.0.0.'
         return '1.0.0'
     }
     def base = normalizeSemver(lastTag)
@@ -255,7 +435,7 @@ def resolveSemver(String override) {
 
     def subjects = sh(script: "git log --format='%s' ${range}", returnStdout: true).trim()
     if (!subjects) {
-        echo "Sin commits nuevos desde ${lastTag}; se mantiene ${base}."
+        echo "No new commits since ${lastTag}; keeping ${base}."
         return base
     }
 
@@ -282,7 +462,7 @@ def resolveSemver(String override) {
     }
 
     def next = "${major}.${minor}.${patch}"
-    echo "Versión semántica calculada: ${next} (base ${base}, breaking=${breaking}, feat=${feature})."
+    echo "Calculated semantic version: ${next} (base ${base}, breaking=${breaking}, feat=${feature})."
     return next
 }
 
@@ -294,22 +474,22 @@ def createSemverTag(String version) {
             set -eu
             existing=\$(git rev-parse -q --verify "refs/tags/v${tag}" || true)
             if [ -n "\$existing" ] && [ "\$existing" != "\${GIT_COMMIT}" ]; then
-                echo "El tag v${tag} ya existe en \$existing y no apunta al commit actual." >&2
+                echo "Tag v${tag} already exists at \$existing and does not point to the current commit." >&2
                 exit 1
             fi
             if [ -z "\$existing" ]; then
                 git tag "v${tag}" "\${GIT_COMMIT}"
                 git push "https://\${GH_USER}:\${GH_TOKEN}@github.com/\${GITHUB_OWNER}/\${GITHUB_REPO}.git" "refs/tags/v${tag}"
-                echo "Tag v${tag} publicado sobre \${GIT_COMMIT}."
+                echo "Tag v${tag} published on \${GIT_COMMIT}."
             else
-                echo "El tag v${tag} ya apunta al commit actual; no se recrea."
+                echo "Tag v${tag} already points to the current commit; not recreating it."
             fi
         """
     }
 }
 
 def writeReleaseNotes(String version) {
-    // Se genera desde los commits convencionales; el tag previo define el rango.
+    // Generated from conventional commits; the previous tag defines the range.
     def previous = sh(
             script: "git tag --list 'v[0-9]*' --sort=-v:refname | grep -v '^v${version}\$' | head -n1",
             returnStdout: true
@@ -322,32 +502,32 @@ def writeReleaseNotes(String version) {
     def date = sh(script: 'date -u +%Y-%m-%d', returnStdout: true).trim()
     def notes = """# CircleGuard v${version}
 
-Fecha: ${date}
+Date: ${date}
 
-## Cambios
+## Changes
 
-${changes ?: '- Sin cambios registrados.'}
+${changes ?: '- No recorded changes.'}
 
-## Artefactos
+## Artifacts
 
-- Imágenes Docker inmutables con tag `v${version}`.
-- JARs publicados en Nexus.
-- Cobertura y quality gate disponibles en SonarQube.
+- Immutable Docker images tagged `v${version}`.
+- JARs published to Nexus.
+- Coverage and quality gate available in SonarQube.
 """
     writeFile file: "docs/release-notes/v${version}.md", text: notes
     archiveArtifacts artifacts: "docs/release-notes/v${version}.md", fingerprint: true
 }
 
 def publishGitHubRelease(String version) {
-    // Publica las notas como GitHub Release. Si ya existe una release para el tag,
-    // actualiza el cuerpo para que un reintento del pipeline sea idempotente.
+    // Publishes the notes as a GitHub Release. If a release already exists for the tag,
+    // update its body so a pipeline retry stays idempotent.
     withCredentials([usernamePassword(credentialsId: 'github-creds',
             usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
         sh """
             set -eu
             notes="docs/release-notes/v${version}.md"
             if [ ! -f "\$notes" ]; then
-                echo "No hay notas para v${version}; se omite la release."
+                echo "No release notes for v${version}; skipping the release."
                 exit 0
             fi
             payload=\$(jq -n \
@@ -362,20 +542,20 @@ def publishGitHubRelease(String version) {
                 id=\$(printf '%s' "\$existing" | jq -r '.id')
                 curl -fsS -X PATCH -H "Authorization: token \$GH_TOKEN" \
                     -H 'Content-Type: application/json' "\$api/\$id" -d "\$payload" >/dev/null
-                echo "GitHub Release v${version} actualizada (id=\$id)."
+                echo "GitHub Release v${version} updated (id=\$id)."
             else
                 curl -fsS -X POST -H "Authorization: token \$GH_TOKEN" \
                     -H 'Content-Type: application/json' "\$api" -d "\$payload" >/dev/null
-                echo "GitHub Release v${version} publicada."
+                echo "GitHub Release v${version} published."
             fi
         """
     }
 }
 
-// ---------- Idempotencia de publicación -------------------------------------------
-// Un rerun del mismo commit conserva el TAG. Los destinos inmutables (Nexus) y
-// los mutables (Docker registry) deben omitir lo que ya existe, sin fallar ni
-// duplicar evidencia.
+// ---------- Publish idempotency ---------------------------------------------------
+// A rerun of the same commit keeps the same TAG. Immutable targets (Nexus) and
+// mutable ones (Docker registry) must skip what already exists, without failing
+// or duplicating evidence.
 def nexusArtifactExists(String artifact, String version) {
     def repository = version.endsWith('SNAPSHOT') ? 'maven-snapshots' : 'maven-releases'
     def count = 0
@@ -519,41 +699,117 @@ pipeline {
                         'circleguard-notification-service',
                         'circleguard-promotion-service'
                 ],
-                description: 'auto = solo servicios modificados; all = todos los servicios.'
+                description: 'auto = only modified services; all = all services.'
         )
-        string(name: 'TAG', defaultValue: '', description: 'Tag semver. Vacío = calcular desde Git tags y Conventional Commits.')
-        booleanParam(name: 'SKIP_INTEGRATION', defaultValue: false, description: 'Omitir pruebas de integración.')
-        booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Compatibilidad: en main el despliegue es automático; en otras ramas no aplica.')
-        string(name: 'ROLLBACK_TAG', defaultValue: '', description: 'Si se indica, despliega ese tag en prod sin reconstruir.')
+        string(name: 'TAG', defaultValue: '', description: 'Semver tag. Empty = derive from Git tags and Conventional Commits.')
+        booleanParam(name: 'SKIP_INTEGRATION', defaultValue: false, description: 'Skip integration tests.')
+        booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Compatibility: on main, deployment is automatic; it does not apply to other branches.')
+        string(name: 'ROLLBACK_TAG', defaultValue: '', description: 'If set, deploys that tag to production without rebuilding.')
     }
 
     stages {
+        stage('Preflight resources') {
+            steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                script {
+                    // All numeric comparisons stay in awk: the Jenkins sandbox rejects
+                    // Groovy static calls such as Double.parseDouble and Integer.parseInt.
+                    sh script: '''
+                        load=$(awk '{print $1}' /proc/loadavg)
+                        avail=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+                        echo "Host: load=${load}, available memory=${avail}MB."
+                        if awk -v l="$load" -v a="$avail" 'BEGIN { exit !(l > 14 || a < 2048) }'; then
+                            echo "WARNING: host under pressure; integration tests may take longer than usual."
+                        fi
+                        if awk -v l="$load" -v a="$avail" 'BEGIN { exit !(l > 24 || a < 512) }'; then
+                            echo "Host lacks capacity to run the pipeline (load=${load}, available=${avail}MB)."
+                            exit 1
+                        fi
+                    '''
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.checkoutRepo() }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
         stage('Resolve services') {
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    loadEnvironment('NEXUS_REGISTRY', 'NEXUS_URL', 'TOOLS_IP', 'GITHUB_OWNER', 'GITHUB_REPO')
+                    loadEnvironment('NEXUS_REGISTRY', 'NEXUS_URL', 'TOOLS_IP', 'TOOLS_PRIVATE_IP',
+                            'GITHUB_OWNER', 'GITHUB_REPO', 'EMAIL_RECIPIENTS')
+                    env.DOCKER_REGISTRY = dockerRegistryForDaemon()
+                    echo "Docker login target: ${env.DOCKER_REGISTRY ?: 'none'} (advertised registry: ${env.NEXUS_REGISTRY ?: 'none'})"
 
-                    // Un rerun no debe duplicar enlaces ni digests en los artefactos.
+                    // A rerun must not duplicate links or digests in the artifacts.
                     writeFile file: 'sonar-links.txt', text: ''
                     writeFile file: 'image-digest.txt', text: ''
 
                     if (params.ROLLBACK_TAG?.trim()) {
                         env.TAG = normalizeSemver(params.ROLLBACK_TAG.trim())
                         services = []
-                        echo "Rollback solicitado: ${env.TAG}"
+                        javaServices = []
+                        env.MOBILE_CHANGED = 'false'
+                        echo "Rollback requested: ${env.TAG}"
                     } else {
                         env.TAG = resolveSemver(params.TAG ?: '')
-                        services = enrichServices(resolveServicesLocal(params.SERVICE ?: 'auto'))
+                        def requestedService = params.SERVICE ?: 'auto'
+                        def resolved = resolveServicesLocal(requestedService)
+                        def mobileSelected = isMobileSelected(requestedService)
+                        env.MOBILE_CHANGED = mobileSelected.toString()
+                        services = enrichServices(resolved, mobileSelected)
                         env.SERVICES = services.collect { it.short }.join(',')
-                        echo "Versión semántica: ${env.TAG}"
-                        echo "Servicios a construir: ${env.SERVICES ?: 'ninguno'}"
+                        echo "Semantic version: ${env.TAG}"
+                        echo "Components to build: ${env.SERVICES ?: 'none'}"
+                        echo "Mobile coverage: ${env.MOBILE_CHANGED}"
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
+        }
+
+        stage('Mobile tests + coverage') {
+            when { expression { env.MOBILE_CHANGED == 'true' && !params.ROLLBACK_TAG?.trim() } }
+            steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                script {
+                    timeout(time: 15, unit: 'MINUTES') {
+                        echo 'Jest coverage for circleguard-mobile (global threshold >= 60%)...'
+                        dir('mobile') {
+                            sh 'npm ci --no-audit --no-fund'
+                            sh 'npm run test:coverage'
+                        }
+                    }
+                }
+            }
+            post {
+                failure {
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -581,64 +837,99 @@ pipeline {
         }
 
         stage('Unit Tests + JaCoCo') {
-            when { expression { services } }
+            when { expression { javaServices } }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    javaServices.each { service ->
                         timeout(time: 10, unit: 'MINUTES') {
-                            echo "Pruebas unitarias y cobertura de ${service.name}..."
+                            echo "Unit tests and coverage for ${service.name}..."
                             ci.unitTest(service)
                         }
                     }
                 }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Build') {
-            when { expression { services } }
+            when { expression { javaServices } }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    javaServices.each { service ->
                         timeout(time: 10, unit: 'MINUTES') {
-                            echo "Compilando ${service.name}..."
+                            echo "Building ${service.name}..."
                             ci.build(service)
                         }
                     }
                 }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('SonarQube + Quality Gate') {
-            when { expression { services && !params.ROLLBACK_TAG?.trim() } }
+            when { expression { (javaServices || env.MOBILE_CHANGED == 'true') && !params.ROLLBACK_TAG?.trim() } }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    def analyzed = []
+                    analyzed.addAll(javaServices)
+                    analyzed.addAll(services.findAll { it.type == 'node' })
+                    analyzed.each { service ->
                         if (service.jacoco) {
-                            echo "Analizando ${service.name} con SonarQube..."
+                            echo "Analyzing ${service.name} with SonarQube..."
                             ci.sonarScan(service)
                             ci.qualityGate(service)
                         } else {
-                            echo "SonarQube omitido para ${service.name}: sin JaCoCo configurado."
+                            echo "SonarQube skipped for ${service.name}: no coverage configured."
                         }
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
 
         stage('Integration Tests') {
-            when { expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() } }
+            when { expression { javaServices && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() } }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    javaServices.each { service ->
                         if (service.integration) {
                             timeout(time: 12, unit: 'MINUTES') {
-                                echo "Pruebas de integración de ${service.name}..."
+                                echo "Integration tests for ${service.name}..."
                                 ci.integrationTest(service)
                             }
                         } else {
-                            echo "Integración omitida para ${service.name}."
+                            echo "Integration skipped for ${service.name}."
                         }
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -646,18 +937,34 @@ pipeline {
         stage('Trivy IaC Security Gate') {
             when { expression { !params.ROLLBACK_TAG?.trim() } }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { trivyScanIaCLocal() }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
         stage('Package') {
-            when { expression { services && !params.ROLLBACK_TAG?.trim() } }
+            when { expression { javaServices && !params.ROLLBACK_TAG?.trim() } }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
-                        echo "Empaquetando ${service.name}..."
+                    javaServices.each { service ->
+                        echo "Packaging ${service.name}..."
                         ci.packageService(service)
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -667,12 +974,20 @@ pipeline {
                 allOf {
                     branch 'main'
                     expression {
-                        services && services.any { it.publish || it.docker } && !params.ROLLBACK_TAG?.trim()
+                        javaServices && javaServices.any { it.publish || it.docker } && !params.ROLLBACK_TAG?.trim()
                     }
                 }
             }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { createSemverTag(env.TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -680,11 +995,19 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { writeReleaseNotes(env.TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -692,11 +1015,19 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { publishGitHubRelease(env.TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -704,18 +1035,26 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    javaServices.each { service ->
                         if (service.publish && nexusArtifactExists(service.name, env.TAG)) {
-                            echo "Publicación omitida: ${service.name}:${env.TAG} ya existe en Nexus (reintento idempotente)."
+                            echo "Publish skipped: ${service.name}:${env.TAG} already exists in Nexus (idempotent retry)."
                         } else {
                             ci.publish(service)
                         }
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -724,29 +1063,37 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
                     // Preserve idempotent retries: existing images need no base-image catalog lookup.
                     // New builds still use the Nexus mirror through ci.dockerBuildPush.
-                    def images = services.findAll { it.docker }
+                    def images = javaServices.findAll { it.docker }
                     if (!images) {
-                        echo 'Ningún servicio seleccionado publica imagen.'
+                        echo 'No selected service publishes an image.'
                     }
                     images.each { service ->
                         def repository = "circleguard-docker/${service.short}"
                         if (dockerImageExists(repository, env.TAG)) {
-                            def digest = registryDigest(repository, env.TAG) ?: 'sha256:<desconocido>'
+                            def digest = registryDigest(repository, env.TAG) ?: 'sha256:<unknown>'
                             def commit = env.GIT_COMMIT ?: 'unknown'
-                            echo "Docker omitido: ${env.NEXUS_REGISTRY}/${repository}:${env.TAG} ya publicado (${digest})."
+                            echo "Docker skipped: ${env.NEXUS_REGISTRY}/${repository}:${env.TAG} already published (${digest})."
                             sh "printf '%s\\n%s\\ncommit=%s\\n' '${env.NEXUS_REGISTRY}/${repository}:${env.TAG}' '${digest}' '${commit}' >> image-digest.txt"
                         } else {
                             def digest = ci.dockerBuildPush(service, env.TAG)
-                            echo "Digest publicado (${service.short}): ${digest}"
+                            echo "Published digest (${service.short}): ${digest}"
                         }
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -755,21 +1102,29 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { (javaServices || env.MOBILE_CHANGED == 'true') && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
                     def repository = 'circleguard-docker/web'
                     if (dockerImageExists(repository, env.TAG)) {
-                        def digest = registryDigest(repository, env.TAG) ?: 'sha256:<desconocido>'
+                        def digest = registryDigest(repository, env.TAG) ?: 'sha256:<unknown>'
                         def commit = env.GIT_COMMIT ?: 'unknown'
-                        echo "Docker client omitido: ${env.NEXUS_REGISTRY}/${repository}:${env.TAG} ya publicado (${digest})."
+                        echo "Docker client skipped: ${env.NEXUS_REGISTRY}/${repository}:${env.TAG} already published (${digest})."
                         sh "printf '%s\\n%s\\ncommit=%s\\n' '${env.NEXUS_REGISTRY}/${repository}:${env.TAG}' '${digest}' '${commit}' >> image-digest.txt"
                     } else {
                         def digest = dockerBuildPushClientLocal(env.TAG)
-                        echo "Digest publicado (web): ${digest}"
+                        echo "Published digest (web): ${digest}"
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -778,13 +1133,21 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    def images = services.findAll { it.docker }
+                    def images = javaServices.findAll { it.docker }
                     trivyScanImagesLocal(images, env.TAG)
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -803,20 +1166,40 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
-            steps { script { ci.deploy('dev', env.TAG) } }
+            steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                script { ci.deploy('dev', env.TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('E2E') {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
                 }
             }
-            steps { script { ci.e2e() } }
+            steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                script { ci.e2e() }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Terraform Apply stage') {
@@ -833,31 +1216,59 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
-            steps { script { ci.deploy('stage', env.TAG) } }
+            steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                script { ci.deploy('stage', env.TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('OWASP ZAP Security Gate') {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
                 }
             }
-            steps { script { owaspZapGateLocal('stage') } }
+            steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                script { owaspZapGateLocal('stage') }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Approval prod') {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
-                input message: 'Aprobar despliegue a producción', ok: 'Desplegar'
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                input message: 'Approve production deployment', ok: 'Deploy'
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -875,10 +1286,20 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
-            steps { script { ci.deploy('prod', env.TAG) } }
+            steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                script { ci.deploy('prod', env.TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Rollback prod') {
@@ -888,7 +1309,17 @@ pipeline {
                     expression { params.ROLLBACK_TAG?.trim() }
                 }
             }
-            steps { script { ci.deploy('prod', params.ROLLBACK_TAG) } }
+            steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                script { ci.deploy('prod', params.ROLLBACK_TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
     }
 
@@ -902,13 +1333,27 @@ pipeline {
                 if (services) {
                     ci.archive(services)
                 }
+                // The library pinned to main does not know about LCOV yet; archive
+                // the mobile evidence locally until the ci.groovy change is merged.
+                if (env.MOBILE_CHANGED == 'true' && fileExists('mobile/coverage/lcov.info')) {
+                    archiveArtifacts artifacts: 'mobile/coverage/lcov.info,mobile/coverage/**',
+                            allowEmptyArchive: true, fingerprint: true
+                }
             }
         }
         success {
-            echo "Pipeline exitoso: ${env.SERVICES ?: 'sin servicios'} ${env.TAG}"
+            echo "Pipeline succeeded: ${env.SERVICES ?: 'no services'} ${env.TAG}"
         }
         failure {
-            script { ciNotify.failure(services) }
+            script {
+                // Declarative has already overwritten STAGE_NAME with "Declarative: Post Actions".
+                // env.FAILED_STAGE was captured at stage entry, so restore it before notifying.
+                // The library is still pinned to @main and reads STAGE_NAME; this bridge works
+                // without waiting for the ciNotify change to reach main.
+                env.STAGE_NAME = env.FAILED_STAGE ?: env.STAGE_NAME
+                echo "Actual failure stage: ${env.STAGE_NAME}"
+                ciNotify.failure(services)
+            }
         }
     }
 }

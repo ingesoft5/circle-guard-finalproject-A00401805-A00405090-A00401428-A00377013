@@ -5,6 +5,12 @@ Este documento explica el funcionamiento, la estructura y las dependencias actua
 
 El despliegue Kubernetes, la persistencia de certificados y la evidencia pendiente de HU-FORM-05 se describen en [el informe de la HU](../../docs/informe/HU-FORM-05.md).
 
+## Observabilidad — HU-FORM-06
+
+Form expone `/actuator/prometheus`, observa publicaciones Kafka y permite exportar trazas OpenTelemetry mediante configuración externa. La exportación de trazas está desactivada por defecto hasta disponer del backend compartido.
+
+El [informe HU-FORM-06](../../docs/informe/HU-FORM-06.md) incluye configuración, pruebas, cobertura, privacidad y pendientes operativos. Los [componentes Kustomize](../../deploy/k8s/components/form-observability/README.md) ya conectan el scrape, el panel Grafana y la alerta con la pila compartida de #93; falta desplegar y validar esa configuración en ejecución.
+
 ## Cómo funciona form-service
 
 `form-service` administra cuestionarios de salud dinámicos y recibe las respuestas asociadas a un identificador anónimo. También permite subir un certificado o resultado de prueba y registrar su validación. La entidad `HealthSurvey` usa `anonymousId` y no contiene campos de nombre o correo.

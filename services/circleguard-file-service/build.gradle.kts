@@ -1,4 +1,6 @@
 // CG-DOC: Build configuration for the file service.
+import java.time.Duration
+
 plugins {
     id("org.springframework.boot")
     id("io.spring.dependency-management")
@@ -7,6 +9,8 @@ plugins {
     jacoco
     `maven-publish`
 }
+
+apply(from = "$rootDir/gradle/jacoco-convention.gradle")
 
 jacoco {
     toolVersion = "0.8.12"
@@ -18,7 +22,16 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    // Exposes /actuator/prometheus so Prometheus can scrape file-service metrics.
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    // Bridges Spring observations to OpenTelemetry and exports traces through OTLP.
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // HU-FILE-04: the S3 client backs the real file-storage adapter; Testcontainers only supplies
+    // the ephemeral MinIO server used by the integration tests.
+    implementation("software.amazon.awssdk:s3:2.29.52")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.4")
 }
 
 tasks.test {
@@ -69,8 +82,9 @@ tasks.check {
 }
 
 // Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
+// HU-FILE-04: same contract as the gateway integration task (hard 3-minute cap, always rerun).
 val integrationTest by tasks.registering(Test::class) {
-    description = "Runs the ${project.name} integration tests."
+    description = "Runs the ${project.name} integration tests against an ephemeral MinIO container."
     group = "verification"
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
@@ -78,6 +92,12 @@ val integrationTest by tasks.registering(Test::class) {
         includeTags("integration")
     }
     shouldRunAfter(tasks.test)
+    timeout.set(Duration.ofMinutes(3))
+    outputs.upToDateWhen { false }
+    reports {
+        junitXml.required.set(true)
+        html.required.set(true)
+    }
 }
 
 // Publicación del artefacto en Nexus (snapshots o releases según la versión/TAG).

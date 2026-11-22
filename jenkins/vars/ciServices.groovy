@@ -81,8 +81,8 @@ def catalog() {
                     dir           : 'services/circleguard-notification-service',
                     projectKey    : 'circleguard-notification-service',
                     display       : 'CircleGuard Notification',
-                    sonarSettings : '',
-                    jacoco        : false,
+                    sonarSettings : 'services/circleguard-notification-service/sonar-project.properties',
+                    jacoco        : true,
                     integration   : true,
                     publish       : true,
                     docker        : true,
@@ -97,7 +97,7 @@ def catalog() {
                     display       : 'CircleGuard File',
                     sonarSettings : 'services/circleguard-file-service/sonar-project.properties',
                     jacoco        : true,
-                    integration   : false,
+                    integration   : true,
                     publish       : true,
                     docker        : true,
                     deploy        : false
@@ -115,17 +115,33 @@ def catalog() {
                     publish       : true,
                     docker        : true,
                     deploy        : false
+            ],
+            [
+                    short         : 'mobile',
+                    name          : 'circleguard-mobile',
+                    path          : '',
+                    dir           : 'mobile',
+                    projectKey    : 'circleguard-mobile',
+                    display       : 'CircleGuard Mobile',
+                    sonarSettings : 'mobile/sonar-project.properties',
+                    type          : 'node',
+                    jacoco        : true,
+                    integration   : false,
+                    publish       : false,
+                    docker        : false,
+                    deploy        : false,
+                    healthcheck   : false
             ]
     ]
 }
 
 def resolve(String mode) {
-    // E1.4/P1.4 del enunciado: ejecución selectiva por servicio. La autoverificación
-    // evita que una ampliación futura del catálogo vuelva a disparar builds completos.
+    // Assignment E1.4/P1.4 requires selective execution per service. The self-check
+    // prevents a future catalog change from silently triggering full builds again.
     verifySelection()
     def requested = (mode ?: 'auto').trim()
     if (requested == 'all') {
-        // "all" cubre todos los servicios del catálogo.
+        // "all" covers every service in the catalog.
         return catalog()
     }
     if (requested == 'auto') {
@@ -133,46 +149,46 @@ def resolve(String mode) {
     }
     def service = catalog().find { it.short == requested || it.name == requested }
     if (!service) {
-        error "Servicio no reconocido: ${requested}. Use auto, all o uno de: ${catalog().collect { it.short }.join(', ')}"
+        error "Unknown service: ${requested}. Use auto, all or one of: ${catalog().collect { it.short }.join(', ')}"
     }
     return [service]
 }
 
 def changed() {
-    // En main no hay CHANGE_TARGET: se construyen todos los servicios para no
-    // dejar main sin validar cuando el diff contra sí mismo está vacío.
+    // On main there is no CHANGE_TARGET: build every service so main is never left
+    // unvalidated when the diff against itself is empty.
     if (!env.CHANGE_TARGET?.trim() && (env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master')) {
-        echo 'Build de main: se construyen todos los servicios.'
+        echo 'Main branch build: building all services.'
         return catalog()
     }
     def target = env.CHANGE_TARGET?.trim() ?: 'main'
     def base = "origin/${target}"
     def diff = ''
     try {
-        // El workspace de rama clona con un refspec restringido a esa rama, así que
-        // "git fetch origin main" solo escribe FETCH_HEAD y no crea origin/main.
-        // Se pide el destino explícito para que ${base} exista antes del diff.
+        // A branch workspace clones with a refspec restricted to that branch, so
+        // "git fetch origin main" only writes FETCH_HEAD and does not create origin/main.
+        // Request the explicit destination so ${base} exists before the diff.
         sh "git fetch --no-tags origin +refs/heads/${target}:refs/remotes/origin/${target}"
         diff = sh(script: "git diff --name-only ${base}...HEAD", returnStdout: true).trim()
     } catch (Exception ex) {
-        echo "No se pudo calcular el diff contra ${base}: ${ex.message}. Se construyen todos los servicios."
+        echo "Could not compute the diff against ${base}: ${ex.message}. Building all services."
         return catalog()
     }
     if (!diff) {
-        echo "Sin cambios de servicio respecto a ${base}."
+        echo "No service changes relative to ${base}."
         return []
     }
     def files = diff.readLines().findAll { it.trim() }
     def selected = selectFromFiles(files)
     if (!selected) {
-        echo "Cambios sin servicio Java asociado: ${files.join(', ')}"
+        echo "Changes with no matching component: ${files.join(', ')}"
     }
     return selected
 }
 
-// Solo estas rutas cambian la compilación de TODOS los módulos Gradle. mobile/, deploy/,
-// docs/, tests/, infra/ y la definición del pipeline NO son globales: mantenerlos aquí era
-// lo que saturaba el pipeline.
+// Only these paths change the compilation of EVERY Gradle module. mobile/, deploy/,
+// docs/, tests/, infra/ and the pipeline definition are NOT global: keeping them here
+// was what saturated the pipeline.
 def globalBuildPaths() {
     return [
             'build.gradle.kts',
@@ -185,8 +201,8 @@ def globalBuildPaths() {
     ]
 }
 
-// Un cambio en Jenkinsfile o en la Shared Library no modifica ningún microservicio Java.
-// Se omite la validación de servicios, pero verifySelection() sigue comprobando la librería.
+// A change to the Jenkinsfile or the shared library does not modify any Java microservice.
+// Service validation is skipped, but verifySelection() still checks the library.
 def ciOnlyPaths() {
     return ['Jenkinsfile', 'jenkins/']
 }
@@ -203,39 +219,60 @@ def isCiOnlyFile(String path) {
     }
 }
 
-// Selección pura (sin git), reutilizable por changed() y por la autoverificación.
-// - services/<servicio>/...            -> ese servicio
-// - deploy/**/<servicio>-*.yml          -> ese servicio (p. ej. promotion-alerts.yml)
-// - cualquier otro archivo de deploy/   -> todos, porque es configuración compartida
-// - Jenkinsfile, jenkins/...            -> ningún servicio Java (self-check de la librería)
-// - mobile/, docs/, tests/, infra/...   -> ningún servicio Java
+// A deploy file belongs to a service if ANY path segment names it:
+// deploy/k8s/base/promotion-alerts.yml, components/form-observability/,
+// form06-dev/canary/... The character after the name must be -, _, . or a digit,
+// so form06-dev maps to form but platform does not map to promotion.
+def matchesDeployService(String path, String shortName) {
+    return path.tokenize('/').any { segment ->
+        if (segment == shortName) {
+            return true
+        }
+        if (!segment.startsWith(shortName)) {
+            return false
+        }
+        def rest = segment.substring(shortName.length())
+        if (!rest) {
+            return false
+        }
+        def first = rest.substring(0, 1)
+        return first == '-' || first == '_' || first == '.' || first ==~ /[0-9]/
+    }
+}
+
+// Pure selection (no git), reused by changed() and by the self-check.
+// - services/<service>/...              -> that service
+// - deploy/** with the service name in the path -> that service
+// - shared deploy/** (overlays, monitoring, ...) -> no Java service;
+//   validated by the Trivy IaC gate instead of recompiling all eight modules.
+// - Jenkinsfile, jenkins/...            -> no component (library self-check)
+// - mobile/...                          -> the mobile component (Node/Jest coverage)
+// - docs/, tests/, infra/...            -> no component
 def selectFromFiles(List files) {
     def catalog = catalog()
     if (files.any { path -> isGlobalBuildFile(path) }) {
-        echo 'Cambio global en la build; se construyen todos los servicios.'
+        echo 'Global build change; building all services.'
         return catalog
     }
     def selected = []
-    def sharedDeployChange = false
     files.each { path ->
         if (path.startsWith('deploy/')) {
-            def fileName = path.tokenize('/').last()
-            def matched = catalog.findAll { service -> fileName.startsWith("${service.short}-") }
+            def matched = catalog.findAll { service ->
+                service.type != 'node' && matchesDeployService(path, service.short)
+            }
             matched.each { service ->
                 if (!selected.contains(service)) selected << service
             }
-            if (!matched) sharedDeployChange = true
+            if (!matched) {
+                echo "Shared deploy change; no Java service matched: ${path}"
+            }
         } else if (isCiOnlyFile(path)) {
-            echo "Cambio solo de CI; no selecciona servicios Java: ${path}"
+            echo "CI-only change; no Java service selected: ${path}"
         } else {
             catalog.findAll { service -> path.startsWith("${service.dir}/") }.each { service ->
                 if (!selected.contains(service)) selected << service
             }
         }
-    }
-    if (sharedDeployChange) {
-        echo 'Cambio compartido en deploy/; se construyen todos los servicios.'
-        return catalog
     }
     // CPS-safe ordering: no comparator closure (Jenkins CPS .sort{} can return the
     // comparator Integer instead of the list, which broke the spread below in main #36).
@@ -248,13 +285,13 @@ def selectFromFiles(List files) {
     return ordered
 }
 
-// Casos que deben cumplirse en cada build. Si fallan, el pipeline para aquí en vez
-// de ejecutar ocho validaciones innecesarias o, peor, dejar un servicio sin validar.
+// Cases that must hold on every build. If one fails, the pipeline stops here instead
+// of running eight unnecessary validations or, worse, leaving a service unvalidated.
 def verifySelection() {
     def assertSelection = { List files, List expected ->
         def actual = selectFromFiles(files).collect { it.short }
         if (actual != expected) {
-            error "Selección incorrecta para ${files}: esperado ${expected}, obtenido ${actual}"
+            error "Wrong selection for ${files}: expected ${expected}, got ${actual}"
         }
     }
     assertSelection(['services/circleguard-promotion-service/src/main/java/PromotionService.java'], ['promotion'])
@@ -267,15 +304,21 @@ def verifySelection() {
             'deploy/k8s/base/promotion-alerts.yml'
     ], ['promotion'])
     assertSelection(['deploy/k8s/base/form-storage.yml'], ['form'])
-    assertSelection(['mobile/App.tsx', 'docs/informe/HU-FORM-06.md'], [])
+    assertSelection(['mobile/App.tsx', 'docs/informe/HU-FORM-06.md'], ['mobile'])
+    assertSelection(['mobile/package.json'], ['mobile'])
     assertSelection(['docs/informe/HU-FORM-06.md', 'services/circleguard-form-service/src/test/FormTest.java'], ['form'])
     assertSelection(['build.gradle.kts'], catalog().collect { it.short })
-    assertSelection(['deploy/k8s/base/apps.yml'], catalog().collect { it.short })
+    assertSelection(['deploy/k8s/base/apps.yml'], [])
+    assertSelection(['deploy/k8s/overlays/dev/kustomization.yml'], [])
+    assertSelection(['deploy/k8s/monitoring/prometheus.yml'], [])
+    assertSelection(['deploy/k8s/components/form-observability/monitoring/form-alerts.yml'], ['form'])
+    assertSelection(['deploy/k8s/form06-dev/canary/form-hu6.yml'], ['form'])
     assertSelection(['Jenkinsfile'], [])
     assertSelection(['jenkins/vars/ci.groovy'], [])
+    assertSelection(['Jenkinsfile', 'deploy/k8s/overlays/prod/kustomization.yml'], [])
     assertSelection([
             'Jenkinsfile',
             'services/circleguard-promotion-service/src/main/java/PromotionService.java'
     ], ['promotion'])
-    echo 'Verificación de selección por servicio: OK.'
+    echo 'Per-service selection self-check: OK.'
 }

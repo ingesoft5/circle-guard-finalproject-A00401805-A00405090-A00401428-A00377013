@@ -9,6 +9,8 @@ plugins {
     `maven-publish`
 }
 
+apply(from = "$rootDir/gradle/jacoco-convention.gradle")
+
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
     testImplementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
