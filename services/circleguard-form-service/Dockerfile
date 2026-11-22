@@ -1,7 +1,16 @@
 # CG-DOC: Multi-stage, non-root image for the form service.
 #BUILD
 # El digest fija la imagen base exacta utilizada para compilar.
-FROM gradle:8.14-jdk21@sha256:930141cf2b9d472f3fd024b2e711856bede114ce116e49fcdfb64427b875982d AS build
+# CG-DOC: Las imágenes base se sobreescriben desde Jenkins con --build-arg para usar
+# el mirror de Nexus (circleguard-base/*) en el host on-premise (sin IPv6 a Docker Hub).
+# El pin por digest se retira: el mirror publica sus propios digests.
+ARG GRADLE_IMAGE=gradle:8.14-jdk21
+ARG JDK_IMAGE=eclipse-temurin:21-jdk
+ARG ALPINE_IMAGE=eclipse-temurin:21-jre-alpine
+ARG JAMMY_IMAGE=eclipse-temurin:21-jre-jammy
+ARG NODE_IMAGE=node:22-alpine
+ARG WEB_IMAGE=nginxinc/nginx-unprivileged:1.27-alpine
+FROM ${GRADLE_IMAGE} AS build
 # Permite que el usuario gradle escriba los resultados y la caché del proyecto.
 WORKDIR /home/gradle/project
 RUN chown gradle:gradle /home/gradle/project
@@ -14,7 +23,7 @@ USER gradle
 RUN gradle :services:circleguard-form-service:bootJar --no-daemon --console=plain
 
 # RUNTIME
-FROM eclipse-temurin:21-jre-jammy@sha256:1eac8b8fee11ca7d6725a48bc5d41992ed1561504ebae25490d2d062847e8269 AS runtime
+FROM ${JAMMY_IMAGE} AS runtime
 # Prepara la ubicación de la aplicación y el directorio de adjuntos con permisos de escritura.
 WORKDIR /app
 RUN mkdir -p /tmp/circleguard-uploads \

@@ -5,6 +5,7 @@ package com.circleguard.promotion.controller;
 
 import com.circleguard.promotion.repository.graph.UserNodeRepository;
 import com.circleguard.promotion.service.AutoCircleService;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class EncounterController {
 
+    /**
+     * Business meter shared with the monitoring stack: exposed by Micrometer as
+     * {@code circleguard_promotion_encounters_total} with a {@code result} tag.
+     */
+    static final String ENCOUNTERS_METRIC = "circleguard.promotion.encounters";
+
     private final UserNodeRepository userRepository;
     private final AutoCircleService autoCircleService;
+    private final MeterRegistry meterRegistry;
 
     @Data
     public static class EncounterRequest {
@@ -34,16 +42,22 @@ public class EncounterController {
     public ResponseEntity<Void> reportEncounter(@RequestBody EncounterRequest request) {
         log.info("Reporting encounter: {} -> {} at {}", 
             request.getSourceId(), request.getTargetId(), request.getLocationId());
-        
-        userRepository.recordEncounter(
-            request.getSourceId(),
-            request.getTargetId(),
-            System.currentTimeMillis(),
-            request.getLocationId() != null ? request.getLocationId() : "mobile_ble"
-        );
 
-        autoCircleService.evaluateEncounter(request.getSourceId(), request.getTargetId());
-        
+        try {
+            userRepository.recordEncounter(
+                request.getSourceId(),
+                request.getTargetId(),
+                System.currentTimeMillis(),
+                request.getLocationId() != null ? request.getLocationId() : "mobile_ble"
+            );
+
+            autoCircleService.evaluateEncounter(request.getSourceId(), request.getTargetId());
+        } catch (RuntimeException e) {
+            meterRegistry.counter(ENCOUNTERS_METRIC, "result", "failure").increment();
+            throw e;
+        }
+
+        meterRegistry.counter(ENCOUNTERS_METRIC, "result", "success").increment();
         return ResponseEntity.ok().build();
     }
 
