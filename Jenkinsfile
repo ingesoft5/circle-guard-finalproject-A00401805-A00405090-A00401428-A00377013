@@ -37,7 +37,7 @@ def loadEnvironment(String... names) {
 // (a PR cannot see its own library changes). The local catalog fixes the flags
 // needed for the deliverable without blocking the PR build.
 def enrichServices(List services) {
-    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form']
+    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification']
     def covered = ['gateway', 'auth', 'identity', 'promotion', 'form']
     services.each { service ->
         service.docker = true
@@ -45,7 +45,7 @@ def enrichServices(List services) {
         if (covered.contains(service.short)) {
             service.jacoco = true
         }
-        if (['gateway', 'auth', 'identity', 'promotion', 'form'].contains(service.short)) {
+        if (['gateway', 'auth', 'identity', 'promotion', 'form', 'notification'].contains(service.short)) {
             service.healthcheck = true
         }
         if (service.short == 'promotion') {
