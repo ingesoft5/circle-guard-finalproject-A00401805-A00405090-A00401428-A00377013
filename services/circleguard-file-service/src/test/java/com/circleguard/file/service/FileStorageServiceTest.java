@@ -115,4 +115,25 @@ class FileStorageServiceTest {
         Path escaped = tempDir.toAbsolutePath().normalize().getParent().resolve("cg-escape-test.txt");
         assertFalse(Files.exists(escaped), "File must not be written outside the storage directory");
     }
+
+    @Test
+    void shouldDeleteExistingFile() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "delete-me.txt", "text/plain", "content".getBytes());
+        String filename = service.saveFile(file);
+
+        assertTrue(service.deleteFile(filename));
+        assertNull(service.loadFile(filename));
+        assertFalse(Files.exists(tempDir.resolve(filename)));
+    }
+
+    @Test
+    void shouldReturnFalseWhenDeletingMissingFile() {
+        assertFalse(service.deleteFile("no-such-file.txt"));
+    }
+
+    @Test
+    void shouldRejectTraversalOnDelete() {
+        assertFalse(service.deleteFile("../etc/passwd"));
+    }
 }

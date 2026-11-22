@@ -1,0 +1,17 @@
+HU-FILE-04 v2 - Tres corridas integrationTest (S3 real adapter via controller)
+============================================================
+Fecha: 21 de noviembre de 2026
+Comando: ./gradlew :services:circleguard-file-service:integrationTest --no-daemon --console=plain
+
+| Corrida | Resultado | Tiempo de pared | Tiempo JUnit (XML final) |
+|---------|-----------|-----------------|--------------------------|
+| 1 | BUILD SUCCESSFUL | 41s | - |
+| 2 | BUILD SUCCESSFUL | 43s | - |
+| 3 | BUILD SUCCESSFUL | 44s | 3.256s |
+
+XML final: tests=5 skipped=0 failures=0 errors=0
+Casos: deletesObject, createsBucketAutomatically, downloadsObject, missingObjectReturnsNotFound, uploadsObject
+
+Unit+coverage: BUILD SUCCESSFUL 41s (test, jacocoTestReport, jacocoTestCoverageVerification)
+Servidor: bitnamilegacy/minio:2025.4.22 (DEVELOPMENT.2025-04-22T22-12-26Z)
+Limpieza: solo contenedor ajeno pensive_wozniak (exited, 9 days ago), sin contenedores Testcontainers activos.

@@ -48,6 +48,11 @@ def enrichServices(List services) {
         if (['gateway', 'auth', 'identity', 'promotion', 'form'].contains(service.short)) {
             service.healthcheck = true
         }
+        // HU-FILE-04: the shared library is pinned to main, so this PR cannot see the
+        // catalog flag change; enable the existing Integration Tests stage for file here.
+        if (service.short == 'file') {
+            service.integration = true
+        }
         if (service.short == 'promotion') {
             service.sonarSettings = 'services/circleguard-promotion-service/sonar-project.properties'
         }

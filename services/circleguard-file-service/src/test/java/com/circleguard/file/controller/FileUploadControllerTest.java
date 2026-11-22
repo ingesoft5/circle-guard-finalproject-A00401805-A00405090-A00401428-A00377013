@@ -3,7 +3,7 @@
  */
 package com.circleguard.file.controller;
 
-import com.circleguard.file.service.FileStorageService;
+import com.circleguard.file.service.FileStorage;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +14,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -25,7 +26,7 @@ class FileUploadControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private FileStorageService storageService;
+    private FileStorage storageService;
 
     @Test
     void shouldUploadFileSuccessfully() throws Exception {
@@ -72,5 +73,21 @@ class FileUploadControllerTest {
         mockMvc.perform(multipart("/api/v1/files/upload").file(file))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.filename").value("uuid_empty.pdf"));
+    }
+
+    @Test
+    void shouldDeleteExistingFile() throws Exception {
+        Mockito.when(storageService.deleteFile("certificate.pdf")).thenReturn(true);
+
+        mockMvc.perform(delete("/api/v1/files/certificate.pdf"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenFileToDeleteDoesNotExist() throws Exception {
+        Mockito.when(storageService.deleteFile("missing.pdf")).thenReturn(false);
+
+        mockMvc.perform(delete("/api/v1/files/missing.pdf"))
+                .andExpect(status().isNotFound());
     }
 }

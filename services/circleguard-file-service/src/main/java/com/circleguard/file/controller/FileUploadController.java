@@ -3,7 +3,7 @@
  */
 package com.circleguard.file.controller;
 
-import com.circleguard.file.service.FileStorageService;
+import com.circleguard.file.service.FileStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -18,7 +18,7 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class FileUploadController {
-    private final FileStorageService storageService;
+    private final FileStorage storageService;
 
     @PostMapping("/upload")
     public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
@@ -37,5 +37,12 @@ public class FileUploadController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
+    }
+
+    @DeleteMapping("/{filename}")
+    public ResponseEntity<Void> delete(@PathVariable String filename) {
+        return storageService.deleteFile(filename)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 }

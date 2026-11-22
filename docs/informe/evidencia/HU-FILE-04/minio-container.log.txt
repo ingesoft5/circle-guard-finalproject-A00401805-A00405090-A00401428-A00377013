@@ -1,0 +1,21 @@
+ 01:17:02.51 INFO  ==> 
+ 01:17:02.51 INFO  ==> Welcome to the Bitnami minio container
+ 01:17:02.52 INFO  ==> Subscribe to project updates by watching https://github.com/bitnami/containers
+ 01:17:02.52 INFO  ==> Did you know there are enterprise versions of the Bitnami catalog? For enhanced secure software supply chain features, unlimited pulls from Docker, LTS support, or application customization, see Bitnami Premium or Tanzu Application Catalog. See https://www.arrow.com/globalecs/na/vendors/bitnami/ for more information.
+ 01:17:02.52 INFO  ==> 
+ 01:17:02.52 INFO  ==> ** Starting MinIO setup **
+minio 01:17:02.58 INFO  ==> Starting MinIO in background...
+minio 01:17:07.64 INFO  ==> Adding local Minio host to 'mc' configuration...
+minio 01:17:07.80 INFO  ==> Stopping MinIO...
+ 01:17:07.88 INFO  ==> ** MinIO setup finished! **
+
+minio 01:17:07.92 INFO  ==> ** Starting MinIO **
+MinIO Object Storage Server
+Copyright: 2015-2026 MinIO, Inc.
+License: GNU AGPLv3 - https://www.gnu.org/licenses/agpl-3.0.html
+Version: DEVELOPMENT.2025-04-22T22-12-26Z (go1.24.2 linux/amd64)
+
+API: http://localhost:9000 
+WebUI: http://172.17.0.3:9001 http://127.0.0.1:9001  
+
+Docs: https://docs.min.io
