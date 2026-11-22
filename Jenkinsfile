@@ -536,20 +536,27 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    // Early diagnostics: a host at load ~13 with swap in use caused the
-                    // Testcontainers timeouts in Integration Tests. Record the real state so
-                    // the build log explains itself.
-                    def capOut = sh(script: "awk '{print \$1}' /proc/loadavg; awk '/MemAvailable/ {print int(\$2/1024)}' /proc/meminfo", returnStdout: true).trim()
-                    def capLines = capOut.readLines().findAll { it.trim() }
-                    def hostLoad = Double.parseDouble(capLines[0])
-                    def availMb = Integer.parseInt(capLines[1])
-                    echo "Host: load=${hostLoad}, available memory=${availMb}MB."
-                    if (hostLoad > 14 || availMb < 2048) {
-                        echo "WARNING: host under pressure; integration tests may take longer than usual."
-                    }
-                    if (hostLoad > 24 || availMb < 512) {
-                        error "Host lacks capacity to run the pipeline (load=${hostLoad}, available=${availMb}MB)."
-                    }
+                    // All numeric comparisons stay in awk: the Jenkins sandbox rejects
+                    // Groovy static calls such as Double.parseDouble and Integer.parseInt.
+                    sh script: '''
+                        load=$(awk '{print $1}' /proc/loadavg)
+                        avail=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+                        echo "Host: load=${load}, available memory=${avail}MB."
+                        if awk -v l="$load" -v a="$avail" 'BEGIN { exit !(l > 14 || a < 2048) }'; then
+                            echo "WARNING: host under pressure; integration tests may take longer than usual."
+                        fi
+                        if awk -v l="$load" -v a="$avail" 'BEGIN { exit !(l > 24 || a < 512) }'; then
+                            echo "Host lacks capacity to run the pipeline (load=${load}, available=${avail}MB)."
+                            exit 1
+                        fi
+                    '''
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -558,6 +565,13 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.checkoutRepo() }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -584,6 +598,13 @@ pipeline {
                     }
                 }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Unit Tests + JaCoCo') {
@@ -599,6 +620,13 @@ pipeline {
                     }
                 }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Build') {
@@ -612,6 +640,13 @@ pipeline {
                             ci.build(service)
                         }
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -630,6 +665,13 @@ pipeline {
                             echo "SonarQube skipped for ${service.name}: no JaCoCo configured."
                         }
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -651,6 +693,13 @@ pipeline {
                     }
                 }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Trivy IaC Security Gate') {
@@ -658,6 +707,13 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { trivyScanIaCLocal() }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -670,6 +726,13 @@ pipeline {
                         echo "Packaging ${service.name}..."
                         ci.packageService(service)
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -687,6 +750,13 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { createSemverTag(env.TAG) }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Release notes') {
@@ -700,6 +770,13 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { writeReleaseNotes(env.TAG) }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('GitHub Release') {
@@ -712,6 +789,13 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { publishGitHubRelease(env.TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -732,6 +816,13 @@ pipeline {
                             ci.publish(service)
                         }
                     }
+                }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -766,6 +857,13 @@ pipeline {
                     }
                 }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Docker client') {
@@ -790,6 +888,13 @@ pipeline {
                     }
                 }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Trivy Image Security Gate') {
@@ -806,6 +911,13 @@ pipeline {
                     trivyScanImagesLocal(images, env.TAG)
                 }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Deploy dev') {
@@ -818,6 +930,13 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.deploy('dev', env.TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -832,6 +951,13 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.e2e() }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Deploy stage') {
@@ -844,6 +970,13 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.deploy('stage', env.TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -858,6 +991,13 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { owaspZapGateLocal('stage') }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Approval prod') {
@@ -870,6 +1010,13 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 input message: 'Approve production deployment', ok: 'Deploy'
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
 
@@ -884,6 +1031,13 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.deploy('prod', env.TAG) }
             }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
         }
 
         stage('Rollback prod') {
@@ -896,6 +1050,13 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.deploy('prod', params.ROLLBACK_TAG) }
+            }
+            post {
+                failure {
+                    // Preserve the real stage if the stage body aborted before the
+                    // entry capture could be observed by the global post block.
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
             }
         }
     }
