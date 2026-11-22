@@ -98,7 +98,7 @@ def catalog() {
                     display       : 'CircleGuard File',
                     sonarSettings : 'services/circleguard-file-service/sonar-project.properties',
                     jacoco        : true,
-                    integration   : false,
+                    integration   : true,
                     publish       : true,
                     docker        : true,
                     deploy        : false

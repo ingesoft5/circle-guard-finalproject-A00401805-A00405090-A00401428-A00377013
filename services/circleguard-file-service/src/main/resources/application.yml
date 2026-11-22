@@ -31,7 +31,8 @@ management:
       # OTLP HTTP receiver from the monitoring stack; override per environment.
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger:4318/v1/traces}
 
-# S3/MinIO connection. Consumed by the future S3 HU; values come only from the environment.
+# S3/MinIO connection. Consumed by the S3 storage adapter when file.storage.mode=s3;
+# values come only from the environment.
 aws:
   s3:
     endpoint: ${AWS_S3_ENDPOINT:http://minio:9000}
@@ -43,4 +44,6 @@ aws:
 
 file:
   storage:
+    # local (default, Parte 1) or s3 (real S3/MinIO adapter used by HU-FILE-04)
+    mode: ${FILE_STORAGE_MODE:local}
     path: ${FILE_STORAGE_PATH:/app/uploads}
