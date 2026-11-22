@@ -199,11 +199,21 @@ def comment_once(key: str, digest: str, doc: dict[str, Any], dry_run: bool) -> N
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--event", required=True, help="GitHub event name (pull_request, pull_request_review, issues)")
-    parser.add_argument("--payload", required=True, help="Path to the GitHub event JSON payload")
+    parser.add_argument("--event", help="GitHub event name (pull_request, pull_request_review, issues)")
+    parser.add_argument("--payload", help="Path to the GitHub event JSON payload")
     parser.add_argument("--mapping", default=str(DEFAULT_MAPPING))
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--verify", action="store_true", help="Verify Jira credentials and DCG project access")
     args = parser.parse_args()
+
+    if args.verify:
+        me = jira_request("GET", "/rest/api/3/myself", None, False)
+        project = jira_request("GET", "/rest/api/3/project/DCG", None, False)
+        print(f"[ok] Jira auth: {me.get('displayName')} <{me.get('emailAddress')}>")
+        print(f"[ok] Project: {project.get('key')} - {project.get('name')}")
+        return 0
+    if not args.event or not args.payload:
+        parser.error("--event and --payload are required unless --verify is used")
 
     payload = json.loads(Path(args.payload).read_text(encoding="utf-8"))
     mapping = load_mapping(Path(args.mapping))
