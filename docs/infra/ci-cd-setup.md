@@ -133,10 +133,13 @@ The `Jenkinsfile` runs three additional stages; a failure in any of them stops t
 
 ### Selective execution
 
-- `SERVICE=auto`: services touched under `services/<service>/`; global files (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `Jenkinsfile`, `sonar-project.properties`, `gradlew`, `gradle/`, `jenkins/`, `mobile/`, `deploy/`) select every service.
-- `SERVICE=all`: the eight services.
+- `SERVICE=auto`: services touched under `services/<service>/` or in `deploy/**/<service>-*.yml`. Only build-wide paths (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `sonar-project.properties`, `gradlew`, `gradlew.bat`, `gradle/`) and shared `deploy/` manifests select every service.
+- `Jenkinsfile` and `jenkins/` changes select **no** Java service: they change the pipeline definition, not the microservices. `ciServices.verifySelection()` still validates the Shared Library on every build.
+- `mobile/`, `docs/`, `tests/` and `infra/` do **not** select Java services either.
+- `SERVICE=all`: the eight services. A build on `main` also selects all eight.
 - `SERVICE=<name>`: one service; for example `identity`.
 - With no changed services the build is green and skips compilation.
+- `ciServices.verifySelection()` runs the selection invariants on every build, implementing the "modified or all" execution required by E1.4 and the selective-execution criterion P1.4 of the assignment. The standalone runner `jenkins/test/TestCiServices.groovy` reproduces the same cases without Jenkins.
 
 ### Artifacts
 
