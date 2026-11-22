@@ -56,6 +56,19 @@ resource "kubernetes_deployment" "registry" {
             name       = "registry-data"
             mount_path = "/var/lib/registry"
           }
+
+          # CG-DOC: The environment ResourceQuota requires CPU and memory
+          # requests on every container, otherwise the pod is rejected.
+          resources {
+            requests = {
+              cpu    = "100m"
+              memory = "128Mi"
+            }
+            limits = {
+              cpu    = "500m"
+              memory = "512Mi"
+            }
+          }
         }
 
         volume {
