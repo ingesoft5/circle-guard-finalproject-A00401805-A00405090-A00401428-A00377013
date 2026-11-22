@@ -680,7 +680,7 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
                     loadEnvironment('NEXUS_REGISTRY', 'NEXUS_URL', 'TOOLS_IP', 'TOOLS_PRIVATE_IP',
-                            'GITHUB_OWNER', 'GITHUB_REPO', 'EMAIL_RECIPIENTS')
+                            'GITHUB_OWNER', 'GITHUB_REPO')
                     env.DOCKER_REGISTRY = dockerRegistryForDaemon()
                     echo "Docker login target: ${env.DOCKER_REGISTRY ?: 'none'} (advertised registry: ${env.NEXUS_REGISTRY ?: 'none'})"
 

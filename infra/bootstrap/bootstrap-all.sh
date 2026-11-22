@@ -36,14 +36,8 @@ JENKINS_URL=http://${TOOLS_IP}:8080/
 LIBRARY_BRANCH=${LIBRARY_BRANCH:-main}
 SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
 DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
-EMAIL_RECIPIENTS=${EMAIL_RECIPIENTS:-santiago04182005@gmail.com,alejocarlsen@gmail.com,faiberpiedrahita@gmail.com,daniela.castanomoreno@u.icesi.edu.co}
-SMTP_HOST=${SMTP_HOST:-smtp.office365.com}
-SMTP_PORT=${SMTP_PORT:-587}
-SMTP_USER=${SMTP_USER:-daniela.castanomoreno@u.icesi.edu.co}
-SMTP_PASSWORD=${SMTP_PASSWORD:-}
-MAIL_FROM=${MAIL_FROM:-daniela.castanomoreno@u.icesi.edu.co}
 EOF
-  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL LIBRARY_BRANCH SLACK_WEBHOOK_URL DISCORD_WEBHOOK_URL EMAIL_RECIPIENTS SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASSWORD MAIL_FROM; do
+  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL LIBRARY_BRANCH SLACK_WEBHOOK_URL DISCORD_WEBHOOK_URL; do
     val="${!key:-}"
     [ -n "${val}" ] && set_env_kv "${TOOLS_ENV_LOCAL}" "${key}" "${val}"
   done
@@ -70,12 +64,6 @@ bootstrap_tools() {
     "LIBRARY_BRANCH=${LIBRARY_BRANCH:-main}"
     "SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}"
     "DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}"
-    "EMAIL_RECIPIENTS=${EMAIL_RECIPIENTS:-santiago04182005@gmail.com,alejocarlsen@gmail.com,faiberpiedrahita@gmail.com,daniela.castanomoreno@u.icesi.edu.co}"
-    "SMTP_HOST=${SMTP_HOST:-smtp.office365.com}"
-    "SMTP_PORT=${SMTP_PORT:-587}"
-    "SMTP_USER=${SMTP_USER:-daniela.castanomoreno@u.icesi.edu.co}"
-    "SMTP_PASSWORD=${SMTP_PASSWORD:-}"
-    "MAIL_FROM=${MAIL_FROM:-daniela.castanomoreno@u.icesi.edu.co}"
   )
   if hostname -I | tr ' ' '\n' | grep -qx "${TOOLS_PRIVATE_IP}"; then
     env "${env_args[@]}" CG_ENVS_KEY_PATH=/opt/circleguard/cg-envs-key bash "${BOOTSTRAP_DIR}/bootstrap-tools.sh"
