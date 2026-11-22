@@ -238,14 +238,15 @@ def owaspZapGateLocal(String environment) {
     // the blocking check below reads the aggregate report, so adding a target can
     // never weaken the existing auth scan.
     def targets = [
-            'auth'     : 'http://auth:8180/actuator/health',
-            'promotion': 'http://promotion:8088/actuator/health'
+            'auth'        : 'http://auth:8180/actuator/health',
+            'promotion'   : 'http://promotion:8088/actuator/health',
+            'notification': 'http://notification:8082/actuator/health'
     ]
     sh """
         set -eu
         mkdir -p build/reports/security
         : > build/reports/security/zap-${environment}.txt
-        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion --timeout=180s
+        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion deployment/notification --timeout=180s
     """
     targets.each { svc, target ->
         def zapPod = "zap-gate-${svc}-${buildNumber}".toString()
