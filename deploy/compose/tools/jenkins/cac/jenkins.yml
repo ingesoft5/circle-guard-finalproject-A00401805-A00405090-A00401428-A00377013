@@ -1,7 +1,9 @@
 # CG-DOC: Jenkins Configuration as Code for security, credentials, library, and job.
 jenkins:
   systemMessage: "CircleGuard CI/CD"
-  numExecutors: 4
+  # Two executors: four concurrent Gradle + Testcontainers builds pushed this host to
+  # load ~13 with swap in use, which made container health checks time out.
+  numExecutors: 2
   securityRealm:
     local:
       allowsSignup: false
@@ -54,17 +56,26 @@ credentials:
 unclassified:
   location:
     url: ${JENKINS_URL}
+    adminAddress: ${MAIL_FROM}
+  mailer:
+    smtpHost: ${SMTP_HOST}
+    smtpPort: ${SMTP_PORT}
+    useSsl: false
+    useTls: true
+    useSMTPAuth: true
+    smtpAuthUserName: ${SMTP_USER}
+    smtpAuthPasswordSecret: ${SMTP_PASSWORD}
   gitHubPluginConfig:
-    # Relay del webhook mientras no exista un dominio propio: GitHub no alcanza
-    # el host on-prem, asi que el evento entra por el canal de smee.io (ver
-    # docs/infra/migracion-onpremise.md, seccion 3.6).
+    # Webhook relay until a dedicated domain exists: GitHub cannot reach the
+    # on-premise host, so events arrive through smee.io (see
+    # docs/infra/migracion-onpremise.md, section 3.6).
     hookUrl: "${SMEE_URL}"
     configs:
       - name: "GitHub"
         credentialsId: "github-creds"
         apiUrl: "https://api.github.com"
-        # Jenkins no reescribe el hook: se administra a mano en GitHub porque
-        # hookUrl ya no es una IP publica del host.
+        # Jenkins does not rewrite the hook: it is managed manually in GitHub because
+        # hookUrl is no longer a public IP of the host.
         manageHooks: false
     hookSecretConfigs:
       - credentialsId: "github-webhook-secret"
@@ -108,9 +119,9 @@ jobs:
                   gitHubPullRequestDiscovery {
                     strategyId(1)
                   }
-                  // Sin filtro por convención: GitHub es la única fuente de verdad.
-                  // Toda rama existente se indexa; la que se mergea en main y se borra
-                  // desaparece en el próximo index (ver orphanedItemStrategy abajo).
+                  // No convention filter: GitHub is the single source of truth.
+                  // Every existing branch is indexed; a branch merged into main and
+                  // deleted disappears on the next index (see orphanedItemStrategy below).
                 }
               }
             }
@@ -127,9 +138,9 @@ jobs:
             numToKeep(0)
           }
         }
-        // El webhook es el disparador primario: push/PR/delete en GitHub -> smee.io
-        // -> /github-webhook/. El evento delete permite limpiar de inmediato la rama
-        // borrada tras merge en main. Este escaneo de 20 min es el respaldo.
+        // The webhook is the primary trigger: push/PR/delete on GitHub -> smee.io
+        // -> /github-webhook/. The delete event immediately removes a branch deleted
+        // after merging into main. This 20-minute scan is the fallback.
         triggers {
           periodicFolderTrigger {
             interval('20m')
