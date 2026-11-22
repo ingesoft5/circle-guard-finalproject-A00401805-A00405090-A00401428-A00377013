@@ -19,6 +19,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -28,16 +29,27 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag("integration")
 public class HealthStatusReevaluationTest {
 
+    // Same startup budget as AdministrativeCorrectionTest: one bounded attempt on a
+    // loaded Jenkins executor instead of three short retries that can all time out.
     @Container
     static Neo4jContainer<?> neo4jContainer = new Neo4jContainer<>("neo4j:5.12.0")
-            .withAdminPassword("password");
+            .withAdminPassword("password")
+            .withEnv("NEO4J_server_memory_heap_initial__size", "256m")
+            .withEnv("NEO4J_server_memory_heap_max__size", "256m")
+            .withEnv("NEO4J_server_memory_pagecache_size", "128m")
+            .withStartupTimeout(Duration.ofMinutes(3))
+            .withStartupAttempts(1);
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withStartupTimeout(Duration.ofMinutes(3))
+            .withStartupAttempts(1);
 
     @Container
     static GenericContainer<?> redis = new GenericContainer<>("redis:7.2.1")
-            .withExposedPorts(6379);
+            .withExposedPorts(6379)
+            .withStartupTimeout(Duration.ofMinutes(3))
+            .withStartupAttempts(1);
 
     @DynamicPropertySource
     static void neo4jProperties(DynamicPropertyRegistry registry) {

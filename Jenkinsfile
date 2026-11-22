@@ -55,6 +55,23 @@ def enrichServices(List services) {
     return services
 }
 
+// TEMPORAL: ciServices.resolve de la librería pinneada a main llama a verifySelection(),
+// que en main aún tiene el bug CPS del sort/spread (main #36). Este PR arregla la librería,
+// pero su propio build carga la versión de main, así que no puede usar su fix. Bypass local
+// con el mismo contrato que ciServices.resolve (sin el self-check roto de main).
+// ELIMINAR cuando la librería de main incluya el fix de ciServices (tras este merge).
+def resolveServicesLocal(String mode) {
+    def requested = (mode ?: 'auto').trim()
+    if (requested == 'all') {
+        return ciServices.catalog()
+    }
+    if (requested == 'auto') {
+        return ciServices.changed()
+    }
+    def svc = ciServices.catalog().find { it.short == requested || it.name == requested }
+    return svc ? [svc] : []
+}
+
 // El cliente Expo no es un módulo Gradle; se construye aparte y se publica con el
 // mismo tag semántico que las imágenes Java.
 def dockerBuildPushClientLocal(String tag) {
@@ -449,7 +466,7 @@ pipeline {
                         echo "Rollback solicitado: ${env.TAG}"
                     } else {
                         env.TAG = resolveSemver(params.TAG ?: '')
-                        services = enrichServices(ciServices.resolve(params.SERVICE ?: 'auto'))
+                        services = enrichServices(resolveServicesLocal(params.SERVICE ?: 'auto'))
                         env.SERVICES = services.collect { it.short }.join(',')
                         echo "Versión semántica: ${env.TAG}"
                         echo "Servicios a construir: ${env.SERVICES ?: 'ninguno'}"
