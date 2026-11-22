@@ -6,6 +6,9 @@
 @Library('circleguard@main') _
 
 def services = []
+def javaServices = []
+def resolvedFiles = []
+def autoDiffAvailable = false
 
 // The Jenkins container carries the environment addresses and the registry in its
 // process environment (deploy/compose/tools/.env), but a pipeline does not see those
@@ -33,15 +36,63 @@ def loadEnvironment(String... names) {
     }
 }
 
+// The Docker daemon (not this container) resolves registry names. Nexus is published
+// on the host port 5000 over plain HTTP, and Docker only trusts loopback names by
+// default; using the host IP makes `docker login` negotiate HTTPS and fail with
+// "server gave HTTP response to HTTPS client". Map the local host alias to loopback
+// while keeping env.NEXUS_REGISTRY for Kubernetes manifests and evidence.
+def dockerRegistryForDaemon() {
+    def registry = (env.NEXUS_REGISTRY ?: '').trim()
+    if (!registry) return registry
+    def separator = registry.lastIndexOf(':')
+    if (separator <= 0 || registry.indexOf(']') > separator) return registry
+    def host = registry.substring(0, separator)
+    def port = registry.substring(separator + 1)
+    if (host == 'localhost' || host == '127.0.0.1' || host == '[::1]') return registry
+    def privateIp = (env.TOOLS_PRIVATE_IP ?: '').trim()
+    def publicIp = (env.TOOLS_IP ?: '').trim()
+    if (host == privateIp || host == publicIp) {
+        def loopback = "127.0.0.1:${port}"
+        echo "Registry ${registry} is the local plain-HTTP Nexus: Docker daemon will use ${loopback}."
+        return loopback
+    }
+    return registry
+}
+
 // The shared library pinned to main can be one commit behind this Jenkinsfile
 // (a PR cannot see its own library changes). The local catalog fixes the flags
-// needed for the deliverable without blocking the PR build.
-def enrichServices(List services) {
+// needed for the deliverable without blocking the PR build. It also supplies the
+// mobile entry until the shared-library catalog reaches main.
+def localMobileService() {
+    return [
+            short         : 'mobile',
+            name          : 'circleguard-mobile',
+            path          : '',
+            dir           : 'mobile',
+            projectKey    : 'circleguard-mobile',
+            display       : 'CircleGuard Mobile',
+            sonarSettings : 'mobile/sonar-project.properties',
+            type          : 'node',
+            jacoco        : true,
+            integration   : false,
+            publish       : false,
+            docker        : false,
+            deploy        : false,
+            healthcheck   : false
+    ]
+}
+
+def enrichServices(List resolved, boolean includeMobile) {
+    def selected = resolved.findAll { it.short != 'mobile' || includeMobile }
+    if (includeMobile && !selected.any { it.short == 'mobile' }) {
+        selected << localMobileService()
+    }
     def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification']
-    def covered = ['gateway', 'auth', 'identity', 'promotion', 'form']
-    services.each { service ->
-        service.docker = true
-        service.deploy = deployable.contains(service.short)
+    def covered = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification',
+                   'file', 'dashboard', 'mobile']
+    selected.each { service ->
+        service.docker = service.type == 'node' ? false : true
+        service.deploy = service.type == 'node' ? false : deployable.contains(service.short)
         if (covered.contains(service.short)) {
             service.jacoco = true
         }
@@ -52,7 +103,29 @@ def enrichServices(List services) {
             service.sonarSettings = 'services/circleguard-promotion-service/sonar-project.properties'
         }
     }
-    return services
+    javaServices = selected.findAll { it.type != 'node' && it.short != 'mobile' }
+    return selected
+}
+
+// Mobile is resolved from the same diff as the Java services. The library pinned
+// to main predates the mobile catalog entry, so this bridge keeps PR builds honest.
+def isMobileSelected(String mode) {
+    def requested = (mode ?: 'auto').trim()
+    if (requested == 'all' || requested == 'mobile') {
+        return true
+    }
+    if (requested != 'auto') {
+        return false
+    }
+    if ((env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') && !env.CHANGE_TARGET?.trim()) {
+        return true
+    }
+    if (!autoDiffAvailable) {
+        // The diff could not be computed; resolveServicesLocal() already fell back
+        // to every Java service, so mobile coverage must be included as well.
+        return true
+    }
+    return resolvedFiles.any { it == 'mobile' || it.startsWith('mobile/') }
 }
 
 // TEMPORARY: the library is pinned to main (@Library('circleguard@main')), so a PR
@@ -97,7 +170,9 @@ def selectServicesFromFilesLocal(List files) {
     def selected = []
     files.each { path ->
         if (path.startsWith('deploy/')) {
-            def matched = catalog.findAll { service -> matchesDeployServiceLocal(path, service.short) }
+            def matched = catalog.findAll { service ->
+                service.type != 'node' && matchesDeployServiceLocal(path, service.short)
+            }
             matched.each { service ->
                 if (!selected.contains(service)) selected << service
             }
@@ -123,12 +198,16 @@ def selectServicesFromFilesLocal(List files) {
 // Resolves auto/all/<service> using the same contract as ciServices.resolve() on main.
 def resolveServicesLocal(String mode) {
     def requested = (mode ?: 'auto').trim()
+    if (requested == 'mobile') {
+        return [localMobileService()]
+    }
     if (requested == 'all') {
         return ciServices.catalog()
     }
     if (requested == 'auto') {
         if ((env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') && !env.CHANGE_TARGET?.trim()) {
             echo 'Main branch build: building all services.'
+            autoDiffAvailable = true
             return ciServices.catalog()
         }
         def target = env.CHANGE_TARGET?.trim() ?: 'main'
@@ -139,16 +218,22 @@ def resolveServicesLocal(String mode) {
             diff = sh(script: "git diff --name-only origin/${target}...HEAD", returnStdout: true).trim()
         } catch (Exception ex) {
             echo "Could not compute the diff against origin/${target}: ${ex.message}. Building all services."
+            autoDiffAvailable = false
+            resolvedFiles = []
             return ciServices.catalog()
         }
         if (!diff) {
             echo "No service changes relative to origin/${target}."
+            autoDiffAvailable = true
+            resolvedFiles = []
             return []
         }
         def files = diff.readLines().findAll { it.trim() }
+        autoDiffAvailable = true
+        resolvedFiles = files
         def selected = selectServicesFromFilesLocal(files)
         if (!selected) {
-            echo "Changes with no matching Java service: ${files.join(', ')}"
+            echo "Changes with no matching Gradle service: ${files.join(', ')}"
         }
         return selected
     }
@@ -162,14 +247,15 @@ def resolveServicesLocal(String mode) {
 // The Expo client is not a Gradle module; it is built separately and published with
 // the same semantic tag as the Java images.
 def dockerBuildPushClientLocal(String tag) {
-    def image = "${env.NEXUS_REGISTRY}/circleguard-docker/web:${tag}"
+    def registry = dockerRegistryForDaemon()
+    def image = "${registry}/circleguard-docker/web:${tag}"
+    def publicImage = "${env.NEXUS_REGISTRY}/circleguard-docker/web:${tag}"
     def commit = env.GIT_COMMIT ?: 'unknown'
     def source = env.GITHUB_REPO_URL ?: 'unknown'
     def digest = ''
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
-        sh "echo \$NEXUS_PASSWORD | docker login ${env.NEXUS_REGISTRY} -u \$NEXUS_USER --password-stdin"
-        def registry = (env.NEXUS_REGISTRY ?: '').trim()
+        sh "echo \$NEXUS_PASSWORD | docker login ${registry} -u \$NEXUS_USER --password-stdin"
         def base = registry ? "${registry}/circleguard-base" : ''
         def baseArgs = base ? "--build-arg GRADLE_IMAGE=${base}/gradle:8.14-jdk21 --build-arg JDK_IMAGE=${base}/eclipse-temurin:21-jdk --build-arg ALPINE_IMAGE=${base}/eclipse-temurin:21-jre-alpine --build-arg JAMMY_IMAGE=${base}/eclipse-temurin:21-jre-jammy --build-arg NODE_IMAGE=${base}/node:22-alpine --build-arg WEB_IMAGE=${base}/nginx-unprivileged:1.27-alpine" : ''
         sh """
@@ -184,7 +270,7 @@ def dockerBuildPushClientLocal(String tag) {
         if (!digest || digest == '<no value>') {
             digest = sh(script: "docker images --digests --format '{{.Digest}}' ${image} | head -1", returnStdout: true).trim()
         }
-        sh "printf '%s\\n%s\\ncommit=%s\\n' '${image}' '${digest}' '${commit}' >> image-digest.txt"
+        sh "printf '%s\\n%s\\ncommit=%s\\n' '${publicImage}' '${digest}' '${commit}' >> image-digest.txt"
     }
     return digest
 }
@@ -218,8 +304,9 @@ def trivyScanIaCLocal() {
 
 def trivyScanImagesLocal(List images, String tag) {
     ensureTrivyBinaryLocal()
+    def registry = dockerRegistryForDaemon()
     images.each { service ->
-        def image = "${env.NEXUS_REGISTRY}/circleguard-docker/${service.short}:${tag}"
+        def image = "${registry}/circleguard-docker/${service.short}:${tag}"
         sh """
             set -eu
             export PATH="/usr/local/bin:\${WORKSPACE}/.trivy-bin:\${PATH}"
@@ -580,7 +667,10 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    loadEnvironment('NEXUS_REGISTRY', 'NEXUS_URL', 'TOOLS_IP', 'GITHUB_OWNER', 'GITHUB_REPO')
+                    loadEnvironment('NEXUS_REGISTRY', 'NEXUS_URL', 'TOOLS_IP', 'TOOLS_PRIVATE_IP',
+                            'GITHUB_OWNER', 'GITHUB_REPO', 'EMAIL_RECIPIENTS')
+                    env.DOCKER_REGISTRY = dockerRegistryForDaemon()
+                    echo "Docker login target: ${env.DOCKER_REGISTRY ?: 'none'} (advertised registry: ${env.NEXUS_REGISTRY ?: 'none'})"
 
                     // A rerun must not duplicate links or digests in the artifacts.
                     writeFile file: 'sonar-links.txt', text: ''
@@ -589,13 +679,20 @@ pipeline {
                     if (params.ROLLBACK_TAG?.trim()) {
                         env.TAG = normalizeSemver(params.ROLLBACK_TAG.trim())
                         services = []
+                        javaServices = []
+                        env.MOBILE_CHANGED = 'false'
                         echo "Rollback requested: ${env.TAG}"
                     } else {
                         env.TAG = resolveSemver(params.TAG ?: '')
-                        services = enrichServices(resolveServicesLocal(params.SERVICE ?: 'auto'))
+                        def requestedService = params.SERVICE ?: 'auto'
+                        def resolved = resolveServicesLocal(requestedService)
+                        def mobileSelected = isMobileSelected(requestedService)
+                        env.MOBILE_CHANGED = mobileSelected.toString()
+                        services = enrichServices(resolved, mobileSelected)
                         env.SERVICES = services.collect { it.short }.join(',')
                         echo "Semantic version: ${env.TAG}"
-                        echo "Services to build: ${env.SERVICES ?: 'none'}"
+                        echo "Components to build: ${env.SERVICES ?: 'none'}"
+                        echo "Mobile coverage: ${env.MOBILE_CHANGED}"
                     }
                 }
             }
@@ -608,12 +705,33 @@ pipeline {
             }
         }
 
-        stage('Unit Tests + JaCoCo') {
-            when { expression { services } }
+        stage('Mobile tests + coverage') {
+            when { expression { env.MOBILE_CHANGED == 'true' && !params.ROLLBACK_TAG?.trim() } }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    timeout(time: 15, unit: 'MINUTES') {
+                        echo 'Jest coverage for circleguard-mobile (global threshold >= 60%)...'
+                        dir('mobile') {
+                            sh 'npm ci --no-audit --no-fund'
+                            sh 'npm run test:coverage'
+                        }
+                    }
+                }
+            }
+            post {
+                failure {
+                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
+        }
+
+        stage('Unit Tests + JaCoCo') {
+            when { expression { javaServices } }
+            steps {
+                script { env.FAILED_STAGE = env.STAGE_NAME }
+                script {
+                    javaServices.each { service ->
                         timeout(time: 10, unit: 'MINUTES') {
                             echo "Unit tests and coverage for ${service.name}..."
                             ci.unitTest(service)
@@ -631,11 +749,11 @@ pipeline {
         }
 
         stage('Build') {
-            when { expression { services } }
+            when { expression { javaServices } }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    javaServices.each { service ->
                         timeout(time: 10, unit: 'MINUTES') {
                             echo "Building ${service.name}..."
                             ci.build(service)
@@ -653,17 +771,20 @@ pipeline {
         }
 
         stage('SonarQube + Quality Gate') {
-            when { expression { services && !params.ROLLBACK_TAG?.trim() } }
+            when { expression { (javaServices || env.MOBILE_CHANGED == 'true') && !params.ROLLBACK_TAG?.trim() } }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    def analyzed = []
+                    analyzed.addAll(javaServices)
+                    analyzed.addAll(services.findAll { it.type == 'node' })
+                    analyzed.each { service ->
                         if (service.jacoco) {
                             echo "Analyzing ${service.name} with SonarQube..."
                             ci.sonarScan(service)
                             ci.qualityGate(service)
                         } else {
-                            echo "SonarQube skipped for ${service.name}: no JaCoCo configured."
+                            echo "SonarQube skipped for ${service.name}: no coverage configured."
                         }
                     }
                 }
@@ -678,11 +799,11 @@ pipeline {
         }
 
         stage('Integration Tests') {
-            when { expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() } }
+            when { expression { javaServices && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() } }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    javaServices.each { service ->
                         if (service.integration) {
                             timeout(time: 12, unit: 'MINUTES') {
                                 echo "Integration tests for ${service.name}..."
@@ -719,11 +840,11 @@ pipeline {
         }
 
         stage('Package') {
-            when { expression { services && !params.ROLLBACK_TAG?.trim() } }
+            when { expression { javaServices && !params.ROLLBACK_TAG?.trim() } }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    javaServices.each { service ->
                         echo "Packaging ${service.name}..."
                         ci.packageService(service)
                     }
@@ -743,7 +864,7 @@ pipeline {
                 allOf {
                     branch 'main'
                     expression {
-                        services && services.any { it.publish || it.docker } && !params.ROLLBACK_TAG?.trim()
+                        javaServices && javaServices.any { it.publish || it.docker } && !params.ROLLBACK_TAG?.trim()
                     }
                 }
             }
@@ -764,7 +885,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -784,7 +905,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -804,13 +925,13 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    services.each { service ->
+                    javaServices.each { service ->
                         if (service.publish && nexusArtifactExists(service.name, env.TAG)) {
                             echo "Publish skipped: ${service.name}:${env.TAG} already exists in Nexus (idempotent retry)."
                         } else {
@@ -832,7 +953,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -840,7 +961,7 @@ pipeline {
                 script {
                     // Preserve idempotent retries: existing images need no base-image catalog lookup.
                     // New builds still use the Nexus mirror through ci.dockerBuildPush.
-                    def images = services.findAll { it.docker }
+                    def images = javaServices.findAll { it.docker }
                     if (!images) {
                         echo 'No selected service publishes an image.'
                     }
@@ -871,7 +992,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { (javaServices || env.MOBILE_CHANGED == 'true') && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -902,13 +1023,13 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    def images = services.findAll { it.docker }
+                    def images = javaServices.findAll { it.docker }
                     trivyScanImagesLocal(images, env.TAG)
                 }
             }
@@ -925,7 +1046,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -945,7 +1066,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -965,7 +1086,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -985,7 +1106,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -1005,7 +1126,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -1025,7 +1146,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -1071,6 +1192,12 @@ pipeline {
                 // the build stopped, so archiving only happens when something was resolved.
                 if (services) {
                     ci.archive(services)
+                }
+                // The library pinned to main does not know about LCOV yet; archive
+                // the mobile evidence locally until the ci.groovy change is merged.
+                if (env.MOBILE_CHANGED == 'true' && fileExists('mobile/coverage/lcov.info')) {
+                    archiveArtifacts artifacts: 'mobile/coverage/lcov.info,mobile/coverage/**',
+                            allowEmptyArchive: true, fingerprint: true
                 }
             }
         }
