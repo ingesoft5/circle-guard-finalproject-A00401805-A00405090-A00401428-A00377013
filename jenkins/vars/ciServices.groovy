@@ -171,10 +171,18 @@ def changed() {
                 path.startsWith('gradle/') ||
                 path.startsWith('jenkins/') ||
                 path.startsWith('mobile/') ||
-                // Tools de CI (deploy/compose/tools) no alteran ningún binario de
-                // servicio: no fuerzan el build global. deploy/k8s y el resto de
-                // deploy/ sí lo hacen porque afectan el despliegue de todos.
-                (path.startsWith('deploy/') && !path.startsWith('deploy/compose/tools/'))
+                // Solo se excluye del build global el tooling de CI que no altera
+                // ni la ejecución de los tests ni el despliegue: Dockerfile y
+                // plugins.txt del controller, y el relay smee. El RESTO de
+                // deploy/compose/tools (compose con TESTCONTAINERS_*, .env*,
+                // jenkins/cac/, ingress/) y todo deploy/k8s SIGUEN siendo globales:
+                // pueden afectar la validación (variables de Testcontainers,
+                // rutas del E2E, executors/credenciales) o el despliegue de todos.
+                (path.startsWith('deploy/') && !(
+                        path == 'deploy/compose/tools/jenkins/Dockerfile' ||
+                        path == 'deploy/compose/tools/jenkins/plugins.txt' ||
+                        path.startsWith('deploy/compose/tools/smee-client/')
+                ))
     }
     if (globalChange) {
         echo "Cambio global detectado; se construyen todos los servicios: ${files.join(', ')}"

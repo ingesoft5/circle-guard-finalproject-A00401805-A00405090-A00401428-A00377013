@@ -8,6 +8,8 @@ Semantic Versioning.
 
 ### Changed
 
+- **Shared Library `ciServices.changed()`**: el build global de los 8 servicios ya no se dispara cuando solo cambian archivos de tooling de CI sin efecto sobre la validación ni el despliegue (`deploy/compose/tools/jenkins/Dockerfile`, `jenkins/plugins.txt`, `smee-client/`). El resto de `deploy/compose/tools` (compose con `TESTCONTAINERS_*`, `.env*`, `jenkins/cac/`), `deploy/k8s` y los demás paths globales conservan el build completo. Evidencia reproducible: `jenkins/test/TestChanged.groovy` (runner standalone con stubs de `env`/`sh`).
+
 - Los Dockerfiles toman las imágenes base desde `$NEXUS_REGISTRY/circleguard-base` mediante `--build-arg`; el host on-premise no tiene ruta IPv6 al CDN de Docker Hub. Sembrar con `./infra/onpremise/seed-base-images.sh`. Se retiró el pin por digest del Dockerfile de `form` porque el mirror publica sus propios digests.
 - **File service (FS-CI-01)**: Implementado `loadFile` real y endpoint de descarga `GET /api/v1/files/download/{filename}`. Cobertura JaCoCo 85.71% (líneas), umbral 60% cumplido.
 - **File service (HU-FILE-03)**: el pipeline omite la republicación de artefactos Maven e imágenes Docker cuando el TAG semver ya existe, conservando el digest real; la política de inmutabilidad, si se activa en Nexus, aplica solo a `X.Y.Z` y nunca a `latest`, `dev` o `staging`. Documentado en `docs/informe/HU-FILE-03.md` y `docs/infra/migracion-onpremise.md` §3.7.
