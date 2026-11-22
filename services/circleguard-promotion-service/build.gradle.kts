@@ -191,7 +191,7 @@ tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification, verifyUnitTestsRan)
 }
 
-// Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
+// Dedicated task for integration tests (tagged with @Tag("integration")).
 val integrationTest by tasks.registering(Test::class) {
     description = "Runs the ${project.name} integration tests."
     group = "verification"
@@ -201,10 +201,11 @@ val integrationTest by tasks.registering(Test::class) {
         includeTags("integration")
     }
     shouldRunAfter(tasks.test)
-    // La suite tarda ~4.5 min con las imágenes ya cacheadas (7 contenedores entre 3 clases).
-    // 8 min deja margen para un arranque en frío; un cuelgue real falla aquí con mensaje claro
-    // y deja XML, en vez de morir mudo bajo el timeout de Jenkins.
-    timeout.set(Duration.ofMinutes(8))
+    // The suite takes ~4.5 min with images already cached (7 containers across 3 classes).
+    // 15 min leaves room for a cold start under load (3 containers × 3 min of
+    // startupTimeout); a real hang fails here with a clear message and leaves XML behind
+    // instead of dying silently under the Jenkins timeout.
+    timeout.set(Duration.ofMinutes(15))
     outputs.upToDateWhen { false }
 }
 
@@ -227,7 +228,7 @@ val integrationCheck = tasks.register("integrationCheck") {
     dependsOn(tasks.check, integrationTest)
 }
 
-// Publicación del artefacto en Nexus (snapshots o releases según la versión/TAG).
+// Publishes the artifact to Nexus (snapshots or releases depending on the version/TAG).
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
