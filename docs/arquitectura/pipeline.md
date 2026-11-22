@@ -34,9 +34,11 @@ El parámetro `SERVICE` acepta:
 - `auto`: **solo los servicios modificados**. Reglas de `ciServices.selectFromFiles()`:
   - `services/<servicio>/...` → ese servicio (uno, dos o los que estén tocados).
   - `deploy/**/<servicio>-*.yml` → ese servicio (p. ej. `promotion-alerts.yml`, `form-storage.yml`).
-  - Cambios globales de build (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`,
-    `gradlew`, `gradlew.bat`, `gradle/`, `Jenkinsfile`, `jenkins/`, `sonar-project.properties`)
-    o configuración compartida de `deploy/` → los ocho servicios, porque afectan a todos los módulos.
+  - Cambios que afectan a la compilación de todos los módulos (`build.gradle.kts`,
+    `settings.gradle.kts`, `gradle.properties`, `gradlew`, `gradlew.bat`, `gradle/`,
+    `sonar-project.properties`) o configuración compartida de `deploy/` → los ocho servicios.
+  - `Jenkinsfile`, `jenkins/` → ningún servicio Java: cambian la definición del pipeline, no el
+    código de los microservicios. `ciServices.verifySelection()` sigue validando la librería.
   - `mobile/`, `docs/`, `tests/`, `infra/` → ningún servicio Java; el build queda verde y omite
     compilación, pruebas, Sonar e integración.
 - `all`: los ocho servicios.
@@ -46,8 +48,10 @@ El parámetro `SERVICE` acepta:
 El catálogo vive en `jenkins/vars/ciServices.groovy` e indica `docker`, `deploy`,
 `jacoco`, `integration`, `publish` y `healthcheck` por servicio. `ciServices.verifySelection()`
 ejecuta en cada build los casos críticos (un servicio, dos servicios, manifiesto específico de
-deploy, cambio global y cambio solo de cliente) y falla el pipeline si la selección regresa a
-"todos los servicios".
+deploy, cambio global, cambio solo de CI y cambio solo de cliente) y falla el pipeline si la
+selección regresa a "todos los servicios". El runner standalone
+`jenkins/test/TestCiServices.groovy` reproduce esos casos sin Jenkins y se usa como evidencia
+local de regresión.
 
 **Trazabilidad con el enunciado:** E1.4 exige *"ejecución por servicio (modificado o todos)"* y
 el criterio P1.4 califica la *"ejecución selectiva por servicio"*, frente al *"Jenkinsfile

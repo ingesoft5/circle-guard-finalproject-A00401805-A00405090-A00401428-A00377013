@@ -170,8 +170,9 @@ def changed() {
     return selected
 }
 
-// Solo estas rutas cambian la build de TODOS los módulos Gradle. mobile/, deploy/,
-// docs/ y tests/ NO son globales: mantenerlos aquí era lo que saturaba el pipeline.
+// Solo estas rutas cambian la compilación de TODOS los módulos Gradle. mobile/, deploy/,
+// docs/, tests/, infra/ y la definición del pipeline NO son globales: mantenerlos aquí era
+// lo que saturaba el pipeline.
 def globalBuildPaths() {
     return [
             'build.gradle.kts',
@@ -180,10 +181,14 @@ def globalBuildPaths() {
             'gradlew',
             'gradlew.bat',
             'gradle/',
-            'Jenkinsfile',
-            'jenkins/',
             'sonar-project.properties'
     ]
+}
+
+// Un cambio en Jenkinsfile o en la Shared Library no modifica ningún microservicio Java.
+// Se omite la validación de servicios, pero verifySelection() sigue comprobando la librería.
+def ciOnlyPaths() {
+    return ['Jenkinsfile', 'jenkins/']
 }
 
 def isGlobalBuildFile(String path) {
@@ -192,10 +197,17 @@ def isGlobalBuildFile(String path) {
     }
 }
 
+def isCiOnlyFile(String path) {
+    return ciOnlyPaths().any { candidate ->
+        candidate.endsWith('/') ? path.startsWith(candidate) : path == candidate
+    }
+}
+
 // Selección pura (sin git), reutilizable por changed() y por la autoverificación.
 // - services/<servicio>/...            -> ese servicio
 // - deploy/**/<servicio>-*.yml          -> ese servicio (p. ej. promotion-alerts.yml)
 // - cualquier otro archivo de deploy/   -> todos, porque es configuración compartida
+// - Jenkinsfile, jenkins/...            -> ningún servicio Java (self-check de la librería)
 // - mobile/, docs/, tests/, infra/...   -> ningún servicio Java
 def selectFromFiles(List files) {
     def catalog = catalog()
@@ -213,6 +225,8 @@ def selectFromFiles(List files) {
                 if (!selected.contains(service)) selected << service
             }
             if (!matched) sharedDeployChange = true
+        } else if (isCiOnlyFile(path)) {
+            echo "Cambio solo de CI; no selecciona servicios Java: ${path}"
         } else {
             catalog.findAll { service -> path.startsWith("${service.dir}/") }.each { service ->
                 if (!selected.contains(service)) selected << service
@@ -249,5 +263,11 @@ def verifySelection() {
     assertSelection(['docs/informe/HU-FORM-06.md', 'services/circleguard-form-service/src/test/FormTest.java'], ['form'])
     assertSelection(['build.gradle.kts'], catalog()*.short)
     assertSelection(['deploy/k8s/base/apps.yml'], catalog()*.short)
+    assertSelection(['Jenkinsfile'], [])
+    assertSelection(['jenkins/vars/ci.groovy'], [])
+    assertSelection([
+            'Jenkinsfile',
+            'services/circleguard-promotion-service/src/main/java/PromotionService.java'
+    ], ['promotion'])
     echo 'Verificación de selección por servicio: OK.'
 }
