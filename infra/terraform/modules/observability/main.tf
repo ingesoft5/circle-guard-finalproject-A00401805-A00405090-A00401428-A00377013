@@ -37,6 +37,17 @@ resource "helm_release" "loki" {
   timeout    = 1200
 
   set {
+    # CG-DOC: Prometheus and Grafana already come from kube-prometheus-stack.
+    name  = "grafana.enabled"
+    value = "false"
+  }
+
+  set {
+    name  = "prometheus.enabled"
+    value = "false"
+  }
+
+  set {
     name  = "loki.persistence.enabled"
     value = "false"
   }
