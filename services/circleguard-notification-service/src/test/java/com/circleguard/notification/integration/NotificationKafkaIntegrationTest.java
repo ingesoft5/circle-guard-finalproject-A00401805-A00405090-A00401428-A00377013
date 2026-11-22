@@ -251,5 +251,13 @@ class NotificationKafkaIntegrationTest {
         WebClient.Builder webClientBuilder() {
             return WebClient.builder();
         }
+
+        @Bean
+        io.micrometer.core.instrument.MeterRegistry meterRegistry() {
+            // AuditLogService injects a MeterRegistry since the deliveries meter
+            // landed (PR-156); the sliced test context has no Micrometer autoconfig,
+            // so the registry is provided directly.
+            return new io.micrometer.core.instrument.simple.SimpleMeterRegistry();
+        }
     }
 }
