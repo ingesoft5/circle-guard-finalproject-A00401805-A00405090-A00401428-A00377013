@@ -43,6 +43,7 @@ node_modules/
 .expo/
 dist/
 web-build/
+mobile/coverage/
 
 # Docker Local Data
 *_data/

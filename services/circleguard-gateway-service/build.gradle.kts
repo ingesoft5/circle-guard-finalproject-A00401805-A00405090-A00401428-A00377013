@@ -10,6 +10,8 @@ plugins {
     `maven-publish`
 }
 
+apply(from = "$rootDir/gradle/jacoco-convention.gradle")
+
 // En Jenkins el TAG llega como variable de entorno; en local se mantiene SNAPSHOT.
 version = System.getenv("TAG") ?: "1.0.0-SNAPSHOT"
 
