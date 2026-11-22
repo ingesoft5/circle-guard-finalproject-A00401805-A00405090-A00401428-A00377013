@@ -48,6 +48,13 @@ resource "helm_release" "loki" {
   }
 
   set {
+    # CG-DOC: Promtail exhausts the host's fs.inotify.max_user_instances=128
+    # and crashes with "too many open files"; Loki stays available for logs.
+    name  = "promtail.enabled"
+    value = "false"
+  }
+
+  set {
     name  = "loki.persistence.enabled"
     value = "false"
   }
