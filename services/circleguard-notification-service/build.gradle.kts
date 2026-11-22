@@ -7,6 +7,8 @@ plugins {
     `maven-publish`
 }
 
+apply(from = "$rootDir/gradle/jacoco-convention.gradle")
+
 extra["testcontainers.version"] = "1.21.4"
 
 dependencies {

@@ -8,12 +8,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class FileStorageServiceTest {
 
@@ -135,5 +140,104 @@ class FileStorageServiceTest {
     @Test
     void shouldRejectTraversalOnDelete() {
         assertFalse(service.deleteFile("../etc/passwd"));
+    }
+
+    @Test
+    void defaultConstructorCreatesUploadsDirectory() throws IOException {
+        Path uploads = Paths.get("uploads").toAbsolutePath().normalize();
+        try {
+            FileStorageService defaultService = new FileStorageService();
+
+            assertNotNull(defaultService);
+            assertTrue(Files.isDirectory(uploads));
+        } finally {
+            if (Files.isDirectory(uploads)) {
+                try (Stream<Path> entries = Files.list(uploads)) {
+                    if (entries.findAny().isEmpty()) {
+                        Files.deleteIfExists(uploads);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void stringConstructorUsesConfiguredPath() throws IOException {
+        Path configured = tempDir.resolve("configured-uploads");
+        FileStorageService configuredService = new FileStorageService(configured.toString());
+
+        assertTrue(Files.isDirectory(configured));
+        String filename = configuredService.saveFile(new MockMultipartFile(
+                "file", "configured.txt", "text/plain", "ok".getBytes()));
+        assertTrue(Files.exists(configured.resolve(filename)));
+    }
+
+    @Test
+    void constructorWrapsDirectoryCreationFailure() throws IOException {
+        Path blocker = Files.createFile(tempDir.resolve("not-a-directory"));
+        Path invalidRoot = blocker.resolve("child");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> new FileStorageService(invalidRoot));
+
+        assertEquals("Could not initialize storage", ex.getMessage());
+        assertInstanceOf(IOException.class, ex.getCause());
+    }
+
+    @Test
+    void saveFileUsesDefaultNameWhenOriginalFilenameIsNull() {
+        MockMultipartFile file = new MockMultipartFile("file", null, "text/plain", "content".getBytes());
+
+        String filename = service.saveFile(file);
+
+        assertTrue(filename.endsWith("_file"));
+    }
+
+    @Test
+    void saveFileUsesDefaultNameWhenOriginalFilenameIsBlank() {
+        MockMultipartFile file = new MockMultipartFile("file", "   ", "text/plain", "content".getBytes());
+
+        String filename = service.saveFile(file);
+
+        assertTrue(filename.endsWith("_file"));
+    }
+
+    @Test
+    void saveFileStripsWindowsPathFromOriginalFilename() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "C:\\temp\\report.pdf", "application/pdf", "content".getBytes());
+
+        String filename = service.saveFile(file);
+
+        assertTrue(filename.endsWith("_report.pdf"));
+        assertFalse(filename.contains("\\"));
+    }
+
+    @Test
+    void saveFileRethrowsRuntimeExceptionFromStorage() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn("broken.pdf");
+        when(file.getInputStream()).thenThrow(new IllegalStateException("disk failure"));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> service.saveFile(file));
+
+        assertEquals("disk failure", ex.getMessage());
+    }
+
+    @Test
+    void saveFileWrapsCheckedExceptionFromStorage() throws Exception {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn("broken.pdf");
+        when(file.getInputStream()).thenThrow(new IOException("disk failure"));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.saveFile(file));
+
+        assertEquals("Could not store file", ex.getMessage());
+        assertInstanceOf(IOException.class, ex.getCause());
+    }
+
+    @Test
+    void loadFileReturnsNullForInvalidPath() {
+        assertNull(service.loadFile("invalid\0name"));
     }
 }

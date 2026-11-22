@@ -9,6 +9,8 @@ plugins {
     `maven-publish`
 }
 
+apply(from = "$rootDir/gradle/jacoco-convention.gradle")
+
 // Alinea los módulos y el núcleo de Testcontainers en el classpath de pruebas.
 extra["testcontainers.version"] = "1.21.4"
 
