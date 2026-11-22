@@ -186,27 +186,37 @@ Reglas resultantes: fix 1 vive en `SMEE_TARGET` del `.env.onpremise` y en el val
 credencial `github-webhook-secret`. `smee-client` queda fijado a `smee-client@5.0.0` en su `Dockerfile`;
 si se sube la versión, revalidar el doble slash (el trim es de esa versión).
 
-### 3.6.1 Token de SonarQube
+### 3.6.1 Credenciales y token de SonarQube
 
-El `SONAR_TOKEN` del bootstrap **no se genera aleatoriamente**: un `openssl rand` no es un
-token válido de SonarQube y `sonar-scanner` responde `Not authorized`, igual que el paso de
-quality gate. Hay que crearlo dentro de SonarQube:
+El bootstrap genera `SONAR_ADMIN_PASSWORD` y `PROFESSOR_SONAR_PASSWORD` en `.env.onpremise`
+y, justo después de levantar el stack, `aplicar_credenciales_sonar()` espera a
+`/api/system/status` en `UP` y aplica ambas claves: cambia la del usuario `admin` (o la
+confirma si ya coincide) y crea/sincroniza `professor`. Es idempotente: una reinstallación
+no cambia una clave que ya coincide, y **no regenera** `SONAR_TOKEN`. Después del bootstrap
+la UI debe aceptar `admin` / `SONAR_ADMIN_PASSWORD`; si SonarQube estaba fresco, la clave
+inicial `admin/admin` solo se usa como paso intermedio dentro del script.
+
+El `SONAR_TOKEN` **no se genera aleatoriamente**: un `openssl rand` no es un token válido
+de SonarQube y `sonar-scanner` responde `Not authorized`, igual que el paso de quality gate.
+Si hace falta regenerarlo, créalo dentro de SonarQube con la clave admin vigente:
 
 ```bash
-# SonarQube fresco arranca con admin/admin (cambiar si ya se cambió la clave)
-TOKEN=$(curl -s -u admin:admin -X POST http://localhost:9000/api/user_tokens/generate \
+ADMIN_PASS=$(grep '^SONAR_ADMIN_PASSWORD=' .env.onpremise | cut -d= -f2-)
+TOKEN=$(curl -fsS -u "admin:${ADMIN_PASS}" -X POST http://localhost:9000/api/user_tokens/generate \
   --data-urlencode 'name=jenkins-ci' | jq -r .token)   # se muestra una sola vez
 ```
 
-Se pasa al bootstrap (`SONAR_TOKEN=$TOKEN infra/onpremise/bootstrap-onpremise.sh`) o se edita
-`.env.onpremise` y se recrea Jenkins para que JCasC relea el secreto:
+Se edita `.env.onpremise` y se recrea Jenkins para que JCasC relea el secreto:
 
 ```bash
 docker compose --env-file .env.onpremise -f docker-compose.onpremise.yml -p cg-tools \
   up -d --force-recreate jenkins
 docker compose --env-file .env.onpremise -f docker-compose.onpremise.yml -p cg-tools up -d smee-client
-curl -s -u "$(grep '^SONAR_TOKEN=' .env.onpremise | cut -d= -f2):" \
-  http://localhost:9000/api/authentication/validate   # debe devolver login, no 401
+# `/api/authentication/validate` responde 200 incluso con valid=false: hay que leer el JSON.
+curl -fsS -u "$(grep '^SONAR_TOKEN=' .env.onpremise | cut -d= -f2-):" \
+  http://localhost:9000/api/authentication/validate | jq -e '.valid == true'
+curl -fsS -u "admin:$(grep '^SONAR_ADMIN_PASSWORD=' .env.onpremise | cut -d= -f2-)" \
+  http://localhost:9000/api/users/current | jq -e '.login == "admin"'
 ```
 
 Mismo cuidado con las URLs: Jenkins va en `network_mode: host`, así que
@@ -218,7 +228,7 @@ Receta para este host (proyecto `cg-tools`):
 1. Traer lo versionado: `git pull` (el compose, la plantilla `.env.onpremise.example` y
    `infra/onpremise/bootstrap-onpremise.sh` ya incluyen el relay).
 2. Ejecutar `infra/onpremise/bootstrap-onpremise.sh`: crea `.env.onpremise` desde la
-   plantilla, genera los secretos, detecta la IP de ZeroTier, pide usuario y token de
+   plantilla, genera los secretos (y aplica `SONAR_ADMIN_PASSWORD` y `PROFESSOR_SONAR_PASSWORD` en SonarQube), detecta la IP de ZeroTier, pide usuario y token de
    GitHub, y **no** genera el secreto del webhook: lo toma de `GITHUB_WEBHOOK_SECRET`
    (del entorno o del archivo) o lo pide, porque debe coincidir exactamente con el del
    hook de GitHub (id `709307452`); si no, Jenkins responde `403`.

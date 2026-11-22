@@ -48,13 +48,26 @@ fi
 
 SONAR_TOKEN="$(valor_entorno SONAR_TOKEN)"
 if [[ -n "${SONAR_TOKEN:-}" ]]; then
-  if curl -fsS -u "${SONAR_TOKEN}:" http://localhost:9000/api/authentication/validate 2>/dev/null | grep -q '"logged-in":true'; then
+  if curl -fsS -u "${SONAR_TOKEN}:" http://localhost:9000/api/authentication/validate 2>/dev/null \
+      | jq -e '.valid == true' >/dev/null; then
     verde "SONAR_TOKEN autentica en SonarQube (api/authentication/validate)"
   else
-    rojo "SONAR_TOKEN no autentica en SonarQube (401 o logged-in=false)"
+    rojo "SONAR_TOKEN no autentica en SonarQube (401 o valid=false)"
   fi
 else
   info "Sin SONAR_TOKEN en $ARCHIVO_ENTORNO; se omite la validación de API de SonarQube."
+fi
+
+SONAR_ADMIN_PASSWORD="$(valor_entorno SONAR_ADMIN_PASSWORD)"
+if [[ -n "${SONAR_ADMIN_PASSWORD:-}" ]]; then
+  if curl -fsS -u "admin:${SONAR_ADMIN_PASSWORD}" http://localhost:9000/api/users/current 2>/dev/null \
+      | jq -e '.login == "admin"' >/dev/null; then
+    verde "SONAR_ADMIN_PASSWORD autentica como admin en SonarQube (/api/users/current)"
+  else
+    rojo "SONAR_ADMIN_PASSWORD no autentica como admin en SonarQube"
+  fi
+else
+  info "Sin SONAR_ADMIN_PASSWORD en $ARCHIVO_ENTORNO; se omite la validación de admin."
 fi
 
 NEXUS_USER="$(valor_entorno NEXUS_USER)"; NEXUS_USER="${NEXUS_USER:-jenkins}"
