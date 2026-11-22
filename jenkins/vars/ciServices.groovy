@@ -133,7 +133,7 @@ def resolve(String mode) {
     }
     def service = catalog().find { it.short == requested || it.name == requested }
     if (!service) {
-        error "Servicio no reconocido: ${requested}. Use auto, all o uno de: ${catalog()*.short.join(', ')}"
+        error "Servicio no reconocido: ${requested}. Use auto, all o uno de: ${catalog().collect { it.short }.join(', ')}"
     }
     return [service]
 }
@@ -237,14 +237,22 @@ def selectFromFiles(List files) {
         echo 'Cambio compartido en deploy/; se construyen todos los servicios.'
         return catalog
     }
-    return selected.sort { a, b -> catalog*.short.indexOf(a.short) <=> catalog*.short.indexOf(b.short) }
+    // CPS-safe ordering: no comparator closure (Jenkins CPS .sort{} can return the
+    // comparator Integer instead of the list, which broke the spread below in main #36).
+    def ordered = []
+    catalog.each { svc ->
+        if (selected.contains(svc)) {
+            ordered << svc
+        }
+    }
+    return ordered
 }
 
 // Casos que deben cumplirse en cada build. Si fallan, el pipeline para aquí en vez
 // de ejecutar ocho validaciones innecesarias o, peor, dejar un servicio sin validar.
 def verifySelection() {
     def assertSelection = { List files, List expected ->
-        def actual = selectFromFiles(files)*.short
+        def actual = selectFromFiles(files).collect { it.short }
         if (actual != expected) {
             error "Selección incorrecta para ${files}: esperado ${expected}, obtenido ${actual}"
         }
@@ -261,8 +269,8 @@ def verifySelection() {
     assertSelection(['deploy/k8s/base/form-storage.yml'], ['form'])
     assertSelection(['mobile/App.tsx', 'docs/informe/HU-FORM-06.md'], [])
     assertSelection(['docs/informe/HU-FORM-06.md', 'services/circleguard-form-service/src/test/FormTest.java'], ['form'])
-    assertSelection(['build.gradle.kts'], catalog()*.short)
-    assertSelection(['deploy/k8s/base/apps.yml'], catalog()*.short)
+    assertSelection(['build.gradle.kts'], catalog().collect { it.short })
+    assertSelection(['deploy/k8s/base/apps.yml'], catalog().collect { it.short })
     assertSelection(['Jenkinsfile'], [])
     assertSelection(['jenkins/vars/ci.groovy'], [])
     assertSelection([
