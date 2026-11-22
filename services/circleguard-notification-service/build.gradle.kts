@@ -4,11 +4,16 @@ plugins {
     id("io.spring.dependency-management")
     kotlin("jvm")
     kotlin("plugin.spring")
+    id("jacoco")
     `maven-publish`
 }
 
 apply(from = "$rootDir/gradle/jacoco-convention.gradle")
 
+// Spring Boot 3.2.4 manages Testcontainers 1.19.7, whose Docker client negotiates
+// API 1.32 while Docker Engine 29 rejects anything below 1.40. The Boot BOM exposes
+// this version as a property, so overriding it here keeps the whole Testcontainers
+// stack (core, junit-jupiter, kafka) on a supported release.
 extra["testcontainers.version"] = "1.21.4"
 
 dependencies {
@@ -35,6 +40,9 @@ dependencies {
     testImplementation("org.testcontainers:kafka")
 }
 
+// The @Tag("integration") suites run in the dedicated integrationTest task below;
+// the unit task must exclude them so the JaCoCo bundle from the convention plugin
+// stays a unit-only bundle.
 tasks.test {
     useJUnitPlatform {
         excludeTags("integration")
