@@ -133,10 +133,11 @@ The `Jenkinsfile` runs three additional stages; a failure in any of them stops t
 
 ### Selective execution
 
-- `SERVICE=auto`: services touched under `services/<service>/`; global files (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `Jenkinsfile`, `sonar-project.properties`, `gradlew`, `gradle/`, `jenkins/`, `mobile/`, `deploy/`) select every service.
+- `SERVICE=auto`: services touched under `services/<service>/` or in `deploy/**/<service>-*.yml`. Only true build-wide paths (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `Jenkinsfile`, `sonar-project.properties`, `gradlew`, `gradlew.bat`, `gradle/`, `jenkins/`) and shared `deploy/` manifests select every service. `mobile/`, `docs/`, `tests/` and `infra/` do **not** select Java services.
 - `SERVICE=all`: the eight services.
 - `SERVICE=<name>`: one service; for example `identity`.
 - With no changed services the build is green and skips compilation.
+- `ciServices.verifySelection()` runs the selection invariants on every build, implementing the "modified or all" execution required by E1.4 and the selective-execution criterion P1.4 of the assignment.
 
 ### Artifacts
 

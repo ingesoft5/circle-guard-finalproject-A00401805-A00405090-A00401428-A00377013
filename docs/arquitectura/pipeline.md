@@ -31,14 +31,27 @@ flowchart LR
 
 El parámetro `SERVICE` acepta:
 
-- `auto`: solo servicios modificados; un cambio global (`build.gradle.kts`, `Jenkinsfile`,
-  `jenkins/`, `gradle/`, `mobile/`, `deploy/`) construye todos.
+- `auto`: **solo los servicios modificados**. Reglas de `ciServices.selectFromFiles()`:
+  - `services/<servicio>/...` → ese servicio (uno, dos o los que estén tocados).
+  - `deploy/**/<servicio>-*.yml` → ese servicio (p. ej. `promotion-alerts.yml`, `form-storage.yml`).
+  - Cambios globales de build (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`,
+    `gradlew`, `gradlew.bat`, `gradle/`, `Jenkinsfile`, `jenkins/`, `sonar-project.properties`)
+    o configuración compartida de `deploy/` → los ocho servicios, porque afectan a todos los módulos.
+  - `mobile/`, `docs/`, `tests/`, `infra/` → ningún servicio Java; el build queda verde y omite
+    compilación, pruebas, Sonar e integración.
 - `all`: los ocho servicios.
 - Un nombre corto: `gateway`, `auth`, `identity`, `promotion`, `form`, `notification`,
   `file` o `dashboard`.
 
 El catálogo vive en `jenkins/vars/ciServices.groovy` e indica `docker`, `deploy`,
-`jacoco`, `integration`, `publish` y `healthcheck` por servicio.
+`jacoco`, `integration`, `publish` y `healthcheck` por servicio. `ciServices.verifySelection()`
+ejecuta en cada build los casos críticos (un servicio, dos servicios, manifiesto específico de
+deploy, cambio global y cambio solo de cliente) y falla el pipeline si la selección regresa a
+"todos los servicios".
+
+**Trazabilidad con el enunciado:** E1.4 exige *"ejecución por servicio (modificado o todos)"* y
+el criterio P1.4 califica la *"ejecución selectiva por servicio"*, frente al *"Jenkinsfile
+monolítico"*. Esta selección es por tanto un requisito evaluado, no una optimización opcional.
 
 ## Promoción
 
