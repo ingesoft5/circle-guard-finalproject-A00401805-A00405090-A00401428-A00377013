@@ -22,8 +22,22 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        # Expose prometheus for scraping; keep health/info for probes and diagnostics.
+        include: health,info,prometheus
   endpoint:
     health:
       probes:
+        # Enables /actuator/health/liveness and /actuator/health/readiness.
         enabled: true
+  metrics:
+    tags:
+      # Shared tag used by Grafana queries and Prometheus filters.
+      application: circleguard-gateway-service
+  tracing:
+    sampling:
+      # 1.0 = sample every request; acceptable for the partial tracing scope.
+      probability: 1.0
+  otlp:
+    tracing:
+      # Jaeger all-in-one OTLP HTTP receiver inside the monitoring namespace.
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger:4318/v1/traces}
