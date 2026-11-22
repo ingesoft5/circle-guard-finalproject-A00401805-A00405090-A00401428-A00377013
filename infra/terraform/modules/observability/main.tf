@@ -14,7 +14,7 @@ resource "helm_release" "prometheus" {
   chart      = "kube-prometheus-stack"
   version    = var.prometheus_version
   namespace  = kubernetes_namespace.obs.metadata[0].name
-  timeout    = 1200
+  timeout    = 1800
 
   set {
     name  = "grafana.adminPassword"
@@ -34,11 +34,21 @@ resource "helm_release" "loki" {
   chart      = "loki-stack"
   version    = var.loki_version
   namespace  = kubernetes_namespace.obs.metadata[0].name
-  timeout    = 1200
+  timeout    = 1800
 
   set {
     # CG-DOC: Prometheus and Grafana already come from kube-prometheus-stack.
     name  = "grafana.enabled"
+    value = "false"
+  }
+
+  set {
+    # CG-DOC: The Loki chart registers a Grafana datasource with isDefault=true
+    # by default. kube-prometheus-stack also registers Prometheus as default,
+    # so Grafana aborts with "Only one datasource per organization can be
+    # marked as default" and never becomes ready. Keep Loki as a regular
+    # datasource so the install is independent of Helm release ordering.
+    name  = "loki.isDefault"
     value = "false"
   }
 
