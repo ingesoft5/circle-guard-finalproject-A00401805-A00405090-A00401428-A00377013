@@ -1,0 +1,85 @@
+# Private canary. The existing form Service and Ingress keep selecting app=form.
+apiVersion: v1
+kind: Service
+metadata:
+  name: form-hu6
+  namespace: cg-dev
+spec:
+  selector:
+    app: form-hu6
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: form-hu6
+  namespace: cg-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: form-hu6
+  template:
+    metadata:
+      labels:
+        app: form-hu6
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "8086"
+    spec:
+      containers:
+        - name: form
+          image: circleguard-docker/form:REPLACE_WITH_APPROVED_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: cg-config
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/circleguard_form
+            - name: SPRING_DATASOURCE_USERNAME
+              value: admin
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cg-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: validate
+            - name: SPRING_FLYWAY_ENABLED
+              value: "false"
+            - name: FORM_ENVIRONMENT
+              value: cg-dev
+            - name: FORM_TRACING_ENABLED
+              value: "true"
+            - name: FORM_TRACING_SAMPLING_PROBABILITY
+              value: "1.0"
+            - name: FORM_OTLP_TRACING_ENDPOINT
+              value: http://jaeger.monitoring.svc.cluster.local:4318/v1/traces
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 90
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 320Mi
+            limits:
+              memory: 512Mi

@@ -20,8 +20,7 @@ public class RoomReservationServiceImpl implements RoomReservationService {
     @Override
     @Async
     public CompletableFuture<Void> cancelReservation(String circleId, String locationId) {
-        log.info("Room Cancellation: Automatically releasing reservation for location {} (Circle: {}) via API ({})", 
-            locationId, circleId, roomBookingApiUrl);
+        log.info("Room Cancellation: Releasing reservation for fenced circle");
         
         // Mock cancellation logic
         // webClient.post().uri(roomBookingApiUrl + "/" + locationId + "/cancel").bodyValue(Map.of("circleId", circleId, "reason", "FENCED_CLASS"))...

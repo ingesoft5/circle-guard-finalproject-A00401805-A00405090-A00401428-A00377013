@@ -1,0 +1,179 @@
+{
+  "title": "CircleGuard Form Observability",
+  "uid": "circleguard-form-overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "tags": [
+    "circleguard",
+    "form"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "query",
+        "datasource": null,
+        "query": "label_values(up{app=\"form\"}, namespace)",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": "cg-dev|cg-stage|cg-prod",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Form scrape availability",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "up{app=\"form\",namespace=~\"$namespace\"}",
+          "refId": "A",
+          "legendFormat": "{{pod}} {{event_type}} {{result}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "HTTP requests per second",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (pod) (rate(http_server_requests_seconds_count{app=\"form\",namespace=~\"$namespace\",uri!~\"/actuator.*\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{pod}} {{event_type}} {{result}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "HTTP 5xx requests per second",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (pod) (rate(http_server_requests_seconds_count{app=\"form\",namespace=~\"$namespace\",status=~\"5..\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{pod}} {{event_type}} {{result}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Mean HTTP latency",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (pod) (rate(http_server_requests_seconds_sum{app=\"form\",namespace=~\"$namespace\",uri!~\"/actuator.*\"}[5m])) / sum by (pod) (rate(http_server_requests_seconds_count{app=\"form\",namespace=~\"$namespace\",uri!~\"/actuator.*\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{pod}} {{event_type}} {{result}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "JVM heap usage",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (pod) (jvm_memory_used_bytes{app=\"form\",namespace=~\"$namespace\",area=\"heap\"})",
+          "refId": "A",
+          "legendFormat": "{{pod}} {{event_type}} {{result}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Acknowledged Kafka publications per second",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (event_type,result) (rate(circleguard_form_event_publications_total{app=\"form\",namespace=~\"$namespace\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{pod}} {{event_type}} {{result}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      }
+    }
+  ]
+}
