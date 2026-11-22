@@ -6,6 +6,7 @@ RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PLANTILLA="$RAIZ/deploy/compose/tools/.env.onpremise.example"
 ARCHIVO_ENTORNO="$RAIZ/deploy/compose/tools/.env.onpremise"
 ARCHIVO_COMPOSE="$RAIZ/deploy/compose/tools/docker-compose.onpremise.yml"
+source "$RAIZ/infra/bootstrap/bootstrap-common.sh"
 
 [[ -f "$PLANTILLA" ]] || { echo "Falta $PLANTILLA"; exit 1; }
 [[ -f "$ARCHIVO_COMPOSE" ]] || { echo "Falta $ARCHIVO_COMPOSE"; exit 1; }
@@ -30,6 +31,61 @@ establecer_valor() {
     }
   ' "$ARCHIVO_ENTORNO" > "${ARCHIVO_ENTORNO}.temporal"
   mv "${ARCHIVO_ENTORNO}.temporal" "$ARCHIVO_ENTORNO"
+}
+
+# The SonarQube image does not consume SONAR_ADMIN_PASSWORD. bootstrap-tools.sh
+# applies it through the API for the Docker Compose stack; the on-prem bootstrap
+# must do the same, otherwise the generated secret is never used and the UI keeps
+# the default admin/admin credentials.
+aplicar_credenciales_sonar() {
+  local base="${SONAR_HOST_URL:-}"
+  if [[ -z "$base" ]]; then
+    base="$(grep -m1 '^SONAR_HOST_URL=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)"
+  fi
+  base="${base:-http://localhost:9000}"
+  base="${base%/}"
+
+  local password profesor token
+  password="$(grep -m1 '^SONAR_ADMIN_PASSWORD=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)"
+  [[ -n "$password" && "$password" != __* ]] || die "Falta SONAR_ADMIN_PASSWORD en $ARCHIVO_ENTORNO"
+
+  wait_http "${base}/api/system/status" 600 '"status":"UP"'
+
+  if curl -fsS -u "admin:${password}" "${base}/api/users/current" >/dev/null 2>&1; then
+    log_info "SonarQube: la contraseña de admin ya coincide con .env.onpremise."
+  elif curl -fsS -u admin:admin "${base}/api/users/current" >/dev/null 2>&1; then
+    log_info "SonarQube: aplicando SONAR_ADMIN_PASSWORD al usuario admin."
+    curl -fsS -u admin:admin -X POST "${base}/api/users/change_password" \
+      --data-urlencode login=admin \
+      --data-urlencode previousPassword=admin \
+      --data-urlencode "password=${password}" >/dev/null
+  else
+    die "SonarQube: no autentica ni con admin/<SONAR_ADMIN_PASSWORD> ni con admin/admin."
+  fi
+
+  token="$(grep -m1 '^SONAR_TOKEN=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)"
+  if [[ -n "$token" ]] && curl -fsS -u "${token}:" "${base}/api/users/current" >/dev/null 2>&1; then
+    log_info "SonarQube: SONAR_TOKEN sigue siendo válido tras el cambio de contraseña."
+  else
+    log_warn "SonarQube: SONAR_TOKEN no autentica; créalo de nuevo y actualiza .env.onpremise."
+  fi
+
+  profesor="$(grep -m1 '^PROFESSOR_SONAR_PASSWORD=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)"
+  if [[ -n "$profesor" && "$profesor" != __* ]]; then
+    if curl -fsS -u "admin:${password}" "${base}/api/users/search?q=professor" \
+        | jq -e '.users[]? | select(.login == "professor")' >/dev/null 2>&1; then
+      curl -fsS -u "admin:${password}" -X POST "${base}/api/users/change_password" \
+        --data-urlencode login=professor \
+        --data-urlencode "password=${profesor}" >/dev/null
+    else
+      curl -fsS -u "admin:${password}" -X POST "${base}/api/users/create" \
+        --data-urlencode login=professor \
+        --data-urlencode name=Professor \
+        --data-urlencode "password=${profesor}" \
+        --data-urlencode local=true >/dev/null
+    fi
+    log_info "SonarQube: usuario professor sincronizado con .env.onpremise."
+  fi
 }
 
 # Detecta la dirección de ZeroTier; si no existe, usa la ruta por defecto.
@@ -154,6 +210,7 @@ grep -qxF 'deploy/compose/tools/.env.onpremise' "$EXCLUSIONES" 2>/dev/null || \
 # Valida y arranca jenkins, el relay de smee.io y el resto del stack.
 docker compose --env-file "$ARCHIVO_ENTORNO" -f "$ARCHIVO_COMPOSE" -p cg-tools config -q
 docker compose --env-file "$ARCHIVO_ENTORNO" -f "$ARCHIVO_COMPOSE" -p cg-tools up -d --build --remove-orphans
+aplicar_credenciales_sonar
 
 echo "Stack iniciado."
 echo "Jenkins: http://${IP_EQUIPO}:8080/"
