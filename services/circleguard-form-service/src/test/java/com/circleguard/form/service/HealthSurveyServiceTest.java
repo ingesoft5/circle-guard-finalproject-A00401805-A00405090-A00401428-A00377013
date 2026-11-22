@@ -13,7 +13,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.Map;
 import java.util.Optional;
@@ -40,7 +39,7 @@ class HealthSurveyServiceTest {
     private SymptomMapper symptomMapper;
 
     @Mock
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private FormEventPublisher eventPublisher;
 
     @InjectMocks
     private HealthSurveyService service;
@@ -61,7 +60,7 @@ class HealthSurveyServiceTest {
         assertTrue(survey.getHasFever());
         assertTrue(survey.getHasCough());
         ArgumentCaptor<Map> eventCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(kafkaTemplate).send(eq("survey.submitted"), eq(anonymousId.toString()), eventCaptor.capture());
+        verify(eventPublisher).publish(eq("survey.submitted"), eq(anonymousId.toString()), eventCaptor.capture());
         Map<?, ?> event = eventCaptor.getValue();
         assertEquals(anonymousId, event.get("anonymousId"));
         assertEquals(true, event.get("hasSymptoms"));
@@ -96,7 +95,7 @@ class HealthSurveyServiceTest {
         assertFalse(survey.getHasFever());
         assertFalse(survey.getHasCough());
         verifyNoInteractions(symptomMapper);
-        verify(kafkaTemplate).send(eq("survey.submitted"), anyString(), any());
+        verify(eventPublisher).publish(eq("survey.submitted"), anyString(), any());
     }
 
     @Test
@@ -138,7 +137,7 @@ class HealthSurveyServiceTest {
         assertEquals(ValidationStatus.APPROVED, survey.getValidationStatus());
         assertEquals(adminId, survey.getValidatedBy());
         ArgumentCaptor<Map> eventCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(kafkaTemplate).send(eq("certificate.validated"), eq(anonymousId.toString()), eventCaptor.capture());
+        verify(eventPublisher).publish(eq("certificate.validated"), eq(anonymousId.toString()), eventCaptor.capture());
         Map<?, ?> event = eventCaptor.getValue();
         assertEquals(anonymousId, event.get("anonymousId"));
         assertEquals("APPROVED", event.get("status"));
@@ -156,7 +155,7 @@ class HealthSurveyServiceTest {
         service.validateSurvey(surveyId, ValidationStatus.REJECTED, UUID.randomUUID());
 
         verify(repository).save(survey);
-        verifyNoInteractions(kafkaTemplate);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -169,7 +168,7 @@ class HealthSurveyServiceTest {
                 () -> service.validateSurvey(surveyId, ValidationStatus.APPROVED, UUID.randomUUID()));
 
         verify(repository, never()).save(any());
-        verifyNoInteractions(kafkaTemplate);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -181,7 +180,7 @@ class HealthSurveyServiceTest {
 
         assertThrows(IllegalStateException.class, () -> service.submitSurvey(survey));
 
-        verifyNoInteractions(kafkaTemplate);
+        verifyNoInteractions(eventPublisher);
     }
 
     private HealthSurvey survey(UUID anonymousId) {

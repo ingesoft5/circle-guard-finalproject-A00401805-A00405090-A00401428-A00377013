@@ -50,13 +50,13 @@ public class PushServiceImpl implements PushService {
     public CompletableFuture<Void> sendAsync(String userId, String message, Map<String, String> metadata) {
         String correlationId = java.util.UUID.randomUUID().toString();
         if (gotifyToken.equals("MOCK_TOKEN")) {
-            log.info("[MOCK PUSH] To: {}, Content: {}, Metadata: {}", userId, message, metadata);
+            log.info("[MOCK PUSH] Delivery simulated");
             auditLogService.logDelivery(userId, "PUSH", "SUCCESS", correlationId);
             return CompletableFuture.completedFuture(null);
         }
 
         try {
-            log.debug("Attempting to send push notification with metadata to user: {}", userId);
+            log.debug("Attempting to send push notification");
             
             Map<String, Object> body = new HashMap<>();
             body.put("title", "CircleGuard Alert");
@@ -76,11 +76,11 @@ public class PushServiceImpl implements PushService {
                 .toFuture()
                 .join(); // Block in the @Async thread to support @Retryable
 
-            log.info("Push notification with metadata sent successfully to user: {}", userId);
+            log.info("Push notification sent successfully");
             auditLogService.logDelivery(userId, "PUSH", "SUCCESS", correlationId);
             return CompletableFuture.completedFuture(null);
         } catch (Exception e) {
-            log.warn("Failed to send push notification to user {} (correlationId: {}): {}", userId, correlationId, e.getMessage());
+            log.warn("Push delivery failed (correlationId: {}, error: {})", correlationId, e.getClass().getSimpleName());
             auditLogService.logDelivery(userId, "PUSH", "RETRY", correlationId);
             throw e;
         }
@@ -88,7 +88,7 @@ public class PushServiceImpl implements PushService {
 
     @org.springframework.retry.annotation.Recover
     public CompletableFuture<Void> recover(Exception e, String userId, String message, Map<String, String> metadata) {
-        log.error("Push delivery failed after max retries for user: {}. Error: {}", userId, e.getMessage());
+        log.error("Push delivery failed after max retries ({})", e.getClass().getSimpleName());
         auditLogService.logDelivery(userId, "PUSH", "FAILED", null);
         return CompletableFuture.failedFuture(e);
     }

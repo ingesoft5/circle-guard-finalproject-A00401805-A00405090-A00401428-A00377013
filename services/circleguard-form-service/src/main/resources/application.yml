@@ -21,3 +21,34 @@ spring:
 
 server:
   port: 8086
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: never
+  tracing:
+    enabled: ${FORM_TRACING_ENABLED:false}
+    sampling:
+      probability: ${FORM_TRACING_SAMPLING_PROBABILITY:0.1}
+    propagation:
+      type: w3c
+  otlp:
+    tracing:
+      endpoint: ${FORM_OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
+  metrics:
+    tags:
+      service: form
+      environment: ${FORM_ENVIRONMENT:local}
+
+logging:
+  level:
+    root: INFO
+    org.apache.kafka: WARN
+    org.springframework.kafka: WARN
+    org.springframework.web: INFO
+  pattern:
+    level: "%5p [form,${FORM_ENVIRONMENT:local},%X{traceId:-},%X{spanId:-}]"

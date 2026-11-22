@@ -236,7 +236,7 @@ def matchesDeployService(String path, String shortName) {
             return false
         }
         def first = rest.substring(0, 1)
-        return first == '-' || first == '_' || first == '.' || Character.isDigit(first.charAt(0))
+        return first == '-' || first == '_' || first == '.' || first ==~ /[0-9]/
     }
 }
 
