@@ -81,12 +81,13 @@ def catalog() {
                     dir           : 'services/circleguard-notification-service',
                     projectKey    : 'circleguard-notification-service',
                     display       : 'CircleGuard Notification',
-                    sonarSettings : '',
-                    jacoco        : false,
+                    sonarSettings : 'services/circleguard-notification-service/sonar-project.properties',
+                    jacoco        : true,
                     integration   : true,
                     publish       : true,
                     docker        : true,
-                    deploy        : false
+                    deploy        : true,
+                    healthcheck   : true
             ],
             [
                     short         : 'file',

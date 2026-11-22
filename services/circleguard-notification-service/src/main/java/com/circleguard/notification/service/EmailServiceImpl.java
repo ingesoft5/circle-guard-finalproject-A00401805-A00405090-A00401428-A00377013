@@ -17,6 +17,8 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
+    private static final String CHANNEL = "EMAIL";
+
     private final JavaMailSender mailSender;
     private final AuditLogService auditLogService;
 
@@ -38,11 +40,11 @@ public class EmailServiceImpl implements EmailService {
             
             mailSender.send(mailMessage);
             log.info("Email sent successfully");
-            auditLogService.logDelivery(userId, "EMAIL", "SUCCESS", correlationId);
+            auditLogService.logDelivery(userId, CHANNEL, "SUCCESS", correlationId);
             return CompletableFuture.completedFuture(null);
         } catch (Exception e) {
             log.warn("Email delivery failed (correlationId: {}, error: {})", correlationId, e.getClass().getSimpleName());
-            auditLogService.logDelivery(userId, "EMAIL", "RETRY", correlationId);
+            auditLogService.logDelivery(userId, CHANNEL, "RETRY", correlationId);
             throw e; // Rethrow to trigger retry
         }
     }
@@ -50,7 +52,7 @@ public class EmailServiceImpl implements EmailService {
     @org.springframework.retry.annotation.Recover
     public CompletableFuture<Void> recover(Exception e, String userId, String message) {
         log.error("Email delivery failed after max retries ({})", e.getClass().getSimpleName());
-        auditLogService.logDelivery(userId, "EMAIL", "FAILED", null);
+        auditLogService.logDelivery(userId, CHANNEL, "FAILED", null);
         return CompletableFuture.failedFuture(e);
     }
 }
