@@ -18,6 +18,11 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    // Exposes /actuator/prometheus so Prometheus can scrape file-service metrics.
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    // Bridges Spring observations to OpenTelemetry and exports traces through OTLP.
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
