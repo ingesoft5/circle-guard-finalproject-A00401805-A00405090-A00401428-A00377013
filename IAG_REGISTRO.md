@@ -22,6 +22,7 @@
    - [1.7 HU-AUTH-05 (DCG-81 — Subtareas DCG-104 y DCG-105) — Resiliencia con Resilience4j, logs estructurados y alertas Prometheus](#17-hu-auth-05-dcg-81--subtareas-dcg-104-y-dcg-105--resiliencia-con-resilience4j-logs-estructurados-y-alertas-prometheus)
    - [1.8 HU-ID-05 (DCG-86 — Subtareas DCG-119 y DCG-120) — Orquestación en Kubernetes, HPA, sondas Actuator y observabilidad Prometheus en `identity-service`](#18-hu-id-05-dcg-86--subtareas-dcg-119-y-dcg-120--orquestación-en-kubernetes-hpa-sondas-actuator-y-observabilidad-prometheus-en-identity-service)
    - [1.9 HU-ID-05 (DCG-86 — Subtareas DCG-121 y DCG-122) — Resiliencia Resilience4j en auditoría Kafka, logs estructurados sin PII y alertas Prometheus](#19-hu-id-05-dcg-86--subtareas-dcg-121-y-dcg-122--resiliencia-resilience4j-en-auditoría-kafka-logs-estructurados-sin-pii-y-alertas-prometheus)
+   - [1.10 HU-DOCS-07 — Actualización y ampliación del informe final de Parte 2 con evidencias actuales](#110-hu-docs-07--actualización-y-ampliación-del-informe-final-de-parte-2-con-evidencias-actuales)
 2. [Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)](#2-módulo-circleguard-gateway-service-e-infraestructura-cicd-daniela-castaño)
    - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
    - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
@@ -657,6 +658,39 @@ Estoy desarrollando la segunda etapa de la historia HU-ID-05 (DCG-86) en la rama
 #### D. Reflexión crítica
 
 Proteger la publicación de auditoría Kafka en `identity-service` con `@CircuitBreaker` (orden `1`) + `@Retry` (orden `2`) y fallback estructurado resuelve un acoplamiento crítico de disponibilidad: ante una interrupción del bróker Kafka, el personal del Centro de Salud puede seguir resolviendo identidades autorizadas (`GET /api/v1/identities/lookup/{id}`) sin degradación en cascada, mientras que el evento de auditoría queda registrado en los logs estructurados (sin exponer PII) y dispara la alerta crítica `IdentityAuditCircuitBreakerOpen` en Prometheus para intervención operativa inmediata.
+
+---
+
+### 1.10 HU-DOCS-07 — Actualización y ampliación del informe final de Parte 2 con evidencias actuales
+
+- **Fecha:** 21 de noviembre de 2026
+- **Autor:** Faiber Piedrahita
+- **Rama / Entregable:** `docs/HU-DOCS-07-actualizar-informe-parte2` (`E2.4`, `E2.7`, `E2.8`, `E2.9`)
+- **Objetivo de la interacción:** Auditar la Sección 13 de `CircleGuard_INFORME_FINAL.docx` frente a los requisitos de la Parte 2 (`Proyecto_Final_CircleGuard.tex`), corregir imprecisiones factuales, incorporar las 14 capturas de evidencia actuales de la plataforma y redactar las subsecciones faltantes (`13.10` a `13.15`).
+
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
+
+Previo a la actualización del documento Word, definí el alcance y proporcioné las evidencias autenticadas necesarias:
+
+1. **Verificación visual previa:** Solicité exportar primero las capturas a una carpeta local (`Desktop/Capturas`) para revisar manualmente cada imagen antes de incorporarla al informe en una rama dedicada.
+2. **Credenciales y capturas autenticadas:** Suministré el acceso de Jenkins y las capturas actualizadas de SonarQube (`5/5 Passed` y detalle de Quality Gate `Passed`) y Jenkins Stage View para reemplazar vistas que requerían sesión o correspondían a ramas ya fusionadas.
+3. **Revisión del análisis de brechas:** Revisé y aprobé explícitamente el listado de hallazgos detectados en la Sección 13 antes de autorizar la edición programática de `CircleGuard_INFORME_FINAL.docx`.
+
+#### B. Prompt empleado
+
+```text
+Necesito que me ayudes a actualizar y ampliar el informe con capturas actuales, ten en cuenta todo lo que este pide y que ya estamos en la segunda fase del taller/parcial. Antes de agregar las capturas y editar el informe por favor déjalas en una carpeta en Desktop/Capturas para yo verlas y confirmarte si proseguir; en caso de proseguir crea una nueva rama para editar el informe. Primero analiza qué falta por actualizar en el informe y dime.
+```
+
+#### C. Validación humana y hallazgos adicionales
+
+- Se corrigió el error factual en la subsección `13.6` (que atribuía `IdentityClient` con Resilience4j al gateway en lugar de `auth-service`, y omitía `IdentityAuditPublisher` en `identity-service`, las 9 reglas de Alertmanager y el stack Loki/Promtail).
+- Se alineó la tabla de entregables `13.8` (`P2-01` a `P2-10`) con el estado real de `main` tras los merges de los PRs `#92`, `#93`, `#134`, `#136`, `#137`, `#138` y `#139` (`v1.14.0`), y se corrigió la ruta de `IAG_REGISTRO.md` en `13.9`.
+- Se añadieron las subsecciones obligatorias faltantes `13.10` (Patrones de diseño y arquitectura), `13.11` (Informe consolidado de pruebas y calidad), `13.12` (Change management y releases), `13.13` (Sprint 2 y retrospectiva), `13.14` (Análisis de costos AWS vs. on-premise) y `13.15` (Executive Summary en inglés), embebiendo las 14 capturas numeradas (`Figura 2` a `Figura 15`) sin alterar las Secciones 1–12 ni los Anexos A–C.
+
+#### D. Reflexión crítica
+
+Realizar una auditoría previa del documento frente al enunciado del proyecto y validar manualmente las evidencias antes de editar el `.docx` evitó introducir información desactualizada o imprecisa. El uso de un script reproducible con `python-docx` permitió preservar intacto el formato histórico de la Parte 1 mientras se integraban de forma consistente tablas, figuras y texto técnico verificado directamente contra el estado real del repositorio `main`.
 
 ---
 
