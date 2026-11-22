@@ -33,6 +33,7 @@ except ImportError:  # pragma: no cover - local fallback
 
 SYNC_MARKER = "circleguard-jira-sync-v1"
 DEFAULT_MAPPING = Path(__file__).resolve().parents[1] / "docs/agil/jira-mapping.yml"
+DEFAULT_EVIDENCE = Path(__file__).resolve().parents[1] / "docs/agil/jira-evidence-queue.json"
 
 # Jira Cloud workflow transition names (case-insensitive). Adjust in the mapping file
 # if the DCG board renames them.
@@ -197,6 +198,26 @@ def comment_once(key: str, digest: str, doc: dict[str, Any], dry_run: bool) -> N
     jira_request("POST", f"/rest/api/3/issue/{key}/comment", {"body": doc}, dry_run)
 
 
+def post_evidence_queue(path: Path, dry_run: bool) -> None:
+    """Post queued paragraph-by-paragraph evidence comments (idempotent)."""
+    if not path.exists():
+        return
+    queue = json.loads(path.read_text(encoding="utf-8"))
+    for item in queue.get("evidence", []):
+        key = item.get("key", "")
+        text = item.get("text", "")
+        if not re.fullmatch(r"DCG-\d+", key) or not text:
+            continue
+        body = f"{SYNC_MARKER} | evidence | {item.get('paragraph', '')}\n{text}"
+        digest = hashlib.sha256(body.encode("utf-8")).hexdigest()[:12]
+        doc = {"version": 1, "type": "doc", "content": [
+            {"type": "paragraph", "content": [{"type": "text", "text": line}]}
+            for line in body.splitlines() if line.strip()
+        ]}
+        comment_once(key, digest, doc, dry_run)
+        print(f"[ok] evidence {item.get('paragraph', '')} -> {key} ({digest})")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--event", help="GitHub event name (pull_request, pull_request_review, issues)")
@@ -204,6 +225,8 @@ def main() -> int:
     parser.add_argument("--mapping", default=str(DEFAULT_MAPPING))
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--verify", action="store_true", help="Verify Jira credentials and DCG project access")
+    parser.add_argument("--evidence-queue", default=str(DEFAULT_EVIDENCE))
+    parser.add_argument("--apply-evidence", action="store_true", help="Post queued paragraph evidence comments")
     args = parser.parse_args()
 
     if args.verify:
@@ -212,6 +235,10 @@ def main() -> int:
         print(f"[ok] Jira auth: {me.get('displayName')} <{me.get('emailAddress')}>")
         print(f"[ok] Project: {project.get('key')} - {project.get('name')}")
         return 0
+    if args.apply_evidence:
+        post_evidence_queue(Path(args.evidence_queue), args.dry_run)
+        if not args.event or not args.payload:
+            return 0
     if not args.event or not args.payload:
         parser.error("--event and --payload are required unless --verify is used")
 
@@ -233,6 +260,7 @@ def main() -> int:
         )
         do_transition(key, state, args.dry_run, mapping.get("transitions"))
     comment_once(key, digest, doc, args.dry_run)
+    post_evidence_queue(Path(args.evidence_queue), args.dry_run)
     print(f"[ok] {args.event}/{action} -> {key} ({digest})")
     return 0
 

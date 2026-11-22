@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "source": "Auditoría párrafo por párrafo del enunciado (Proyecto_Final_CircleGuard.tex)",
+  "evidence": [
+    {
+      "paragraph": "L166-167 - El producto: CircleGuard",
+      "key": "DCG-77",
+      "text": "CUMPLE. Modelo de datos híbrido verificado: Neo4j 5.26-community con purga de aristas >14 días (GraphCleanupTask.java:22,29), PostgreSQL 16-alpine, Kafka 3.7.0, Redis 7.2-alpine, OpenLDAP 1.5.0. Java 21 y Spring Boot 3.2.4 en build.gradle.kts; 8 microservicios en settings.gradle.kts; cliente Expo con salida web en mobile/package.json. Evidencia: README.md, docs/arquitectura/README.md, build.gradle.kts, settings.gradle.kts, mobile/package.json, deploy/compose/*/docker-compose.yml."
+    }
+  ]
+}
