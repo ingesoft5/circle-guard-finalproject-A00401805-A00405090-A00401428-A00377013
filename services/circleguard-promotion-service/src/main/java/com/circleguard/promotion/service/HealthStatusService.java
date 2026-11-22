@@ -41,7 +41,7 @@ public class HealthStatusService {
     @Transactional("neo4jTransactionManager")
     @CacheEvict(cacheNames = "userStatus", allEntries = true)
     public void updateStatus(String anonymousId, String status, boolean adminOverride) {
-        log.info("Updating status: {} -> {} (Admin Override: {})", anonymousId, status, adminOverride);
+        log.info("Updating health status (Admin Override: {})", adminOverride);
 
         if ("ACTIVE".equals(status) && !adminOverride) {
             checkFenceWindow(anonymousId);
@@ -127,7 +127,7 @@ public class HealthStatusService {
             // Story 5.5: Administrative Alerting for Priority Roles
             int affectedCount = (affected != null) ? affected.size() : 0;
             if ("CONFIRMED".equals(status) || affectedCount > 20) {
-                log.info("Priority Alert triggered. Status: {}, Affected Count: {}", status, affectedCount);
+                log.info("Priority Alert triggered. Affected count: {}", affectedCount);
                 Map<String, Object> priorityPayload = new HashMap<>();
                 priorityPayload.put("anonymousId", anonymousId);
                 priorityPayload.put("status", status);
@@ -143,7 +143,7 @@ public class HealthStatusService {
     private void checkAndBroadcastFencedCircles(String anonymousId) {
         var fencedCircles = circleNodeRepository.findNewlyFencedCircles(anonymousId);
         for (var circle : fencedCircles) {
-            log.info("Circle {} is now fully fenced. Broadcasting circle.fenced event.", circle.getName());
+            log.info("Circle fully fenced. Broadcasting circle.fenced event.");
             Map<String, Object> circlePayload = new HashMap<>();
             circlePayload.put("circleId", circle.getId().toString());
             circlePayload.put("locationId", circle.getLocationId());
@@ -188,7 +188,7 @@ public class HealthStatusService {
 
     @Transactional("neo4jTransactionManager")
     public void resolveStatus(String anonymousId, boolean adminOverride) {
-        log.info("Resolving status for user: {} (Admin Override: {})", anonymousId, adminOverride);
+        log.info("Resolving health status (Admin Override: {})", adminOverride);
 
         if (!adminOverride) {
             checkFenceWindow(anonymousId);

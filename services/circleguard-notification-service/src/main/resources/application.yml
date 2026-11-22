@@ -3,7 +3,9 @@ spring:
   application:
     name: circleguard-notification-service
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      observation-enabled: ${NOTIFICATION_TRACING_ENABLED:false}
     consumer:
       group-id: notification-group
       auto-offset-reset: earliest
@@ -40,8 +42,16 @@ management:
   endpoints:
     web:
       exposure:
-        # Prometheus scrapea /actuator/prometheus (ver deploy/k8s/monitoring/prometheus.yml).
         include: health,info,prometheus
+  tracing:
+    enabled: ${NOTIFICATION_TRACING_ENABLED:false}
+    sampling:
+      probability: ${NOTIFICATION_TRACING_SAMPLING_PROBABILITY:0.1}
+    propagation:
+      type: w3c
+  otlp:
+    tracing:
+      endpoint: ${NOTIFICATION_OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
   health:
     # El SMTP es externo y puede no estar disponible durante el arranque; el
     # healthcheck del contenedor debe medir el proceso, no la dependencia de correo.

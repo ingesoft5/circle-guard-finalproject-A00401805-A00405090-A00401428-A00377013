@@ -1,0 +1,29 @@
+# Optional component: attach to an application overlay after HU-FORM-05 is merged.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: form
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: form
+      spec:
+        template:
+          metadata:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/path: /actuator/prometheus
+              prometheus.io/port: "8086"
+          spec:
+            containers:
+              - name: form
+                env:
+                  - name: FORM_ENVIRONMENT
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.namespace

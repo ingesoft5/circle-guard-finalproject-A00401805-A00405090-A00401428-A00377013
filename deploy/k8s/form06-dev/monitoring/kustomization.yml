@@ -1,0 +1,11 @@
+# Opt-in cg-dev validation overlay. Never apply the shared monitoring base directly for this trial.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../monitoring
+  - dev-rbac.yml
+  - loki-alloy-jaeger.yml
+patches:
+  - path: remove-cluster-rbac.yml
+  - path: remove-promtail.yml
+  - path: dev-monitoring-patch.yml

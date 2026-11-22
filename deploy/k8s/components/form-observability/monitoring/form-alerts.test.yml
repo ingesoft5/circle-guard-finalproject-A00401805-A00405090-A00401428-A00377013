@@ -1,0 +1,37 @@
+rule_files:
+  - form-alerts.yml
+evaluation_interval: 30s
+tests:
+  - name: fires for dev and recovers while ignoring stopped stage
+    interval: 1m
+    input_series:
+      - series: 'circleguard_form_event_publications_total{app="form",namespace="cg-dev",result="failure",event_type="survey.submitted"}'
+        values: '0+1x12 12+0x15'
+      - series: 'circleguard_form_event_publications_total{app="form",namespace="cg-stage",result="failure",event_type="survey.submitted"}'
+        values: '0+10x27'
+    alert_rule_test:
+      - eval_time: 0m
+        alertname: FormKafkaPublicationFailures
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: FormKafkaPublicationFailures
+        exp_alerts:
+          - exp_labels:
+              namespace: cg-dev
+              severity: warning
+              service: form
+            exp_annotations:
+              summary: Form Kafka publications are failing
+              description: At least three failed publications in five minutes, sustained for one minute. Check Form and Kafka health.
+      - eval_time: 20m
+        alertname: FormKafkaPublicationFailures
+        exp_alerts: []
+  - name: no failures means no alert
+    interval: 1m
+    input_series:
+      - series: 'circleguard_form_event_publications_total{app="form",namespace="cg-prod",result="failure",event_type="certificate.validated"}'
+        values: '0+0x20'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: FormKafkaPublicationFailures
+        exp_alerts: []
