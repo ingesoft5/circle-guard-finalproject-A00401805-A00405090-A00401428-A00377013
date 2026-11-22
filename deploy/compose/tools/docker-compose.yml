@@ -36,6 +36,11 @@ services:
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
       EMAIL_RECIPIENTS: ${EMAIL_RECIPIENTS}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./jenkins/cac:/var/jenkins_home/cac:ro

@@ -111,6 +111,13 @@ an optional optimization.
   explicitly that the assignment notification (E1.5, E2.3, P1.5, P2.5) is incomplete.
   The three variables are injected into the Jenkins container from
   `deploy/compose/tools/.env`.
+ - Email delivery uses Office365 SMTP (`smtp.office365.com:587`, STARTTLS) with
+   authentication. `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` and
+   `MAIL_FROM` are injected into Jenkins and applied through JCasC
+   (`unclassified.mailer` plus `location.adminAddress`). `SMTP_PASSWORD` is a local
+   secret and is intentionally empty in the tracked examples; without it the
+   `mail` step fails (the failure is caught by `notifyAll`, so the build stays green
+   but no email is delivered).
 - `ROLLBACK_TAG` skips build, tests, Sonar, publish and Docker; it only deploys to
   production.
 - Logs, JaCoCo reports, JUnit results and digests are archived on every build.

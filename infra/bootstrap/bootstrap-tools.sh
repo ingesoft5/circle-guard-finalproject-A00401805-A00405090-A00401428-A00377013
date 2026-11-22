@@ -46,6 +46,11 @@ LIBRARY_BRANCH=${LIBRARY_BRANCH:-main}
 SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
 DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
 EMAIL_RECIPIENTS=${EMAIL_RECIPIENTS:-santiago04182005@gmail.com,alejocarlsen@gmail.com,faiberpiedrahita@gmail.com,daniela.castanomoreno@u.icesi.edu.co}
+SMTP_HOST=${SMTP_HOST:-smtp.office365.com}
+SMTP_PORT=${SMTP_PORT:-587}
+SMTP_USER=${SMTP_USER:-daniela.castanomoreno@u.icesi.edu.co}
+SMTP_PASSWORD=${SMTP_PASSWORD:-}
+MAIL_FROM=${MAIL_FROM:-daniela.castanomoreno@u.icesi.edu.co}
 EOF
   ensure_secret "${TOOLS_ENV}" JENKINS_ADMIN_PASSWORD
   ensure_secret "${TOOLS_ENV}" PROFESSOR_PASSWORD
@@ -63,7 +68,7 @@ EOF
   # Mutable credentials are refreshed when supplied by the environment, so a token
   # rotation is not overwritten by the old value in .env.
   local key value
-  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL SLACK_WEBHOOK_URL DISCORD_WEBHOOK_URL EMAIL_RECIPIENTS; do
+  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL SLACK_WEBHOOK_URL DISCORD_WEBHOOK_URL EMAIL_RECIPIENTS SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASSWORD MAIL_FROM; do
     value="${!key:-}"
     [[ -n "${value}" ]] && set_env_kv "${TOOLS_ENV}" "${key}" "${value}"
   done
@@ -82,6 +87,11 @@ EOF
   ensure_env_kv "${TOOLS_ENV}" SLACK_WEBHOOK_URL ""
   ensure_env_kv "${TOOLS_ENV}" DISCORD_WEBHOOK_URL ""
   ensure_env_kv "${TOOLS_ENV}" EMAIL_RECIPIENTS "${EMAIL_RECIPIENTS}"
+  ensure_env_kv "${TOOLS_ENV}" SMTP_HOST "smtp.office365.com"
+  ensure_env_kv "${TOOLS_ENV}" SMTP_PORT "587"
+  ensure_env_kv "${TOOLS_ENV}" SMTP_USER "daniela.castanomoreno@u.icesi.edu.co"
+  ensure_env_kv "${TOOLS_ENV}" SMTP_PASSWORD ""
+  ensure_env_kv "${TOOLS_ENV}" MAIL_FROM "daniela.castanomoreno@u.icesi.edu.co"
   set -a; source "${TOOLS_ENV}"; set +a
 }
 

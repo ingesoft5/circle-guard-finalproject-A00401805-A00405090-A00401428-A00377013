@@ -56,6 +56,15 @@ credentials:
 unclassified:
   location:
     url: ${JENKINS_URL}
+    adminAddress: ${MAIL_FROM}
+  mailer:
+    smtpHost: ${SMTP_HOST}
+    smtpPort: ${SMTP_PORT}
+    useSsl: false
+    useTls: true
+    useSMTPAuth: true
+    smtpAuthUserName: ${SMTP_USER}
+    smtpAuthPasswordSecret: ${SMTP_PASSWORD}
   gitHubPluginConfig:
     # Webhook relay until a dedicated domain exists: GitHub cannot reach the
     # on-premise host, so events arrive through smee.io (see
