@@ -65,3 +65,12 @@ deploy/k8s/overlays/*/secrets.env
 # File service local storage directory
 services/circleguard-file-service/uploads/
 uploads/
+
+# Terraform local caches, state and generated plans (CG-DOC: .terraform.lock.hcl stays tracked)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+backend.hcl
+tfplan
+*.tfplan
+crash.log
