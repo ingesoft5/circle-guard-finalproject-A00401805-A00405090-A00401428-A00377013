@@ -30,6 +30,8 @@ resource "aws_s3_bucket_versioning" "backups" {
 
 resource "kubernetes_persistent_volume_claim" "app_data" {
   # CG-DOC: Provide persistent storage for stateful workloads in the environment.
+  # CG-DOC: The shared k3d cluster uses a WaitForFirstConsumer storage class,
+  # so the PVC stays Pending until a pod mounts it; do not wait for Bound.
   metadata {
     name      = "cg-${var.env}-app-data"
     namespace = var.namespace
@@ -44,4 +46,6 @@ resource "kubernetes_persistent_volume_claim" "app_data" {
       }
     }
   }
+
+  wait_until_bound = false
 }

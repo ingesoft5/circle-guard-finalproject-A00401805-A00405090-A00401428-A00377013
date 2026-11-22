@@ -1,5 +1,7 @@
 resource "kubernetes_persistent_volume_claim" "registry" {
   # CG-DOC: Persist container images for the environment registry.
+  # CG-DOC: The shared k3d cluster uses a WaitForFirstConsumer storage class,
+  # so the PVC stays Pending until a pod mounts it; do not wait for Bound.
   metadata {
     name      = "cg-${var.env}-registry-pvc"
     namespace = var.namespace
@@ -14,6 +16,8 @@ resource "kubernetes_persistent_volume_claim" "registry" {
       }
     }
   }
+
+  wait_until_bound = false
 }
 
 resource "kubernetes_deployment" "registry" {

@@ -11,6 +11,6 @@ backup_bucket_name = "circleguard-backups-dev"
 pvc_size           = "10Gi"
 registry_size      = "5Gi"
 prometheus_version = "61.7.0"
-loki_version       = "2.17.4"
+loki_version       = "2.10.3"
 ingress_port       = 30080
 force_destroy      = true

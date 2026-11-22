@@ -7,11 +7,14 @@ resource "kubernetes_namespace" "obs" {
 
 resource "helm_release" "prometheus" {
   # CG-DOC: Deploy Prometheus, Grafana and Alertmanager for the environment.
+  # CG-DOC: A longer timeout is needed because Grafana may restart once before
+  # its readiness probe succeeds on a freshly started single-node cluster.
   name       = "cg-${var.env}-prometheus"
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "kube-prometheus-stack"
   version    = var.prometheus_version
   namespace  = kubernetes_namespace.obs.metadata[0].name
+  timeout    = 1200
 
   set {
     name  = "grafana.adminPassword"
@@ -31,6 +34,7 @@ resource "helm_release" "loki" {
   chart      = "loki-stack"
   version    = var.loki_version
   namespace  = kubernetes_namespace.obs.metadata[0].name
+  timeout    = 1200
 
   set {
     name  = "loki.persistence.enabled"

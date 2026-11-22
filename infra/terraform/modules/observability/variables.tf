@@ -21,7 +21,7 @@ variable "prometheus_version" {
 }
 
 variable "loki_version" {
-  description = "CG-DOC: Pinned loki-stack chart version."
+  description = "CG-DOC: Pinned loki-stack chart version (latest published)."
   type        = string
-  default     = "2.17.4"
+  default     = "2.10.3"
 }
