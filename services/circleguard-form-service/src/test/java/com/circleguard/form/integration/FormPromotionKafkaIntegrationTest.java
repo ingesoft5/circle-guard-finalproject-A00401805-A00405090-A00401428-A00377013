@@ -35,7 +35,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -47,10 +47,10 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,7 +58,7 @@ import static org.mockito.Mockito.when;
  * Verifica que Form publique una encuesta con síntomas y que Promotion la procese
  * después de recibirla desde un broker Kafka temporal.
  */
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(
         classes = FormPromotionKafkaIntegrationTest.KafkaTestApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
@@ -77,8 +77,12 @@ class FormPromotionKafkaIntegrationTest {
     private static final Duration RECEIVE_TIMEOUT = Duration.ofSeconds(20);
 
     @Container
-    static final KafkaContainer kafka = new KafkaContainer(
-            DockerImageName.parse("confluentinc/cp-kafka:7.6.0"));
+    static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer(
+            DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
+            // El broker con Zookeeper superaba el timeout de 60 s del wait strategy en CI.
+            // KRaft + heap acotado reducen el tiempo de arranque y el consumo de memoria.
+            .withEnv("KAFKA_HEAP_OPTS", "-Xmx512M -Xms256M")
+            .withStartupTimeout(Duration.ofMinutes(3));
 
     @DynamicPropertySource
     static void kafkaProperties(DynamicPropertyRegistry registry) {
@@ -131,8 +135,8 @@ class FormPromotionKafkaIntegrationTest {
         assertTrue(event.path("timestamp").asLong() > 0);
 
         // El listener se ejecuta mediante Kafka; la espera contempla su procesamiento asíncrono.
-        verify(healthStatusService, timeout(20_000))
-                .updateStatus(anonymousId.toString(), "SUSPECT");
+        await().atMost(Duration.ofSeconds(60)).untilAsserted(() ->
+                verify(healthStatusService).updateStatus(anonymousId.toString(), "SUSPECT"));
     }
 
     private ConsumerRecord<String, String> receiveSurveyEvent() {
