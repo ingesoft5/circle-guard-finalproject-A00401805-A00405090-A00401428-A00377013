@@ -588,7 +588,7 @@ metadata:
   labels:
     app: notification
 spec:
-  replicas: 1
+  # El HPA (deploy/k8s/base/hpa.yml) es el dueno de spec.replicas.
   selector:
     matchLabels:
       app: notification
@@ -596,6 +596,10 @@ spec:
     metadata:
       labels:
         app: notification
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8082"
     spec:
       containers:
         - name: notification

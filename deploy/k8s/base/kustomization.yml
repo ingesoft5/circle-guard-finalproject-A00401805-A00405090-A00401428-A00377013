@@ -10,6 +10,7 @@ resources:
   - hpa.yml
   - auth-alerts.yml
   - promotion-alerts.yml
+  - notification-alerts.yml
 
 commonLabels:
   app.kubernetes.io/part-of: circleguard
