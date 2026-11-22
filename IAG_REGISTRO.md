@@ -770,7 +770,7 @@ El valor de esta HU estuvo menos en escribir pruebas nuevas y más en hacer expl
 2. **Decisión de diseño:** adaptador real `S3FileStorageService` (AWS SDK v2) detrás del puerto `FileStorage`, con modo `local` por defecto y activación `file.storage.mode=s3`. El controller depende del puerto y conserva `DELETE /api/v1/files/{filename}` (204/404), de modo que ambos adaptadores comparten contrato.
 3. **Estrategia de conflictos:** al integrar `origin/main` se conservaron el puerto y el `DELETE` de la rama, el `MeterRegistry` y el bloque `management` de `main`, y se combinaron las aserciones de métricas con los tests de borrado. Los auto-merges (`Jenkinsfile`, `ciServices.groovy`, `build.gradle.kts`) se revisaron sin marcadores residuales.
 4. **Restricciones y desviaciones:** imagen fijada `bitnamilegacy/minio:2025.4.22` porque `minio/minio` dejó de ser públicamente descargable; límite explícito de 3 minutos en la tarea `integrationTest`; flag de catálogo más override local (ambos vigentes); el bloque `TEMPORARY` provino de `main` y no se eliminó aquí.
-5. **Cierre de ciclo:** PR actualizado en inglés, revisores solicitados a compañeros, bitácora, reporte, evidencia regenerada y backlog en `Done`.
+5. **Cierre de ciclo:** PR actualizado en inglés, revisores solicitados a compañeros, bitácora, reporte, evidencia regenerada, backlog en `Done` y anexo B.1 incorporado a `CircleGuard_INFORME_FINAL.docx`.
 
 ### B. Prompts empleados
 
@@ -821,6 +821,7 @@ Continua y termina
 - **Unitarias y cobertura:** `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde (46 s), 69.16 % de líneas (74/107), por encima del gate del 60 %.
 - **Limpieza:** `docker ps` sin contenedores Testcontainers activos tras la ventana de Ryuk.
 - **Trazabilidad:** PR #144 en inglés, `MERGEABLE`, con `FaiberDev` y `salejostrada` solicitados como revisores; check `continuous-integration/jenkins/pr-merge` publicado por el pipeline y pendiente de cierre en el momento de esta entrada.
+- **Informe final:** `CircleGuard_INFORME_FINAL.docx` incorpora el anexo B.1 con criterios, tres corridas, XML JUnit, cobertura, rutas de evidencia y seguimiento P2; se validó con `python-docx` y `unzip -t` sin errores.
 - **Hallazgo JCasC:** el `@Library('circleguard@main')` del Jenkinsfile hace innecesario un `Reload Configuration as Code` para esta HU; el cambio de JCasC en `main` (`6c20d8b`: 2 executors, SMTP) sí requiere reload/recreate como cierre de P1.4.
 
 ### D. Reflexión crítica
