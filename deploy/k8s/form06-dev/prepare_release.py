@@ -21,14 +21,14 @@ def write_json(path, objects):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--tag", required=True, help="Unused semver prerelease from the approved Jenkins run")
+    parser.add_argument("--tag", required=True, help="Semantic image version recorded by Jenkins")
     parser.add_argument("--commit", required=True, help="Full Git commit SHA built by Jenkins")
     parser.add_argument("--digest", required=True, help="Registry sha256 digest recorded by Jenkins")
     parser.add_argument("--jenkins-build-url", required=True)
     parser.add_argument("--output-dir", type=Path, default=ROOT.parents[2] / "build" / "form06-release")
     args = parser.parse_args()
-    if not re.fullmatch(r"\d+\.\d+\.\d+-hu6\.\d+", args.tag):
-        parser.error("Tag must be a reserved X.Y.Z-hu6.N prerelease")
+    if not re.fullmatch(r"\d+\.\d+\.\d+(?:-[a-zA-Z0-9]+(?:[.-][a-zA-Z0-9]+)*)?", args.tag):
+        parser.error("Tag must be a semantic image version")
     if not re.fullmatch(r"[0-9a-f]{40}", args.commit):
         parser.error("Commit must be a full Git SHA-1")
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", args.digest):
@@ -48,7 +48,7 @@ def main():
     verify()
     canary = render(ROOT / "canary")
     monitoring = render(ROOT / "monitoring")
-    image = "circleguard-docker/form:" + args.tag
+    image = f"circleguard-docker/form:{args.tag}@{args.digest}"
     deployment = canary[("Deployment", "cg-dev", "form-hu6")]
     deployment["spec"]["template"]["spec"]["containers"][0]["image"] = image
 

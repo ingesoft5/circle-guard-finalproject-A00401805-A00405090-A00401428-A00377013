@@ -4,15 +4,10 @@ This opt-in overlay reuses the monitoring stack from merged PRs #93 and #138. It
 deployed. It is deliberately separate from the normal dev/stage/prod overlays
 and the shared Jenkinsfile.
 
-`Jenkinsfile.form06-dev` is a separate, dormant pipeline script in the repo root.
-It restricts checkout to this feature branch, requires a unique `X.Y.Z-hu6.N`
-tag, runs Form unit/JaCoCo, Sonar gate, integration, IaC scan, packaging and
-image build through the existing Shared Library, then scans the image. It
-never deploys. A failed image scan can leave an unused image in Nexus because
-the current `ci.dockerBuildPush` publishes before that scan; the image must
-not be selected for the release generator or Kubernetes unless the entire
-Jenkins run succeeds. Job creation and execution are on hold while the shared
-Jenkins controller has only two busy executors.
+Use the official Jenkins pipeline for PR checks and image publication. The
+PR check does not publish images. For canary validation use the Form image
+and digest recorded by the official release build after its quality and image
+security gates pass. Canary resources are applied separately with approval.
 
 ## Isolation and impact
 
@@ -23,8 +18,8 @@ Jenkins controller has only two busy executors.
   and Hibernate uses `validate` during the trial. A manually approved
   questionnaire submission would still write to the **dev** database and emit
   events to the **dev** broker; do not send production data or real identities.
-- `monitoring/` renders the existing Prometheus, Grafana, Alertmanager, Auth
-  and Promotion rules/dashboard, plus Form assets, the existing Loki, Alloy and
+- `monitoring/` renders the existing Prometheus, Grafana, Alertmanager, Auth,
+  Identity and Promotion rules, shared dashboards, Form assets, Loki, Alloy and
   Jaeger. It does not create another Loki instance. It removes the inherited
   Promtail DaemonSet and its global RBAC because that collector watches all
   three environments. Prometheus RBAC is replaced with a Role in `cg-dev`.
@@ -33,11 +28,10 @@ Jenkins controller has only two busy executors.
   `FormEventPublisher` outcomes and rewrites accepted lines from allowlisted
   fields. No host log mounts, DaemonSet, public Ingress, prod or stage resources.
 - The overlay limits Prometheus discovery to the canary in `cg-dev` and keeps
-  the original Prometheus and Loki datasources, Auth/Promotion rules and their
+  the original Prometheus and Loki datasources, the shared rules and
   dashboards unchanged. Their panels are provisioned but remain empty in this
-  isolated trial. Prometheus 2.51 rejects the shared nested rule glob
-  `/etc/prometheus/rules/*/*.yml`; this trial projects all three existing rule
-  ConfigMaps into the root rules mount without changing their contents.
+  isolated trial. Both configurations load Auth, Identity and Form rules
+  from the root directory and Promotion rules from its existing subdirectory.
 - The shared Loki from #138 uses a 2 GiB PVC. Jaeger is in-memory. Prometheus
   retention is two hours and its `emptyDir` is capped at 512 MiB. The total
   resource budget must be checked again before deployment. The shared Loki
@@ -64,9 +58,9 @@ python deploy/k8s/form06-dev/smoke_alertmanager.py
 
 The Kustomize output contains configuration but no Secret values. Do not apply
 the canary manifest with its placeholder image tag. Use
-`prepare_release.py --tag X.Y.Z-hu6.N --commit FULL_SHA --digest sha256:FULL_DIGEST
+`prepare_release.py --tag X.Y.Z --commit FULL_SHA --digest sha256:FULL_DIGEST
 --jenkins-build-url URL` only after Jenkins has built and approved that exact
-commit. The script requires a clean checkout and writes an inventory, hashes
+commit. The script pins the canary image to the recorded digest, requires a clean checkout and writes an inventory, hashes
 and two JSON resource lists under `build/form06-release/`. Its input must be
 checked against the Jenkins image digest artifact. It never contacts the
 cluster.
