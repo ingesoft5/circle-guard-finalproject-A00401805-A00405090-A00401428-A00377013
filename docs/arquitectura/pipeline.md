@@ -10,7 +10,8 @@
 flowchart LR
     P[Preflight resources] --> C[Checkout]
     C --> R[Resolve services]
-    R --> B[Build Gradle]
+    R --> M[Mobile tests + coverage]
+    M --> B[Build Gradle]
     B --> U[Unit tests + JaCoCo]
     U --> S[SonarQube + Quality Gate]
     S --> I[Integration tests]
@@ -38,22 +39,24 @@ The `SERVICE` parameter accepts:
     `promotion-alerts.yml`, `form-storage.yml`, `components/form-observability/`,
     `form06-dev/canary/`). A suffix `-`, `_`, `.` or a digit is required, so
     `form06-dev` maps to `form` but `platform` does not map to `promotion`.
+  - `mobile/...` → the mobile component (Node/Jest coverage and its Sonar project).
   - Changes that affect the compilation of every module (`build.gradle.kts`,
     `settings.gradle.kts`, `gradle.properties`, `gradlew`, `gradlew.bat`, `gradle/`,
-    `sonar-project.properties`) → all eight services.
+    `sonar-project.properties`) → all nine components.
   - Shared `deploy/**` configuration (overlays, monitoring, base manifests without a
     service name) → **no Java service**; it is validated by the Trivy IaC gate instead
     of recompiling all eight modules.
   - `Jenkinsfile`, `jenkins/` → no Java service: they change the pipeline definition,
     not microservice code. `ciServices.verifySelection()` still validates the library.
-  - `mobile/`, `docs/`, `tests/`, `infra/` → no Java service; the build stays green and
-    skips compilation, tests, Sonar and integration.
-- `all`: all eight services.
+  - `docs/`, `tests/`, `infra/` → no component; the build stays green and skips
+    compilation, tests, Sonar and integration.
+- `all`: all eight Java services plus the mobile component.
 - A short name: `gateway`, `auth`, `identity`, `promotion`, `form`, `notification`,
-  `file` or `dashboard`.
+  `file`, `dashboard` or `mobile`.
 
-The catalog lives in `jenkins/vars/ciServices.groovy` and declares the `docker`,
-`deploy`, `jacoco`, `integration`, `publish` and `healthcheck` flags per service.
+The catalog lives in `jenkins/vars/ciServices.groovy` and declares the `type`, `docker`,
+`deploy`, `jacoco`, `integration`, `publish` and `healthcheck` flags per component.
+The `mobile` entry uses `type: 'node'` so Gradle-only stages skip it safely.
 `ciServices.verifySelection()` runs the critical cases on every build (one service,
 two services, a service-specific deploy manifest, a global change, a CI-only change,
 a client-only change, and shared deploy paths) and fails the pipeline if selection
@@ -64,7 +67,8 @@ as local regression evidence.
 > The library is pinned to `@main`, so a PR cannot see library changes it introduces
 > itself. Until the selective-execution fix is merged into `main`, `Jenkinsfile`
 > carries a temporary local copy of the selection logic (marked
-> `REMOVE after merging to main`). Delete it once the library fix reaches `main`.
+> `REMOVE after merging to main`) and of the `mobile` catalog entry. Delete both once
+> the library changes reach `main`.
 
 **Traceability to the assignment:** E1.4 requires *"execution per service (modified or
 all)"* and criterion P1.4 grades *"selective execution per service"* versus a
@@ -90,15 +94,43 @@ an optional optimization.
 - `Git tag` publishes the tag on `main`.
 - `Release notes` generates `docs/release-notes/vX.Y.Z.md`.
 
-## Quality
+## Quality and coverage matrix
 
-- Unit tests: `./gradlew :service:check`; JaCoCo ≥ 60 % for auth, identity, gateway
-  and form; promotion ≥ 70 %.
-- SonarQube: blocking quality gate per project.
-- Integration: Testcontainers in auth, form, gateway, identity and promotion.
+Every component has a blocking coverage gate of **≥ 60 %**. Thresholds are never
+lowered to make a build pass: when coverage falls below the gate, real tests are added.
+
+| Component | Runner | Gate | Report |
+|---|---|---|---|
+| gateway, auth, identity, promotion, form, notification, file, dashboard | `./gradlew :services:<name>:check` via `ci.unitTest` | JaCoCo `LINE COVEREDRATIO >= 0.60` | `<service>/build/reports/jacoco/test/jacocoTestReport.xml` |
+| mobile | `npm run test:coverage` via `Mobile tests + coverage` | Jest `coverageThreshold.global` ≥ 60 % for lines/statements/functions/branches | `mobile/coverage/lcov.info` |
+
+- The eight Java services share one configuration shape. Seven apply the convention
+  plugin `gradle/jacoco-convention.gradle` (JaCoCo 0.8.12, XML+HTML, `finalizedBy`,
+  `verifyUnitTestsRan`, `check.dependsOn`); promotion keeps the equivalent canonical
+  inline setup and is intentionally left untouched as the reference.
+- `verifyUnitTestsRan` fails when no `TEST-*.xml` exists or any suite was skipped, so a
+  cached/empty run cannot satisfy the coverage number.
+- SonarQube: blocking quality gate per project, including `circleguard-mobile`, which
+  reads the LCOV report through `mobile/sonar-project.properties`.
+- Integration: Testcontainers in auth, form, gateway, identity, notification and promotion.
 - E2E: Playwright against the web client and the gateway.
 - Image security: verifies the image does not run as root; services with
   `healthcheck: true` must declare `HEALTHCHECK`.
+- Logs, JaCoCo XML, LCOV, JUnit results, Sonar links and image digests are archived on
+  every build.
+
+## Docker registry
+
+`NEXUS_REGISTRY` is the address used by Kubernetes manifests and build evidence (for
+example `10.147.20.67:5000`, or the private tools IP configured in `.env`). The registry
+serves plain HTTP, but the Docker daemon only trusts loopback names by default; logging
+in with the host IP fails with `http: server gave HTTP response to HTTPS client`.
+
+`dockerRegistryForDaemon()` maps the local host aliases (`TOOLS_PRIVATE_IP` /
+`TOOLS_IP`) to `127.0.0.1:<port>` **only** for `docker login`, base-image arguments,
+build, push, pull, Trivy scans and deploys. External registries are left untouched.
+The images are still recorded in `image-digest.txt` with their advertised
+`NEXUS_REGISTRY` name, so evidence and k3d overlays keep using the stable address.
 
 ## Failure notifications and rollback
 
@@ -110,7 +142,9 @@ an optional optimization.
   (`EMAIL_RECIPIENTS`, comma-separated list). If none is configured, the build warns
   explicitly that the assignment notification (E1.5, E2.3, P1.5, P2.5) is incomplete.
   The three variables are injected into the Jenkins container from
-  `deploy/compose/tools/.env`.
+  `deploy/compose/tools/.env`; `EMAIL_RECIPIENTS` is also published to pipelines through
+  `jenkins.globalNodeProperties.envVars` in `jenkins.yml`, so `env.EMAIL_RECIPIENTS`
+  is available without relying on the container process environment.
  - Email delivery uses Office365 SMTP (`smtp.office365.com:587`, STARTTLS) with
    authentication. `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` and
    `MAIL_FROM` are injected into Jenkins and applied through JCasC
@@ -134,6 +168,18 @@ an optional optimization.
   and leaves JUnit XML behind.
 
 ## Evidence
+
+Finalization evidence must include:
+
+- A coverage table with the **real measured percentage** for all nine components
+  (eight Java services plus mobile), each with `>= 60 %` and the report path used.
+- A green `continuous-integration/jenkins/pr-merge` check plus the approving review;
+  merges use the normal GitHub merge, never `--admin`.
+- A production demo after approval, with the deploy/rollback record.
+- A delivered email notification to the configured `EMAIL_RECIPIENTS` (not only the
+  mocked/logged path), with `SMTP_PASSWORD` kept solely in the ignored local `.env`.
+
+Historical evidence:
 
 - `docs/informe/evidencia/jenkins-pr15.png`
 - `docs/informe/evidencia/sonarqube-quality-gate.png`
