@@ -1,20 +1,25 @@
 /**
- * CG-DOC: business service for the file service: File Storage Service.
+ * CG-DOC: local filesystem storage adapter for the file service; active when file.storage.mode=local.
  */
 package com.circleguard.file.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.UUID;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+/** Default {@link FileStorage} implementation: stores objects under a local directory. */
 @Service
-public class FileStorageService {
+@ConditionalOnProperty(name = "file.storage.mode", havingValue = "local", matchIfMissing = true)
+public class FileStorageService implements FileStorage {
     private final Path root;
 
     public FileStorageService() {
@@ -35,13 +40,9 @@ public class FileStorageService {
         }
     }
 
+    @Override
     public String saveFile(MultipartFile file) {
-        String originalFilename = file.getOriginalFilename();
-        String safeOriginalName = originalFilename == null ? "file" : Paths.get(originalFilename.replace('\\', '/')).getFileName().toString();
-        if (safeOriginalName.isBlank()) {
-            safeOriginalName = "file";
-        }
-        String filename = UUID.randomUUID().toString() + "_" + safeOriginalName;
+        String filename = FileStorage.generateFilename(file.getOriginalFilename());
         try {
             Path destination = this.root.resolve(filename).normalize();
             if (!destination.startsWith(this.root)) {
@@ -56,7 +57,11 @@ public class FileStorageService {
         }
     }
 
+    @Override
     public Resource loadFile(String filename) {
+        if (!FileStorage.isValidFilename(filename)) {
+            return null;
+        }
         try {
             Path file = this.root.resolve(filename).normalize();
             if (!file.startsWith(this.root)) {
@@ -66,6 +71,22 @@ public class FileStorageService {
             return resource.exists() && resource.isReadable() ? resource : null;
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    @Override
+    public boolean deleteFile(String filename) {
+        if (!FileStorage.isValidFilename(filename)) {
+            return false;
+        }
+        try {
+            Path file = this.root.resolve(filename).normalize();
+            if (!file.startsWith(this.root)) {
+                return false;
+            }
+            return Files.deleteIfExists(file);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not delete file", e);
         }
     }
 }

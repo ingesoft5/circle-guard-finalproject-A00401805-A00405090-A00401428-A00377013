@@ -33,7 +33,7 @@ English purpose of every tracked repository file.
 
 - `CHANGELOG.md` — Markdown documentation: CHANGELOG.
 
-- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification.
+- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification (includes the `hu-file-04` entry under the CI/CD section).
 
 - `Jenkinsfile` — Shared Jenkins multibranch pipeline for CircleGuard services, quality gates, semver tags, and Docker publication; on-prem deploys via kubectl/kustomize to k3d.
 
@@ -189,6 +189,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/HU-FILE-03.md` — File-service CI quality gate, idempotent publishing, semver tag policy, and on-prem rebuild evidence.
 
+- `docs/informe/HU-FILE-04-Integracion-MinIO.md` — HU-FILE-04 report on file-service real S3/MinIO integration with Testcontainers.
+
 - `docs/informe/HU-ID-03.md` — Identity service Docker packaging, CI integration, semver, and acceptance evidence report.
 
 - `docs/informe/P1.1-Branching-GitHub-Flow.html` — Repository file.
@@ -198,6 +200,22 @@ English purpose of every tracked repository file.
 - `docs/informe/P1.1-Branching-GitHub-Flow.pdf` — Binary asset.
 
 - `docs/informe/evidencia/README.md` — Evidence screenshots for the E1.2 Markdown report.
+
+- `docs/informe/evidencia/HU-FILE-04/3-runs.txt` — Summary of three consecutive MinIO integration runs and cleanup.
+
+- `docs/informe/evidencia/HU-FILE-04/integrationTest-run1.log` — Full Gradle log of the first MinIO integration run.
+
+- `docs/informe/evidencia/HU-FILE-04/integrationTest-run2.log` — Full Gradle log of the second MinIO integration run.
+
+- `docs/informe/evidencia/HU-FILE-04/integrationTest-run3.log` — Full Gradle log of the third MinIO integration run.
+
+- `docs/informe/evidencia/HU-FILE-04/jenkins-stage-config.txt` — Local configuration evidence for the Jenkins Integration Tests stage.
+
+- `docs/informe/evidencia/HU-FILE-04/junit-integrationTest.xml` — JUnit XML report for the MinIO storage contract tests.
+
+- `docs/informe/evidencia/HU-FILE-04/minio-container.log.txt` — Log of the ephemeral MinIO container used by the integration tests.
+
+- `docs/informe/evidencia/HU-FILE-04/unit-and-coverage.log` — Unit test and JaCoCo coverage verification log.
 
 - `docs/informe/evidencia/HU-ID-03/README.md` — Evidence checklist for the identity Docker and CI report.
 
@@ -729,13 +747,29 @@ English purpose of every tracked repository file.
 
 - `services/circleguard-file-service/src/main/java/com/circleguard/file/package-info.java` — Package com.circleguard.file for the file service (file layer).
 
-- `services/circleguard-file-service/src/main/java/com/circleguard/file/service/FileStorageService.java` — business service for the file service: File Storage Service.
+- `services/circleguard-file-service/src/main/java/com/circleguard/file/service/FileStorage.java` — Storage port for local and S3/MinIO file adapters.
+
+- `services/circleguard-file-service/src/main/java/com/circleguard/file/service/FileStorageService.java` — Local filesystem storage adapter for the file service.
+
+- `services/circleguard-file-service/src/main/java/com/circleguard/file/service/S3FileStorageService.java` — Real S3/MinIO storage adapter backed by AWS SDK v2.
 
 - `services/circleguard-file-service/src/main/java/com/circleguard/file/service/package-info.java` — Package com.circleguard.file.service for the file service (service layer).
 
 - `services/circleguard-file-service/src/main/resources/application.yml` — Runtime resource for the file service: application.yml.
 
-- `services/circleguard-file-service/src/test/java/com/circleguard/file/controller/FileUploadControllerTest.java` — Unit or integration tests for File Upload Controller Test in the file service.
+- `services/circleguard-file-service/src/test/java/com/circleguard/file/controller/FileUploadControllerTest.java` — Unit tests for FileUploadController, including delete behavior.
+
+- `services/circleguard-file-service/src/test/java/com/circleguard/file/integration/AbstractMinioIntegrationTest.java` — Base class that starts ephemeral MinIO with Testcontainers for the file service.
+
+- `services/circleguard-file-service/src/test/java/com/circleguard/file/integration/MinioStorageIntegrationTest.java` — Integration tests exercising the real S3 adapter through HTTP endpoints against MinIO.
+
+- `services/circleguard-file-service/src/test/java/com/circleguard/file/service/FileStorageServiceTest.java` — Unit tests for the local filesystem storage adapter.
+
+- `services/circleguard-file-service/src/test/java/com/circleguard/file/service/S3FileStorageServiceTest.java` — Unit tests for the S3/MinIO storage adapter with a mocked S3Client.
+
+- `services/circleguard-file-service/src/test/resources/application-test.yml` — Test profile settings for the MinIO integration tests.
+
+- `services/circleguard-file-service/src/test/resources/docker-java.properties` — Docker API version settings for Testcontainers in the file service.
 
 - `services/circleguard-form-service/README.md` — Service documentation for form.
 
