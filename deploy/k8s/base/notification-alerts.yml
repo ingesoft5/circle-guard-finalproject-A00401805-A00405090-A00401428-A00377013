@@ -1,0 +1,37 @@
+# CG-DOC: Prometheus alerting rules for circleguard-notification-service (HU-NOTIF-05 / DCG-360).
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-prometheus-alerts
+  labels:
+    app: notification
+    app.kubernetes.io/part-of: circleguard
+data:
+  notification-alerts.rules.yml: |
+    groups:
+      - name: circleguard.notification.availability
+        interval: 30s
+        rules:
+          - alert: NotificationServiceDown
+            expr: up{app="notification"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: notification
+            annotations:
+              summary: "CircleGuard notification-service is DOWN"
+              description: "The notification-service instance ({{ $labels.instance }} in namespace {{ $labels.namespace }}) has been unreachable for more than 1 minute."
+
+      - name: circleguard.notification.delivery
+        interval: 30s
+        rules:
+          - alert: NotificationDeliveryFailures
+            expr: rate(circleguard_notification_deliveries_total{result="failure"}[5m]) > 0.2
+            for: 2m
+            labels:
+              severity: warning
+              service: notification
+            annotations:
+              summary: "Failed notification deliveries in notification-service"
+              description: "More than 0.2 failed deliveries per second over the last 5 minutes on notification-service (channels email/sms/push/lms). Revisar credenciales del canal (SMTP, Twilio) y la salud de sus proveedores."

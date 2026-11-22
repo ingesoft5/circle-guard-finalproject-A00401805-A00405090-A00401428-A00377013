@@ -52,7 +52,7 @@ def main():
                        ("ConfigMap", "monitoring", "grafana-datasources"),
                        ("Deployment", "monitoring", "prometheus")}, changed
 
-    for name in ("auth-prometheus-alerts", "promotion-prometheus-alerts",
+    for name in ("auth-prometheus-alerts", "promotion-prometheus-alerts", "notification-prometheus-alerts",
                  "grafana-dashboard-circleguard", "loki-config",
                  "alertmanager-config", "grafana-dashboards-provider"):
         key = ("ConfigMap", "monitoring", name)
@@ -67,10 +67,11 @@ def main():
     scrape = yaml.safe_load(dev[("ConfigMap", "monitoring", "prometheus-config")]["data"]["prometheus.yml"])
     shared_scrape = yaml.safe_load(shared[("ConfigMap", "monitoring", "prometheus-config")]["data"]["prometheus.yml"])
     assert scrape["rule_files"] == shared_scrape["rule_files"] == [
-        "/etc/prometheus/rules/*.yml", "/etc/prometheus/rules/promotion/*.yml"]
+        "/etc/prometheus/rules/*.yml", "/etc/prometheus/rules/promotion/*.yml",
+        "/etc/prometheus/rules/notification/*.yml"]
     prometheus_pod = dev[("Deployment", "monitoring", "prometheus")]["spec"]["template"]["spec"]
     shared_pod = shared[("Deployment", "monitoring", "prometheus")]["spec"]["template"]["spec"]
-    rule_volumes = {"alert-rules", "promotion-alert-rules"}
+    rule_volumes = {"alert-rules", "promotion-alert-rules", "notification-alert-rules"}
     for field, dev_spec, shared_spec in (
         ("volumes", prometheus_pod, shared_pod),
         ("volumeMounts", prometheus_pod["containers"][0], shared_pod["containers"][0]),
@@ -123,7 +124,7 @@ def main():
         ("Service", "monitoring", "jaeger"),
     }, additions
     print("PASS: cg-dev-only canary and namespaced discovery/log RBAC")
-    print("PASS: shared Auth/Promotion rules, dashboards and Loki unchanged; Promtail excluded")
+    print("PASS: shared Auth/Promotion/Notification rules, dashboards and Loki unchanged; Promtail excluded")
     print("PASS: canary has no public route, schema update or Flyway migration")
     print("PASS: scoped scrape and log collection; only Form operations are eligible")
     print(json.dumps({"monitoring_resources": len(dev), "canary_resources": len(canary),

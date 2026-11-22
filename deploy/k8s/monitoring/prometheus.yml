@@ -52,6 +52,7 @@ data:
     rule_files:
       - /etc/prometheus/rules/*.yml
       - /etc/prometheus/rules/promotion/*.yml
+      - /etc/prometheus/rules/notification/*.yml
 
     scrape_configs:
       - job_name: 'circleguard-services'
@@ -121,6 +122,8 @@ spec:
               mountPath: /etc/prometheus/rules
             - name: promotion-alert-rules
               mountPath: /etc/prometheus/rules/promotion
+            - name: notification-alert-rules
+              mountPath: /etc/prometheus/rules/notification
             - name: storage
               mountPath: /prometheus
           readinessProbe:
@@ -151,6 +154,9 @@ spec:
         - name: promotion-alert-rules
           configMap:
             name: promotion-prometheus-alerts
+        - name: notification-alert-rules
+          configMap:
+            name: notification-prometheus-alerts
         - name: storage
           emptyDir: {}
 ---
