@@ -3,6 +3,7 @@
  */
 package com.circleguard.notification.service;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,7 +27,7 @@ class AuditLogServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void publishesEveryDeliveryToTheNotificationAuditTopic() {
-        AuditLogService auditLogService = new AuditLogService(kafkaTemplate);
+        AuditLogService auditLogService = new AuditLogService(kafkaTemplate, new SimpleMeterRegistry());
 
         auditLogService.logDelivery("anonymous-123", "EMAIL", "SUCCESS", "corr-1");
 
@@ -46,7 +47,7 @@ class AuditLogServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void generatesACorrelationIdWhenTheChannelHasNone() {
-        AuditLogService auditLogService = new AuditLogService(kafkaTemplate);
+        AuditLogService auditLogService = new AuditLogService(kafkaTemplate, new SimpleMeterRegistry());
 
         auditLogService.logDelivery("anonymous-123", "PUSH", "FAILED", null);
 
