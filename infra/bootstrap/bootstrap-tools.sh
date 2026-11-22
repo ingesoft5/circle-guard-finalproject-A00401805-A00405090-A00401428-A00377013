@@ -44,6 +44,8 @@ SONAR_HOST_URL=http://sonarqube:9000
 JENKINS_URL=http://${TOOLS_IP}:8080/
 LIBRARY_BRANCH=${LIBRARY_BRANCH:-main}
 SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+EMAIL_RECIPIENTS=${EMAIL_RECIPIENTS:-santiago04182005@gmail.com,alejocarlsen@gmail.com,faiberpiedrahita@gmail.com,daniela.castanomoreno@u.icesi.edu.co}
 EOF
   ensure_secret "${TOOLS_ENV}" JENKINS_ADMIN_PASSWORD
   ensure_secret "${TOOLS_ENV}" PROFESSOR_PASSWORD
@@ -58,10 +60,10 @@ EOF
   ensure_env_kv "${TOOLS_ENV}" GITHUB_OWNER "${GITHUB_OWNER:-ingesoft5}"
   ensure_env_kv "${TOOLS_ENV}" GITHUB_REPO "${GITHUB_REPO:-circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013}"
   ensure_env_kv "${TOOLS_ENV}" GITHUB_REPO_URL "${GITHUB_REPO_URL:-https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git}"
-  # Las credenciales mutables sí se actualizan cuando llegan por entorno; así una
-  # rotación de token no queda pisada por el valor viejo del .env.
+  # Mutable credentials are refreshed when supplied by the environment, so a token
+  # rotation is not overwritten by the old value in .env.
   local key value
-  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL SLACK_WEBHOOK_URL; do
+  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL SLACK_WEBHOOK_URL DISCORD_WEBHOOK_URL EMAIL_RECIPIENTS; do
     value="${!key:-}"
     [[ -n "${value}" ]] && set_env_kv "${TOOLS_ENV}" "${key}" "${value}"
   done
@@ -78,6 +80,8 @@ EOF
   ensure_env_kv "${TOOLS_ENV}" SONAR_HOST_URL "http://sonarqube:9000"
   ensure_env_kv "${TOOLS_ENV}" LIBRARY_BRANCH "main"
   ensure_env_kv "${TOOLS_ENV}" SLACK_WEBHOOK_URL ""
+  ensure_env_kv "${TOOLS_ENV}" DISCORD_WEBHOOK_URL ""
+  ensure_env_kv "${TOOLS_ENV}" EMAIL_RECIPIENTS "${EMAIL_RECIPIENTS}"
   set -a; source "${TOOLS_ENV}"; set +a
 }
 
@@ -184,8 +188,8 @@ configure_sonar() {
 }
 
 prepull_integration_images() {
-  # Testcontainers arranca estas imágenes en la etapa Integration Tests. Pre-descargarlas
-  # aquí evita que el primer build de Jenkins agote el timeout mientras hace pull.
+  # Testcontainers starts these images in the Integration Tests stage. Pre-pulling them
+  # here prevents the first Jenkins build from timing out while downloading them.
   local image
   for image in \
     neo4j:5.12.0 \

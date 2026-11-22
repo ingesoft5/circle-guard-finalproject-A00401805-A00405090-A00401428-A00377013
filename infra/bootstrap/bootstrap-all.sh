@@ -35,8 +35,10 @@ SONAR_HOST_URL=http://sonarqube:9000
 JENKINS_URL=http://${TOOLS_IP}:8080/
 LIBRARY_BRANCH=${LIBRARY_BRANCH:-main}
 SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+EMAIL_RECIPIENTS=${EMAIL_RECIPIENTS:-santiago04182005@gmail.com,alejocarlsen@gmail.com,faiberpiedrahita@gmail.com,daniela.castanomoreno@u.icesi.edu.co}
 EOF
-  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL LIBRARY_BRANCH SLACK_WEBHOOK_URL; do
+  for key in GITHUB_USER GITHUB_TOKEN GITHUB_OWNER GITHUB_REPO GITHUB_REPO_URL LIBRARY_BRANCH SLACK_WEBHOOK_URL DISCORD_WEBHOOK_URL EMAIL_RECIPIENTS; do
     val="${!key:-}"
     [ -n "${val}" ] && set_env_kv "${TOOLS_ENV_LOCAL}" "${key}" "${val}"
   done
@@ -61,6 +63,9 @@ bootstrap_tools() {
     "PROD_PRIVATE_IP=${PROD_PRIVATE_IP}"
     "NEXUS_REGISTRY=${TOOLS_PRIVATE_IP}:${REGISTRY_PORT}"
     "LIBRARY_BRANCH=${LIBRARY_BRANCH:-main}"
+    "SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}"
+    "DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}"
+    "EMAIL_RECIPIENTS=${EMAIL_RECIPIENTS:-santiago04182005@gmail.com,alejocarlsen@gmail.com,faiberpiedrahita@gmail.com,daniela.castanomoreno@u.icesi.edu.co}"
   )
   if hostname -I | tr ' ' '\n' | grep -qx "${TOOLS_PRIVATE_IP}"; then
     env "${env_args[@]}" CG_ENVS_KEY_PATH=/opt/circleguard/cg-envs-key bash "${BOOTSTRAP_DIR}/bootstrap-tools.sh"
@@ -81,11 +86,11 @@ bootstrap_github() {
   local token
   token="$(get_env_kv "${STATE_DIR}/tools.env" GITHUB_TOKEN)"
   if [ -z "${token}" ] || [ "${token}" = "change-me" ]; then
-    log_warn "GITHUB_TOKEN no configurado; se omite webhook y branch protection."
+    log_warn "GITHUB_TOKEN not set; skipping webhook and branch protection."
     return 0
   fi
   if ! bash "${BOOTSTRAP_DIR}/bootstrap-github.sh"; then
-    log_warn "No se pudo configurar GitHub automaticamente; revisa el token y los permisos."
+    log_warn "Could not configure GitHub automatically; check the token and permissions."
   fi
 }
 
