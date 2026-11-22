@@ -182,6 +182,8 @@ kubectl -n cg-stage rollout restart deployment/auth deployment/identity \
 - Nunca ejecutar `docker compose down -v`: los volúmenes guardan el estado de Jenkins y SonarQube.
 - Mantener `secrets.env` fuera de git; `.gitignore` cubre `deploy/k8s/overlays/*/secrets.env`.
 - El clúster depende de Docker: si se reinicia el servicio, usar `k3d cluster start cg`.
+- Jenkins: 4 executors y `mem_limit: 8g` — los builds de gradle/sonar/trivy corren dentro del mismo cgroup del controller; revisar `free -h` antes de recrear el contenedor.
+- Recrear Jenkins solo con `docker compose -p cg-tools -f deploy/compose/tools/docker-compose.onpremise.yml --env-file deploy/compose/tools/.env.onpremise up -d jenkins`, en ventana quieta y tras `git pull --ff-only`: el CASC va bind-mounted (sin pull no suben los executors) y un `-p` distinto duplicaría el contenedor.
 
 ## Parte 1 — Hosts de AWS (evidencia histórica)
 
