@@ -70,7 +70,7 @@ CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Mod
 | **Message Bus** | Apache Kafka 3.7.0 (KRaft) | Persistent, audit-trailed event log for status dispatches. |
 | **Caching** | Redis 7.2 | L2 distributed cache for rapid entry-gate status validation. |
 | **Mobile/Web** | Expo (React Native) | Unified codebase across iOS, Android, and Browser. |
-| **Infra** | Docker Compose on-prem (`cg-tools`) + k3d cluster (`cg`) | k3d ejecuta k3s (Kubernetes certificado por la CNCF): la API es idéntica a K8s, pero se empaqueta sobre Docker para operar un host compartido sin `sudo` ni exponer puertos; ver [CI/CD](#cicd-platform) y `infra/onpremise/README.md`. |
+| **Infra** | Docker Compose on-prem (`cg-tools`) + k3d cluster (`cg`) | k3d ejecuta k3s (Kubernetes certificado por la CNCF): la API es idéntica a K8s, pero se empaqueta sobre Docker para operar un host compartido sin `sudo` ni exponer puertos; ver [CI/CD](#cicd-platform) y `infra/onpremise/ONPREMISE.md`. |
 
 ---
 
@@ -97,7 +97,7 @@ CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Mod
 ## Local Development
 
 ### 1. Infrastructure
-For the current on-premise platform (Compose `cg-tools` + k3d `cg`, namespaces `cg-dev`/`cg-stage`/`cg-prod`) follow [`infra/onpremise/README.md`](infra/onpremise/README.md) and [`docs/infra/migracion-onpremise.md`](docs/infra/migracion-onpremise.md).
+For the current on-premise platform (Compose `cg-tools` + k3d `cg`, namespaces `cg-dev`/`cg-stage`/`cg-prod`) follow [`infra/onpremise/ONPREMISE.md`](infra/onpremise/ONPREMISE.md) and [`docs/infra/migracion-onpremise.md`](docs/infra/migracion-onpremise.md).
 
 The `deploy/compose/{dev,stage,prod}` stacks are kept as a **local legacy reference** from Parte 1 (they define the same services + middleware for a single machine); they are no longer the delivery target.
 
@@ -257,7 +257,7 @@ La plataforma corre on-premise en un único host (accesible por ZeroTier):
 | minikube / kind | Descartadas | Añaden una VM o un nodo Docker extra con su propio networking; no aportan sobre k3d aquí. |
 | kubeadm / clúster externo (EKS) | Descartadas | Requieren privilegios, automatización IaC adicional o salida a nube; la API es la misma. |
 
-Detalle completo: [`deploy/k8s/README.md`](deploy/k8s/README.md).
+Detalle completo: [`deploy/k8s/K8S.md`](deploy/k8s/K8S.md).
 
 Levantar desde cero en el host on-premise:
 
@@ -278,16 +278,16 @@ La infraestructura de la Parte 1 (cuatro instancias EC2, scripts `infra/bootstra
 
 Documentación:
 
-- [Guía on-premise](infra/onpremise/README.md)
-- [Gestión ágil](docs/agil/README.md)
-- [Arquitectura](docs/arquitectura/README.md)
+- [Guía on-premise](infra/onpremise/ONPREMISE.md)
+- [Gestión ágil](docs/agil/AGIL.md)
+- [Arquitectura](docs/arquitectura/ARQUITECTURA.md)
 - [Pipeline](docs/arquitectura/pipeline.md)
 - [Pipeline on-prem (kubectl/Kustomize, sin SSH)](docs/infra/migracion-onpremise.md)
 - [Entornos](docs/infra/environments.md)
 - [CI/CD setup](docs/infra/ci-cd-setup.md)
 - [Runbook](docs/infra/runbook.md)
 - [Change management](docs/change-management.md)
-- [Release notes](docs/release-notes/README.md)
+- [Release notes](docs/release-notes/RELEASE-NOTES.md)
 - [Índice de documentación](docs/README.md)
 - [Índice de archivos](docs/FILE_INDEX.md)
 - Pipeline: [`Jenkinsfile`](Jenkinsfile) y [`jenkins/vars/ci.groovy`](jenkins/vars/ci.groovy)

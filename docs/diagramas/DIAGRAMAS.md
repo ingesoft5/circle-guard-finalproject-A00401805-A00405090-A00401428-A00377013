@@ -63,7 +63,7 @@ son `platform/<env>/terraform.tfstate` y se configuran desde
 Vista general del sistema on-premise: cliente web → Traefik con TLS → API Gateway →
 los ocho microservicios en los namespaces `cg-dev`/`cg-stage`/`cg-prod` y el
 middleware (PostgreSQL, OpenLDAP, Kafka, Redis, Neo4j y MinIO/S3). Coherente con
-`docs/arquitectura/README.md` y `deploy/k8s/base/apps.yml`.
+`docs/arquitectura/ARQUITECTURA.md` y `deploy/k8s/base/apps.yml`.
 
 ![Arquitectura general de servicios](04-arquitectura-servicios.png)
 
@@ -73,7 +73,7 @@ Fuente: [`04-arquitectura-servicios.mmd`](04-arquitectura-servicios.mmd).
 
 Circuit Breaker, Retry y Bulkhead con Resilience4j en gateway/identity, con
 fallback y alerta crítica asociada. Evidencia y *trade-offs* en
-[`docs/patrones/README.md`](../patrones/README.md).
+[`docs/patrones/PATRONES.md`](../patrones/PATRONES.md).
 
 ![Patrón de resiliencia](05-patron-resiliencia.png)
 

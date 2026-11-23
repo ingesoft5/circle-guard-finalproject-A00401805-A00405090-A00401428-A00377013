@@ -3,7 +3,7 @@
 > **Parte 1 (histórica).** Este documento describe la topología de cuatro hosts con Compose que
 > se usó en el primer entregable. Como la cuenta de AWS quedó inaccesible, la Parte 2 corre
 > sobre un solo host on-premise con un clúster k3d y tres namespaces. La topología vigente está
-> en `docs/infra/migracion-onpremise.md` y `deploy/k8s/README.md`.
+> en `docs/infra/migracion-onpremise.md` y `deploy/k8s/K8S.md`.
 >
 > | Parte 1 | Parte 2 |
 > |---|---|
@@ -77,7 +77,7 @@ Cada entorno lee `deploy/compose/<entorno>/.env` (modo 600, nunca versionado).
 `JWT_SECRET` debe tener al menos 32 bytes: el servicio se niega a arrancar con una clave más
 corta (`WeakKeyException` de la librería JWT). `bootstrap-envs.sh` genera 48 caracteres
 hexadecimales, suficiente. La misma regla aplica a `QR_SECRET` y `VAULT_SALT` en los manifiestos
-de Kubernetes; ver `deploy/k8s/README.md`.
+de Kubernetes; ver `deploy/k8s/K8S.md`.
 
 ## Comandos
 

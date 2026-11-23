@@ -18,7 +18,7 @@ Registro de las correcciones aplicadas sin borrar recursos.
 ## Sondas
 
 - `gateway` y `promotion` usan `tcpSocket` en los puertos 8087/8088 porque las imágenes `1.4.0` devuelven 401 en `/actuator/health`.
-- `deploy/k8s/base/apps.yml` y `deploy/k8s/README.md` actualizados para reflejar el estado real.
+- `deploy/k8s/base/apps.yml` y `deploy/k8s/K8S.md` actualizados para reflejar el estado real.
 
 ## Escalado
 

@@ -38,7 +38,7 @@ Un solo host con dos capas:
   `6443` y `10250`, y el host es un equipo compartido donde el usuario `docker` no tiene
   privilegios. Se descartaron también minikube y kind por consumo y por no traer Ingress ni
   balanceador por defecto, y EKS porque la cuenta de AWS quedó inaccesible. La comparación
-  completa y los límites asumidos están en `deploy/k8s/README.md`.
+  completa y los límites asumidos están en `deploy/k8s/K8S.md`.
 - **Namespaces:** `cg-dev`, `cg-stage` y `cg-prod` sustituyen los tres entornos que en AWS eran
   tres hosts separados. Un solo clúster con tres namespaces reduce el consumo de RAM y mantiene
   el aislamiento lógico.
@@ -372,6 +372,6 @@ webhook de GitHub apunta al canal `smee.io` (`nk4nvlnyB0u6Fqnn`) con el relay ve
   desplegados y verificados. RBAC está declarado para Prometheus y para el deployer
   (`deploy/k8s/base/rbac.yml`); TLS está listo en `deploy/k8s/components/tls` y en los
   overlays `*-tls`. Su activación en el host depende del certificado/DNS y de la adopción
-  del `ServiceAccount` por Jenkins, según `deploy/k8s/README.md`.
+  del `ServiceAccount` por Jenkins, según `deploy/k8s/K8S.md`.
 - **P2.4 (observabilidad) y P2.8 (pipeline con IaC y `kubectl`):** se apoyan en esta topología;
   comparten host, registro y clúster.

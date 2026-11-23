@@ -58,5 +58,5 @@ carpeta:
 - [`07-patron-adicional.png`](07-patron-adicional.png)
 
 El índice completo de arquitectura e infraestructura está en
-[`docs/diagramas/README.md`](../diagramas/README.md), incluida la vista general
+[`docs/diagramas/DIAGRAMAS.md`](../diagramas/DIAGRAMAS.md), incluida la vista general
 de servicios [`04-arquitectura-servicios.mmd`](../diagramas/04-arquitectura-servicios.mmd).

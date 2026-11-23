@@ -548,7 +548,7 @@ Con base en este diseño previo:
 - **Stack completo de monitoreo (`deploy/k8s/monitoring/`) y compuertas de seguridad en Jenkins (`Trivy` + `OWASP ZAP`):**
   - Se añadieron las anotaciones `prometheus.io/scrape: "true"`, `prometheus.io/path: "/actuator/prometheus"` y `prometheus.io/port: "8180"` en `deploy/k8s/base/apps.yml` y se crearon los manifiestos `deploy/k8s/monitoring/{namespace,prometheus,alertmanager,grafana,kustomization}.yml`, montando `auth-prometheus-alerts` en `/etc/prometheus/rules`.
   - Se integró `trivy v0.57.1` en `deploy/compose/tools/jenkins/Dockerfile` y se añadieron en `Jenkinsfile` y `jenkins/vars/ci.groovy` las etapas bloqueantes `Trivy IaC Security Gate`, `Trivy Image Security Gate` (`--severity CRITICAL --exit-code 1`) y `OWASP ZAP Security Gate` sobre `cg-stage` antes de `Approval prod` / `Deploy prod`.
-  - Se actualizaron `deploy/k8s/README.md` y `docs/agil/backlog.md` cruzando los identificadores `DCG-81` (`DCG-102`..`DCG-105`), `P2-02`..`P2-06` y `E2.2`..`E2.5`.
+  - Se actualizaron `deploy/k8s/K8S.md` y `docs/agil/backlog.md` cruzando los identificadores `DCG-81` (`DCG-102`..`DCG-105`), `P2-02`..`P2-06` y `E2.2`..`E2.5`.
 - **Resultados de pruebas y cobertura JaCoCo (`jacocoTestReport.xml`):**
   - **Total de pruebas ejecutadas (`test` + `IdentityClientResilienceTest` + `integrationTest`):** **`32 / 32` aprobadas (`0` fallos)**.
   - **Cobertura de líneas (`LINE`):** **`100.00%`** (`189 / 189` líneas cubiertas, umbral mínimo `60%`).
@@ -965,7 +965,7 @@ La segunda lección salió de la auditoría de releases: se afirmó que `1.2.6` 
 - **Fecha:** 4–5 de noviembre de 2026
 - **Autor:** Santiago Alejandro Estrada Martínez
 - **Commits:** `0aae510` (estructura y dependencias) y `5357e26` (flujo de integración), PR #2
-- **Objetivo de la interacción:** Producir `services/circleguard-form-service/README.md` con la descripción funcional, la organización de paquetes, las rutas HTTP, las migraciones y los puntos de integración del servicio.
+- **Objetivo de la interacción:** Producir `services/circleguard-form-service/FORM-SERVICE.md` con la descripción funcional, la organización de paquetes, las rutas HTTP, las migraciones y los puntos de integración del servicio.
 
 #### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 

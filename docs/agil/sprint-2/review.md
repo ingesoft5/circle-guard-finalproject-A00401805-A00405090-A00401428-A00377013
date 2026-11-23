@@ -12,7 +12,7 @@ sobre `main`.
 | Entregable | Estado en la revisión | Evidencia verificable |
 |---|---|---|
 | E2.1 Infraestructura como código | **Listo** | Módulos `network`, `compute`, `registry`, `storage`, `observability`; ambientes `dev/stage/prod` y backend S3/DynamoDB local; `terraform fmt -check` rc=0 y planes `0` en los tres ambientes (`docs/infra/evidencia/E2.1-terraform.md`). |
-| E2.2 Kubernetes | **Listo** | Nueve deployments en `deploy/k8s/base/apps.yml`, namespaces por overlay, Ingress Traefik, sondas Actuator y HPA (`deploy/k8s/README.md`). |
+| E2.2 Kubernetes | **Listo** | Nueve deployments en `deploy/k8s/base/apps.yml`, namespaces por overlay, Ingress Traefik, sondas Actuator y HPA (`deploy/k8s/K8S.md`). |
 | E2.3 Resiliencia | **Listo** | Circuit Breaker/Retry y fallbacks en `auth` e `identity`, con pruebas y configuración externalizada (PRs #93 y #139). |
 | E2.4 Observabilidad | **Listo en repositorio; despliegue parcial** | Prometheus/Alertmanager/Grafana/Loki en `monitoring/`; Alloy + Jaeger en `form06-dev/`. Smoke real de OTLP: `PASS: Jaeger returned the synthetic OTLP trace`. Quedan series/real trazas en clúster. |
 | E2.5 Seguridad | **Listo en repositorio; ejecución on-prem pendiente** | `trivy config --severity CRITICAL --exit-code 1 deploy/k8s` rc=0, 0 CRITICAL; gates de imágenes y ZAP en `Jenkinsfile`; ver `docs/infra/evidencia/E2.4-E2.5-seguridad.md`. |

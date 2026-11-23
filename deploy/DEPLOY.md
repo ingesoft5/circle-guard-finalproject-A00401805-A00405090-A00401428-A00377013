@@ -7,7 +7,7 @@ The `deploy/` directory defines how the platform runs **on-premise**:
 
 - `compose/tools/`: Jenkins, SonarQube, PostgreSQL and Nexus as the `cg-tools`
   Compose project (`docker-compose.onpremise.yml`, documented in
-  `infra/onpremise/README.md` and `docs/infra/migracion-onpremise.md`).
+  `infra/onpremise/ONPREMISE.md` and `docs/infra/migracion-onpremise.md`).
 - `k8s/`: Kustomize manifests for the `cg` k3d cluster. Namespaces `cg-dev`,
   `cg-stage`, `cg-prod` host the eight services, the web client and their
   middleware (PostgreSQL, Neo4j, Kafka, Redis, OpenLDAP), an Traefik `Ingress` on
@@ -51,7 +51,7 @@ The cluster resolves the `circleguard-docker/<svc>:<TAG>` names from Docker beca
 the pipeline runs `k3d image import -c cg` after each build, so overlays don't
 change `newName`. If the track `"imagePullSecrets → 10.147.20.67:5000"` is later
 preferred, update `kustomization.yml` files to use `newName: 10.147.20.67:5000/circleguard-docker/...`
-(documented in `deploy/k8s/README.md`).
+(documented in `deploy/k8s/K8S.md`).
 
 ## Pipelines use `kubectl` + `kustomize`, not ssh
 

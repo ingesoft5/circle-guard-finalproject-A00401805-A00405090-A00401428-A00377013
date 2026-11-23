@@ -1,11 +1,11 @@
 <!-- CG-DOC: PART 1 (historical) — Four-host AWS CI/CD setup. Not operational; kept as grade evidence.
-     Current platform: infra/onpremise/README.md and docs/infra/migracion-onpremise.md -->
+     Current platform: infra/onpremise/ONPREMISE.md and docs/infra/migracion-onpremise.md -->
 # CI/CD Platform (Parte 1 — histórico, no operativo)
 
 > **Estado: histórico.** Este documento describe el montaje sobre AWS de la Parte 1 (cuatro
 > instancias EC2, `bootstrap-tools.sh`, secretos en `infra/state/*`). Esa cuenta quedó bloqueada y
 > la plataforma se reprodujo on-premise; el flujo vigente es el de
-> [`infra/onpremise/README.md`](../../infra/onpremise/README.md) y
+> [`infra/onpremise/ONPREMISE.md`](../../infra/onpremise/ONPREMISE.md) y
 > [`docs/infra/migracion-onpremise.md`](./migracion-onpremise.md). Se conserva para trazabilidad.
 
 ## Requirements

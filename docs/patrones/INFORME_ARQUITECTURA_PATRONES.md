@@ -28,7 +28,7 @@ MinIO/S3-compatible para archivos y respaldos.
 ![Arquitectura general de servicios](../diagramas/04-arquitectura-servicios.png)
 
 *Fuente: [`04-arquitectura-servicios.mmd`](../diagramas/04-arquitectura-servicios.mmd).
-Coherente con `docs/arquitectura/README.md` y `deploy/k8s/base/apps.yml`.*
+Coherente con `docs/arquitectura/ARQUITECTURA.md` y `deploy/k8s/base/apps.yml`.*
 
 La figura muestra el flujo completo: el usuario accede al cliente web, que se comunica
 con Traefik; este enruta por cabecera `Host` al Gateway, y el Gateway distribuye hacia
@@ -225,5 +225,5 @@ desplegado) y **P2.10** (documentación coherente con la solución).
 - Evidencia de patrones: `docs/patrones/Patrones_Diseno_CircleGuard.docx`.
 - Manifiestos: `deploy/k8s/base/apps.yml`, `deploy/k8s/overlays/*`, `deploy/k8s/base/rbac.yml`.
 - Código: `services/circleguard-*/src/main/java/**`.
-- Índice de arquitectura: `docs/arquitectura/README.md` y `docs/arquitectura/pipeline.md`.
-- Índice de diagramas: `docs/diagramas/README.md`.
+- Índice de arquitectura: `docs/arquitectura/ARQUITECTURA.md` y `docs/arquitectura/pipeline.md`.
+- Índice de diagramas: `docs/diagramas/DIAGRAMAS.md`.

@@ -80,12 +80,12 @@ Contenido mínimo:
 
 - Versión y fecha.
 - Servicios e imágenes publicadas.
-- Cambios agrupados por `feat`, `fix`, `ci`, `docs`.
+- Cambios agrupados por `feat`, `fix`, `ci`, `docs`, `chore`.
 - Migraciones o cambios de configuración.
 - Riesgos y plan de rollback.
 - Enlace al pipeline y al tag.
 
-La plantilla base está en `docs/release-notes/README.md`. El archivo generado se archiva
+La plantilla base está en `docs/release-notes/RELEASE-NOTES.md`. El archivo generado se archiva
 como artefacto del build y se conserva en el repositorio cuando el PR lo incluya. El
 stage `GitHub Release` publica esa misma nota en la release del tag `vX.Y.Z`; si la
 release ya existe, actualiza el cuerpo en lugar de duplicarla.

@@ -42,7 +42,7 @@ El motivo de la migración desde AWS y la evidencia histórica están documentad
 - No tocar `k8s-worker` ni `icesi-inn`.
 - Sin `docker prune`, sin `docker compose down -v`.
 - Secretos solo en `.env.onpremise` y en los `Secret` del clúster (`cg-secrets`).
-- Como máximo dos ambientes completos encendidos a la vez (RAM; ver `deploy/k8s/README.md`).
+- Como máximo dos ambientes completos encendidos a la vez (RAM; ver `deploy/k8s/K8S.md`).
 
 ## Terraform: infraestructura como código (E2.1)
 

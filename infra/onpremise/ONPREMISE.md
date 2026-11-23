@@ -19,7 +19,7 @@ host Ubuntu 24.04 (ZeroTier 10.147.20.67, usuario `docker` sin sudo)
 Acceso: Jenkins/SonarQube/Nexus/registro por ZeroTier; las aplicaciones por
 `curl -H "Host: <env>.circleguard.local" http://localhost:30080/`. Detalles y decisiones:
 [`docs/infra/migracion-onpremise.md`](../../docs/infra/migracion-onpremise.md) y
-[`deploy/k8s/README.md`](../../deploy/k8s/README.md).
+[`deploy/k8s/K8S.md`](../../deploy/k8s/K8S.md).
 
 ## Requisitos
 
@@ -76,7 +76,7 @@ Notas:
     circleguard-docker/{auth,identity,promotion,form,gateway,dashboard,file,notification,web}:${TAG}
   ```
 
-- Máximo dos entornos completos encendidos a la vez (RAM del host; ver `deploy/k8s/README.md`).
+- Máximo dos entornos completos encendidos a la vez (RAM del host; ver `deploy/k8s/K8S.md`).
 
 ## Imágenes base desde Nexus (sin Docker Hub)
 
