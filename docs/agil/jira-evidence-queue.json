@@ -26,6 +26,11 @@
       "paragraph": "L207-219 - Marco ágil y ciclo de trabajo",
       "key": "DCG-7",
       "text": "CUMPLE. Marco Scrum justificado en docs/agil/README.md:3 con tablero Jira DCG (docs/agil/backlog.md:4,8) y GitHub Project circle-guard-dasf para la Parte 2. Sprint 0 y Sprint 1 con planning/review/retrospective en docs/agil/sprint-0 y docs/agil/sprint-1; métricas de velocidad en sprint-0/retrospective.md:41 (12 puntos) y sprint-1/retrospective.md:41 (7 cerrados + 3 en revisión). Cierre de Sprint 2 documentado en docs/agil/sprint-2/metrics.md con flujo acumulado verificable del GitHub Project #14 (41 Done, 7 In review, 1 In progress, 6 Backlog de 55) y cambio de política de aprobación 2 a 1 revisor en plan-circle-guard-5.0.md:52. DCG-7 'Marco ágil' figura Done en backlog.md:21. Nota: no se exportó un burndown animado; se entrega el registro de flujo acumulado como evidencia verificable."
+    },
+    {
+      "paragraph": "L221-228 - Estrategia de branching y control de cambios",
+      "key": "DCG-5",
+      "text": "CUMPLE. GitHub Flow y convenciones de ramas documentados en BRANCHING-STRATEGY.md; main protegida con 1 aprobación, strict y context obligatorio continuous-integration/jenkins/pr-merge; .githooks/pre-push bloquea pushes directos; PR #161 aprobada por salejostrada; Conventional Commits verificados en el historial; versionado semver con jenkins/vars/ciVersion.groovy y tags hasta v1.16.0; release notes generadas por Jenkinsfile:499-537. Notas: enforce_admins=false y el check 'Jira key in PR title' permanece informativo por decisión del equipo; se prioriza backfillear las keys DCG en PRs ya mergeadas sin inventarlas."
     }
   ]
 }
