@@ -4,8 +4,8 @@
 - Branch: 
 
 ## Context
-<!-- Why is this change necessary? The Jira key must also appear in the PR title. -->
-- Jira Ticket: DCG-###
+<!-- Why is this change necessary? Link the Jira ticket here. -->
+- Jira Ticket: 
 - Background: 
 
 ## What changed
@@ -19,4 +19,4 @@
 3. 
 
 ---
-*Note for the reviewer: PRs and reviews must be written in English. The PR title must contain the Jira story identifier (`DCG-###`) — the `Jira sync` workflow blocks PRs without it. Keep the `HU-*` alias when applicable. Ensure the branch name follows our GitHub Flow convention and that the code does not contain hardcoded credentials.*
+*Note for the reviewer: PRs and reviews must be written in English. Please ensure the branch name follows our GitHub Flow convention and the code does not contain hardcoded credentials.*

@@ -1267,6 +1267,13 @@ Ejecuta el plan
 
 La IAG ayudó a convertir una HU aparentemente nueva en una brecha acotada: reescribir todo el pipeline habría duplicado trabajo ya cubierto y habría introducido riesgo. El punto delicado fue la distinción entre "imagen que compila" e "imagen auditable": sin los labels y el UID fijo, la imagen pasaría los checks funcionales pero no dejaría rastro del commit ni del tag que la originó. También quedó claro que `Jenkinsfile` y la librería comparten responsabilidades de forma intencional: el override local mantiene el PR verde mientras la librería fijada a `main` no incorpora el cambio, y el catálogo compartido lo vuelve permanente tras el merge. Finalmente, no falsificar enlaces de Jenkins o SonarQube evita que la evidencia parezca verificada cuando solo está configurada.
 
+### E. Registro de la corrida remota (23 de noviembre de 2026)
+
+- Con credenciales de administrador de Jenkins se consultó la API y se lanzó `Build with Parameters` sobre `main` con `SERVICE=circleguard-dashboard-service`, `TAG` vacío y `ROLLBACK_TAG` vacío.
+- El PR #163 quedó mergeado en `main` (`cbe6cf7`). El build `PR-163/1` terminó en verde, pero el detector de cambios lo clasificó como `CI-only` y omitió Unit Tests, JaCoCo y Sonar.
+- El build `main #53` terminó en `FAILURE` en `Terraform Plan`: falta la credencial Jenkins `terraform-minio-creds`. En consecuencia no se publicó imagen ni se generaron `image-digest.txt` o `sonar-links.txt` con contenido.
+- La IAG dejó el registro honesto en `docs/informe/evidencia/HU-DASH-03/README.md`, junto con las consolas completas y los pasos para crear las credenciales faltantes y repetir la corrida.
+
 ---
 
 ## Entrada: Ejecución de HU-DASH-04 (despliegue y rollback on-premise de dashboard-service)
