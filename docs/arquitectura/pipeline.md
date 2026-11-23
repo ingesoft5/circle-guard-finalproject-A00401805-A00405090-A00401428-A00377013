@@ -138,20 +138,10 @@ The images are still recorded in `image-digest.txt` with their advertised
   `env.FAILED_STAGE` when each stage starts; `post.failure` restores it because
   Jenkins has already replaced `STAGE_NAME` with `Declarative: Post Actions`) and sends
   automatic notifications through **all configured channels**: Slack
-  (`SLACK_WEBHOOK_URL`), Discord (`DISCORD_WEBHOOK_URL`) and email
-  (`EMAIL_RECIPIENTS`, comma-separated list). If none is configured, the build warns
-  explicitly that the assignment notification (E1.5, E2.3, P1.5, P2.5) is incomplete.
-  The three variables are injected into the Jenkins container from
-  `deploy/compose/tools/.env`; `EMAIL_RECIPIENTS` is also published to pipelines through
-  `jenkins.globalNodeProperties.envVars` in `jenkins.yml`, so `env.EMAIL_RECIPIENTS`
-  is available without relying on the container process environment.
- - Email delivery uses Office365 SMTP (`smtp.office365.com:587`, STARTTLS) with
-   authentication. `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` and
-   `MAIL_FROM` are injected into Jenkins and applied through JCasC
-   (`unclassified.mailer` plus `location.adminAddress`). `SMTP_PASSWORD` is a local
-   secret and is intentionally empty in the tracked examples; without it the
-   `mail` step fails (the failure is caught by `notifyAll`, so the build stays green
-   but no email is delivered).
+  (`SLACK_WEBHOOK_URL`) and Discord (`DISCORD_WEBHOOK_URL`). If none is configured, the
+  build warns explicitly that the assignment notification (E1.5, E2.3, P1.5, P2.5) is
+  incomplete. Both variables are injected into the Jenkins container from
+  `deploy/compose/tools/.env`.
 - `ROLLBACK_TAG` skips build, tests, Sonar, publish and Docker; it only deploys to
   production.
 - Logs, JaCoCo reports, JUnit results and digests are archived on every build.
@@ -176,8 +166,6 @@ Finalization evidence must include:
 - A green `continuous-integration/jenkins/pr-merge` check plus the approving review;
   merges use the normal GitHub merge, never `--admin`.
 - A production demo after approval, with the deploy/rollback record.
-- A delivered email notification to the configured `EMAIL_RECIPIENTS` (not only the
-  mocked/logged path), with `SMTP_PASSWORD` kept solely in the ignored local `.env`.
 
 Historical evidence:
 

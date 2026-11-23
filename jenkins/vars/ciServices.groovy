@@ -86,7 +86,8 @@ def catalog() {
                     integration   : true,
                     publish       : true,
                     docker        : true,
-                    deploy        : false
+                    deploy        : true,
+                    healthcheck   : true
             ],
             [
                     short         : 'file',

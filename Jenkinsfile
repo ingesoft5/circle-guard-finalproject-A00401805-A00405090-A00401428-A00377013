@@ -107,6 +107,13 @@ def enrichServices(List resolved, boolean includeMobile) {
         if (service.short == 'promotion') {
             service.sonarSettings = 'services/circleguard-promotion-service/sonar-project.properties'
         }
+        // Same override pattern: the pinned main library still has an empty
+        // sonarSettings for notification, which made sonar-scanner fall back to the
+        // root gateway settings and fail (PR-154 build #7). The catalog fix in this
+        // branch makes it permanent once merged; this line keeps THIS build green.
+        if (service.short == 'notification') {
+            service.sonarSettings = 'services/circleguard-notification-service/sonar-project.properties'
+        }
     }
     javaServices = selected.findAll { it.type != 'node' && it.short != 'mobile' }
     return selected
@@ -756,7 +763,7 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
                     loadEnvironment('NEXUS_REGISTRY', 'NEXUS_URL', 'TOOLS_IP', 'TOOLS_PRIVATE_IP',
-                            'GITHUB_OWNER', 'GITHUB_REPO', 'EMAIL_RECIPIENTS')
+                            'GITHUB_OWNER', 'GITHUB_REPO')
                     env.DOCKER_REGISTRY = dockerRegistryForDaemon()
                     echo "Docker login target: ${env.DOCKER_REGISTRY ?: 'none'} (advertised registry: ${env.NEXUS_REGISTRY ?: 'none'})"
 

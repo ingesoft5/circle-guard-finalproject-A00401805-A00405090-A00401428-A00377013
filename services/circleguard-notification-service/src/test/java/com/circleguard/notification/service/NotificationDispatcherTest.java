@@ -10,8 +10,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -45,5 +47,33 @@ class NotificationDispatcherTest {
         verify(emailService, timeout(1000)).sendAsync(eq("user-123"), any());
         verify(smsService, timeout(1000)).sendAsync(eq("user-123"), any());
         verify(pushService, timeout(1000)).sendAsync(eq("user-123"), any(), any());
+    }
+
+    @Test
+    void shouldRouteEachChannelItsOwnRenderedContent() {
+        when(templateService.generateEmailContent("PROBABLE", "user-123")).thenReturn("email-body");
+        when(templateService.generatePushContent("PROBABLE")).thenReturn("push-body");
+        when(templateService.generatePushMetadata("PROBABLE")).thenReturn(Map.of("url", "circleguard://guidelines"));
+        when(templateService.generateSmsContent("PROBABLE")).thenReturn("sms-body");
+        when(emailService.sendAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(smsService.sendAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(pushService.sendAsync(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null));
+
+        dispatcher.dispatch("user-123", "PROBABLE");
+
+        verify(emailService, timeout(1000)).sendAsync("user-123", "email-body");
+        verify(smsService, timeout(1000)).sendAsync("user-123", "sms-body");
+        verify(pushService, timeout(1000))
+                .sendAsync("user-123", "push-body", Map.of("url", "circleguard://guidelines"));
+    }
+
+    @Test
+    void shouldContainAChannelFailureInsteadOfPropagatingIt() {
+        when(emailService.sendAsync(any(), any()))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("mail down")));
+        when(smsService.sendAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(pushService.sendAsync(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null));
+
+        assertDoesNotThrow(() -> dispatcher.dispatch("user-123", "PROBABLE"));
     }
 }
