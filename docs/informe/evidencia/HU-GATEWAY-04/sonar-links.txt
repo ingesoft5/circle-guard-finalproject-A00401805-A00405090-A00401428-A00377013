@@ -1,3 +1,0 @@
-CircleGuard Gateway: http://77.112.223.174:9000/dashboard?id=circleguard-gateway-service
-CircleGuard Auth: http://77.112.223.174:9000/dashboard?id=circleguard-auth-service
-CircleGuard Form: http://77.112.223.174:9000/dashboard?id=circleguard-form-service

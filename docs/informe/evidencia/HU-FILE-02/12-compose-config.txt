@@ -1,3 +1,0 @@
-dev compose config OK
-stage compose config OK
-prod compose config OK
