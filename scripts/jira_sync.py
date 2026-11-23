@@ -335,14 +335,18 @@ def resolve_sprint_field(dry_run: bool) -> str | None:
     return None
 
 
-def current_sprint_ids(key: str, field_id: str, dry_run: bool) -> set[int]:
+def current_issue_state(key: str, field_id: str, dry_run: bool) -> tuple[set[int], list[str]]:
+    """Return the issue's current sprint ids and labels."""
     if dry_run:
-        return set()
-    data = jira_request("GET", f"/rest/api/3/issue/{key}?fields={field_id}", None, dry_run)
-    value = (data.get("fields") or {}).get(field_id)
+        return set(), []
+    data = jira_request(
+        "GET", f"/rest/api/3/issue/{key}?fields={field_id},labels", None, dry_run
+    )
+    fields = data.get("fields") or {}
+    value = fields.get(field_id)
     if not value:
-        return set()
-    if isinstance(value, str):
+        value = []
+    if isinstance(value, (str, int)):
         value = [value]
     ids: set[int] = set()
     for entry in value:
@@ -351,7 +355,8 @@ def current_sprint_ids(key: str, field_id: str, dry_run: bool) -> set[int]:
             ids.add(int(raw))
         except (TypeError, ValueError):
             continue
-    return ids
+    labels = [str(label) for label in (fields.get("labels") or [])]
+    return ids, labels
 
 
 def assign_sprints(path: Path, dry_run: bool) -> None:
@@ -375,7 +380,7 @@ def assign_sprints(path: Path, dry_run: bool) -> None:
         if not re.fullmatch(r"DCG-\d+", key):
             continue
         names = item.get("sprints") or default_names
-        wanted: list[int] = []
+        resolved: dict[str, int] = {}
         for name in names:
             sid = sprint_map.get(name)
             if sid is None:
@@ -389,18 +394,36 @@ def assign_sprints(path: Path, dry_run: bool) -> None:
             if sid is None:
                 print(f"[warn] sprint '{name}' not found on board {board_id}")
                 continue
-            wanted.append(sid)
-        if not wanted:
+            resolved[name] = sid
+        if not resolved:
             continue
-        current = current_sprint_ids(key, field_id, dry_run)
-        merged = sorted(current | set(wanted))
-        if merged == sorted(current):
-            print(f"[skip] sprints already assigned on {key}: {merged}")
+
+        current_name = item.get("current_sprint") or names[-1]
+        also_names = item.get("also_sprints") or [n for n in names if n != current_name]
+        primary = resolved.get(current_name) or list(resolved.values())[-1]
+        current_ids, current_labels = current_issue_state(key, field_id, dry_run)
+
+        also_labels: list[str] = []
+        for name in also_names:
+            if name not in resolved:
+                continue
+            number = re.search(r"\d+", name)
+            also_labels.append(f"sprint-{number.group(0)}" if number else "sprint-secondary")
+        merged_labels = sorted(set(current_labels) | set(also_labels))
+
+        if current_ids == {primary} and set(current_labels) == set(merged_labels):
+            print(f"[skip] sprint already assigned on {key}: {current_name} (id={primary})")
         else:
             jira_request(
-                "PUT", f"/rest/api/3/issue/{key}", {"fields": {field_id: merged}}, dry_run
+                "PUT",
+                f"/rest/api/3/issue/{key}",
+                {"fields": {field_id: primary, "labels": merged_labels}},
+                dry_run,
             )
-            print(f"[ok] assigned {key} -> {names} ids={merged}")
+            print(
+                f"[ok] assigned {key} -> current={current_name} id={primary} "
+                f"also={also_names} labels={also_labels}"
+            )
 
         note = item.get("note", "")
         seed = f"{SYNC_MARKER} | sprint | {key} | {', '.join(names)}\n{note}"

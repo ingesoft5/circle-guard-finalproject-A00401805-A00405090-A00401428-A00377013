@@ -7,7 +7,9 @@
     {
       "key": "DCG-437",
       "sprints": ["DCG Sprint 1", "DCG Sprint 2"],
-      "note": "Tarea de registro IAG y trazabilidad individual: origen en E1.8 / bitácora IAG (Sprint 0-1) y cierre de evidencia L230-231 / P2-09 (Sprint 2)."
+      "current_sprint": "DCG Sprint 2",
+      "also_sprints": ["DCG Sprint 1"],
+      "note": "Tarea de registro IAG y trazabilidad individual: origen en E1.8 / bitácora IAG (Sprint 0-1) y cierre de evidencia L230-231 / P2-09 (Sprint 2). Jira acepta un solo sprint activo por issue, por ello DCG Sprint 2 queda como sprint actual y DCG Sprint 1 se conserva como etiqueta sprint-1 y en esta nota."
     }
   ]
 }
