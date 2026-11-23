@@ -63,6 +63,13 @@ def dockerRegistryForDaemon() {
 // (a PR cannot see its own library changes). The local catalog fixes the flags
 // needed for the deliverable without blocking the PR build. It also supplies the
 // mobile entry until the shared-library catalog reaches main.
+//
+// IMPORTANT: never assign to a global name without `def` from these helpers.
+// A script-level `def javaServices` is a local variable of run(), while an
+// undeclared assignment creates a field on the script class. The `when`
+// expressions of the declarative stages read the local variable, so the two
+// lists silently diverge and every service stage is skipped (PR-169 #5).
+// Helpers must return their data and Resolve services must assign the locals.
 def localMobileService() {
     return [
             short         : 'mobile',
@@ -114,9 +121,18 @@ def enrichServices(List resolved, boolean includeMobile) {
         if (service.short == 'notification') {
             service.sonarSettings = 'services/circleguard-notification-service/sonar-project.properties'
         }
+        // The pinned main catalog still marks dashboard as integration:false, so
+        // the Integration Tests stage would print "Integration skipped" even when
+        // dashboard is the only selected service. Keep parity with the service's
+        // own integration suite until the catalog reaches main.
+        if (service.short == 'dashboard') {
+            service.integration = true
+        }
     }
-    javaServices = selected.findAll { it.type != 'node' && it.short != 'mobile' }
-    return selected
+    return [
+            services    : selected,
+            javaServices: selected.findAll { it.type != 'node' && it.short != 'mobile' }
+    ]
 }
 
 // Mobile is resolved from the same diff as the Java services. The library pinned
@@ -785,7 +801,9 @@ pipeline {
                         def resolved = resolveServicesLocal(requestedService)
                         def mobileSelected = isMobileSelected(requestedService)
                         env.MOBILE_CHANGED = mobileSelected.toString()
-                        services = enrichServices(resolved, mobileSelected)
+                        def enriched = enrichServices(resolved, mobileSelected)
+                        services = enriched.services
+                        javaServices = enriched.javaServices
                         env.SERVICES = services.collect { it.short }.join(',')
                         echo "Semantic version: ${env.TAG}"
                         echo "Components to build: ${env.SERVICES ?: 'none'}"

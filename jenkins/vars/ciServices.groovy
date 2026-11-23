@@ -112,7 +112,7 @@ def catalog() {
                     display       : 'CircleGuard Dashboard',
                     sonarSettings : 'services/circleguard-dashboard-service/sonar-project.properties',
                     jacoco        : true,
-                    integration   : false,
+                    integration   : true,
                     publish       : true,
                     docker        : true,
                     deploy        : false,
