@@ -33,7 +33,13 @@ npm run android
 npm run ios
 npm run web
 npm test
+npm run test:coverage
 ```
+
+`npm run test:coverage` generates `coverage/lcov.info`, HTML reports and
+`coverage/coverage-summary.json`, then runs `scripts/check-coverage.mjs`. The script
+fails if any global metric (`lines`, `statements`, `functions`, `branches`) is below
+**60 %**. The same rule is declared in `package.json` under `jest.coverageThreshold`.
 
 ## Configuration
 
