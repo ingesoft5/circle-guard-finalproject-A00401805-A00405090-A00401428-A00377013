@@ -8,12 +8,17 @@ import com.circleguard.form.model.Question;
 import com.circleguard.form.model.QuestionType;
 import com.circleguard.form.model.Questionnaire;
 import com.circleguard.form.repository.HealthSurveyRepository;
+import com.circleguard.form.repository.FormOutboxRepository;
+import com.circleguard.form.model.FormOutboxEvent;
 import com.circleguard.form.service.HealthSurveyService;
 import com.circleguard.form.service.FormEventPublisher;
+import com.circleguard.form.service.FormOutboxDispatcher;
 import com.circleguard.form.observability.TracingFixture;
 import com.circleguard.form.observability.FormObservabilityConfiguration;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.propagation.Propagator;
+import io.micrometer.tracing.otel.bridge.OtelPropagator;
 import java.nio.charset.StandardCharsets;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -54,6 +59,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -99,12 +105,16 @@ class FormPromotionKafkaIntegrationTest {
 
     @Autowired
     private HealthSurveyService healthSurveyService;
+    @Autowired
+    private FormOutboxDispatcher dispatcher;
 
     @Autowired
     private TracingFixture tracing;
 
     @MockBean
     private HealthSurveyRepository repository;
+    @MockBean
+    private FormOutboxRepository outbox;
 
     @MockBean
     private QuestionnaireService questionnaireService;
@@ -131,11 +141,19 @@ class FormPromotionKafkaIntegrationTest {
 
         when(questionnaireService.getActiveQuestionnaire()).thenReturn(Optional.of(questionnaire));
         when(repository.save(any(HealthSurvey.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        AtomicReference<FormOutboxEvent> pending = new AtomicReference<>();
+        when(outbox.save(any(FormOutboxEvent.class))).thenAnswer(invocation -> {
+            FormOutboxEvent row = invocation.getArgument(0);
+            pending.set(row);
+            return row;
+        });
+        when(outbox.lockNextDue()).thenAnswer(invocation -> Optional.ofNullable(pending.get()));
 
         var parent = tracing.tracer.nextSpan().name("survey-request").start();
         try (var scope = tracing.tracer.withSpan(parent)) {
             healthSurveyService.submitSurvey(survey);
         } finally { parent.end(); }
+        assertTrue(dispatcher.dispatchOne());
 
         ConsumerRecord<String, String> record = receiveSurveyEvent();
         assertEquals(TOPIC, record.topic());
@@ -183,12 +201,15 @@ class FormPromotionKafkaIntegrationTest {
     @SpringBootConfiguration
     @EnableKafka
     @ImportAutoConfiguration(KafkaAutoConfiguration.class)
-    @Import({HealthSurveyService.class, FormEventPublisher.class, SymptomMapper.class, SurveyListener.class,
+    @Import({HealthSurveyService.class, FormEventPublisher.class, FormOutboxDispatcher.class, SymptomMapper.class, SurveyListener.class,
             FormObservabilityConfiguration.class})
     static class KafkaTestApplication {
         @Bean(destroyMethod = "close") TracingFixture tracing() { return new TracingFixture(); }
         @Bean ObservationRegistry observationRegistry(TracingFixture fixture) { return fixture.observations; }
         @Bean Tracer tracer(TracingFixture fixture) { return fixture.tracer; }
+        @Bean Propagator propagator(TracingFixture fixture) {
+            return new OtelPropagator(fixture.sdk.getPropagators(), fixture.sdk.getTracer("form-test"));
+        }
         @Bean MeterRegistry meters() { return new SimpleMeterRegistry(); }
 
         @Bean
