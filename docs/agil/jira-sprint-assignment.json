@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source": "Auditoría párrafo por párrafo: DCG-437 (IAG) y DCG-438 (E1.1-E1.8) se registran en Sprint 2 como cierre de la Parte 1/2.",
+  "source": "Auditoría párrafo por párrafo: DCG-437 a DCG-442 se registran en Sprint 2 como cierre de la Parte 1/2.",
   "board_id": 67,
   "sprints": [
     "DCG Sprint 1",
@@ -30,6 +30,54 @@
         "DCG Sprint 1"
       ],
       "note": "Tarea de verificación de los entregables E1.1-E1.8: origina en la Parte 1 (Sprint 0-1) y cierra con la auditoría final en Sprint 2. Jira acepta un solo sprint activo por issue, por ello DCG Sprint 2 queda como sprint actual y DCG Sprint 1 se conserva como etiqueta sprint-1 y en esta nota."
+    },
+    {
+      "key": "DCG-439",
+      "sprints": [
+        "DCG Sprint 1",
+        "DCG Sprint 2"
+      ],
+      "current_sprint": "DCG Sprint 2",
+      "also_sprints": [
+        "DCG Sprint 1"
+      ],
+      "note": "Contenedor de verificación de los entregables E2.1-E2.10: cierre de la auditoría final de la Parte 2 en Sprint 2; Sprint 1 se conserva como etiqueta sprint-1 y en esta nota por el origen de varias historias."
+    },
+    {
+      "key": "DCG-440",
+      "sprints": [
+        "DCG Sprint 1",
+        "DCG Sprint 2"
+      ],
+      "current_sprint": "DCG Sprint 2",
+      "also_sprints": [
+        "DCG Sprint 1"
+      ],
+      "note": "Brecha E2.5 de trazabilidad Jaeger: instrumentación iniciada en HU-FORM-06 (Sprint 1) y cierre/deploy de la traza completa en Sprint 2."
+    },
+    {
+      "key": "DCG-441",
+      "sprints": [
+        "DCG Sprint 1",
+        "DCG Sprint 2"
+      ],
+      "current_sprint": "DCG Sprint 2",
+      "also_sprints": [
+        "DCG Sprint 1"
+      ],
+      "note": "Brecha E2.7 de Locust y ZAP: suite preparada en Sprint 1 y ejecución/consolidación de resultados en Sprint 2."
+    },
+    {
+      "key": "DCG-442",
+      "sprints": [
+        "DCG Sprint 1",
+        "DCG Sprint 2"
+      ],
+      "current_sprint": "DCG Sprint 2",
+      "also_sprints": [
+        "DCG Sprint 1"
+      ],
+      "note": "Cierre E2.10 de sustentación final y ensayo de demostración: actividad de Sprint 2."
     }
   ]
 }

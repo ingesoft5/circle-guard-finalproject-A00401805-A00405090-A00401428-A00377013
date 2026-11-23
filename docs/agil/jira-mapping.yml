@@ -185,6 +185,34 @@
         "E1.7",
         "E1.8"
       ]
+    },
+    "E2-ENTREGABLES": {
+      "jira": "DCG-439",
+      "aliases": [
+        "E2.1-E2.10",
+        "PARTE-2-EVIDENCIA"
+      ]
+    },
+    "E2-JAEGER-TRACE": {
+      "jira": "DCG-440",
+      "aliases": [
+        "TRAZA-JAEGER",
+        "FORM-PROMOTION-NOTIFICATION"
+      ]
+    },
+    "E2-LOAD-SECURITY": {
+      "jira": "DCG-441",
+      "aliases": [
+        "LOCUST-ZAP",
+        "CG-STAGE-TESTS"
+      ]
+    },
+    "E2-DEMO": {
+      "jira": "DCG-442",
+      "aliases": [
+        "SUSTENTACION",
+        "DEMOSTRACION-FINAL"
+      ]
     }
   },
   "unmapped": [

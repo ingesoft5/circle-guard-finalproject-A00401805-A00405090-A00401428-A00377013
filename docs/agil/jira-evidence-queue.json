@@ -46,6 +46,11 @@
       "paragraph": "L260 - Alcance de despliegue en la Parte 1",
       "key": "DCG-438",
       "text": "CUMPLE. Los cinco servicios núcleo (auth, identity, promotion, form, gateway), su middleware (PostgreSQL, Neo4j, Kafka, Redis, OpenLDAP) y el cliente web quedaron desplegados en dev, stage y prod según docs/infra/environments.md:101 y deploy/compose/{dev,stage,prod}/docker-compose.yml. HU-INFRA-02 figura Done en docs/agil/backlog.md:26 con PRs #34/#38/#39/#40/#41, y docs/informe/E1.2-Informe-Final.md:14,364 registra los tres ambientes aislados en el release 1.2.8. Los servicios notification, file y dashboard fueron compilados, probados y empaquetados en Parte 1: dashboard.deploy=false en docs/informe/HU-DASH-03.md:10; file-service no desplegado en P1 según docs/informe/HU-FILE-04-Integracion-MinIO.md:34,40; notification desplegado en P2 según docs/informe/evidencia/HU-NOTIF-04/README.md:42,154-161. El hecho de que Jenkinsfile:90 incluya notification en deployable refleja la evolución de Parte 2, no una contradicción del alcance P1."
+    },
+    {
+      "paragraph": "L271-280 - Entregables E2.1-E2.10 (Parte 2)",
+      "key": "DCG-439",
+      "text": "CUMPLE CON BRECHAS REGISTRADAS. E2.1 IaC con 5 modulos Terraform, 3 entornos y backend remoto S3+DynamoDB; E2.2 Kubernetes con 8 servicios, middleware, namespaces, ConfigMaps/Secrets, Ingress, HPA y sondas Actuator; E2.3 pipeline incrementado con terraform plan/apply, aprobacion de produccion, Trivy bloqueante y despliegue Kubernetes; E2.4 patrones verificados en codigo con tres mejoras documentadas; E2.5 PARCIAL: Prometheus, Grafana, 12 alertas, Loki/Promtail y Micrometer implementados, pero falta la traza desplegada form -> Kafka -> promotion -> notification en Jaeger (DCG-440); E2.6 seguridad con Trivy, secretos parametrizados, RBAC, TLS y ZAP bloqueante; E2.7 PARCIAL: suite Locust y ZAP en repo, resultados de ejecucion pendientes en cg-stage (DCG-441); E2.8 change management con release notes y rollback ejecutado v1.2.5 build #10; E2.9 documentacion completa con diagramas, metricas agile, costos, runbook y resumen ejecutivo en ingles; E2.10 PENDIENTE de sustentacion en vivo (DCG-442). Evidencia: infra/terraform/, deploy/k8s/, Jenkinsfile, docs/patrones/, docs/informe/, docs/costos/, docs/operaciones/, IAG_REGISTRO.md."
     }
   ]
 }
