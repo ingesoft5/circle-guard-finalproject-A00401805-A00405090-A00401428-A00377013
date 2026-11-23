@@ -1,5 +1,5 @@
 # CG-DOC: GitHub <-> Jira DCG integration (no org-level GitHub app required).
-# Validates that every PR title carries a Jira key and mirrors PR events into Jira.
+# Validates that every PR body carries a Jira key and mirrors PR events into Jira.
 name: Jira sync
 
 on:
