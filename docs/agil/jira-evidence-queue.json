@@ -6,6 +6,11 @@
       "paragraph": "L166-167 - El producto: CircleGuard",
       "key": "DCG-77",
       "text": "CUMPLE. Modelo de datos híbrido verificado: Neo4j 5.26-community con purga de aristas >14 días (GraphCleanupTask.java:22,29), PostgreSQL 16-alpine, Kafka 3.7.0, Redis 7.2-alpine, OpenLDAP 1.5.0. Java 21 y Spring Boot 3.2.4 en build.gradle.kts; 8 microservicios en settings.gradle.kts; cliente Expo con salida web en mobile/package.json. Evidencia: README.md, docs/arquitectura/README.md, build.gradle.kts, settings.gradle.kts, mobile/package.json, deploy/compose/*/docker-compose.yml."
+    },
+    {
+      "paragraph": "L186 - El reto de implementar DevOps",
+      "key": "DCG-5",
+      "text": "CUMPLE. Brecha DevOps cerrada: Dockerfile multi-stage para los 8 microservicios y el cliente Expo; Jenkinsfile multibranch con Shared Library (jenkins/vars/ci,ciNotify,ciServices,ciVersion); Terraform modular en infra/terraform/envs/{dev,stage,prod}; Actuator y Micrometer en los 8 servicios; Resilience4j en auth, identity y notification; 5 flujos E2E en tests/e2e; credenciales parametrizadas con ${VAR} en deploy/compose/*/docker-compose.yml y solo .env.example versionados. Dashboard de negocio en deploy/k8s/monitoring/grafana.yml. Evidencia: Jenkinsfile, jenkins/vars/, infra/terraform/, deploy/k8s/monitoring/, tests/e2e/, docs/change-management.md."
     }
   ]
 }
