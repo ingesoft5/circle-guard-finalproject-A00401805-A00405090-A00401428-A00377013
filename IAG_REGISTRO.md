@@ -864,7 +864,7 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 
 **B. Apoyo IAG — prompt (reconstruido y contrastado).** «Revisa por qué el gate de cobertura no aplica igual a todos los servicios y unifica la configuración JaCoCo sin cambiar el umbral acordado ni relajar la verificación de pruebas omitidas».
 
-**C. Validación y apreciación humana.** El merge final `21c406b` conservó `apply(from = "$rootDir/gradle/jacoco-convention.gradle")` junto al bloque local. El índice vigente de cobertura está en `docs/informe/evidencia/trazabilidad/coverage-reports.md`; el XML de form se versionó como `jacoco-form-test-report.xml`. La medición de `promotion` (564/733 líneas, 76.9 %) quedó pendiente de publicación como artefacto versionado y no se presenta como evidencia ya cerrada.
+**C. Validación y apreciación humana.** El merge final `21c406b` conservó `apply(from = "$rootDir/gradle/jacoco-convention.gradle")` junto al bloque local. El índice vigente de cobertura está en `docs/informe/evidencia/trazabilidad/coverage-reports.md`; los XML de form y promotion se versionaron como `jacoco-form-test-report.xml` y `jacoco-promotion-test-report.xml`. La medición de `promotion` (564/733 líneas, 76,9 %) quedó así incorporada como artefacto versionado y verificable.
 
 **D. Apreciación humana y reflexión.** Una convención compartida solo es útil si se comprueba en cada servicio. Revisar el merge final, no solo la rama propia, fue lo que evitó una regla escrita pero no aplicada.
 
