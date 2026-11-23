@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest",
-    "test:coverage": "jest --coverage --coverageReporters=lcov --coverageReporters=html --coverageReporters=text"
+    "test:coverage": "jest --coverage --coverageReporters=lcov --coverageReporters=html --coverageReporters=text --coverageReporters=json-summary && node scripts/check-coverage.mjs"
   },
   "dependencies": {
     "@react-navigation/native": "^7.1.33",
