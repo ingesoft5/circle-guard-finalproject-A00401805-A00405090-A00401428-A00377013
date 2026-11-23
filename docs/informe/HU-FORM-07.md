@@ -2,8 +2,8 @@
 
 - Historia: DCG-367.
 - Base del análisis: `origin/main` en `1a9199d` (22 de noviembre de 2026).
-- Alcance de esta entrega: subtareas 1 a 4, diagnóstico e implementación local.
-- Estado: mecanismo implementado localmente; pruebas de caída y recuperación, revisión del equipo y evidencia desplegada pendientes.
+- Alcance de esta entrega: subtareas 1 a 6, diagnóstico, implementación y verificación local.
+- Estado: mecanismo implementado localmente; revisión del equipo y evidencia desplegada pendientes.
 
 ## 1. Línea base: qué ocurría si fallaba Kafka
 
@@ -53,4 +53,16 @@ Se consideró Circuit Breaker, que podría reducir llamadas durante una caída p
 - El mensaje conserva topic, clave y contenido JSON. Añade un header `form-event-id` estable para reconocer reenvíos; conserva el contexto W3C capturado al crear la fila y lo restaura para la observación Kafka. El contador `success` se incrementa tras acuse. El planificador revisa filas cada segundo y procesa hasta diez por ejecución.
 - La entrega es **al menos una vez**. Si Kafka aceptó un mensaje pero el acuse se perdió, un nuevo intento puede duplicarlo. Promotion aún no deduplica `form-event-id`; la coordinación de esa garantía con su responsable sigue pendiente. El outbox contiene los campos del evento en PostgreSQL y no debe exponerse en logs ni capturas de Jira.
 
-`check` de Form pasó, incluidas las pruebas unitarias y el umbral de cobertura. Tras iniciar Docker Engine, `integrationTest` pasó con dos casos, sin fallos ni omisiones: adjuntos con PostgreSQL temporal y Form → Kafka → Promotion con broker temporal y `traceparent`. Las subtareas 5 y 6 aún requieren pruebas dirigidas de indisponibilidad y recuperación, documentación final de resultados y validación operativa. No se ha desplegado el cambio ni se ha modificado el clúster.
+## 5. Prueba de indisponibilidad temporal y recuperación
+
+`FormOutboxRecoveryIntegrationTest` usa PostgreSQL y Kafka efímeros de Testcontainers. Después de guardar una encuesta, simula dos fallos asíncronos consecutivos del productor Kafka, comprueba que el ciclo de Retry termina en el límite configurado y que la encuesta confirmada y la fila pendiente permanecen en PostgreSQL. Al retirar el fallo simulado, el despachador vuelve a intentar el evento y un consumidor real comprueba la recepción en Kafka con la clave anónima y el header `form-event-id`. La prueba ejercita la frontera productor → Kafka, pero no pausa ni reinicia un broker real ni acredita el comportamiento de los consumidores en un despliegue.
+
+Comando dirigido: `./gradlew :services:circleguard-form-service:integrationTest --tests '*FormOutboxRecoveryIntegrationTest'`. Requiere Docker Engine. Los reportes se generan en `services/circleguard-form-service/build/reports/tests/integrationTest/`.
+
+## 6. Propósito, ventajas y límites del patrón
+
+El outbox transaccional conserva el cambio de negocio y la intención de publicar en el mismo commit de PostgreSQL. Retry de Resilience4j acota el trabajo de un ciclo de envío y el planificador recupera los pendientes después de fallos temporales. El bloqueo `SKIP LOCKED` permite que varias instancias procesen filas distintas; `form-event-id` ayuda a los consumidores a reconocer duplicados. Los tiempos de espera, número de intentos y frecuencia de sondeo son configurables.
+
+La garantía es **al menos una vez**, no exactamente una vez: si Kafka recibe el mensaje pero se pierde el acuse, puede haber duplicados. Promotion y Notification necesitan acordar y verificar el tratamiento de duplicados; el header por sí solo no lo garantiza. Una caída prolongada acumula filas en PostgreSQL y requiere vigilancia del backlog y capacidad de almacenamiento. La publicación espera el acuse mientras mantiene el bloqueo de la fila, lo que puede aumentar la ocupación de conexiones. Además, el límite de espera del acuse empieza después de `KafkaTemplate.send`; la obtención síncrona de metadatos del productor puede tardar más si el broker no responde. Hace falta validar ese tiempo y la recuperación frente a una caída física de Kafka en un entorno controlado.
+
+`check` de Form pasó el 22 de noviembre de 2026 con los cambios actuales, incluidas las pruebas unitarias y el umbral de cobertura. La ejecución completa de `integrationTest` pasó con tres casos, cero fallos y cero omisiones: adjuntos con PostgreSQL temporal, Form → Kafka → Promotion con `traceparent`, y recuperación del outbox tras dos fallos simulados del productor. La prueba dirigida de recuperación también pasó por separado. Los reportes HTML y XML de Gradle son evidencia local para Jira. No se ha desplegado este cambio ni modificado el clúster; la revisión del patrón con el equipo y la evidencia operativa siguen pendientes.

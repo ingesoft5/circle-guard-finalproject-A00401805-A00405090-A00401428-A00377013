@@ -8,7 +8,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.propagation.Propagator;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +56,7 @@ public class FormOutboxDispatcher {
     }
 
     /** Holds one row lock until Kafka acknowledges or the attempt is deferred. */
-    @Transactional
+    @Transactional("transactionManager")
     public boolean dispatchOne() {
         var candidate = outbox.lockNextDue();
         if (candidate.isEmpty()) return false;
