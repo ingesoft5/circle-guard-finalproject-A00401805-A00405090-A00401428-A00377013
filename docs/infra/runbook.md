@@ -185,6 +185,120 @@ kubectl -n cg-stage rollout restart deployment/auth deployment/identity \
 - Jenkins: 4 executors y `mem_limit: 8g` — los builds de gradle/sonar/trivy corren dentro del mismo cgroup del controller; revisar `free -h` antes de recrear el contenedor.
 - Recrear Jenkins solo con `docker compose -p cg-tools -f deploy/compose/tools/docker-compose.onpremise.yml --env-file deploy/compose/tools/.env.onpremise up -d jenkins`, en ventana quieta y tras `git pull --ff-only`: el CASC va bind-mounted (sin pull no suben los executors) y un `-p` distinto duplicaría el contenedor.
 
+### Terraform: plataforma y backend (E2.1)
+
+Terraform declara la infraestructura completa con módulos reutilizables
+(`network`, `compute`, `registry`, `storage`, `observability`) y tres ambientes
+parametrizados (`dev`, `stage`, `prod`). El backend remoto es MinIO `:9002` +
+DynamoDB Local `:8000`, levantados por `cg-tools`.
+
+#### 1. Bootstrap del backend (una sola vez)
+
+`infra/terraform/state-backend/` crea el bucket `circleguard-tfstate` con versioning y la
+tabla `circleguard-tf-lock` con `hash_key = "LockID"`. Su estado es local y está ignorado
+por git (el bucket no puede guardar el estado que lo crea).
+
+```bash
+set -a
+source deploy/compose/tools/.env.onpremise
+set +a
+export TF_VAR_minio_access_key="$TF_STATE_MINIO_USER"
+export TF_VAR_minio_secret_key="$TF_STATE_MINIO_PASSWORD"
+export TF_VAR_state_bucket="$TF_STATE_BUCKET"
+export TF_VAR_lock_table="$TF_LOCK_TABLE"
+export TF_VAR_aws_region="$AWS_REGION"
+export TF_VAR_s3_endpoint="$TF_MINIO_ENDPOINT"
+export TF_VAR_dynamodb_endpoint="$TF_DYNAMODB_ENDPOINT"
+
+cd infra/terraform/state-backend
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
+
+Sin salida a internet: `terraform init -plugin-dir=../bootstrap/.terraform/providers`.
+Si el bucket/tabla ya existen del bootstrap anterior, impórtalos antes de aplicar:
+
+```bash
+terraform import aws_s3_bucket.tfstate "$TF_STATE_BUCKET"
+terraform import aws_s3_bucket_versioning.tfstate "$TF_STATE_BUCKET"
+terraform import aws_dynamodb_table.state_lock "$TF_LOCK_TABLE"
+```
+
+#### 2. Ambientes (dev, stage, prod)
+
+Cada entorno tiene `backend.hcl.example` con ambos endpoints y su clave
+`platform/<env>/terraform.tfstate`. Los secretos se inyectan por `TF_VAR_*` y las
+credenciales del backend por `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`.
+
+```bash
+set -a
+source deploy/compose/tools/.env.onpremise
+set +a
+export AWS_ACCESS_KEY_ID="$TF_STATE_MINIO_USER"
+export AWS_SECRET_ACCESS_KEY="$TF_STATE_MINIO_PASSWORD"
+export TF_VAR_minio_access_key="$TF_STATE_MINIO_USER"
+export TF_VAR_minio_secret_key="$TF_STATE_MINIO_PASSWORD"
+export TF_VAR_grafana_admin_password="$TF_GRAFANA_ADMIN_PASSWORD"
+export TF_VAR_kubeconfig="$HOME/.kube/config"
+
+for env in dev stage prod; do
+  cd "$OLDPWD/infra/terraform/envs/$env"
+  cp -f backend.hcl.example backend.hcl
+  terraform init -backend-config=backend.hcl
+  terraform validate
+  # El provider de Kubernetes necesita el contexto del clúster antes del plan completo.
+  terraform apply -auto-approve -target=module.compute
+  terraform plan -detailed-exitcode
+done
+```
+
+`plan -detailed-exitcode`: `0` = sin cambios, `2` = cambios pendientes, `1` = error.
+Para aplicar un ambiente: `terraform apply` dentro de `infra/terraform/envs/<env>`.
+
+Notas de observabilidad en el host on-prem:
+
+- `node_exporter_enabled` debe ser `true` en un solo ambiente del clúster compartido: el
+  DaemonSet fija `hostPort 9100` y un segundo ambiente deja los pods `Pending`.
+- `loki.isDefault=false` es obligatorio porque `kube-prometheus-stack` ya registra
+  Prometheus como datasource `default`; dos defaults impiden que Grafana arranque.
+- `grafana_slow_start=true` (usado en prod) relaja `livenessProbe.initialDelaySeconds`
+  a 600 y los umbrales de fallo de las sondas. En este host las migraciones SQLite de
+  Grafana pueden tardar ~10 min y la sonda por defecto reinicia el contenedor a mitad
+  de la migración, dejando el `helm_release` en `pending-install`.
+
+El apply es **en dos fases**: primero `terraform apply -target=module.compute` verifica el
+clúster compartido `cg` y su kubeconfig; después el plan/apply completo puede cargar el
+contexto `k3d-cg`. Si se omite la primera fase, el plan falla con
+`context "k3d-cg" does not exist`. No se crean clústeres por ambiente: los tres ambientes
+son namespaces `cg-dev`, `cg-stage` y `cg-prod` dentro de `cg`, con Traefik `:30080` y
+ruteo por header `Host`. Esto evita el conflicto del puerto `30080` y el límite
+`fs.inotify.max_user_instances=128` del host.
+
+#### 3. Pipeline (E2.3)
+
+Jenkins ejecuta `init → validate → verificación compute → plan → Trivy IaC → apply` para los tres ambientes, con
+`Approval prod` antes del apply de producción. Las credenciales se leen de los credentials
+`terraform-minio-creds` y `terraform-grafana-password`, definidos en `jenkins/cac/jenkins.yml`
+y alimentados por `.env.onpremise`.
+
+La checklist de evidencia y las validaciones estáticas están en
+[`docs/infra/evidencia/E2.1-terraform.md`](evidencia/E2.1-terraform.md).
+
+#### 4. Verificación y precauciones
+
+```bash
+terraform fmt -check -recursive infra/terraform
+terraform plan -detailed-exitcode   # 0 = idempotente
+terraform output
+```
+
+> `dynamodb-local` corre con `-inMemory`: si el contenedor se reinicia, la tabla desaparece y
+> hay que repetir el apply del bootstrap antes de usar los ambientes. Los providers pueden
+> reutilizarse desde `infra/terraform/bootstrap/.terraform/providers` con `-plugin-dir` si no
+> hay internet. No commitear `backend.hcl`, `*.tfstate` ni `.terraform/`.
+
 ## Parte 1 — Hosts de AWS (evidencia histórica)
 
 Estos comandos documentan la infraestructura original del pipeline. La cuenta de AWS ya no es
@@ -303,5 +417,7 @@ CONFIRM=yes ./infra/bootstrap/bootstrap-destroy.sh
 | SonarQube se queda en «starting» | PostgreSQL o memoria | Revisar logs; ampliar swap |
 | Nexus no abre | Puerto 8081 o memoria | Revisar logs |
 | El *pull* del registro falla | Registro HTTP no confiable | Verificar `insecure-registries` en el host del entorno |
+| Terraform: `AccessDenied` al crear el bucket | `TF_VAR_minio_*` no exportados o distintos de `.env.onpremise` | Repetir el `source` y los `export` del runbook; no usar credenciales de AWS |
+| Terraform: `ResourceNotFoundException` en DynamoDB | `dynamodb-local` se reinició con `-inMemory` y perdió la tabla | Volver a ejecutar `terraform apply` en `infra/terraform/state-backend` |
 | Gateway 401 (Parte 1) | Falta el JWT de personal | Enviar `Authorization: Bearer <jwt>` |
 | Gateway 503 (Parte 1) | Redis no disponible | Revisar `docker compose logs redis` |

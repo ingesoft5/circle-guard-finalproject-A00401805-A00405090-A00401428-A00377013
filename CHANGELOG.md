@@ -8,6 +8,11 @@ Semantic Versioning.
 
 ### Changed
 
+- **E2.1 (Terraform)**: restaurados los módulos reutilizables `network`, `compute`, `registry`, `storage` y `observability` y los tres ambientes, ahora en `infra/terraform/envs/{dev,stage,prod}`. Terraform vuelve a declarar la plataforma completa conforme al enunciado; `state-backend/` queda como bootstrap del backend remoto.
+- **E2.1/E2.3 (Terraform)**: el apply de cada ambiente es en dos fases (`apply -target=module.compute` antes del plan completo) para verificar el clúster compartido antes de configurar el provider; el `Jenkinsfile` y el runbook documentan esta verificación.
+- **E2.1 (compute)**: el módulo verifica el clúster k3d compartido `cg` (contexto `k3d-cg`) en vez de crear tres clústeres: el puerto `30080` ya está ocupado por `cg` y `fs.inotify.max_user_instances=128` impide un segundo clúster sin privilegios. Los ambientes son namespaces `cg-dev/cg-stage/cg-prod`; `k3s_version` quedó fijado como `v1.35.5-k3s1`.
+- **E2.1 (observability)**: `loki_version` corregido de `2.17.4` (inexistente) a `2.10.3` (última versión publicada de `loki-stack`); los releases Helm aumentaron su `timeout` a 1800s para tolerar el reinicio inicial de Grafana. Se añadió el parámetro `grafana_slow_start` (activo en prod) que relaja las sondas de Grafana cuando las migraciones SQLite del host on-prem tardan ~10 min.
+- **E2.1 (storage/registry)**: los PVC declaran `wait_until_bound = false` porque el StorageClass `local-path` usa `WaitForFirstConsumer` y los PVC permanecen `Pending` hasta que un pod los monta.
 - Los Dockerfiles toman las imágenes base desde `$NEXUS_REGISTRY/circleguard-base` mediante `--build-arg`; el host on-premise no tiene ruta IPv6 al CDN de Docker Hub. Sembrar con `./infra/onpremise/seed-base-images.sh`. Se retiró el pin por digest del Dockerfile de `form` porque el mirror publica sus propios digests.
 - **File service (FS-CI-01)**: Implementado `loadFile` real y endpoint de descarga `GET /api/v1/files/download/{filename}`. Cobertura JaCoCo 85.71% (líneas), umbral 60% cumplido.
 - **File service (HU-FILE-03)**: el pipeline omite la republicación de artefactos Maven e imágenes Docker cuando el TAG semver ya existe, conservando el digest real; la política de inmutabilidad, si se activa en Nexus, aplica solo a `X.Y.Z` y nunca a `latest`, `dev` o `staging`. Documentado en `docs/informe/HU-FILE-03.md` y `docs/infra/migracion-onpremise.md` §3.7.
@@ -16,6 +21,8 @@ Semantic Versioning.
 
 ### Added
 
+- **E2.1 (Terraform)**: `infra/terraform/state-backend/` crea el bucket de MinIO con versioning y la tabla de DynamoDB Local con `LockID`; los tres ambientes usan `backend "s3" {}` con `backend.hcl` que incluye ambos endpoints y claves `platform/<env>/terraform.tfstate`. Runbook, diagramas y evidencia en `docs/infra/runbook.md`, `docs/diagramas/` y `docs/infra/evidencia/E2.1-terraform.md`.
+- **E2.3 (pipeline)**: el `Jenkinsfile` ejecuta `terraform init/validate/plan/apply` por ambiente con aprobación en prod y `Trivy` bloqueante sobre IaC; la imagen de Jenkins incluye Terraform 1.9.8 y Trivy 0.70.0.
 - **File service (HU-FILE-05)**: sondas nativas de Kubernetes (`/actuator/health/readiness` y `/actuator/health/liveness`), anotaciones de scrape Prometheus en el Service, dependencias Micrometer/OTel/OTLP, contador `circleguard_file_uploads_total` con tag `result` y configuración de management sin secretos. Evidencia en `docs/informe/HU-FILE-05.md` (issue #149).
 - `infra/onpremise/rebuild-onpremise.sh`: wrapper idempotente de un comando que valida el token de SonarQube, ejecuta el bootstrap on-premise, asegura todos los proyectos del catálogo de la Shared Library (incluido `circleguard-file-service`) y converge el stack `cg-tools`.
 - `docs/informe/HU-FILE-03.md` y `docs/informe/evidencia/HU-FILE-03/README.md`: cierre P1.4, decisión de idempotencia/semver e índice de evidencia de la HU-FILE-03 (issue #135).
@@ -64,6 +71,9 @@ Semantic Versioning.
 
 ### Fixed
 
+- **E2.1 (observability)**: Grafana entraba en `CrashLoopBackOff` en stage porque Loki y Prometheus registraban dos datasources `default` (`Only one datasource per organization can be marked as default`); `loki.isDefault=false` deja a Prometheus como único default.
+- **E2.1 (observability)**: el `node-exporter` no podía programarse en el clúster compartido por el `hostPort 9100` duplicado (`0/2 nodes ... didn't have free ports`); se desactivó en stage y prod mediante `node_exporter_enabled`.
+- **E2.1 (observability)**: en prod la liveness probe por defecto mataba a Grafana durante las migraciones SQLite del PVC; `grafana_slow_start=true` aumenta `initialDelaySeconds` a 600 y los umbrales de fallo, evitando el ciclo de reinicios.
 - JCasC `NoSuchFileException: /var/jenkins_home/.ssh/cg-envs-key` on boot: the dead AWS-era `cg-envs-ssh` credential was removed from JCasC.
 - Notification health endpoint no longer fails when the external SMTP server is not
   configured.

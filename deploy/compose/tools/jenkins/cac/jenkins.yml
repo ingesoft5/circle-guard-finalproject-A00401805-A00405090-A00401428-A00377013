@@ -52,6 +52,17 @@ credentials:
               username: ${NEXUS_USER}
               password: ${NEXUS_PASSWORD}
               description: Nexus
+          - usernamePassword:
+              scope: GLOBAL
+              id: terraform-minio-creds
+              username: ${TF_STATE_MINIO_USER}
+              password: ${TF_STATE_MINIO_PASSWORD}
+              description: Terraform state backend (MinIO S3 + DynamoDB Local)
+          - string:
+              scope: GLOBAL
+              id: terraform-grafana-password
+              secret: ${TF_GRAFANA_ADMIN_PASSWORD}
+              description: Grafana admin password used by the Terraform observability module
 
 unclassified:
   location:

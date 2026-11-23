@@ -396,8 +396,10 @@ kubectl -n monitoring get pods,svc
 | Clúster ligero (k3s/k3d) | Cumplido | k3d v5.9.0 / k3s v1.35.5 |
 | HPA | Cumplido | `base/hpa.yml` + `metrics-server`; gateway 1-3 (70 %), web 1-2 (70 %), auth 1-5 (75 %), promotion 1-5 (75 %) (`DCG-102` / `DCG-339`) |
 | Observabilidad y alertas | Cumplido | `deploy/k8s/monitoring/` (Prometheus, Alertmanager, Grafana y `auth-alerts.yml`) (`DCG-103` / `DCG-105` / `E2.4`) |
-| TLS en servicios expuestos | **Pendiente** | depende de DNS propio; hoy es HTTP interno |
-| RBAC de Kubernetes | Cumplido (Monitoreo) | `ClusterRole` / `ServiceAccount` para Prometheus SD en `monitoring/prometheus.yml` |
+| TLS en servicios expuestos | Declarado, pendiente de certificado/DNS | `components/tls` y overlays `*-tls`; el HTTP sigue siendo el default hasta crear `circleguard-tls` |
+| RBAC de Kubernetes | Declarado (Monitoreo + deployer) | `ClusterRole` de Prometheus en `monitoring/prometheus.yml` y `ServiceAccount`/`Role`/`RoleBinding` `circleguard-deployer` en `base/rbac.yml` |
 
 Las brechas están declaradas a propósito: el enunciado penaliza configuraciones que no se
-pueden explicar, no deudas documentadas con su plan de cierre.
+pueden explicar, no deudas documentadas con su plan de cierre. La adopción del deployer
+por Jenkins y la terminación TLS en el clúster requieren cambios en el host on-prem; los
+manifiestos y la verificación local ya están versionados.

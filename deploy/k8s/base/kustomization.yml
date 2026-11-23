@@ -4,6 +4,7 @@ kind: Kustomization
 
 resources:
   - middleware.yml
+  - rbac.yml
   - apps.yml
   - form-storage.yml
   - ingress.yml
