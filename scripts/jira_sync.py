@@ -25,6 +25,7 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 try:
     import yaml  # PyYAML is bundled with GitHub Actions ubuntu runners
@@ -34,6 +35,7 @@ except ImportError:  # pragma: no cover - local fallback
 SYNC_MARKER = "circleguard-jira-sync-v1"
 DEFAULT_MAPPING = Path(__file__).resolve().parents[1] / "docs/agil/jira-mapping.yml"
 DEFAULT_EVIDENCE = Path(__file__).resolve().parents[1] / "docs/agil/jira-evidence-queue.json"
+DEFAULT_ISSUES = Path(__file__).resolve().parents[1] / "docs/agil/jira-issues-to-create.json"
 
 # Jira Cloud workflow transition names (case-insensitive). Adjust in the mapping file
 # if the DCG board renames them.
@@ -232,6 +234,69 @@ def post_evidence_queue(path: Path, dry_run: bool) -> None:
         print(f"[ok] evidence {item.get('paragraph', '')} -> {key} ({digest})")
 
 
+def adf_document(lines: list[str]) -> dict[str, Any]:
+    """Build a minimal ADF document from plain text lines."""
+    return {
+        "version": 1,
+        "type": "doc",
+        "content": [
+            {"type": "paragraph", "content": [{"type": "text", "text": line}]}
+            for line in lines
+            if line.strip()
+        ],
+    }
+
+
+def find_existing_issue(summary: str, dry_run: bool) -> str | None:
+    """Return an existing DCG issue key with the same summary (idempotence)."""
+    if dry_run:
+        return None
+    escaped = summary.replace("\\", "\\\\").replace('"', '\\"')
+    jql = f'project = DCG AND summary ~ "{escaped}"'
+    data = jira_request(
+        "GET",
+        f"/rest/api/3/search/jql?jql={quote(jql)}&maxResults=10&fields=summary",
+        None,
+        dry_run,
+    )
+    for issue in data.get("issues", []):
+        fields = issue.get("fields", {}) or {}
+        if (fields.get("summary") or "").strip() == summary.strip():
+            return issue.get("key")
+    return None
+
+
+def create_issues(path: Path, dry_run: bool) -> None:
+    """Create DCG issues declared in an evidence-backed JSON file."""
+    if not path.exists():
+        print(f"[warn] issues file not found: {path}")
+        return
+    data = json.loads(path.read_text(encoding="utf-8"))
+    for item in data.get("issues", []):
+        summary = item.get("summary", "").strip()
+        if not summary:
+            continue
+        existing = find_existing_issue(summary, dry_run)
+        if existing:
+            print(f"[skip] issue already exists: {existing} - {summary}")
+            continue
+        fields: dict[str, Any] = {
+            "project": {"key": "DCG"},
+            "summary": summary,
+            "issuetype": {"name": item.get("issue_type", "Task")},
+            "description": adf_document(item.get("description", [])),
+        }
+        labels = item.get("labels") or []
+        if labels:
+            fields["labels"] = labels
+        created = jira_request("POST", "/rest/api/3/issue", {"fields": fields}, dry_run)
+        key = created.get("key") if isinstance(created, dict) else None
+        if key:
+            print(f"[ok] created {key} - {summary}")
+        else:
+            print(f"[ok] would create - {summary}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--event", help="GitHub event name (pull_request, pull_request_review, issues)")
@@ -241,6 +306,8 @@ def main() -> int:
     parser.add_argument("--verify", action="store_true", help="Verify Jira credentials and DCG project access")
     parser.add_argument("--evidence-queue", default=str(DEFAULT_EVIDENCE))
     parser.add_argument("--apply-evidence", action="store_true", help="Post queued paragraph evidence comments")
+    parser.add_argument("--create-issues", action="store_true", help="Create missing DCG issues from the issues file")
+    parser.add_argument("--issues-file", default=str(DEFAULT_ISSUES))
     args = parser.parse_args()
 
     if args.verify:
@@ -249,6 +316,10 @@ def main() -> int:
         print(f"[ok] Jira auth: {me.get('displayName')} <{me.get('emailAddress')}>")
         print(f"[ok] Project: {project.get('key')} - {project.get('name')}")
         return 0
+    if args.create_issues:
+        create_issues(Path(args.issues_file), args.dry_run)
+        if not args.event or not args.payload:
+            return 0
     if args.apply_evidence:
         post_evidence_queue(Path(args.evidence_queue), args.dry_run)
         if not args.event or not args.payload:

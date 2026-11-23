@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "source": "Auditoría del enunciado L230-231: no existe clave DCG dedicada a IAG/trazabilidad en docs/agil/backlog.md ni en IAG_REGISTRO.md",
+  "issues": [
+    {
+      "summary": "Registro IAG y trazabilidad individual",
+      "issue_type": "Task",
+      "labels": ["iag", "trazabilidad", "documentacion"],
+      "description": [
+        "Auditoría del enunciado L230-231 (Trazabilidad individual y uso de IAG).",
+        "Declaración verificada: IAG_REGISTRO.md:6 registra Nivel 3 - Colaboracion con IAG (con registro de prompts); IAG_REGISTRO.md:9 documenta insumo propio, prompt exacto, validacion humana y reflexion critica por modulo.",
+        "Trazabilidad individual verificable en GitHub: git shortlog (Daniela Castano Moreno 105+91, Alejandro Quinones 63, salejostrada 23+16, Faiber Piedrahita 7+7) y revisiones de PR (PR #161 aprobada por salejostrada).",
+        "Pendiente unicamente para la sustentacion: aplicacion del factor de contribucion individual (0.0 a 1.0) y explicacion verbal de los resultados generados con IAG."
+      ]
+    }
+  ]
+}
