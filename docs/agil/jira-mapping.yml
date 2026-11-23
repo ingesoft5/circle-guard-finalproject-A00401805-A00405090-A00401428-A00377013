@@ -25,7 +25,8 @@
     "HU-NOTIF-01": {"jira": "DCG-314", "aliases": ["HU-NOTIF-1", "NOTIF-01"]},
     "HU-NOTIF-02": {"jira": "DCG-316", "aliases": ["HU-NOTIF-2", "NOTIF-02"]},
     "HU-NOTIF-04": {"jira": "DCG-318", "aliases": ["HU-NOTIF-4", "NOTIF-04"], "subtasks": ["DCG-354", "DCG-355", "DCG-356", "DCG-357"]},
-    "HU-NOTIF-05": {"jira": "DCG-319", "aliases": ["HU-NOTIF-5", "NOTIF-05"], "subtasks": ["DCG-358", "DCG-360"]}
+    "HU-NOTIF-05": {"jira": "DCG-319", "aliases": ["HU-NOTIF-5", "NOTIF-05"], "subtasks": ["DCG-358", "DCG-360"]},
+    "IAG-TRAZABILIDAD": {"jira": "DCG-437", "aliases": ["IAG", "TRAZABILIDAD", "REGISTRO-IAG"]}
   },
   "unmapped": [
     "HU-FILE-01..05", "HU-FORM-01..06", "HU-GATEWAY-01..05", "HU-GATEWAY-CICD-01",

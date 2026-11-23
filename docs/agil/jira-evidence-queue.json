@@ -31,6 +31,11 @@
       "paragraph": "L221-228 - Estrategia de branching y control de cambios",
       "key": "DCG-5",
       "text": "CUMPLE. GitHub Flow y convenciones de ramas documentados en BRANCHING-STRATEGY.md; main protegida con 1 aprobación, strict y context obligatorio continuous-integration/jenkins/pr-merge; .githooks/pre-push bloquea pushes directos; PR #161 aprobada por salejostrada; Conventional Commits verificados en el historial; versionado semver con jenkins/vars/ciVersion.groovy y tags hasta v1.16.0; release notes generadas por Jenkinsfile:499-537. Notas: enforce_admins=false y el check 'Jira key in PR title' permanece informativo por decisión del equipo; se prioriza backfillear las keys DCG en PRs ya mergeadas sin inventarlas."
+    },
+    {
+      "paragraph": "L230-231 - Trazabilidad individual y uso de IAG",
+      "key": "DCG-437",
+      "text": "CUMPLE. Nivel 3 (Colaboración con IAG) declarado en IAG_REGISTRO.md:6; la declaración de uso de IAG_REGISTRO.md:9 documenta por módulo el insumo propio, el prompt exacto, la validación humana y la reflexión crítica. La trazabilidad individual es verificable en GitHub mediante git shortlog (Daniela Castaño Moreno 105+91, Alejandro Quiñones 63, salejostrada 23+16, Faiber Piedrahita 7+7) y las revisiones de PR (PR #161 aprobada por salejostrada). El factor de contribución individual (0.0 a 1.0) y la explicación de resultados generados con IAG se aplican en la sustentación. Se creó el issue DCG-437 en Jira para registrar esta evidencia porque no existía clave DCG dedicada en el repositorio."
     }
   ]
 }
