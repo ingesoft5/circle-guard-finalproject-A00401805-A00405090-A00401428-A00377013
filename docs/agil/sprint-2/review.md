@@ -22,8 +22,8 @@ sobre `main`.
 
 ## Checks y evidencia de integración
 
-- El título del PR incluye la llave `DCG-5`; los trabajos *Jira key in PR title* y
-  *Mirror event to Jira* pasan.
+- Jira se utilizó como herramienta de tablero ágil; el estado de las historias
+  se registró allí y se resume en `docs/agil/sprint-2/metrics.md`.
 - Jenkins `continuous-integration/jenkins/pr-merge` pasó en el commit `4e12166`
   con el mensaje *This commit looks good* (build #10). Cada push posterior vuelve
   a disparar la cadena; el estado final se verifica en el PR antes del merge.

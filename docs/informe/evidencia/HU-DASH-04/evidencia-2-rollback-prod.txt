@@ -1,0 +1,104 @@
+2026-11-23T07:45:36Z
+=== REVISIONES DISPONIBLES ===
+deployment.apps/dashboard 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+4         <none>
+7         <none>
+8         <none>
+
+REV_110=7 REV_140=8
+=== VOLVER AL BASELINE 1.10.0 ===
+deployment.apps/dashboard rolled back
+Waiting for deployment "dashboard" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "dashboard" rollout to finish: 1 old replicas are pending termination...
+deployment "dashboard" successfully rolled out
+NAME        READY   DESIRED   IMAGE
+dashboard   1       1         circleguard-docker/dashboard:1.10.0
+=== ESTADO PRE-ROLLBACK ===
+deployment.apps/dashboard 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+4         <none>
+8         <none>
+9         <none>
+
+--- revision destino 8 ---
+deployment.apps/dashboard with revision #8
+Pod Template:
+  Labels:	app=dashboard
+	app.kubernetes.io/part-of=circleguard
+	pod-template-hash=85c4c6b57f
+  Containers:
+   dashboard:
+    Image:	circleguard-docker/dashboard:1.4.0
+    Port:	8084/TCP
+    Host Port:	0/TCP
+    Limits:
+      memory:	512Mi
+    Requests:
+      cpu:	100m
+NAME                         READY   STATUS        RESTARTS   AGE     IP           NODE              NOMINATED NODE   READINESS GATES
+dashboard-7749cccdb7-s62br   1/1     Running       0          51s     10.42.0.79   k3d-cg-server-0   <none>           <none>
+dashboard-85c4c6b57f-nh7hp   1/1     Terminating   0          2m41s   10.42.0.78   k3d-cg-server-0   <none>           <none>
+=== EJECUCION DEL ROLLOUT UNDO A 1.4.0 ===
+deployment.apps/dashboard rolled back
+=== ROLLOUT STATUS ===
+Waiting for deployment "dashboard" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "dashboard" rollout to finish: 1 old replicas are pending termination...
+deployment "dashboard" successfully rolled out
+=== ESTADO POST-ROLLBACK ===
+NAME        READY   DESIRED   IMAGE
+dashboard   1       1         circleguard-docker/dashboard:1.4.0
+NAME                         READY   STATUS        RESTARTS   AGE    IP           NODE              NOMINATED NODE   READINESS GATES
+dashboard-7749cccdb7-s62br   1/1     Terminating   0          111s   10.42.0.79   k3d-cg-server-0   <none>           <none>
+dashboard-85c4c6b57f-fpw8s   1/1     Running       0          60s    10.42.0.80   k3d-cg-server-0   <none>           <none>
+postgres-0   true   Running   0
+=== PODS CON SU IMAGEN (para seleccionar el activo) ===
+dashboard-7749cccdb7-s62br   circleguard-docker/dashboard:1.10.0   2026-11-23T07:47:58Z
+dashboard-85c4c6b57f-fpw8s   circleguard-docker/dashboard:1.4.0    <none>
+POD_ACTIVO_1_4_0=dashboard-85c4c6b57f-fpw8s
+--- curl post-rollback via port-forward pod/dashboard-85c4c6b57f-fpw8s 18092:8084 ---
+--- GET /actuator/health ---
+{"status":"UP","groups":["liveness","readiness"]}
+HTTP 200
+
+--- GET /actuator/health/readiness ---
+{"status":"UP"}
+HTTP 200
+
+--- GET /actuator/health/liveness ---
+{"status":"UP"}
+HTTP 200
+
+=== HISTORIAL TRAS ROLLBACK ===
+deployment.apps/dashboard 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+4         <none>
+9         <none>
+10        <none>
+
+=== RESTAURACION FINAL AL BASELINE 1.10.0 ===
+error: unable to find specified revision 7 in history
+deployment "dashboard" successfully rolled out
+NAME        READY   DESIRED   IMAGE
+dashboard   1       1         circleguard-docker/dashboard:1.4.0
+dashboard-7749cccdb7-s62br   circleguard-docker/dashboard:1.10.0   2026-11-23T07:47:58Z
+dashboard-85c4c6b57f-fpw8s   circleguard-docker/dashboard:1.4.0    <none>
+2026-11-23T07:47:40Z
+2026-11-23T07:47:49Z
+=== CORRECCION DE RESTAURACION: la revision 7 ya no estaba en el historial ===
+deployment.apps/dashboard image updated
+Waiting for deployment "dashboard" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "dashboard" rollout to finish: 1 old replicas are pending termination...
+deployment "dashboard" successfully rolled out
+=== ESTADO FINAL ===
+NAME        READY   DESIRED   IMAGE
+dashboard   1       1         circleguard-docker/dashboard:1.10.0
+dashboard-6b5b89fcb6-jn66h   circleguard-docker/dashboard:1.10.0   true   <none>
+dashboard-85c4c6b57f-fpw8s   circleguard-docker/dashboard:1.4.0    true   2026-11-23T07:49:20Z
+2026-11-23T07:48:50Z
