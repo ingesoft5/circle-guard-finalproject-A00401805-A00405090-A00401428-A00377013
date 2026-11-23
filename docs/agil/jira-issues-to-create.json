@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source": "Auditoría del enunciado L230-231: no existe clave DCG dedicada a IAG/trazabilidad en docs/agil/backlog.md ni en IAG_REGISTRO.md",
+  "source": "Auditoría párrafo por párrafo del enunciado: claves DCG creadas solo cuando no existe una clave evidenciada en docs/agil/backlog.md ni en IAG_REGISTRO.md",
   "issues": [
     {
       "summary": "Registro IAG y trazabilidad individual",
@@ -11,6 +11,22 @@
         "Declaración verificada: IAG_REGISTRO.md:6 registra Nivel 3 - Colaboracion con IAG (con registro de prompts); IAG_REGISTRO.md:9 documenta insumo propio, prompt exacto, validacion humana y reflexion critica por modulo.",
         "Trazabilidad individual verificable en GitHub: git shortlog (Daniela Castano Moreno 105+91, Alejandro Quinones 63, salejostrada 23+16, Faiber Piedrahita 7+7) y revisiones de PR (PR #161 aprobada por salejostrada).",
         "Pendiente unicamente para la sustentacion: aplicacion del factor de contribucion individual (0.0 a 1.0) y explicacion verbal de los resultados generados con IAG."
+      ]
+    },
+    {
+      "summary": "Verificación entregables E1.1-E1.8 (Parte 1)",
+      "issue_type": "Task",
+      "labels": ["entrega-1", "evidencia", "documentacion"],
+      "description": [
+        "Auditoría del enunciado L249-256 (entregables E1.1 a E1.8 de la Parte 1).",
+        "E1.1: tablero agile, Sprint 0/1 documentado y ramas protegidas (docs/agil/, BRANCHING-STRATEGY.md).",
+        "E1.2: aprovisionamiento Bash idempotente, entornos aislados y tools Jenkins/Sonar/Nexus (infra/bootstrap/, docs/infra/).",
+        "E1.3: Dockerfiles multi-stage no-root, semver y healthchecks (services/*/Dockerfile, mobile/Dockerfile).",
+        "E1.4: Jenkinsfile multibranch, webhook, Shared Library, Sonar quality gate y ejecución selectiva (jenkins/vars/).",
+        "E1.5: promoción dev -> E2E -> stage -> aprobación manual -> prod, tag y rollback (Jenkinsfile:1181-1321).",
+        "E1.6: JaCoCo >= 60 %, integraciones Testcontainers y 5 flujos E2E Playwright (tests/e2e/).",
+        "E1.7: plantilla de cambio, política de aprobación, release notes y etiquetado semver (docs/change-management.md).",
+        "E1.8: README operativo, diagramas de arquitectura/pipeline y bitácora IAG (docs/arquitectura/, docs/diagramas/, IAG_REGISTRO.md)."
       ]
     }
   ]
