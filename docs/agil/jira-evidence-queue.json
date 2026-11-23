@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "source": "Auditoría párrafo por párrafo del enunciado (Proyecto_Final_CircleGuard.tex)",
+  "evidence": [
+    {
+      "paragraph": "L166-167 - El producto: CircleGuard",
+      "key": "DCG-77",
+      "text": "CUMPLE. Modelo de datos híbrido verificado: Neo4j 5.26-community con purga de aristas >14 días (GraphCleanupTask.java:22,29), PostgreSQL 16-alpine, Kafka 3.7.0, Redis 7.2-alpine, OpenLDAP 1.5.0. Java 21 y Spring Boot 3.2.4 en build.gradle.kts; 8 microservicios en settings.gradle.kts; cliente Expo con salida web en mobile/package.json. Evidencia: README.md, docs/arquitectura/README.md, build.gradle.kts, settings.gradle.kts, mobile/package.json, deploy/compose/*/docker-compose.yml."
+    },
+    {
+      "paragraph": "L186 - El reto de implementar DevOps",
+      "key": "DCG-5",
+      "text": "CUMPLE. Brecha DevOps cerrada: Dockerfile multi-stage para los 8 microservicios y el cliente Expo; Jenkinsfile multibranch con Shared Library (jenkins/vars/ci,ciNotify,ciServices,ciVersion); Terraform modular en infra/terraform/envs/{dev,stage,prod}; Actuator y Micrometer en los 8 servicios; Resilience4j en auth, identity y notification; 5 flujos E2E en tests/e2e; credenciales parametrizadas con ${VAR} en deploy/compose/*/docker-compose.yml y solo .env.example versionados. Dashboard de negocio en deploy/k8s/monitoring/grafana.yml. Evidencia: Jenkinsfile, jenkins/vars/, infra/terraform/, deploy/k8s/monitoring/, tests/e2e/, docs/change-management.md."
+    },
+    {
+      "paragraph": "L187-197 - Estructura en dos entregas",
+      "key": "DCG-5",
+      "text": "CUMPLE. Estructura de dos entregas verificada: Parte 1 (15 %) con automatizacion, colaboracion, integracion y entrega continua (Jenkinsfile, jenkins/vars/, PRs revisados, Bash en infra/bootstrap/, GitHub, SonarQube y Playwright en tests/e2e); Parte 2 (25 %) con Terraform modular en infra/terraform/envs/{dev,stage,prod}, Kubernetes en deploy/k8s/overlays, Prometheus/Grafana/Jaeger en deploy/k8s/monitoring/, patrones en docs/patrones/, seguridad y calidad en Jenkins y documentacion completa. Evidencia: Jenkinsfile, infra/bootstrap/, infra/terraform/, deploy/k8s/, docs/patrones/, docs/operaciones/, docs/costos/, README.md."
+    },
+    {
+      "paragraph": "L205 - Conformación de equipos",
+      "key": "DCG-6",
+      "text": "CUMPLE. Equipo de cuatro integrantes del grupo 005 documentado antes del Sprint 0 en docs/agil/sprint-0/planning.md:20 y docs/agil/sprint-1/planning.md:20; DCG-6 \"Conformar equipo\" en docs/agil/backlog.md:20 con estado Done y evidencia en la planeación. No se registra rotación de integrantes despues de la Parte 1; docs/agil/plan-circle-guard-5.0.md:65 documenta la politica de no rotacion y responsables por frente. Evidencia: README.md (Integrantes), docs/agil/sprint-0/planning.md, docs/agil/sprint-1/planning.md, docs/agil/backlog.md, IAG_REGISTRO.md."
+    },
+    {
+      "paragraph": "L207-219 - Marco ágil y ciclo de trabajo",
+      "key": "DCG-7",
+      "text": "CUMPLE. Marco Scrum justificado en docs/agil/README.md:3 con tablero Jira DCG (docs/agil/backlog.md:4,8) y GitHub Project circle-guard-dasf para la Parte 2. Sprint 0 y Sprint 1 con planning/review/retrospective en docs/agil/sprint-0 y docs/agil/sprint-1; métricas de velocidad en sprint-0/retrospective.md:41 (12 puntos) y sprint-1/retrospective.md:41 (7 cerrados + 3 en revisión). Cierre de Sprint 2 documentado en docs/agil/sprint-2/metrics.md con flujo acumulado verificable del GitHub Project #14 (41 Done, 7 In review, 1 In progress, 6 Backlog de 55) y cambio de política de aprobación 2 a 1 revisor en plan-circle-guard-5.0.md:52. DCG-7 'Marco ágil' figura Done en backlog.md:21. Nota: no se exportó un burndown animado; se entrega el registro de flujo acumulado como evidencia verificable."
+    },
+    {
+      "paragraph": "L221-228 - Estrategia de branching y control de cambios",
+      "key": "DCG-5",
+      "text": "CUMPLE. GitHub Flow y convenciones de ramas documentados en BRANCHING-STRATEGY.md; main protegida con 1 aprobación, strict y context obligatorio continuous-integration/jenkins/pr-merge; .githooks/pre-push bloquea pushes directos; PR #161 aprobada por salejostrada; Conventional Commits verificados en el historial; versionado semver con jenkins/vars/ciVersion.groovy y tags hasta v1.16.0; release notes generadas por Jenkinsfile:499-537. Notas: enforce_admins=false y el check 'Jira key in PR title' permanece informativo por decisión del equipo; se prioriza backfillear las keys DCG en PRs ya mergeadas sin inventarlas."
+    },
+    {
+      "paragraph": "L230-231 - Trazabilidad individual y uso de IAG",
+      "key": "DCG-437",
+      "text": "CUMPLE. Nivel 3 (Colaboración con IAG) declarado en IAG_REGISTRO.md:6; la declaración de uso de IAG_REGISTRO.md:9 documenta por módulo el insumo propio, el prompt exacto, la validación humana y la reflexión crítica. La trazabilidad individual es verificable en GitHub mediante git shortlog (Daniela Castaño Moreno 105+91, Alejandro Quiñones 63, salejostrada 23+16, Faiber Piedrahita 7+7) y las revisiones de PR (PR #161 aprobada por salejostrada). El factor de contribución individual (0.0 a 1.0) y la explicación de resultados generados con IAG se aplican en la sustentación. Se creó el issue DCG-437 en Jira para registrar esta evidencia porque no existía clave DCG dedicada en el repositorio."
+    },
+    {
+      "paragraph": "L249-256 - Entregables E1.1-E1.8 (Parte 1)",
+      "key": "DCG-438",
+      "text": "CUMPLE. Los ocho entregables E1.1-E1.8 de la Parte 1 están verificados: E1.1 gestión ágil y branching (docs/agil/, sprint-0/1, BRANCHING-STRATEGY.md, main protegida); E1.2 infraestructura Bash idempotente con entornos aislados y Jenkins/Sonar/Nexus (infra/bootstrap/, docs/infra/; la migración on-prem posterior está documentada); E1.3 empaquetamiento inmutable con 9 Dockerfiles multi-stage no-root, semver y healthchecks; E1.4 Jenkinsfile multibranch con webhook verificado, Shared Library, Sonar quality gate y ejecución selectiva; E1.5 promoción dev -> E2E -> stage -> aprobación manual -> prod con tag y rollback (Jenkinsfile:1181-1321); E1.6 JaCoCo >= 60 % en los 5 núcleos, integraciones Testcontainers y 5 flujos E2E Playwright; E1.7 plantilla de cambio, política por tipo de cambio, release notes automáticas y etiquetado semver (docs/change-management.md, docs/release-notes/); E1.8 README operativo, diagramas de arquitectura/pipeline y bitácora IAG Nivel 3 (IAG_REGISTRO.md). Se creó el issue DCG-438 (Task) para consolidar esta evidencia."
+    },
+    {
+      "paragraph": "L260 - Alcance de despliegue en la Parte 1",
+      "key": "DCG-438",
+      "text": "CUMPLE. Los cinco servicios núcleo (auth, identity, promotion, form, gateway), su middleware (PostgreSQL, Neo4j, Kafka, Redis, OpenLDAP) y el cliente web quedaron desplegados en dev, stage y prod según docs/infra/environments.md:101 y deploy/compose/{dev,stage,prod}/docker-compose.yml. HU-INFRA-02 figura Done en docs/agil/backlog.md:26 con PRs #34/#38/#39/#40/#41, y docs/informe/E1.2-Informe-Final.md:14,364 registra los tres ambientes aislados en el release 1.2.8. Los servicios notification, file y dashboard fueron compilados, probados y empaquetados en Parte 1: dashboard.deploy=false en docs/informe/HU-DASH-03.md:10; file-service no desplegado en P1 según docs/informe/HU-FILE-04-Integracion-MinIO.md:34,40; notification desplegado en P2 según docs/informe/evidencia/HU-NOTIF-04/README.md:42,154-161. El hecho de que Jenkinsfile:90 incluya notification en deployable refleja la evolución de Parte 2, no una contradicción del alcance P1."
+    }
+  ]
+}
