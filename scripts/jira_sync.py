@@ -234,6 +234,33 @@ def post_evidence_queue(path: Path, dry_run: bool) -> None:
         print(f"[ok] evidence {item.get('paragraph', '')} -> {key} ({digest})")
 
 
+def inspect_evidence(path: Path, dry_run: bool) -> None:
+    """Debug helper: report whether queued evidence digests are already commented."""
+    if not path.exists():
+        return
+    queue = json.loads(path.read_text(encoding="utf-8"))
+    for item in queue.get("evidence", []):
+        key = item.get("key", "")
+        text = item.get("text", "")
+        if not re.fullmatch(r"DCG-\d+", key) or not text:
+            continue
+        body = f"{SYNC_MARKER} | evidence | {item.get('paragraph', '')}\n{text}"
+        digest = hashlib.sha256(body.encode("utf-8")).hexdigest()[:12]
+        data = jira_request(
+            "GET", f"/rest/api/3/issue/{key}/comment?startAt=0&maxResults=100", None, dry_run
+        )
+        comments = data.get("comments", [])
+        found = any(
+            SYNC_MARKER in json.dumps(c.get("body", {})) and digest in json.dumps(c.get("body", {}))
+            for c in comments
+        )
+        sample = json.dumps(comments[0].get("body", {}))[:200] if comments else ""
+        print(
+            f"[inspect] {key} paragraph={item.get('paragraph', '')} digest={digest} "
+            f"total={data.get('total')} fetched={len(comments)} found={found} sample={sample}"
+        )
+
+
 def adf_document(lines: list[str]) -> dict[str, Any]:
     """Build a minimal ADF document from plain text lines."""
     return {
@@ -308,6 +335,7 @@ def main() -> int:
     parser.add_argument("--apply-evidence", action="store_true", help="Post queued paragraph evidence comments")
     parser.add_argument("--create-issues", action="store_true", help="Create missing DCG issues from the issues file")
     parser.add_argument("--issues-file", default=str(DEFAULT_ISSUES))
+    parser.add_argument("--inspect-evidence", action="store_true", help="Debug queued evidence comment state")
     args = parser.parse_args()
 
     if args.verify:
@@ -315,6 +343,9 @@ def main() -> int:
         project = jira_request("GET", "/rest/api/3/project/DCG", None, False)
         print(f"[ok] Jira auth: {me.get('displayName')} <{me.get('emailAddress')}>")
         print(f"[ok] Project: {project.get('key')} - {project.get('name')}")
+        return 0
+    if args.inspect_evidence:
+        inspect_evidence(Path(args.evidence_queue), args.dry_run)
         return 0
     if args.create_issues:
         create_issues(Path(args.issues_file), args.dry_run)
