@@ -1,0 +1,42 @@
+[
+  {
+    "ID": "i-0168db88a32069ccf",
+    "Priv": "172.31.19.75",
+    "Pub": "3.140.191.217",
+    "SG": [
+      "sg-03ed767c4bbcbf5fe"
+    ],
+    "State": "running",
+    "Type": "m7i-flex.large"
+  },
+  {
+    "ID": "i-05084037bd8177db7",
+    "Priv": "172.31.20.75",
+    "Pub": "3.140.253.184",
+    "SG": [
+      "sg-03ed767c4bbcbf5fe"
+    ],
+    "State": "running",
+    "Type": "m7i-flex.large"
+  },
+  {
+    "ID": "i-0a65406c7c44c52ec",
+    "Priv": "172.31.29.207",
+    "Pub": "13.58.139.230",
+    "SG": [
+      "sg-03ed767c4bbcbf5fe"
+    ],
+    "State": "running",
+    "Type": "m7i-flex.large"
+  },
+  {
+    "ID": "i-0f39bae4a25328be1",
+    "Priv": "172.31.20.46",
+    "Pub": "77.112.223.174",
+    "SG": [
+      "sg-0ed6257fcc34b0f5b"
+    ],
+    "State": "running",
+    "Type": "m7i-flex.large"
+  }
+]

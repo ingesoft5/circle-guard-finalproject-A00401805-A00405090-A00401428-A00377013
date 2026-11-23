@@ -1,0 +1,5 @@
+cg-ingress|0c17db25aad5|nginx:1.27-alpine
+cg-jenkins|4bd4ae4bb94a|35dd966ce823
+cg-nexus|8b05099017d7|sonatype/nexus3:3.68.1
+cg-sonar-db|59a7b468f25c|postgres:16
+cg-sonarqube|ef9bb7883ae7|sonarqube:lts-community
