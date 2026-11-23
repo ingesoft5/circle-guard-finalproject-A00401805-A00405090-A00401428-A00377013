@@ -189,12 +189,26 @@ def do_transition(key: str, action: str, dry_run: bool, transitions: dict[str, s
 
 
 def comment_once(key: str, digest: str, doc: dict[str, Any], dry_run: bool) -> None:
-    data = jira_request("GET", f"/rest/api/3/issue/{key}/comment", None, dry_run)
     if not dry_run:
-        for existing in data.get("comments", []):
-            if SYNC_MARKER in json.dumps(existing.get("body", {})) and digest in json.dumps(existing.get("body", {})):
-                print(f"[skip] comment {digest} already present on {key}")
-                return
+        start_at = 0
+        while True:
+            data = jira_request(
+                "GET",
+                f"/rest/api/3/issue/{key}/comment?startAt={start_at}&maxResults=100",
+                None,
+                dry_run,
+            )
+            comments = data.get("comments", [])
+            for existing in comments:
+                body_json = json.dumps(existing.get("body", {}))
+                if SYNC_MARKER in body_json and digest in body_json:
+                    print(f"[skip] comment {digest} already present on {key}")
+                    return
+            if start_at + len(comments) >= data.get("total", len(comments)) or not comments:
+                break
+            start_at += len(comments)
+    else:
+        jira_request("GET", f"/rest/api/3/issue/{key}/comment?startAt=0&maxResults=100", None, True)
     jira_request("POST", f"/rest/api/3/issue/{key}/comment", {"body": doc}, dry_run)
 
 
