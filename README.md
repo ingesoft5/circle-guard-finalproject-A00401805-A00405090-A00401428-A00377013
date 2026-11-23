@@ -286,6 +286,6 @@ Documentación:
 - [Runbook](docs/infra/runbook.md)
 - [Change management](docs/change-management.md)
 - [Release notes](docs/release-notes/RELEASE-NOTES.md)
-- [Índice de documentación](docs/README.md)
-- [Índice de archivos](docs/FILE_INDEX.md)
+- [Operaciones](docs/operaciones/OPERACIONES.md)
+- [Estándares de documentación](docs/standards/documentation.md)
 - Pipeline: [`Jenkinsfile`](Jenkinsfile) y [`jenkins/vars/ci.groovy`](jenkins/vars/ci.groovy)
