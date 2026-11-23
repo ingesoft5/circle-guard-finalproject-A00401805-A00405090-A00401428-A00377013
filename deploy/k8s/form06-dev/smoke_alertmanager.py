@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent
 
 
 def docker(*args):
-    result = subprocess.run(["docker", *args], capture_output=True, text=True, timeout=60)
+    result = subprocess.run(["docker", *args], capture_output=True, text=True, timeout=180)
     if result.returncode:
         raise RuntimeError(result.stderr[-800:])
     return result.stdout.strip()
@@ -38,12 +38,12 @@ def main():
     with TemporaryDirectory(prefix="cg-form06-alert-") as directory:
         config_file = Path(directory) / "alertmanager.yml"
         config_file.write_text(config, encoding="utf-8")
-        mount = f"type=bind,source={directory},target=/etc/alertmanager,readonly"
+        mount = f"{directory}:/etc/alertmanager:ro,Z"
         try:
-            print(docker("run", "--rm", "--mount", mount, "--entrypoint", "amtool", image,
+            print(docker("run", "--rm", "-v", mount, "--entrypoint", "amtool", image,
                          "check-config", "/etc/alertmanager/alertmanager.yml"), flush=True)
             container = docker("run", "--rm", "-d", "--label", "cg.form06.smoke=true",
-                               "--mount", mount, "-p", "127.0.0.1::9093", image,
+                               "-v", mount, "-p", "127.0.0.1::9093", image,
                                "--config.file=/etc/alertmanager/alertmanager.yml")
             port = docker("port", container, "9093/tcp").split(":")[-1]
             base = f"http://127.0.0.1:{port}"

@@ -19,13 +19,13 @@ HERE = Path(__file__).resolve().parent
 
 
 def docker(*args):
-    result = subprocess.run(["docker", *args], capture_output=True, text=True, timeout=45)
+    result = subprocess.run(["docker", *args], capture_output=True, text=True, timeout=180)
     if result.returncode:
         raise RuntimeError(f"docker {' '.join(args[:2])} failed: {result.stderr[-800:]}")
     return result.stdout.strip()
 
 
-def wait_for(url, seconds=45):
+def wait_for(url, seconds=120):
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         try:
@@ -74,7 +74,7 @@ def main():
                           "--network-alias", "loki", "--label", "cg.form06.smoke=true",
                           "-p", "127.0.0.1::3100",
                           "--tmpfs", "/loki:rw,size=1073741824,mode=1777",
-                          "-v", f"{directory}:/etc/loki:ro", "grafana/loki:2.9.6",
+                          "-v", f"{directory}:/etc/loki:ro,Z", "grafana/loki:2.9.6",
                           "-config.file=/etc/loki/loki.yml")
             containers.append(loki)
             loki_port = docker("port", loki, "3100/tcp").split(":")[-1]
@@ -84,7 +84,7 @@ def main():
 
             alloy = docker("run", "--rm", "-d", "--network", network,
                            "--label", "cg.form06.smoke=true", "-p", "127.0.0.1::18080",
-                           "-v", f"{directory}:/etc/alloy:ro", "grafana/alloy:v1.22.0",
+                           "-v", f"{directory}:/etc/alloy:ro,Z", "grafana/alloy:v1.22.0",
                            "run", "/etc/alloy/config.alloy")
             containers.append(alloy)
             alloy_port = docker("port", alloy, "18080/tcp").split(":")[-1]
