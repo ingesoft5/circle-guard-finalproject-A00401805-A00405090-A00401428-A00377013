@@ -7,6 +7,7 @@
 
 def services = []
 def javaServices = []
+def nodeServices = []
 def resolvedFiles = []
 def autoDiffAvailable = false
 
@@ -61,8 +62,9 @@ def dockerRegistryForDaemon() {
 
 // The shared library pinned to main can be one commit behind this Jenkinsfile
 // (a PR cannot see its own library changes). The local catalog fixes the flags
-// needed for the deliverable without blocking the PR build. It also supplies the
-// mobile entry until the shared-library catalog reaches main.
+// needed for the deliverable without blocking the PR build. Mobile is selected
+// from that same catalog like any other service: its Node/Jest lifecycle stays
+// in its own stage, but selection and reporting use the common service lists.
 //
 // IMPORTANT: never assign to a global name without `def` from these helpers.
 // A script-level `def javaServices` is a local variable of run(), while an
@@ -70,30 +72,8 @@ def dockerRegistryForDaemon() {
 // expressions of the declarative stages read the local variable, so the two
 // lists silently diverge and every service stage is skipped (PR-169 #5).
 // Helpers must return their data and Resolve services must assign the locals.
-def localMobileService() {
-    return [
-            short         : 'mobile',
-            name          : 'circleguard-mobile',
-            path          : '',
-            dir           : 'mobile',
-            projectKey    : 'circleguard-mobile',
-            display       : 'CircleGuard Mobile',
-            sonarSettings : 'mobile/sonar-project.properties',
-            type          : 'node',
-            jacoco        : true,
-            integration   : false,
-            publish       : false,
-            docker        : false,
-            deploy        : false,
-            healthcheck   : false
-    ]
-}
-
-def enrichServices(List resolved, boolean includeMobile) {
-    def selected = resolved.findAll { it.short != 'mobile' || includeMobile }
-    if (includeMobile && !selected.any { it.short == 'mobile' }) {
-        selected << localMobileService()
-    }
+def enrichServices(List resolved) {
+    def selected = resolved
     def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification']
     def covered = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification',
                    'file', 'dashboard', 'mobile']
@@ -133,27 +113,6 @@ def enrichServices(List resolved, boolean includeMobile) {
             services    : selected,
             javaServices: selected.findAll { it.type != 'node' && it.short != 'mobile' }
     ]
-}
-
-// Mobile is resolved from the same diff as the Java services. The library pinned
-// to main predates the mobile catalog entry, so this bridge keeps PR builds honest.
-def isMobileSelected(String mode) {
-    def requested = (mode ?: 'auto').trim()
-    if (requested == 'all' || requested == 'mobile') {
-        return true
-    }
-    if (requested != 'auto') {
-        return false
-    }
-    if ((env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') && !env.CHANGE_TARGET?.trim()) {
-        return true
-    }
-    if (!autoDiffAvailable) {
-        // The diff could not be computed; resolveServicesLocal() already fell back
-        // to every Java service, so mobile coverage must be included as well.
-        return true
-    }
-    return resolvedFiles.any { it == 'mobile' || it.startsWith('mobile/') }
 }
 
 // TEMPORARY: the library is pinned to main (@Library('circleguard@main')), so a PR
@@ -227,7 +186,11 @@ def selectServicesFromFilesLocal(List files) {
 def resolveServicesLocal(String mode) {
     def requested = (mode ?: 'auto').trim()
     if (requested == 'mobile') {
-        return [localMobileService()]
+        def svc = ciServices.catalog().find { it.short == 'mobile' }
+        if (!svc) {
+            error "Unknown service: mobile."
+        }
+        return [svc]
     }
     if (requested == 'all') {
         return ciServices.catalog()
@@ -793,21 +756,20 @@ pipeline {
                         env.TAG = normalizeSemver(params.ROLLBACK_TAG.trim())
                         services = []
                         javaServices = []
-                        env.MOBILE_CHANGED = 'false'
+                        nodeServices = []
                         echo "Rollback requested: ${env.TAG}"
                     } else {
                         env.TAG = resolveSemver(params.TAG ?: '')
                         def requestedService = params.SERVICE ?: 'auto'
                         def resolved = resolveServicesLocal(requestedService)
-                        def mobileSelected = isMobileSelected(requestedService)
-                        env.MOBILE_CHANGED = mobileSelected.toString()
-                        def enriched = enrichServices(resolved, mobileSelected)
+                        def enriched = enrichServices(resolved)
                         services = enriched.services
                         javaServices = enriched.javaServices
+                        nodeServices = services.findAll { it.type == 'node' }
                         env.SERVICES = services.collect { it.short }.join(',')
                         echo "Semantic version: ${env.TAG}"
                         echo "Components to build: ${env.SERVICES ?: 'none'}"
-                        echo "Mobile coverage: ${env.MOBILE_CHANGED}"
+                        echo "Client components: ${nodeServices.collect { it.short }.join(',') ?: 'none'}"
                     }
                 }
             }
@@ -821,7 +783,7 @@ pipeline {
         }
 
         stage('Mobile tests + coverage') {
-            when { expression { env.MOBILE_CHANGED == 'true' && !params.ROLLBACK_TAG?.trim() } }
+            when { expression { nodeServices && !params.ROLLBACK_TAG?.trim() } }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
@@ -908,13 +870,11 @@ pipeline {
         }
 
         stage('SonarQube + Quality Gate') {
-            when { expression { (javaServices || env.MOBILE_CHANGED == 'true') && !params.ROLLBACK_TAG?.trim() } }
+            when { expression { services && !params.ROLLBACK_TAG?.trim() } }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    def analyzed = []
-                    analyzed.addAll(javaServices)
-                    analyzed.addAll(services.findAll { it.type == 'node' })
+                    def analyzed = services.findAll { it.jacoco }
                     analyzed.each { service ->
                         if (service.jacoco) {
                             echo "Analyzing ${service.name} with SonarQube..."
@@ -1129,7 +1089,7 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { (javaServices || env.MOBILE_CHANGED == 'true') && !params.ROLLBACK_TAG?.trim() }
+                    expression { nodeServices && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
@@ -1362,7 +1322,7 @@ pipeline {
                 }
                 // The library pinned to main does not know about LCOV yet; archive
                 // the mobile evidence locally until the ci.groovy change is merged.
-                if (env.MOBILE_CHANGED == 'true' && fileExists('mobile/coverage/lcov.info')) {
+                if (nodeServices && fileExists('mobile/coverage/lcov.info')) {
                     archiveArtifacts artifacts: 'mobile/coverage/lcov.info,mobile/coverage/**',
                             allowEmptyArchive: true, fingerprint: true
                 }
