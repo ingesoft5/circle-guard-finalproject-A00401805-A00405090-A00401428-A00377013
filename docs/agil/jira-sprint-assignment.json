@@ -1,15 +1,35 @@
 {
   "version": 1,
-  "source": "Auditoría enunciado L230-231: DCG-437 cubre E1.8/bitácora IAG (Sprint 0-1) y el cierre de P2-09 (Sprint 2).",
+  "source": "Auditoría párrafo por párrafo: DCG-437 (IAG) y DCG-438 (E1.1-E1.8) se registran en Sprint 2 como cierre de la Parte 1/2.",
   "board_id": 67,
-  "sprints": ["DCG Sprint 1", "DCG Sprint 2"],
+  "sprints": [
+    "DCG Sprint 1",
+    "DCG Sprint 2"
+  ],
   "issues": [
     {
       "key": "DCG-437",
-      "sprints": ["DCG Sprint 1", "DCG Sprint 2"],
+      "sprints": [
+        "DCG Sprint 1",
+        "DCG Sprint 2"
+      ],
       "current_sprint": "DCG Sprint 2",
-      "also_sprints": ["DCG Sprint 1"],
+      "also_sprints": [
+        "DCG Sprint 1"
+      ],
       "note": "Tarea de registro IAG y trazabilidad individual: origen en E1.8 / bitácora IAG (Sprint 0-1) y cierre de evidencia L230-231 / P2-09 (Sprint 2). Jira acepta un solo sprint activo por issue, por ello DCG Sprint 2 queda como sprint actual y DCG Sprint 1 se conserva como etiqueta sprint-1 y en esta nota."
+    },
+    {
+      "key": "DCG-438",
+      "sprints": [
+        "DCG Sprint 1",
+        "DCG Sprint 2"
+      ],
+      "current_sprint": "DCG Sprint 2",
+      "also_sprints": [
+        "DCG Sprint 1"
+      ],
+      "note": "Tarea de verificación de los entregables E1.1-E1.8: origina en la Parte 1 (Sprint 0-1) y cierra con la auditoría final en Sprint 2. Jira acepta un solo sprint activo por issue, por ello DCG Sprint 2 queda como sprint actual y DCG Sprint 1 se conserva como etiqueta sprint-1 y en esta nota."
     }
   ]
 }

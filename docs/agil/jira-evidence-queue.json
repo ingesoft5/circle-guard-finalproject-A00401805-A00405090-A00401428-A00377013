@@ -36,6 +36,11 @@
       "paragraph": "L230-231 - Trazabilidad individual y uso de IAG",
       "key": "DCG-437",
       "text": "CUMPLE. Nivel 3 (Colaboración con IAG) declarado en IAG_REGISTRO.md:6; la declaración de uso de IAG_REGISTRO.md:9 documenta por módulo el insumo propio, el prompt exacto, la validación humana y la reflexión crítica. La trazabilidad individual es verificable en GitHub mediante git shortlog (Daniela Castaño Moreno 105+91, Alejandro Quiñones 63, salejostrada 23+16, Faiber Piedrahita 7+7) y las revisiones de PR (PR #161 aprobada por salejostrada). El factor de contribución individual (0.0 a 1.0) y la explicación de resultados generados con IAG se aplican en la sustentación. Se creó el issue DCG-437 en Jira para registrar esta evidencia porque no existía clave DCG dedicada en el repositorio."
+    },
+    {
+      "paragraph": "L249-256 - Entregables E1.1-E1.8 (Parte 1)",
+      "key": "DCG-438",
+      "text": "CUMPLE. Los ocho entregables E1.1-E1.8 de la Parte 1 están verificados: E1.1 gestión ágil y branching (docs/agil/, sprint-0/1, BRANCHING-STRATEGY.md, main protegida); E1.2 infraestructura Bash idempotente con entornos aislados y Jenkins/Sonar/Nexus (infra/bootstrap/, docs/infra/; la migración on-prem posterior está documentada); E1.3 empaquetamiento inmutable con 9 Dockerfiles multi-stage no-root, semver y healthchecks; E1.4 Jenkinsfile multibranch con webhook verificado, Shared Library, Sonar quality gate y ejecución selectiva; E1.5 promoción dev -> E2E -> stage -> aprobación manual -> prod con tag y rollback (Jenkinsfile:1181-1321); E1.6 JaCoCo >= 60 % en los 5 núcleos, integraciones Testcontainers y 5 flujos E2E Playwright; E1.7 plantilla de cambio, política por tipo de cambio, release notes automáticas y etiquetado semver (docs/change-management.md, docs/release-notes/); E1.8 README operativo, diagramas de arquitectura/pipeline y bitácora IAG Nivel 3 (IAG_REGISTRO.md). Se creó el issue DCG-438 (Task) para consolidar esta evidencia."
     }
   ]
 }
