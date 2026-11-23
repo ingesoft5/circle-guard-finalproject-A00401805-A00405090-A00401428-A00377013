@@ -255,9 +255,15 @@ def inspect_evidence(path: Path, dry_run: bool) -> None:
             for c in comments
         )
         sample = json.dumps(comments[0].get("body", {}))[:200] if comments else ""
+        marker_bodies = [
+            json.dumps(c.get("body", {}))[:1000]
+            for c in comments
+            if SYNC_MARKER in json.dumps(c.get("body", {}))
+        ][:2]
         print(
             f"[inspect] {key} paragraph={item.get('paragraph', '')} digest={digest} "
-            f"total={data.get('total')} fetched={len(comments)} found={found} sample={sample}"
+            f"total={data.get('total')} fetched={len(comments)} found={found} sample={sample} "
+            f"marker_bodies={marker_bodies}"
         )
 
 
