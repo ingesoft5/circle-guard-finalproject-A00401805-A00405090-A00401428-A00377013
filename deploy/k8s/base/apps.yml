@@ -269,16 +269,17 @@ spec:
                 secretKeyRef:
                   name: cg-secrets
                   key: JWT_SECRET
+          # The deployed 1.4.0 image protects /actuator/health with Spring Security
+          # (HTTP 401), which made Kubernetes restart healthy pods. Use a TCP probe
+          # until the image with the permitAll actuator rules is rebuilt and imported.
           readinessProbe:
-            httpGet:
-              path: /actuator/health
+            tcpSocket:
               port: 8088
             initialDelaySeconds: 45
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
-            httpGet:
-              path: /actuator/health
+            tcpSocket:
               port: 8088
             initialDelaySeconds: 100
             periodSeconds: 20
@@ -434,18 +435,16 @@ spec:
                 secretKeyRef:
                   name: cg-secrets
                   key: QR_SECRET
+          # The deployed 1.4.0 image returns HTTP 401 on /actuator/health/**, so the
+          # live clusters use TCP probes. Keep IaC in sync until the image is rebuilt.
           readinessProbe:
-            httpGet:
-              # Native readiness group: traffic is sent only when dependencies are ready.
-              path: /actuator/health/readiness
+            tcpSocket:
               port: 8087
             initialDelaySeconds: 30
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
-            httpGet:
-              # Native liveness group: restarts the container only when the app is stuck.
-              path: /actuator/health/liveness
+            tcpSocket:
               port: 8087
             initialDelaySeconds: 60
             periodSeconds: 15

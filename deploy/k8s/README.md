@@ -412,14 +412,13 @@ kubectl -n monitoring get pods,svc
 | Namespaces por ambiente | Cumplido | `cg-dev`, `cg-stage`, `cg-prod` (`P2-02` / `E2.2`) |
 | ConfigMaps y Secrets | Cumplido | `cg-config`, `postgres-init`, `cg-secrets` (`DCG-102`) |
 | Ingress | Cumplido | Traefik `:30080`, tres hosts |
-| Sondas liveness/readiness con Actuator | Cumplido | `apps.yml`, `/actuator/health/{liveness,readiness}` en `auth` (`DCG-103`) |
-| Clúster ligero (k3s/k3d) | Cumplido | k3d v5.9.0 / k3s v1.35.5 |
+| Sondas liveness/readiness | Cumplido | `apps.yml`; HTTP Actuator en `auth`, TCP en `gateway`/`promotion` hasta republish la imagen con `permitAll` (`DCG-103`) |
+| Clúster ligero (k3s/k3d) | Cumplido | k3d v5.9.0 / k3s v1.31.1 (pin establecido en `infra/onpremise/k3d-cluster-create.sh`) |
 | HPA | Cumplido | `base/hpa.yml` + `metrics-server`; gateway 1-3 (70 %), web 1-2 (70 %), auth 1-5 (75 %), promotion 1-5 (75 %) (`DCG-102` / `DCG-339`) |
 | Observabilidad y alertas | Cumplido | `deploy/k8s/monitoring/` (Prometheus, Alertmanager, Grafana y `auth-alerts.yml`) (`DCG-103` / `DCG-105` / `E2.4`) |
-| TLS en servicios expuestos | Declarado, pendiente de certificado/DNS | `components/tls` y overlays `*-tls`; el HTTP sigue siendo el default hasta crear `circleguard-tls` |
-| RBAC de Kubernetes | Declarado (Monitoreo + deployer) | `ClusterRole` de Prometheus en `monitoring/prometheus.yml` y `ServiceAccount`/`Role`/`RoleBinding` `circleguard-deployer` en `base/rbac.yml` |
+| TLS en servicios expuestos | Cumplido (autofirmado) | `components/tls` y overlays `*-tls` aplicados en los 3 entornos; `circleguard-tls` creado y HTTPS verificado con 200 en dev/stage/prod mediante `port-forward 30443:443`. Queda pendiente certificado de CA/DNS definitivo. |
+| RBAC de Kubernetes | Declarado (Monitoreo + deployer) | `ClusterRole` de Prometheus en `monitoring/prometheus.yml` y `ServiceAccount`/`Role`/`RoleBinding` `circleguard-deployer` en `base/rbac.yml`; la migración de Jenkins al ServiceAccount se gestiona en el host on-prem. |
 
-Las brechas están declaradas a propósito: el enunciado penaliza configuraciones que no se
-pueden explicar, no deudas documentadas con su plan de cierre. La adopción del deployer
-por Jenkins y la terminación TLS en el clúster requieren cambios en el host on-prem; los
-manifiestos y la verificación local ya están versionados.
+El TLS con certificado autofirmado ya está aplicado y verificado en los tres entornos;
+la adopción del `ServiceAccount` por Jenkins sigue siendo un cambio del host on-prem que
+debe ejecutarse con autorización y sin borrar el kubeconfig actual.
