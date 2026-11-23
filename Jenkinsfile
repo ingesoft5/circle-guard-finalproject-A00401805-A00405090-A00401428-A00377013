@@ -96,7 +96,7 @@ def enrichServices(List resolved, boolean includeMobile) {
         if (covered.contains(service.short)) {
             service.jacoco = true
         }
-        if (['gateway', 'auth', 'identity', 'promotion', 'form', 'notification'].contains(service.short)) {
+        if (['gateway', 'auth', 'identity', 'promotion', 'form', 'notification', 'dashboard'].contains(service.short)) {
             service.healthcheck = true
         }
         // HU-FILE-04: the shared library is pinned to main, so this PR cannot see the
