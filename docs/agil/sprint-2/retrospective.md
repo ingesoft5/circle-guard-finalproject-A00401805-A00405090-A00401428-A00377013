@@ -44,7 +44,7 @@ Alejandro Quiñones.
 |---|---|---|---|
 | Ejecutar Locust en `cg-stage` y copiar `reports/locust-stage.html` a `docs/informe/evidencia/` | Integrante 3 | 24 nov 2026 | Pendiente |
 | Repetir smokes de Loki y Alertmanager en el host con volúmenes etiquetados y capturar salida | Integrante 3 | 24 nov 2026 | Pendiente |
-| Crear `circleguard-tls` en los tres namespaces y aplicar los overlays `*-tls` | Integrante 2 | 25 nov 2026 | Pendiente |
+| Crear `circleguard-tls` en `cg-stage` y `cg-prod` y aplicar los overlays `*-tls` (`cg-dev` ya verificado con certificado autofirmado) | Integrante 2 | 25 nov 2026 | En progreso |
 | Cambiar el kubeconfig de Jenkins al `ServiceAccount circleguard-deployer` | Integrante 2 | 25 nov 2026 | Pendiente |
 | Solicitar aprobación nueva del PR #145 tras el último push y completar merge | Integrante 4 | 23 nov 2026 | Done — mergeado (commit `4e12166`) |
 | Registrar la ejecución real del rollback de prod con `ROLLBACK_TAG` | Integrante 1 | 26 nov 2026 | Pendiente |

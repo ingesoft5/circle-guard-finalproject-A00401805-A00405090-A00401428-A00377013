@@ -91,7 +91,7 @@ function RootLayoutNav() {
   }, []);
 
   useEffect(() => {
-    console.log('RootLayoutNav: Auth State Change', { anonymousId, token, isLoading });
+    console.log('RootLayoutNav: Auth State Change', { isLoading });
     console.log('RootLayoutNav: Segments', segments);
     
     if (isLoading || !loaded) return;

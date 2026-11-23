@@ -15,7 +15,7 @@ import { FORM_BASE_URL } from '@/constants/Config';
  * Responsive layout for Web/Desktop.
  */
 export default function SymptomReportScreen() {
-  const { anonymousId } = useAuth();
+  const { anonymousId, token } = useAuth();
   const { width } = useWindowDimensions();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function SymptomReportScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!anonymousId) {
+    if (!anonymousId || !token) {
       Alert.alert('Error', 'No authenticated identity found.');
       return;
     }
@@ -43,7 +43,7 @@ export default function SymptomReportScreen() {
     try {
       const response = await fetch(`${FORM_BASE_URL}/api/v1/surveys`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           anonymousId,
           ...symptoms,

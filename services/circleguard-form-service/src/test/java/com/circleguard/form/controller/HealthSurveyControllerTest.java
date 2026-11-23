@@ -25,7 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Prueba únicamente la capa web de HealthSurveyController. El servicio se
  * reemplaza por un mock para evitar acceso a base de datos y Kafka.
  */
-@WebMvcTest(HealthSurveyController.class)
+@WebMvcTest(value = HealthSurveyController.class, properties = "jwt.secret=test-only-secret-with-at-least-32-bytes")
+@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc(addFilters = false)
 class HealthSurveyControllerTest {
 
     @Autowired
