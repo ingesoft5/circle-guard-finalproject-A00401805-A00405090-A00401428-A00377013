@@ -4,6 +4,7 @@ kind: Kustomization
 
 resources:
   - middleware.yml
+  - dashboard-config.yml
   - rbac.yml
   - apps.yml
   - form-storage.yml

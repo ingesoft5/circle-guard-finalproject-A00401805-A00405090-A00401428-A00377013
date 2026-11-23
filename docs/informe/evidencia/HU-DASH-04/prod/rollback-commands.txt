@@ -1,0 +1,7 @@
+date: 2026-11-23T03:04:31Z
+context: k3d-cg
+before: circleguard-docker/dashboard:1.10.0
+$ kubectl -n cg-prod rollout undo deploy/dashboard
+deployment.apps/dashboard rolled back
+$ kubectl -n cg-prod set image deploy/dashboard dashboard=circleguard-docker/dashboard:1.4.0
+after: circleguard-docker/dashboard:1.4.0

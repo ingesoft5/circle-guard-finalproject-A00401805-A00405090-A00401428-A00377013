@@ -1,0 +1,19 @@
+apiVersion: v1
+data:
+  PROMOTION_SERVICE_URL: http://promotion:8088
+  SERVER_PORT: "8084"
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/circleguard_dashboard
+  SPRING_DATASOURCE_USERNAME: admin
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"PROMOTION_SERVICE_URL":"http://promotion:8088","SERVER_PORT":"8084","SPRING_DATASOURCE_URL":"jdbc:postgresql://postgres:5432/circleguard_dashboard","SPRING_DATASOURCE_USERNAME":"admin"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"app":"dashboard","app.kubernetes.io/part-of":"circleguard"},"name":"dashboard-config","namespace":"cg-dev"}}
+  creationTimestamp: "2026-11-23T02:58:46Z"
+  labels:
+    app: dashboard
+    app.kubernetes.io/part-of: circleguard
+  name: dashboard-config
+  namespace: cg-dev
+  resourceVersion: "283759"
+  uid: 633cf10e-64c7-4829-89cb-5420d818fec3

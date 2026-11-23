@@ -66,6 +66,7 @@ entregables del enunciado (`E2.*`).
 | P2-08 (`E2.1`/`E2.2`) | `HU-CICD-03` | Pipeline con IaC y Kubernetes | Jenkins despliega con `kubectl`/`kustomize` sobre `k3d`, con E2E contra Ingress `:30080` y rollback verificable | Alta | 8 | 2 | Done | PR [#92](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/92), `Jenkinsfile`, `jenkins/vars/ci.groovy` |
 | P2-09 (`E2.6`) | — | Documentación y Sprint 2 | Sprint 2 planning/review/retrospective, runbook on-prem, costos, bitácora IAG y resumen en inglés | Media | 8 | 2 | Done | `docs/agil/sprint-2/`, `docs/infra/rollback.md`, `CircleGuard_INFORME_FINAL.docx`, `Proyecto_Final_CircleGuard.pdf`, `IAG_REGISTRO.md` |
 | P2-10 (`E2.6`) | — | Demostración final | Guion de sustentación, evidencias enlazadas y ensayo completo del flujo | Alta | 5 | 2 | En progreso | `docs/agil/sprint-2/review.md`, `docs/infra/evidencia/`, Anexo D de `CircleGuard_INFORME_FINAL.docx`; ensayo en host on-prem pendiente |
+| P2-11 (`E2.2`/`E2.3`/`E2.8`) | `HU-DASH-04` | Despliegue de `dashboard-service` en Kubernetes (dev/stage/prod) | Configuración externalizada, sondas Actuator, HPA, Ingress `/api/v1/analytics`, misma imagen versionada, aprobación manual y rollback ejecutado en `cg-prod` | Alta | 8 | 2 | Done | `docs/informe/HU-DASH-04.md`, `docs/informe/evidencia/HU-DASH-04/`, `deploy/k8s/base/dashboard-config.yml`, `docs/infra/rollback.md` |
 
 ## Definition of Done
 
