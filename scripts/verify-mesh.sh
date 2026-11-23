@@ -30,15 +30,15 @@ SIDECARS="$(kubectl --context "$CTX" get pods -n "$CANARY_NS" -o jsonpath='{.ite
 
 echo "=== 2. mTLS policy (PeerAuthentication + DestinationRule) ==="
 kubectl --context "$CTX" get peerauthentication,destinationrule -n "$CANARY_NS" 2>&1
-STRICT_COUNT="$(kubectl --context "$CTX" get peerauthentication -n "$CANARY_NS" -o json 2>/dev/null | grep -c '"mode":"STRICT"')"
+STRICT_COUNT="$(kubectl --context "$CTX" get peerauthentication -n "$CANARY_NS" -o json 2>/dev/null | grep -o '"mode": "STRICT"' | wc -l)"
 [[ "$STRICT_COUNT" -ge 2 ]] && ok "STRICT mTLS on both canary ports" || fail "STRICT count=$STRICT_COUNT"
 MUTUAL_COUNT="$(kubectl --context "$CTX" get destinationrule -n "$CANARY_NS" -o json 2>/dev/null | grep -c 'ISTIO_MUTUAL')"
 [[ "$MUTUAL_COUNT" -ge 2 ]] && ok "ISTIO_MUTUAL originations present" || fail "ISTIO_MUTUAL count=$MUTUAL_COUNT"
 
 echo "=== 3. SPIFFE certificate from the Envoy sidecar ==="
 CERT="$(kubectl --context "$CTX" exec -n "$CANARY_NS" deploy/form-stable -c istio-proxy -- curl -s --max-time 5 http://localhost:15000/certs 2>/dev/null)"
-echo "$CERT" | grep -i 'spiffe://cluster.local/ns/cg-mesh-canary/sa/default' | head -2
-echo "$CERT" | grep -qi 'spiffe://cluster.local/ns/cg-mesh-canary/sa/default' \
+echo "$CERT" | grep -F 'spiffe://cluster.local/ns/cg-mesh-canary/sa/default' | head -2
+printf '%s' "$CERT" | grep -qF 'spiffe://cluster.local/ns/cg-mesh-canary/sa/default' \
   && ok "workload identity SPIFFE present in sidecar" \
   || fail "SPIFFE identity not found in sidecar certs"
 
