@@ -369,7 +369,9 @@ webhook de GitHub apunta al canal `smee.io` (`nk4nvlnyB0u6Fqnn`) con el relay ve
 - **P1.2 (infraestructura):** el anexo documenta una infraestructura reproducible alternativa y
   explica por qué la de AWS no puede demostrarse en vivo.
 - **P2.2 (Kubernetes):** namespaces, ConfigMaps, Secrets, Ingress, sondas Actuator y HPA están
-  desplegados y verificados. Quedan pendientes TLS y RBAC, declarados en
-  `deploy/k8s/README.md`.
+  desplegados y verificados. RBAC está declarado para Prometheus y para el deployer
+  (`deploy/k8s/base/rbac.yml`); TLS está listo en `deploy/k8s/components/tls` y en los
+  overlays `*-tls`. Su activación en el host depende del certificado/DNS y de la adopción
+  del `ServiceAccount` por Jenkins, según `deploy/k8s/README.md`.
 - **P2.4 (observabilidad) y P2.8 (pipeline con IaC y `kubectl`):** se apoyan en esta topología;
   comparten host, registro y clúster.
