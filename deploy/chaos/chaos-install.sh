@@ -28,18 +28,19 @@ fi
 echo "==> Ensuring namespace ${CHAOS_NS}"
 kubectl --context "$CTX" create ns "$CHAOS_NS" >/dev/null 2>&1 || true
 
-echo "==> Installing Chaos Mesh ${CHAOS_VERSION}"
-if helm status chaos-mesh -n "$CHAOS_NS" >/dev/null 2>&1; then
-  echo "    [skip] chaos-mesh already deployed"
-else
-  helm upgrade --install chaos-mesh chaos-mesh/chaos-mesh \
-    --version "$CHAOS_VERSION" --namespace "$CHAOS_NS" \
-    --set controllerManager.replicaCount=1 \
-    --set dashboard.create=false \
-    --set chaosDaemon.runtime=containerd \
-    --set chaosDaemon.socketPath=/run/containerd/containerd.sock \
-    --wait --timeout 600s
-fi
+echo "==> Installing/upgrading Chaos Mesh ${CHAOS_VERSION}"
+# Always run helm upgrade --install (convergent idempotence): on k3s the
+# containerd socket lives at /run/k3s/containerd/containerd.sock, not the
+# chart default /run/containerd/containerd.sock. Re-applying guarantees the
+# daemon pods converge on the correct socket even if an earlier install used
+# the wrong path and entered CrashLoopBackOff.
+helm upgrade --install chaos-mesh chaos-mesh/chaos-mesh \
+  --version "$CHAOS_VERSION" --namespace "$CHAOS_NS" \
+  --set controllerManager.replicaCount=1 \
+  --set dashboard.create=false \
+  --set chaosDaemon.runtime=containerd \
+  --set chaosDaemon.socketPath=/run/k3s/containerd/containerd.sock \
+  --wait --timeout 600s
 
 echo "==> Verification"
 kubectl --context "$CTX" get pods -n "$CERT_NS" 2>&1

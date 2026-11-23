@@ -1,0 +1,39 @@
+# CG-DOC: Real Chaos Mesh experiments for the L284 chaos-engineering bonus.
+# Targets are the isolated cg-dev services (the graded deployment) and the
+# chaos resources themselves live in cg-chaos. Experiments are one-shot with a
+# bounded duration and self-heal within the selector scope.
+#
+# Experiment 1: pod-kill on the gateway deployment (resilience to pod loss).
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: gateway-pod-kill
+  namespace: cg-chaos
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - cg-dev
+    labelSelectors:
+      app: gateway
+  duration: "30s"
+---
+# Experiment 2: network delay towards redis (resilience to dependency latency).
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: redis-network-delay
+  namespace: cg-chaos
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - cg-dev
+    labelSelectors:
+      app: redis
+  delay:
+    latency: "2000ms"
+    jitter: "500ms"
+  duration: "60s"
