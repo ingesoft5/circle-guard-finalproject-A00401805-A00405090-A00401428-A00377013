@@ -1,16 +1,7 @@
-# CG-DOC: Service mesh mTLS bonus (L284). STRICT mTLS for the CircleGuard
-# namespaces plus ISTIO_MUTUAL origination on services that still receive
-# plaintext from non-meshed infrastructure (Traefik Ingress, seed jobs).
-# Installed with `deploy/mesh/istio/istio-install.sh`.
-apiVersion: security.istio.io/v1
-kind: PeerAuthentication
-metadata:
-  name: circleguard-strict-mtls
-  namespace: cg-dev
-spec:
-  mtls:
-    mode: STRICT
----
+# CG-DOC: Service mesh mTLS bonus (L284). STRICT mTLS is applied ONLY to the
+# isolated cg-mesh-canary namespace so the mandatory cg-dev deployment is not
+# restarted (the agent node is currently NotReady). ISTIO_MUTUAL
+# DestinationRules originate mTLS towards both the stable and canary services.
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
@@ -23,10 +14,10 @@ spec:
 apiVersion: networking.istio.io/v1
 kind: DestinationRule
 metadata:
-  name: circleguard-mtls-originate
-  namespace: cg-dev
+  name: form-stable-mtls
+  namespace: cg-mesh-canary
 spec:
-  host: form.cg-dev.svc.cluster.local
+  host: form-stable.cg-mesh-canary.svc.cluster.local
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL
@@ -34,10 +25,10 @@ spec:
 apiVersion: networking.istio.io/v1
 kind: DestinationRule
 metadata:
-  name: circleguard-mtls-originate
+  name: form-hu6-mtls
   namespace: cg-mesh-canary
 spec:
-  host: form.cg-dev.svc.cluster.local
+  host: form-hu6.cg-mesh-canary.svc.cluster.local
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL

@@ -33,20 +33,25 @@ else
 fi
 
 echo "==> Installing istiod"
-if helm --kube-context "$KUBE_CONTEXT" status istiod -n "$MESH_NS" >/dev/null 2>&1; then
+# `--wait` makes Helm fail the release while the large pilot image is still
+# being pulled (10+ min on this host). We verify readiness with rollout status
+# at the end instead, so the release always converges to `deployed`.
+ISTIOD_STATUS="$(helm --kube-context "$KUBE_CONTEXT" status istiod -n "$MESH_NS" -o json 2>/dev/null | grep -o '"status":"[^"]*"' | head -1 || true)"
+if [[ "$ISTIOD_STATUS" == '"status":"deployed"' ]]; then
   echo "    [skip] istiod already deployed"
 else
   helm --kube-context "$KUBE_CONTEXT" upgrade --install istiod istio/istiod \
-    --namespace "$MESH_NS" --version "$ISTIO_VERSION" --wait \
+    --namespace "$MESH_NS" --version "$ISTIO_VERSION" \
     --set pilot.discoveryRefreshDelay=2s
 fi
 
 echo "==> Installing istio-ingress (for the canary VirtualService)"
-if helm --kube-context "$KUBE_CONTEXT" status istio-ingress -n "$INGRESS_NS" >/dev/null 2>&1; then
+INGRESS_STATUS="$(helm --kube-context "$KUBE_CONTEXT" status istio-ingress -n "$INGRESS_NS" -o json 2>/dev/null | grep -o '"status":"[^"]*"' | head -1 || true)"
+if [[ "$INGRESS_STATUS" == '"status":"deployed"' ]]; then
   echo "    [skip] istio-ingress already deployed"
 else
   helm --kube-context "$KUBE_CONTEXT" upgrade --install istio-ingress istio/gateway \
-    --namespace "$INGRESS_NS" --version "$ISTIO_VERSION" --wait \
+    --namespace "$INGRESS_NS" --version "$ISTIO_VERSION" \
     --set labels.istio=ingressgateway \
     --set service.type=NodePort \
     --set service.ports[0].name=http \
@@ -54,17 +59,19 @@ else
     --set service.ports[0].protocol=TCP
 fi
 
-echo "==> Enabling automatic sidecar injection only on cg-dev and cg-mesh-canary"
-for ns in cg-dev "$CANARY_NS"; do
-  kubectl --context "$KUBE_CONTEXT" label ns "$ns" istio-injection=enabled --overwrite
-done
+echo "==> Enabling automatic sidecar injection only on ${CANARY_NS}"
+# cg-dev is intentionally NOT injected: the agent node is NotReady and
+# restarting the mandatory deployment would put the graded app at risk.
+kubectl --context "$KUBE_CONTEXT" label ns "$CANARY_NS" istio-injection=enabled --overwrite
 
 echo "==> Applying STRICT mTLS and canary routing"
 kubectl --context "$KUBE_CONTEXT" apply -f "$(dirname "$0")/mtls.yml"
 kubectl --context "$KUBE_CONTEXT" apply -f "$(dirname "$0")/canary.yml"
 
 echo "==> Waiting for mesh control plane"
-kubectl --context "$KUBE_CONTEXT" -n "$MESH_NS" rollout status deploy/istiod --timeout=180s
-kubectl --context "$KUBE_CONTEXT" -n "$INGRESS_NS" rollout status deploy/istio-ingress --timeout=180s
+kubectl --context "$KUBE_CONTEXT" -n "$MESH_NS" rollout status deploy/istiod --timeout=300s
+kubectl --context "$KUBE_CONTEXT" -n "$INGRESS_NS" rollout status deploy/istio-ingress --timeout=300s
+kubectl --context "$KUBE_CONTEXT" -n "$CANARY_NS" rollout status deploy/form-stable --timeout=300s
+kubectl --context "$KUBE_CONTEXT" -n "$CANARY_NS" rollout status deploy/form-hu6 --timeout=300s
 
 echo "MESH_INSTALL_DONE"

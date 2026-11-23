@@ -1,8 +1,115 @@
-# CG-DOC: Canary release bonus (L284). 90/10 weighted routing between the
-# stable Form deployment (cg-dev/form, image 1.4.0) and the canary
-# (cg-dev/form-hu6, image 1.8.0). Reuses the existing Service endpoint from
-# deploy/k8s/form06-dev/canary/form-hu6.yml, so no application image is
-# rebuilt here. Both target services are mTLS STRICT (see mtls.yml).
+# CG-DOC: Canary release bonus (L284). 90/10 weighted routing between a stable
+# Form deployment (image 1.4.0) and a canary (image 1.8.0), both living in the
+# isolated cg-mesh-canary namespace with Istio sidecars and STRICT mTLS. The
+# application images are the real ones imported into the k3d nodes (no build
+# is performed here). See mtls.yml for the STRICT PeerAuthentication and the
+# ISTIO_MUTUAL DestinationRules.
+apiVersion: v1
+kind: Service
+metadata:
+  name: form-stable
+  namespace: cg-mesh-canary
+spec:
+  selector:
+    app: form-stable
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: form-stable
+  namespace: cg-mesh-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: form-stable
+  template:
+    metadata:
+      labels:
+        app: form-stable
+    spec:
+      containers:
+        - name: form
+          image: circleguard-docker/form:1.4.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+          env:
+            - name: SERVER_PORT
+              value: "8086"
+            - name: FORM_ENVIRONMENT
+              value: cg-mesh-canary
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 12
+          resources:
+            requests:
+              cpu: 100m
+              memory: 320Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: form-hu6
+  namespace: cg-mesh-canary
+spec:
+  selector:
+    app: form-hu6
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: form-hu6
+  namespace: cg-mesh-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: form-hu6
+  template:
+    metadata:
+      labels:
+        app: form-hu6
+    spec:
+      containers:
+        - name: form
+          image: circleguard-docker/form:1.8.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+          env:
+            - name: SERVER_PORT
+              value: "8086"
+            - name: FORM_ENVIRONMENT
+              value: cg-mesh-canary
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 12
+          resources:
+            requests:
+              cpu: 100m
+              memory: 320Mi
+            limits:
+              memory: 512Mi
+---
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
@@ -17,7 +124,7 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "canary.circleguard.local"
+        - "*"
 ---
 apiVersion: networking.istio.io/v1
 kind: VirtualService
@@ -26,7 +133,7 @@ metadata:
   namespace: cg-mesh-canary
 spec:
   hosts:
-    - "canary.circleguard.local"
+    - "*"
   gateways:
     - circleguard-canary-gateway
   http:
@@ -37,36 +144,22 @@ spec:
               exact: "false"
       route:
         - destination:
-            host: form.cg-dev.svc.cluster.local
+            host: form-stable.cg-mesh-canary.svc.cluster.local
             port:
               number: 8086
           weight: 100
     - name: weighted-canary
       route:
         - destination:
-            host: form.cg-dev.svc.cluster.local
+            host: form-stable.cg-mesh-canary.svc.cluster.local
             port:
               number: 8086
           weight: 90
         - destination:
-            host: form-hu6.cg-dev.svc.cluster.local
+            host: form-hu6.cg-mesh-canary.svc.cluster.local
             port:
               number: 8086
           weight: 10
       retries:
         attempts: 2
         perTryTimeout: 2s
----
-# Match the STRICT PeerAuthentication on the canary service too. Without an
-# ISTIO_MUTUAL DestinationRule the sidecar would originate plaintext to a
-# STRICT peer and every 10% canary request would fail with 503.
-apiVersion: networking.istio.io/v1
-kind: DestinationRule
-metadata:
-  name: form-hu6-mtls
-  namespace: cg-mesh-canary
-spec:
-  host: form-hu6.cg-dev.svc.cluster.local
-  trafficPolicy:
-    tls:
-      mode: ISTIO_MUTUAL
