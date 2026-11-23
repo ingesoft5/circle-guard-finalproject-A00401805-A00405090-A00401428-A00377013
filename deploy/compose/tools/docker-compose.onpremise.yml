@@ -112,6 +112,35 @@ services:
     mem_limit: 2g
     networks: [tools-net]
 
+  minio-iac:
+    image: cgr.dev/chainguard/minio:latest
+    container_name: cg-minio-iac
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${TF_STATE_MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${TF_STATE_MINIO_PASSWORD}
+    # CG-DOC: MinIO community images were withdrawn from Docker Hub and Quay in 2026;
+    # Chainguard publishes the same S3-compatible server as a free image.
+    command: server /data --console-address :9001
+    ports:
+      - "127.0.0.1:9002:9000"
+      - "127.0.0.1:9003:9001"
+    volumes:
+      - minio_iac_data:/data
+    mem_limit: 512m
+    networks: [ tools-net ]
+
+  dynamodb-local:
+    image: amazon/dynamodb-local:2.6.1
+    container_name: cg-dynamodb-local
+    restart: unless-stopped
+    # CG-DOC: In-memory mode avoids SQLite file locks; Terraform recreates the lock table on bootstrap.
+    command: -jar DynamoDBLocal.jar -inMemory -port 8000
+    ports:
+      - "127.0.0.1:8000:8000"
+    mem_limit: 256m
+    networks: [ tools-net ]
+
 volumes:
   jenkins_home:
   sonar_db:
@@ -119,6 +148,7 @@ volumes:
   sonarqube_extensions:
   sonarqube_logs:
   nexus_data:
+  minio_iac_data:
 
 networks:
   tools-net:

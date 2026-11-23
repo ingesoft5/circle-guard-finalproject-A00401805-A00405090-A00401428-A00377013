@@ -1,0 +1,29 @@
+flowchart TB
+  HOST["Host on-prem 10.147.20.67"]
+  TOOLS["Docker Compose cg-tools"]
+  JENKINS["Jenkins :8080"]
+  SONAR["SonarQube :9000"]
+  NEXUS["Nexus :8081 + registry :5000"]
+  MINIO["MinIO IAC :9002 / consola :9003"]
+  DDB["DynamoDB Local :8000"]
+  TF["Terraform E2.1"]
+  MOD["modules: network · compute · registry · storage · observability"]
+  ENVS["envs: dev · stage · prod"]
+  K3D["k3d cg único<br/>Traefik :30080 · ruteo por Host"]
+  APPS["Namespaces cg-dev · cg-stage · cg-prod<br/>Kustomize + Ingress + HPA + sondas"]
+
+  HOST --> TOOLS
+  HOST --> TF
+  TOOLS --> JENKINS
+  TOOLS --> SONAR
+  TOOLS --> NEXUS
+  TOOLS --> MINIO
+  TOOLS --> DDB
+  TF --> MOD
+  MOD --> ENVS
+  ENVS --> K3D
+  K3D --> APPS
+  JENKINS -->|"terraform plan/apply + kubectl apply -k"| TF
+  JENKINS -->|"kubectl apply -k"| APPS
+  NEXUS -->|"imágenes"| APPS
+  MINIO -->|"buckets files/backups"| APPS

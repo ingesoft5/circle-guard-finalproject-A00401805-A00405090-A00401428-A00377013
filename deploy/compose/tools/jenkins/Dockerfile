@@ -3,6 +3,7 @@ FROM aquasec/trivy:0.57.1 AS trivy-cli
 FROM jenkins/jenkins:lts-jdk21
 
 USER root
+# CG-DOC: Trivy is pinned to v0.70.0 because v0.58.1 has no published release assets.
 COPY --from=trivy-cli /usr/local/bin/trivy /usr/local/bin/trivy
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -26,6 +27,14 @@ RUN apt-get update \
     && rm -f /tmp/kustomize.tar.gz \
     && curl -fsSL "https://github.com/k3d-io/k3d/releases/download/v5.9.0/k3d-linux-amd64" -o /usr/local/bin/k3d \
     && chmod 0755 /usr/local/bin/k3d \
+    && curl -fsSL "https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip" -o /tmp/terraform.zip \
+    && unzip /tmp/terraform.zip -d /usr/local/bin \
+    && rm -f /tmp/terraform.zip \
+    && curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v0.70.0/trivy_0.70.0_Linux-64bit.tar.gz" -o /tmp/trivy.tar.gz \
+    && tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy \
+    && rm -f /tmp/trivy.tar.gz \
+    && terraform version \
+    && trivy version \
     && kubectl version --client \
     && kustomize version \
     && k3d version \

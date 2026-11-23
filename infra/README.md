@@ -9,6 +9,7 @@ La infraestructura vigente de CircleGuard es **on-premise** y vive en `infra/onp
 |---|---|---|
 | Herramientas | Docker Compose proyecto `cg-tools` | `deploy/compose/tools/docker-compose.onpremise.yml` |
 | Plataforma | Clúster k3d `cg` (namespaces `cg-dev`, `cg-stage`, `cg-prod`) | `deploy/k8s/` (Kustomize) |
+| IaC (E2.1) | Terraform: módulos + 3 ambientes + backend remoto | `infra/terraform/` |
 | Hosts | Un servidor Ubuntu 24.04, ZeroTier `10.147.20.67`, usuario `docker` sin `sudo` | `docs/infra/migracion-onpremise.md` |
 
 Herramientas en el host: Jenkins (`:8080`), SonarQube (`:9000`), Nexus (`:8081`), registro Docker (`:5000`) y el relay smee.io del webhook (GitHub → `https://smee.io/nk4nvlnyB0u6Fqnn` → Jenkins).
@@ -42,6 +43,27 @@ El motivo de la migración desde AWS y la evidencia histórica están documentad
 - Sin `docker prune`, sin `docker compose down -v`.
 - Secretos solo en `.env.onpremise` y en los `Secret` del clúster (`cg-secrets`).
 - Como máximo dos ambientes completos encendidos a la vez (RAM; ver `deploy/k8s/README.md`).
+
+## Terraform: infraestructura como código (E2.1)
+
+La plataforma se declara en `infra/terraform/` con módulos reutilizables y tres ambientes:
+
+| Bloque | Contenido | Definido en |
+|---|---|---|
+| Backend remoto | Bucket `circleguard-tfstate` con versioning + tabla `circleguard-tf-lock` con `LockID` | `infra/terraform/state-backend/` |
+| Módulos | `network`, `compute`, `registry`, `storage`, `observability` | `infra/terraform/modules/` |
+| Ambientes | `dev`, `stage`, `prod` parametrizados, cada uno con su estado remoto | `infra/terraform/envs/` |
+
+El backend remoto usa MinIO `:9002` y DynamoDB Local `:8000` del Compose `cg-tools`.
+Cada ambiente guarda su estado en `platform/<env>/terraform.tfstate` y usa la tabla
+`LockID` para bloquear aplicaciones concurrentes. El bootstrap `state-backend/` mantiene
+estado local (es el caso huevo-huevo: el bucket no puede alojar el estado que lo crea) y
+está ignorado por git.
+
+El pipeline de Jenkins ejecuta `init`, `validate`, `plan`, escaneo Trivy de IaC y
+`apply` por ambiente, con aprobación manual antes de producción (E2.3). Comandos,
+credenciales y precauciones en
+[`docs/infra/runbook.md`](../docs/infra/runbook.md) → «Terraform: plataforma y backend».
 
 ## Legado AWS ( Parte 1 — histórico, no operativo )
 

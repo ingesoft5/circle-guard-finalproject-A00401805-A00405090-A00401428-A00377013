@@ -74,3 +74,17 @@ no se tocan hasta completar los ítems obligatorios.
 - PR #91 (`fix/HU-CICD-02-webhook-single-source`) y bundle PR #92 (`feat/HU-CICD-03-multibranch-grade`): **integrados en `main`**.
 - PR [#95](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/95) (`feat/HU-CICD-04-multibranch-active-branches`, **abierto**, en inglés): agrega `headWildcardFilter` en JCasC para indexar solo ramas activas por convención, manteniendo `gitHubBranchDiscovery` y `gitHubPullRequestDiscovery` (alineado con P1.4/E1.4). Reemplaza la PR anterior con rama `ci/*`.
 - **Pendiente estrictamente** para cerrar P1.4: merge/aplicar PR #95 (si aplica) y la configuración vigente en on-premise → recargar/reconstruir Jenkins en el host (`Configuration as Code → Reload` o `up -d --build --force-recreate jenkins`) → **Scan Multibranch Pipeline Now** → `./infra/onpremise/verify-onpremise.sh` verde (si aplica) → builds verdes (PR checks y `main`, con cadena requerida) → actualizar el ítem 8 y este anexo con evidencia verificable.
+
+## 7. Cierre de entregables P2 (actualizado 2026-11-23)
+
+| Día del plan | Entregable | Estado real | Evidencia |
+|---|---|---|---|
+| 1–2 | Terraform y ambientes | Cerrado | `infra/terraform/`, `docs/infra/evidencia/E2.1-terraform.md` (planes `0` en los tres ambientes) |
+| 3 | Prometheus, Grafana y alertas | Cerrado | `deploy/k8s/monitoring/`, `base/*-alerts.yml` |
+| 4 | Jaeger, Loki, Trivy, ZAP y Locust | Código y gates cerrados; ejecución en clúster pendiente | `docs/infra/evidencia/E2.4-E2.5-seguridad.md`, `tests/performance-locust/` |
+| 5 | Pipeline con IaC/Kubernetes, rollback y documentación | Cerrado en repositorio; prueba real de rollback pendiente | `Jenkinsfile`, `docs/infra/rollback.md`, `docs/agil/sprint-2/` |
+| 6 | Ensayo y sustentación | En curso | `docs/agil/sprint-2/review.md`, informe final PDF/DOCX |
+
+El ítem 8 de la Parte 1 (build final verde en `main`) sigue supeditado a la
+aplicación de la configuración vigente en el host; el check del PR de entrega se
+verifica por separado en `#145`.
