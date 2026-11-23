@@ -146,8 +146,8 @@ def jira_request(method: str, path: str, payload: dict[str, Any] | None, dry_run
         raise SyncError("Missing JIRA_BASE_URL / JIRA_EMAIL / JIRA_API_TOKEN")
     auth = base64.b64encode(f"{email}:{token}".encode()).decode()
     body = json.dumps(payload).encode() if payload is not None else None
-    req = urllib_request(base + path, method, body, auth)
     try:
+        req = urllib_request(base + path, method, body, auth)
         with req as response:
             raw = response.read()
             return json.loads(raw) if raw else {}
