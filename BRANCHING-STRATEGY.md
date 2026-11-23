@@ -77,8 +77,8 @@ feat ( auth ) !: replace role schema
 In GitHub Flow, the Pull Request is the core quality gate. To prevent incomplete code from being merged:
 
 1. **Required template:** every PR must use `.github/pull_request_template.md` (fields: *Branch Name, Context, What changed, How to test it*).
-2. **PR title (traceability):** the PR title is written **in English** and must include the branch name at the end. With *Squash & Merge*, this title becomes the official commit message in `main`.
-   - *Example:* `feat(auth): add login endpoint (HU-AUTH-12-implement-login)`
+2. **PR title (traceability):** the PR title is written **in English** and must include the **Jira story key (`DCG-###`)**; keep the `HU-*` alias when one exists. The branch name may be appended for context. The `Jira sync` GitHub Actions workflow rejects any PR title without a `DCG-\d+` identifier. With *Squash & Merge*, this title becomes the official commit message in `main`.
+   - *Example:* `feat(auth): add login endpoint (HU-AUTH-12, DCG-81)`
 3. **Conversation resolution:** `main` requires *"Require conversation resolution before merging"*. If a reviewer requests context, merging stays blocked until it is resolved.
 4. **Pipeline gate:** no PR can be merged while the Jenkins pipeline is failing.
 
@@ -90,3 +90,13 @@ To prevent human errors before reaching the remote repository, the project inclu
 - `pre-push`: blocks direct pushes to `main`, and validates the branch name against `[<type>/]HU-<MICROSERVICE>-<number>-<description>`.
 
 *(Team note: enable the hooks once per machine with `git config core.hooksPath .githooks`.)*
+
+### GitHub ↔ Jira integration
+
+The repository uses the versioned `.github/workflows/jira-sync.yml` workflow instead of an organization-level GitHub app (the team is not an org owner). It:
+
+- blocks PRs whose title does not contain a `DCG-###` key;
+- mirrors `pull_request` / `pull_request_review` / `issues` events as idempotent Jira comments (marker `circleguard-jira-sync-v1`) via `scripts/jira_sync.py` using Jira REST v3;
+- transitions the Jira issue between *In Progress*, *In Review*, *Done* and *To Do* according to the PR lifecycle.
+
+Required repository secrets: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`. The `HU-*` → `DCG-###` aliases live in `docs/agil/jira-mapping.yml`; only keys evidenced in the repository are registered — unmapped stories must carry their `DCG-###` key directly in the PR title.
