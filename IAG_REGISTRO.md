@@ -23,10 +23,16 @@
    - [1.8 HU-ID-05 (DCG-86 — Subtareas DCG-119 y DCG-120) — Orquestación en Kubernetes, HPA, sondas Actuator y observabilidad Prometheus en `identity-service`](#18-hu-id-05-dcg-86--subtareas-dcg-119-y-dcg-120--orquestación-en-kubernetes-hpa-sondas-actuator-y-observabilidad-prometheus-en-identity-service)
    - [1.9 HU-ID-05 (DCG-86 — Subtareas DCG-121 y DCG-122) — Resiliencia Resilience4j en auditoría Kafka, logs estructurados sin PII y alertas Prometheus](#19-hu-id-05-dcg-86--subtareas-dcg-121-y-dcg-122--resiliencia-resilience4j-en-auditoría-kafka-logs-estructurados-sin-pii-y-alertas-prometheus)
    - [1.10 HU-DOCS-07 — Actualización y ampliación del informe final de Parte 2 con evidencias actuales](#110-hu-docs-07--actualización-y-ampliación-del-informe-final-de-parte-2-con-evidencias-actuales)
-2. [Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)](#2-módulo-circleguard-gateway-service-e-infraestructura-cicd-daniela-castaño)
-   - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#21-hu-gateway-cicd-01--plataforma-cicd-del-gateway)
-   - [2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#bitacora-e12)
-   - [2.3 E1.2 — Cierre documental con sustentación en lugar de video](#23-e12--cierre-documental-con-sustentación-en-lugar-de-video)
+2. [Módulo: `circleguard-gateway-service`, `circleguard-file-service` e Infraestructura CI/CD (Daniela Castaño)](#modulo-daniela)
+   - [2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway](#iag-daniela-21)
+   - [2.2 GW-CI-02 — Integración Gateway–Redis con Testcontainers](#iag-daniela-22)
+   - [2.3 FS-CI-01 — Pruebas unitarias del file-service](#iag-daniela-23)
+   - [2.4 HU-FILE-02 — Imagen inmutable y dependencia de MinIO](#iag-daniela-24)
+   - [2.5 HU-FILE-05 — Orquestación, observabilidad y seguridad del file-service](#iag-daniela-25)
+   - [2.6 HU-FILE-04 — Integración File–MinIO con Testcontainers](#iag-daniela-26)
+   - [2.7 Cierre de gates de cobertura y calidad (#158)](#iag-daniela-27)
+   - [2.8 Bitácora E1.2 — Idempotencia, evidencias y cierre documental](#iag-daniela-28)
+   - [2.9 Lecciones transversales y límites de verificación](#iag-daniela-29)
 3. [Módulo: `circleguard-form-service` (Santiago Estrada)](#3-módulo-circleguard-form-service-santiago-estrada)
    - [3.1 HU-FORM-01 — Documentar el funcionamiento y las dependencias de `form-service`](#31-hu-form-01--documentar-el-funcionamiento-y-las-dependencias-de-form-service)
    - [3.2 HU-FORM-02 — Automatizar las pruebas y la cobertura de `form-service`](#32-hu-form-02--automatizar-las-pruebas-y-la-cobertura-de-form-service)
@@ -697,260 +703,200 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 
 ---
 
-## 2. Módulo: `circleguard-gateway-service` e Infraestructura CI/CD (Daniela Castaño)
+<a id="modulo-daniela"></a>
+## 2. Módulo: `circleguard-gateway-service`, `circleguard-file-service` e Infraestructura CI/CD (Daniela Castaño)
 
+**Nivel de uso declarado:** 3 — colaboración con IAG como herramienta de apoyo. En todas las intervenciones **Daniela Castaño determinó las acciones, decidió qué cambios se aplicaron y validó personalmente cada resultado antes de incorporarlo**. El IAG se usó únicamente para acelerar análisis, borradores y contrastes; ninguna salida se aceptó sin verificación humana, ejecución real y apreciación crítica de la estudiante.
+
+**Criterio de registro aplicado:** para cada entrada se distingue el insumo propio, el apoyo recibido de IAG, la validación y apreciación humana, y la reflexión final. Las decisiones técnicas, los criterios de aceptación y la aceptación o rechazo de lo generado son responsabilidad de la estudiante.
+
+**Alcance de la sección.** Se registran aquí las intervenciones sobre el gateway, el `file-service` y la plataforma CI/CD. Las historias de `dashboard-service` (HU-DASH-03, HU-DASH-04 y HU-DASH-05) tienen entrada propia en las secciones [5](#5-módulo-circleguard-dashboard-service-e-integración-cicd-hu-dash-03), [6](#6-módulo-circleguard-dashboard-service--observabilidad-y-seguridad-hu-dash-05) y [7](#7-entrada-ejecución-de-hu-dash-04-despliegue-y-rollback-on-premise-de-dashboard-service), y se referencian desde esta sección sin duplicar su contenido.
+
+**Convención de registro.** Los prompts marcados como *reconstruidos y contrastados* se derivaron del historial de la sesión y se cotejaron contra los commits, reportes y evidencias versionadas. Los prompts literales que se conservan se identifican como *transcripción de sesión*. Ninguna métrica se tomó de una conversación sin contraste con un artefacto del repositorio.
+
+**Trazabilidad de las intervenciones**
+
+| ID | Fecha | Entregable | Commits / PR | Evidencia principal |
+|---|---|---|---|---|
+| 2.1 | 2026-11-08 | E1.4 | `7c4d938` (#15), `f055b99` (#38), `c3ac704` (#23) | `docs/informe/HU-GATEWAY-04.md`, `docs/informe/evidencia/HU-GATEWAY-04/` |
+| 2.2 | 2026-11-08 | E1.6 | `a7ad652`, `8344497`, `5e3376f`, `0d0222d`, `6432bb8`, `747f88d` | `docs/informe/GW-CI-02-Integracion-Redis.md`, `GW-CI-02-Validacion-Testcontainers.docx` |
+| 2.3 | 2026-11-20 | E1.6 | `4e359c1` (#89) | `docs/informe/FS-CI-01-Informe-Pruebas.md`, `docs/informe/evidencia/fs-ci-01/` |
+| 2.4 | 2026-11-21 | E1.3 / E1.2 | `2635ca5` (#133) | `docs/informe/evidencia/HU-FILE-02/` |
+| 2.5 | 2026-11-22 | E2.4 / E2.5 | `74acc53` (#150) | `docs/informe/HU-FILE-05.md` |
+| 2.6 | 2026-11-22 | E1.6 | `251e923` (#144), merge `21c406b` | `docs/informe/HU-FILE-04-Integracion-MinIO.md`, `docs/informe/evidencia/HU-FILE-04/` |
+| 2.7 | 2026-11-22 | E1.4 / E1.6 | `af451ff` (#158) | `docs/informe/evidencia/trazabilidad/coverage-reports.md` |
+| 2.8 | 2026-11-08 a 2026-11-11 | E1.2 / E1.8 | PR-15, PR-45 | `docs/infra/evidencia/idempotency/IDEMPOTENCIA.md` |
+| 2.9 | Transversal | Cierre y sustentación | `e600c02`, `aab6bc0` | `IAG_REGISTRO.md`, `docs/informe/CircleGuard_INFORME_FINAL.docx` |
+
+---
+
+<a id="iag-daniela-21"></a>
 ### 2.1 HU-GATEWAY-CICD-01 — Plataforma CI/CD del gateway
 
-- **Nivel de uso:** 3 (colaboración con IAG).
-- **Herramienta:** OpenCode / DeepSeek.
-- **Contenido propio entregado:** estructura del repositorio, hallazgos del análisis del gateway, requisitos del PDF, decisiones de topología (2 instancias, `dev`/`stage`/`prod`).
-- **Prompts principales:**
-  - Analizar la estructura del microservicio Gateway.
-  - Validar el plan de la HU contra el PDF del proyecto.
-  - Ajustar la HU a la Parte 1 / Sprint 1 y al microservicio gateway.
-  - Generar scripts Bash idempotentes, Docker Compose y pipeline de Jenkins.
-- **Resultado:** integración de `e12-bootstrap` (idempotencia) con el aprovisionamiento AWS y el pipeline del gateway; scripts `infra/bootstrap-*.sh`, compose de herramientas y ambientes, Jenkinsfile, Shared Library, correcciones de seguridad del gateway, pruebas y documentación.
-- **Verificación humana:** el equipo debe revisar y ejecutar cada script, validar las credenciales y estar en capacidad de explicar la configuración en la sustentación.
+- **Fecha:** 8 de noviembre de 2026.
+- **Autor:** Daniela Castaño.
+- **Rama / PR:** `feature/hu-gateway-cicd` → PR #15 y PR #38; cierre documental en PR #23 (`c3ac704`).
+- **Commits:** `7c4d938`, `f055b99`, `c3ac704`.
+- **Entregable:** E1.4 — pipeline de integración continua con Jenkins.
+- **Objetivo:** dejar una plataforma CI/CD multibranch para el gateway, disparada por webhook, con etapas reutilizables y quality gate bloqueante, sin requerir intervención manual para cada rama.
 
-https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6
+**A. Insumo propio.** Análisis de la estructura del servicio, lectura de los requisitos del enunciado para E1.4 y E1.6, y decisión de topología: dos instancias de gateway, ambientes `dev`/`stage`/`prod`, registro privado y SonarQube on-premise. Se definió que el job debía ser multibranch y que el disparador sería el webhook `/github-webhook/`, no un `cron`.
 
----
+**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Analiza la estructura del microservicio Gateway, valida el plan de la historia contra los entregables E1.4 y E1.6 del enunciado, y propón la configuración del job multibranch, el webhook y el pipeline con etapas reutilizables en la Shared Library». La sesión de trabajo original se conserva como referencia histórica: `https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6`.
 
-<a id="gw-ci-02"></a>
-## GW-CI-02 — Integración Gateway–Redis con Testcontainers (8 de noviembre de 2026)
+**C. Validación y apreciación humana.** Se revisaron y ejecutaron los scripts `infra/bootstrap-*.sh`, se verificaron credenciales y se ajustó la configuración del webhook y de la protección de `main`. La salida quedó versionada en `Jenkinsfile`, `jenkins/vars/`, `deploy/compose/tools/jenkins/cac/jenkins.yml` y `docs/informe/HU-GATEWAY-04.md`. Las capturas de Jenkins, SonarQube y GitHub se conservan en `docs/informe/evidencia/HU-GATEWAY-04/`, incluidas la notificación de fallo (`09-failure-notification-github.png`) y la Reproducción del quality gate en rojo (`11-quality-gate-red.png`).
 
-- **Nivel de uso:** 3 (colaboración con IAG).
-- **Herramienta:** OpenCode / Big Pickle.
-- **Historia / Entregable:** `GW-CI-02` — E1.6 (pruebas automatizadas).
-- **Rama:** `feat/HU-GATEWAY-03-integracion-redis-testcontainers`.
-
-### A. Contenido propio entregado a la IAG
-
-1. **Requisitos de la HU:** leer la sección 5 de `CircleGuard_HU_CICD_Gateway_File.pdf` y contrastarla con `Proyecto_Final_CircleGuard.pdf` (E1.6 exige ≥ 60 % de cobertura en gateway, ≥ 3 integraciones entre servicios y 3 flujos E2E).
-2. **Diagnóstico del estado actual:** el repositorio ya tenía `GatewayRedisIntegrationTest` con Testcontainers, pero solo cubría `ACTIVE`, `SUSPECT` y estado ausente; las pruebas de integración corrían dentro de `test`, no existía tarea `integrationTest` ni etapa de Jenkins.
-3. **Decisiones acordadas:** imagen `redis:7.2-alpine`, separación por filtro de paquete (`**/integration/**`), JaCoCo solo con unitarias, commits Conventional Commits sin clave `[CG-02]`, sin cambios en lógica de negocio ni contratos de API.
-4. **Criterios de aceptación:** casos ACTIVE, RECOVERED, SUSPECT, CONTAGIED, estado ausente y token expirado; tarea Gradle propia; etapa de pipeline; < 3 minutos; limpieza de contenedores; 3 corridas consecutivas; Redis caído solo documentado.
-5. **Restricciones del entorno:** WSL2 con el repositorio en `/mnt/c` (9p), sin Java ni Docker instalados inicialmente.
-
-### B. Prompts empleados
-
-```text
-Dame el plan completo
-```
-
-```text
-Ejecuta el plan
-```
-
-### C. Validación humana y hallazgos
-
-- **Entorno:** se instaló Temurin JDK 21 en `~/.local/opt/jdk-21` sin `sudo` y Docker Engine 29.1.3 + Compose v2 mediante `wsl.exe -u root`; se habilitó el socket para el usuario.
-- **Casos:** se amplió la suite a 9 ejecuciones (2 parametrizadas y 3 individuales), incluyendo `RECOVERED`, `CONTAGIED`, `PROBABLE`, `CONFIRMED`, `POTENTIAL` y token expirado.
-- **Hallazgo 1 — Redis no listo:** las primeras corridas fallaban con `RedisConnectionFailureException` porque el contenedor aceptaba conexiones antes de inicializar Redis. Se añadió `Wait.forLogMessage(".*Ready to accept connections.*\\n", 1)`.
-- **Hallazgo 2 — timeouts en WSL:** con timeouts de 2 s el arranque de Lettuce en `/mnt/c` agotaba el tiempo; se ajustaron a 10 s en `application-test.yml`.
-- **Hallazgo 3 — rendimiento de 9p:** la tarea superaba los 3 minutos por la carga de clases desde `/mnt/c`. Se verificó con `gradle/wsl-ext4.init.gradle.kts`, que mueve `buildDir` a ext4; en Jenkins el checkout está en ext4 y no requiere ajuste.
-- **Resultado:** tres corridas consecutivas verdes de 28 s, 25 s y 26 s; 9 pruebas, 0 fallos; contenedores eliminados por Ryuk; JaCoCo unitario se mantiene en 95.92 % de líneas.
-- **Sin cambios de producción:** solo se modificaron `build.gradle.kts`, `Jenkinsfile`, `jenkins/vars/ci.groovy`, pruebas y documentación.
-
-### D. Reflexión crítica
-
-El valor de esta HU estuvo menos en escribir pruebas nuevas y más en hacer explícitas las condiciones que las vuelven confiables: esperar la señal real de readiness de Redis, separar la suite de integración de la unitaria y medir el tiempo en el mismo tipo de filesystem que usa el agente. Las primeras corridas fallidas evidenciaron que un contenedor “arriba” no implica un servicio listo. También quedó claro que el límite de 3 minutos es una restricción de infraestructura tanto como de código: el mismo test tarda 3 s de ejecución JUnit pero más de 3 minutos de tarea cuando el classpath vive en 9p. Documentar el comportamiento ante caída de Redis sin implementar resiliencia mantiene el alcance de la Parte 1 y deja preparado el terreno para la Parte 2.
+**D. Apreciación humana y reflexión.** La automatización no sustituye la verificación: un webhook configurado sin el check obligatorio en `main` deja el flujo expuesto a fusiones sin gate. La decisión de conservar capturas reales, aunque provengan de la API de GitHub y no de una sesión web, fue preferible a omitir la evidencia.
 
 ---
 
-<a id="hu-file-04"></a>
-## HU-FILE-04 — Integración File–MinIO con Testcontainers (22 de noviembre de 2026)
+<a id="iag-daniela-22"></a>
+### 2.2 GW-CI-02 — Integración Gateway–Redis con Testcontainers
 
-- **Nivel de uso:** 3 (colaboración con IAG).
-- **Herramienta:** OpenCode / Big Pickle.
-- **Historia / Entregable:** `HU-FILE-04` — E1.6 (pruebas automatizadas) y E2.4 (patrones).
-- **Rama:** `feat/HU-FILE-04-integracion-file-minio-con-testcontainers`.
-- **Commit de cierre:** `21c406b` (merge final de `origin/main` `af451ff`, después de `440b96c` con `9c4653e`), PR [#144](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/144).
+- **Fecha:** 8 de noviembre de 2026 (reverificación posterior al rebase el mismo día).
+- **Autor:** Daniela Castaño.
+- **Rama / PR:** `feat/HU-GATEWAY-03-integracion-redis-testcontainers` → PR #22.
+- **Commits:** `6432bb8`, `747f88d`, `0d0222d`, `8344497`, `a7ad652`; documentación posterior `5e3376f`.
+- **Entregable:** E1.6 — pruebas automatizadas.
+- **Objetivo:** validar el flujo de validación de QR contra una instancia real y efímera de Redis, sin mocks, y ejecutarlo como tarea Gradle independiente dentro de Jenkins.
 
-### A. Contenido propio entregado a la IAG
+**A. Insumo propio.** Lectura de la sección 5 del documento de requerimientos del gateway y diagnóstico de `GatewayRedisIntegrationTest`. Se decidieron la imagen `redis:7.2-alpine`, el filtro `**/integration/**` para separar unitarias de integración, el cálculo de JaCoCo solo sobre unitarias y la convención de commits sin la clave interna `[CG-02]`.
 
-1. **Contraste con el enunciado:** se verificaron las líneas 167, 180, 221-222, 240-260, 254, 260 y 351-370 de `Proyecto_Final_CircleGuard.tex`. El `file-service` es «almacenamiento compatible S3» (L180), pero en P1 solo se compila, prueba y empaqueta (L260); por eso **no se añadió despliegue** en esta HU y el seguimiento quedó para P2.
-2. **Decisión de diseño:** adaptador real `S3FileStorageService` (AWS SDK v2) detrás del puerto `FileStorage`, con modo `local` por defecto y activación `file.storage.mode=s3`. El controller depende del puerto y conserva `DELETE /api/v1/files/{filename}` (204/404), de modo que ambos adaptadores comparten contrato.
-3. **Estrategia de conflictos:** al integrar `origin/main` se conservaron el puerto y el `DELETE` de la rama, el `MeterRegistry` y el bloque `management` de `main`, y se combinaron las aserciones de métricas con los tests de borrado. Cuando `main` avanzó con `af451ff` (#158) se resolvió el conflicto en `FileStorageServiceTest.java` conservando los 3 tests de delete/traversal y los 9 tests nuevos de `main`; los auto-merges (`Jenkinsfile`, `ciServices.groovy`, `build.gradle.kts`, con `apply(from = "$rootDir/gradle/jacoco-convention.gradle")`) se revisaron sin marcadores residuales.
-4. **Restricciones y desviaciones:** imagen fijada `bitnamilegacy/minio:2025.4.22` porque `minio/minio` dejó de ser públicamente descargable; límite explícito de 3 minutos en la tarea `integrationTest`; flag de catálogo más override local (ambos vigentes); el bloque `TEMPORARY` provino de `main` y no se eliminó aquí.
-5. **Cierre de ciclo:** PR actualizado en inglés, revisores solicitados a compañeros, bitácora, reporte, evidencia regenerada, backlog en `Done` y anexo B.1 incorporado a `CircleGuard_INFORME_FINAL.docx`. El informe final recibió además una portada institucional con logo Icesi, banda de color, bloque de autores en dos columnas, encabezado/pie con numeración y estilo visual universitario consistente en encabezados y tablas.
+**B. Apoyo IAG — prompt (transcripción de sesión, ortografía normalizada).** «Dame el plan completo» y, tras la revisión, «Ejecuta el plan». El detalle técnico se reconstruyó y contrastó con `docs/informe/GW-CI-02-Integracion-Redis.md` y `docs/informe/Gateway-Cobertura.md`.
 
-### B. Prompts empleados
+**C. Validación y apreciación humana.** Tres ejecuciones consecutivas con 9 pruebas, 0 fallos y 0 errores. La primera serie registró 28 s, 25 s y 26 s; la serie posterior al rebase sobre `main` registró 24 s, 25 s y 24 s, con tiempos JUnit de 3.541 s, 3.628 s y 3.496 s y `count=0` de contenedores tras la ventana de limpieza de Ryuk. El reporte de cobertura unitaria del gateway quedó en 49/49 líneas (100 %) en el consolidado `Gateway-Cobertura.md`; el registro de la sesión reportó 95.92 % sobre una medición intermedia, que se conserva como histórico y no como cifra vigente en el informe. Se documentó el error de WSL (`/mnt/c` montado como 9p), resuelto con `gradle/wsl-ext4.init.gradle.kts` sin subir el límite de 3 minutos de CI.
 
-```text
-Corrige los conflictos que hay, primero haz merge del main actual a esta rama y resuelve conflictos
-```
-
-```text
-Ejecuta el plan
-```
-
-```text
-Haz push y actualiza la PR en ingles
-```
-
-```text
-Contrasta con el enunciado del proyecto final si está bien esta HU y si falta algo
-```
-
-```text
-Dame un plan completo para cerrar esta HU cumpliendo el enunciado del proyecto final
-```
-
-```text
-Ejecuta el plan
-```
-
-```text
-Con lo que hay en main, consideras que deberia haber hecho reload configuration as code en la interfaz de Jenkins?
-```
-
-```text
-Que sugieres hacer en esta rama para cerrarla?
-```
-
-```text
-Ejecuta el plan
-```
-
-```text
-La evidencia adjuntla al docx de informe final, ahi es donde realmente importante mas que todo
-```
-
-```text
-Continua y termina
-```
-
-```text
-Agrega un estilo universitario y bonito al informe, hazle una portada, que se vea muy ordenado y bonito
-```
-
-```text
-Hazlo como deepseek, el hace los estios bonitos
-```
-
-### C. Validación humana y hallazgos
-
-- **Merge:** primer `git merge origin/main --no-edit` sobre `a47e7d1` (3 conflictos: `FileUploadController.java`, `application.yml`, `FileUploadControllerTest.java`); segundo merge sobre `826a359` para incorporar `af451ff` (1 conflicto: `FileStorageServiceTest.java`); `git diff --check` limpio en los archivos tocados.
-- **Corridas sobre `21c406b`:** tres `integrationTest` con `--no-build-cache --rerun-tasks` en 53 s, 52 s y 52 s; XML final `tests=5 skipped=0 failures=0 errors=0 time="3.556"` (timestamp `2026-11-22T21:34:33.769Z`).
-- **Unitarias y cobertura:** `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde (46 s), 32 pruebas sin omisiones, 81.31 % de líneas (87/107), por encima del gate del 60 % con la convención compartida de `main`.
-- **Limpieza:** `docker ps` sin contenedores Testcontainers activos tras la ventana de Ryuk.
-- **Trazabilidad:** PR #144 en inglés, `MERGEABLE`, con `FaiberDev` y `salejostrada` solicitados como revisores; check `continuous-integration/jenkins/pr-merge` publicado por el pipeline y verificado en esta entrada.
-- **Informe final:** `CircleGuard_INFORME_FINAL.docx` incorpora el anexo B.1 con criterios, tres corridas, XML JUnit, cobertura, rutas de evidencia y seguimiento P2; se validó con `python-docx` y `unzip -t` sin errores. La portada usa el logo `logo-icesi.png`, banda superior en el azul del logo, línea de acento, autores en tabla de dos columnas y salto de página antes del índice. El resto del documento usa estilos `Calibri`, encabezados con franja lateral azul, tablas con cabecera oscura/filas alternas, encabezado con proyecto y pie con número de página; la primera página conserva encabezado/pie vacíos. La maqueta se verificó exportando a PDF con LibreOffice y revisando el texto de las dos primeras páginas.
-- **Hallazgo JCasC:** el `@Library('circleguard@main')` del Jenkinsfile hace innecesario un `Reload Configuration as Code` para esta HU; el cambio de JCasC en `main` (`6c20d8b`: 2 executors, SMTP) sí requiere reload/recreate como cierre de P1.4.
-
-### D. Reflexión crítica
-
-El riesgo principal no fue el código S3, sino la trazabilidad: dejar la evidencia del 21-11 después de mergear `main` habría hecho creíble una validación sobre un commit que ya no existía en la rama. Regenerar las tres corridas primero sobre `440b96c` y, cuando `main` avanzó con #158, de nuevo sobre `21c406b`, y copiar el XML real evita esa deriva. La insistencia del usuario en el `.docx` final fue acertada: el informe no mencionaba HU-FILE-04 hasta que se añadió el anexo B.1, que es el entregable que realmente se lee. Persisten decisiones conscientes: credenciales estáticas de prueba frente a IAM en P2, `local` como modo por defecto para no exigir S3 en P1, y una imagen Bitnami fijada hasta publicar un digest propio. También quedó claro que el bloque `TEMPORARY` heredado de `main` es hoy redundante —el fix de selección selectiva ya está integrado—, pero limpiarlo dentro de esta HU habría obligado a revalidar todo; se documenta y se deja para un PR separado. Finalmente, no mergear sin aprobación respeta la protección de `main` y evita disparar CD y tags semánticos sin revisión de par.
+**D. Apreciación humana y reflexión.** Un contenedor «arriba» no implica un servicio listo: fue necesario esperar `Ready to accept connections`. El límite de 3 minutos de la tarea es una restricción de infraestructura, no una tolerancia a código lento; mover las salidas a ext4 resolvió el síntoma sin relajar el gate.
 
 ---
 
-<a id="bitacora-e12"></a>
-### 2.2 Bitácora E1.2 — Idempotencia, evidencias y cierre documental (8 de noviembre de 2026)
+<a id="iag-daniela-23"></a>
+### 2.3 FS-CI-01 — Pruebas unitarias del file-service
 
-- **Nivel de uso:** 3 (colaboración con IAG).
-- **Herramienta:** OpenCode / DeepSeek.
-- **Historia / Entregable:** `HU-GATEWAY-CICD-01` — E1.2 (plataforma CI/CD del gateway).
-- **Rama de validación:** `test/HU-INFRA-01-idempotencia`.
-- **Rama del PR:** `feat/HU-GATEWAY-01-configurar-servidores` (PR-15).
+- **Fecha:** 20 de noviembre de 2026.
+- **Autor:** Daniela Castaño.
+- **Rama / PR:** `feat/FS-CI-01-file-service-tests` → PR #89.
+- **Commit:** `4e359c1`.
+- **Entregable:** E1.6 — pruebas automatizadas.
+- **Objetivo:** cubrir carga válida, archivo vacío, descarga existente y descarga inexistente en `circleguard-file-service`, con cobertura JaCoCo superior al umbral acordado del 60 %.
 
-### A. Contenido propio entregado a la IAG
+**A. Insumo propio.** Diagnóstico del estado previo: `FileStorageService.loadFile` era un stub que devolvía `null`, la interfaz `Resource` era package-private y no existía endpoint de descarga. Se acotó el arreglo a lo estrictamente necesario para hacer comprobables los criterios de la historia.
 
-1. **Decisiones de flujo:** [GitHub Flow](BRANCHING-STRATEGY.md) con PR hacia `main`; sin rama `dev` para código. La validación de idempotencia debía ejecutarse en una rama separada para no alterar PR-15.
-2. **Invariantes a comprobar:** IDs, IPs, estado y tipo de las 4 instancias EC2; Elastic IP; Security Groups; key pair; hashes SHA-256 de `.env` local y remoto; IDs e imágenes de contenedores; repositorios y usuarios de Nexus; proyectos y usuarios de SonarQube.
-3. **Criterio de evidencia:** no imprimir secretos; comparar hashes; guardar `before`/`after` y un `diffs.txt` vacío como prueba de convergencia.
-4. **Criterio documental:** el informe debía vivir en el PR con capturas reales de CLI, Jenkins, SonarQube y Nexus; la rama de prueba queda como respaldo. Se adoptó `.docx` como único formato de entrega.
-5. **Endurecimiento solicitado en revisión:** eliminar el workflow vacío, restringir Jenkins/Sonar/Nexus a CIDR administrativo y docente, cerrar `443` y dividir futuros PRs por dominio.
+**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Revisa los criterios de FS-CI-01 sobre el file-service, identifica el mínimo cambio de producción necesario para poder probarlos y genera las pruebas unitarias con JaCoCo; no introduzcas cambios de producción innecesarios».
 
-### B. Prompts empleados
+**C. Validación y apreciación humana.** Se implementó `GET /api/v1/files/download/{filename}` con respuestas 200/404 y un `loadFile` real con validación de path traversal. Resultado: 10 pruebas (6 de servicio y 4 de controlador), 0 fallos y 0 errores; cobertura de 23/29 líneas (79.31 %), 102/119 instrucciones (85.71 %) y 8/10 ramas (80 %). Los XML de JUnit y JaCoCo están restaurados en `docs/informe/evidencia/fs-ci-01/` y el detalle en `docs/informe/FS-CI-01-Informe-Pruebas.md`.
 
-```text
-Ejecuta el plan
-```
-
-```text
-Restaura el informe de branching de GitHub FLow y ponlo en el commit,
-tambien debo hacer un informe de la idempotencia
-```
-
-```text
-Ejecuta el Plan Informes-E1.2 — Branching restaurado e idempotencia
-```
-
-```text
-Agrega captura al informe de idempotencia
-```
-
-```text
-Añade capturas reales
-```
-
-```text
-De ahora en adelante quiero solo docx
-```
-
-```text
-Ahora dame el plan cmpleto con las observations tambien
-```
-
-```text
-Ejecuta el Plan completo — E1.2, observaciones y bitácora IAG
-```
-
-### C. Validación humana y hallazgos
-
-- **Idempotencia:** segunda ejecución de `./infra/bootstrap/bootstrap-all.sh` con `exit=0` y `diffs.txt` de **0 líneas**, repetida tras el endurecimiento.
-- **Bug 1 — sincronización de `.env`:** el `.env` remoto se copiaba solo a `infra/state/tools.env`, no a `deploy/compose/tools/.env`; `SONAR_TOKEN` y las contraseñas del profesor se regeneraban. Se corrigió la copia y se añadieron las claves faltantes.
-- **Bug 2 — reconstrucción de Jenkins:** `compose_up` usaba `--build` siempre y la etiqueta de imagen quedaba desalineada del contenedor. Ahora solo construye si la imagen no existe.
-- **Bug 3 — credenciales del profesor:** SonarQube creaba `professor` con `|| true` y Nexus devolvía 204 sin cambiar la contraseña; ambos usuarios quedaban sin autenticación. Se añadió sincronización condicional mediante `change_password` / `change-password`.
-- **Bug 4 — reglas de Security Group:** el bootstrap solo agregaba reglas y nunca revocaba las obsoletas. Se añadió `reconcile_cidr`; `8080`, `9000` y `8081` quedaron limitados a `ADMIN_CIDR` y `TEACHER_CIDR`, `443` se cerró y `80` permanece público para el gateway de dev.
-- **Workflow vacío:** se eliminó `require-two-approvals.yml`, que acumulaba 37 runs fallidas. La protección de `main` sigue exigiendo 2 aprobaciones. **Actualización (2026-11-18, sprint 2):** la protección de `main` pasó a exigir **1** aprobación (esperar dos revisores demoraba demasiado los PRs); el check `continuous-integration/jenkins/pr-merge` sigue siendo obligatorio.
-- **Squash merge:** se ajustó `enforce-pr.yml` para aceptar commits con formato `título (#N)`.
-- **Trigger real:** se verificó que Jenkins no usa webhooks; los builds son “Started by timer” por `cron('H/5 * * * *')`. Por eso no se dejó el allowlist de GitHub en `8080`.
-- **CI:** PR-15 se mantuvo en verde con el último build observado en estado `SUCCESS`.
-- **Informe:** `docs/informe/E1.2-Idempotencia.docx` con 4 capturas reales embebidas (CLI, Jenkins, SonarQube, Nexus) y secciones 6.3 y 6.4.
-- **Observaciones no accionables:** el PR de 447 archivos no se divide retroactivamente; se adopta la convención de separar infraestructura, pipeline, código y evidencia en futuras entregas. La evidencia binaria permanece en el historial.
-
-### D. Reflexión crítica
-
-La validación de idempotencia expuso defectos que una sola ejecución del bootstrap ocultaba: desincronización de secretos, reconstrucción innecesaria de Jenkins y usuarios que existían pero no podían autenticarse. El mismo patrón apareció en los Security Groups: agregar reglas sin revocarlas hacía que el estado convergiera solo en apariencia. La verificación del trigger real de Jenkins evitó añadir una allowlist de GitHub innecesaria y mantuvo `8080` con la menor exposición posible. Se obtuvieron las 2 aprobaciones, se mergeó PR-15 y se ejecutó el CD en `main` con evidencia de `dev`, `stage`, `prod` y rollback.
+**D. Apreciación humana y reflexión.** La historia era de pruebas, pero era imposible cumplirla sin un arreglo mínimo de producción. Registrar el stub como hallazgo y documentar el parche evitó convertir una limitación del código en una prueba ficticia.
 
 ---
 
-### 2.3 E1.2 — Cierre documental con sustentación en lugar de video (11 de noviembre de 2026)
+<a id="iag-daniela-24"></a>
+### 2.4 HU-FILE-02 — Imagen inmutable y dependencia de MinIO
 
-- **Nivel de uso:** 3 (colaboración con IAG).
-- **Herramienta:** OpenCode / DeepSeek.
-- **Entregable:** E1.2 — Informe Final de la Parte 1 (`docs/informe/CircleGuard_INFORME_FINAL.pdf`) y `IAG_REGISTRO.md`.
-- **Rama del PR:** `docs/HU-INFRA-02-sustentacion-p18` (PR-45).
+- **Fecha:** 21 de noviembre de 2026.
+- **Autor:** Daniela Castaño.
+- **Rama / PR:** `feat/HU-FILE-02-imagen-inmutable-minio` → PR #133.
+- **Commit:** `2635ca5`.
+- **Entregable:** E1.3 — empaquetamiento inmutable.
+- **Objetivo:** empaquetar el file-service como imagen no root con healthcheck y metadatos verificables, y dejar la dependencia de MinIO declarada para el entorno de integración.
 
-### A. Contenido propio entregado a la IAG
+**A. Insumo propio.** Revisión del Dockerfile del servicio y de las políticas de empaquetamiento del equipo: multi-stage, usuario no root, healthcheck sobre `/actuator/health` y sin secretos en la imagen. Se decidió conservar el puerto 8085 y publicar labels de OCI para trazabilidad.
 
-1. **Decisión de equipo:** el video de demostración no aplica para la Parte 1; la demostración se realiza en la sustentación oral ante el docente.
-2. **Estado real verificado:** las cinco capturas de Jira ya estaban embebidas en la sección 11.2.1 del informe, y el texto se ajustó para reflejarlo.
-3. **Estado de releases verificado:** cada merge a `main` publica un parche con sus nueve imágenes. Nexus contiene `1.2.5`, `1.2.6`, `1.2.7` y `1.2.8`; los builds #11 y #12 desplegaron `dev` y `stage`, y #12 llegó a `prod` tras la aprobación manual. El build #13 completó la cadena con `1.2.8`.
-4. **Restricciones:** no inventar fecha de sustentación, no introducir enlaces de video y no reescribir el archivo histórico `Proyecto_Final_CircleGuard.tex`.
+**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Ajusta el Dockerfile del file-service para que compile en multi-stage, ejecute como usuario no root, exponga healthcheck y labels, y revisa que no haya credenciales embebidas; luego verifica la imagen construida con docker inspect».
 
-### B. Prompt empleado
+**C. Validación y apreciación humana.** Los artefactos reales están en `docs/informe/evidencia/HU-FILE-02/`: `03-docker-inspect-user.txt` reporta `circleguard`, `05b-healthcheck.txt` muestra el `CMD-SHELL` con `wget` contra `/actuator/health`, `09-no-secrets.txt` confirma «OK: no hardcoded credentials in tracked sources» y `12-compose-config.txt` documenta la dependencia de MinIO. La imagen quedó referenciada por tag semver, sin `latest`.
 
-```text
-El video no aplica, usamos en cambio sustentacion, acomoda documentacion y la bitacora de IAG
-```
+**D. Apreciación humana y reflexión.** El healthcheck del contenedor y la sonda de Kubernetes son mecanismos distintos. Mantener ambos alineados evita que un contenedor «sano» para Docker sea declarative-mente inadecuado para el orquestador.
 
-### C. Validación humana y hallazgos
+---
 
-- Se cambió el estado de P1.8 de **Parcial** a **Cumplido**, conservando el nombre oficial del criterio para no alterar la rúbrica.
-- Se ajustaron las afirmaciones sobre video y capturas de Jira en la matriz, la sección 11.3, la sección 12 y la conclusión.
-- La sección 12 pasó de "Qué falta para el cierre documental" a "Actividades de cierre", separando la entrega y la sustentación de la infraestructura.
-- La primera versión de esta entrada afirmaba que `v1.2.6` y `v1.2.7` eran releases documentales. La verificación contra Nexus y la API de Jenkins lo desmintió: ambos publicaron sus nueve imágenes y desplegaron `dev` y `stage`. Se corrigió el informe con la historia real de los builds #11, #12 y #13, se actualizó la versión evaluada a `1.2.8` y se añadieron las notas de release de `1.2.6`, `1.2.7` y `1.2.8`.
-- `docs/agil/sprint-1/review.md` pasó de "Video de demostración" a "Sustentación oral".
-- Se regeneraron HTML y PDF y se verificaron páginas, tablas, imágenes y la ausencia de secretos e IP personal.
+<a id="iag-daniela-25"></a>
+### 2.5 HU-FILE-05 — Orquestación, observabilidad y seguridad del file-service
 
-### D. Reflexión crítica
+- **Fecha:** 22 de noviembre de 2026.
+- **Autor:** Daniela Castaño.
+- **Rama / PR:** `feat/HU-FILE-05-orquestar-file-service-en-kubernetes-observabilidad-seguridad`, issue #149 → PR #150.
+- **Commit:** `74acc53`.
+- **Entregable:** E2.4 / E2.5 — orquestación y observabilidad de la Parte 2.
+- **Objetivo:** llevar el file-service a Kubernetes con sondas Actuator nativas, métricas Prometheus, trazas OTLP y un contador propio de subidas, sin versionar secretos ni configuración sensible.
 
-Sustituir el video por la sustentación deja la evidencia de P1.8 en un evento oral que no queda dentro del PDF. El riesgo se mitiga declarando la modalidad de forma explícita, conservando el nombre oficial del criterio y asegurando que el PDF contenga toda la evidencia verificable: URLs, capturas del flujo, capturas de Jira, cobertura y rollback. La lección es que un cambio de modalidad no debe resolverse con un simple cambio de estado: hay que dejar escrito qué se entrega, qué se demuestra en vivo y qué ya está probado.
+**A. Insumo propio.** Se partió del equivalente ya resuelto para el gateway (HU-GATEWAY-06) y se adaptó al file-service. La decisión propia fue conservar `management.endpoints.web.exposure.include=health,info,prometheus`, habilitar los grupos de probes, fijar `show-details: never` y parametrizar el endpoint OTLP por variable de entorno.
 
-La segunda lección salió de la auditoría de releases: se afirmó que `1.2.6` y `1.2.7` eran “documentales” sin consultar el registry ni el historial de builds, y la afirmación era falsa. Un artefacto no se describe por el tipo de commit que lo originó, sino por lo que realmente se publicó y desplegó. La verificación en Nexus y en Jenkins tomó minutos y evitó que el informe llegara con una inexactitud que el revisor ya había señalado en el README.
+**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Aplica al file-service el mismo patrón de orquestación, sondas y observabilidad usado en el gateway: anotaciones de scrape en el Service, readiness/liveness Actuator en el Deployment, dependencias Micrometer y OTLP, y un contador de subidas con resultado. No versiones secretos».
+
+**C. Validación y apreciación humana.** `./gradlew :services:circleguard-file-service:test :services:circleguard-file-service:jacocoTestCoverageVerification --console=plain --no-daemon` terminó en `BUILD SUCCESSFUL` con 12 pruebas y cobertura por encima del 60 %. `git diff --check` quedó limpio y no se versionaron secretos, `*.tfstate`, `backend.hcl`, `tfplan` ni `.terraform/`. El detalle está en `docs/informe/HU-FILE-05.md`. La validación on-prem con `kubectl diff` en `cg-dev`, `cg-stage` y `cg-prod` quedó declarada como pendiente de autorización, no como ejecutada.
+
+**D. Apreciación humana y reflexión.** Añadir instrumentación cambia el contrato de observabilidad del servicio, no solo sus dependencias. Por eso el contador `circleguard_file_uploads_total{result="success"|"failure"}` se probó con `SimpleMeterRegistry` y se documentó su etiqueta antes de solicitarse al clúster.
+
+---
+
+<a id="iag-daniela-26"></a>
+### 2.6 HU-FILE-04 — Integración File–MinIO con Testcontainers
+
+- **Fecha:** 22 de noviembre de 2026.
+- **Autor:** Daniela Castaño.
+- **Rama / PR:** `feat/HU-FILE-04-integracion-file-minio-con-testcontainers` → PR #144; merge final `21c406b`.
+- **Commit:** `251e923` (con integración de `af451ff` de la rama principal).
+- **Entregable:** E1.6 — pruebas automatizadas.
+- **Objetivo:** validar el contrato S3-compatible real del file-service contra un MinIO efímero, usando el adaptador de producción y ejerciendo los endpoints HTTP de carga, descarga y borrado.
+
+**A. Insumo propio.** Se decidió un adaptador `S3FileStorageService` detrás del puerto `FileStorage`, con `file.storage.mode=local` por defecto para no exigir S3 en la Parte 1 y `s3` en el perfil de integración. Se fijó la imagen `bitnamilegacy/minio:2025.4.22`, espera `GET /minio/health/live → 200`, creación automática del bucket `circleguard-files` y tarea Gradle `integrationTest` con timeout de 3 minutos.
+
+**B. Apoyo IAG — prompt (reconstruido y contrastado a partir de la transcripción de sesión).** «Contrasta la evidencia con el enunciado del proyecto final y agrega un estilo universitario a la portada del informe usando el logo de la Icesi». La parte técnica se contrastó con `docs/informe/HU-FILE-04-Integracion-MinIO.md`; la petición de estilo se atendió en el DOCX, no en el código.
+
+**C. Validación y apreciación humana.** Tres ejecuciones consecutivas sobre `21c406b`: 53 s, 52 s y 52 s; 5 pruebas de integración por corrida, 0 fallos y 0 errores; sin contenedores residuales tras Ryuk. La suite unitaria conservada tras el merge quedó en 32 pruebas y 81.31 % de líneas (87/107). El XML `tests=5 skipped=0 failures=0 errors=0` y los logs están en `docs/informe/evidencia/HU-FILE-04/`. El anexo B.1 del informe incorpora la portada y esta evidencia.
+
+**D. Apreciación humana y reflexión.** El enunciado define al file-service como almacenamiento compatible S3, pero en la Parte 1 solo lo compila, prueba y empaqueta. separating claramente modo por defecto, perfil de integración y despliegue evitó inventar infraestructura fuera de alcance y dejó el mismo artefacto listo para la Parte 2.
+
+---
+
+<a id="iag-daniela-27"></a>
+### 2.7 Cierre de gates de cobertura y calidad (#158)
+
+- **Fecha:** 22 de noviembre de 2026.
+- **Autor:** Daniela Castaño.
+- **Rama / PR:** `chore/jacoco-convention-all-services` → PR #158.
+- **Commit:** `af451ff`.
+- **Entregable:** E1.4 / E1.6 — gates de cobertura y calidad.
+- **Objetivo:** unificar la convención JaCoCo de los servicios y evitar que el merge de HU-FILE-04 dejara el file-service fuera del gate del 60 %.
+
+**A. Insumo propio.** Se detectó que la rama de HU-FILE-04 tenía un bloque JaCoCo local mientras `main` ya usaba `gradle/jacoco-convention.gradle`. La decisión fue conservar ambos sin duplicar reglas: la convención aplica el mínimo y la verificación de pruebas no omitidas para todos los servicios, incluido `file-service`.
+
+**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Revisa por qué el gate de cobertura no aplica igual a todos los servicios y unifica la configuración JaCoCo sin cambiar el umbral acordado ni relajar la verificación de pruebas omitidas».
+
+**C. Validación y apreciación humana.** El merge final `21c406b` conservó `apply(from = "$rootDir/gradle/jacoco-convention.gradle")` junto al bloque local. El índice vigente de cobertura está en `docs/informe/evidencia/trazabilidad/coverage-reports.md`; el XML de form se versionó como `jacoco-form-test-report.xml`. La medición de `promotion` (564/733 líneas, 76.9 %) quedó pendiente de publicación como artefacto versionado y no se presenta como evidencia ya cerrada.
+
+**D. Apreciación humana y reflexión.** Una convención compartida solo es útil si se comprueba en cada servicio. Revisar el merge final, no solo la rama propia, fue lo que evitó una regla escrita pero no aplicada.
+
+---
+
+<a id="iag-daniela-28"></a>
+### 2.8 Bitácora E1.2 — Idempotencia, evidencias y cierre documental
+
+- **Fecha:** 8 a 11 de noviembre de 2026.
+- **Autor:** Daniela Castaño.
+- **Ramas / PR:** `test/HU-INFRA-01-idempotencia` → PR-15; `docs/HU-INFRA-02-sustentacion-p18` → PR-45.
+- **Entregable:** E1.2 — infraestructura idempotente y E1.8 — documentación.
+- **Objetivo:** demostrar que el bootstrap on-premise es repetible, cerrar la decisión de sustentación oral en lugar de video y conservar la evidencia documental sin duplicados.
+
+**A. Insumo propio.** Revisión del flujo de aprovisionamiento y del pipeline. Se encontraron efectos laterales que rompían la idempotencia: sincronización incompleta de `.env`, reconstrucción innecesaria de Jenkins, credenciales del docente y reglas de Security Group. Se decidió documentar cada corrección y no tocar los pares `before`/`after` de `docs/infra/evidencia/idempotency/`.
+
+**B. Apoyo IAG — prompt (transcripción de sesión, ortografía normalizada).** «Ejecuta el plan», «De ahora en adelante quiero solo docx» y «El video no aplica, usamos en cambio sustentación; acomoda la documentación y la bitácora de IAG».
+
+**C. Validación y apreciación humana.** Segunda ejecución de `./infra/bootstrap/bootstrap-all.sh` con `exit=0` y `diffs.txt` de 0 líneas, registrada en `docs/infra/evidencia/idempotency/IDEMPOTENCIA.md`. Se documentó que el disparador real del pipeline era `cron('H/5 * * * *')` y no un webhook en ese momento, por lo que no se dejó una allowlist injustificada en el puerto 8080. La protección de `main` pasó de dos a un aprobador en Sprint 2. La decisión de sustentación oral sustituyó al video en P1.8 y se registró en el informe.
+
+**D. Apreciación humana y reflexión.** La ausencia de video no puede resolverse escribiendo que «no aplica» sin una decisión trazable. La bitácora dejó claro el cambio de modalidad, y el informe final conserva la limitación de forma explícita en el apartado de presentación.
+
+---
+
+<a id="iag-daniela-29"></a>
+### 2.9 Lecciones transversales y límites de verificación
+
+1. **Evidencia antes que afirmación.** Las cifras de esta sección proceden de XML, logs, capturas o commits versionados. Las mediciones intermedias se marcan como históricas y no se presentan como resultado final cuando existe un consolidado posterior.
+2. **Prompts como insumo, no como prueba.** La salida de IAG se contrastó siempre con una ejecución local, un reporte publicado o un artefacto del repositorio. Los prompts reconstruidos se identifican como tales.
+3. **Separación de responsabilidades.** Las intervenciones de dashboard-service se registran en las secciones 5, 6 y 7; esta sección solo las referencia. El rollback on-premise documentado en la sección 7 se apoya en el transcript restaurado `docs/informe/evidencia/HU-DASH-04/prod/rollback-commands.txt`.
+4. **Límites reales.** Siguen pendientes de ejecución o de material externo: Locust y ZAP en stage, la traza Jaeger de extremo a extremo, la grabación de la sustentación, el certificado definitivo con DNS y exposición en 443, la cifra real de facturación y una notificación de fallo adicional a la captura de GitHub ya restaurada. Estos puntos se declaran como pendientes en el informe final; no se han inventado evidencias para cerrarlos.
+
 ---
 
 ## 3. Módulo: `circleguard-form-service` (Santiago Estrada)
@@ -1100,7 +1046,7 @@ vecino, lo está sustituyendo.
 1. **Requisitos de la imagen:** multi-stage, base fijada por digest, usuario sin privilegios, `HEALTHCHECK` contra `/actuator/health`, puerto `8086` y directorio de adjuntos escribible.
 2. **Contexto de build:** el módulo depende de `settings.gradle.kts` y de otros módulos, por lo que el contexto no puede limitarse a la carpeta del servicio; se necesitaba un `.dockerignore` específico.
 3. **Configuración:** `application.yml` debía tomar PostgreSQL y Kafka de variables de entorno para funcionar en dev, stage y prod.
-4. **Pipeline:** el catálogo de servicios (`jenkins/services.groovy`) debía incluir form con sus tareas de test, integración, publicación y despliegue, y el `Jenkinsfile` debía seleccionarlo igual que a los demás.
+4. **Pipeline:** el catálogo de servicios (`jenkins/vars/ciServices.groovy`) debía incluir form con sus tareas de test, integración, publicación y despliegue, y el `Jenkinsfile` debía seleccionarlo igual que a los demás.
 
 #### B. Prompt empleado (reconstruido y contrastado)
 
@@ -1123,12 +1069,17 @@ Incluye pruebas Groovy del Jenkinsfile si sirven para evitar regresiones en la s
 servicios.
 ```
 
+> **Nota de actualización:** las rutas `jenkins/services.groovy`, `docs/infra/pipeline-servicios.md`
+> y `tests/jenkins/` corresponden a la nomenclatura usada en el prompt original. En el árbol
+> vigente, el catálogo es `jenkins/vars/ciServices.groovy`, la guía es `docs/infra/ci-cd-setup.md`
+> y la prueba es `jenkins/test/TestCiServices.groovy`.
+
 #### C. Validación humana y hallazgos
 
 - El `Dockerfile` final usa `gradle:8.14-jdk21` y `eclipse-temurin:21-jre-jammy` fijadas por digest, ejecuta `bootJar` como usuario `gradle`, copia solo el JAR a la etapa de runtime, corre como `10001:10001` y declara `HEALTHCHECK` con `wget -qO- http://127.0.0.1:8086/actuator/health`.
 - `Dockerfile.dockerignore` recorta el contexto sin excluir `settings.gradle.kts` ni los módulos requeridos; se comprobó que el build falla si se elimina esa configuración.
 - Se externalizaron las credenciales de PostgreSQL y la dirección de Kafka en `application.yml`; el servicio dejó de depender de valores locales.
-- En el pipeline se añadió `jenkins/services.groovy` con la entrada de form y se documentó el catálogo en `docs/infra/pipeline-servicios.md`. Las pruebas `JenkinsfileTest`, `ServiceSelectionTest` y `GitDetectionTest` en `tests/jenkins/` validan la selección de servicios y la detección de cambios.
+- En el pipeline se añadió la entrada de form en `jenkins/vars/ciServices.groovy` y se documentó el catálogo en `docs/infra/ci-cd-setup.md`. La prueba `jenkins/test/TestCiServices.groovy` valida la selección de servicios.
 - La verificación de runtime queda cubierta por las etapas de publicación, despliegue y E2E del pipeline, que consumen la misma imagen y el mismo healthcheck.
 
 #### D. Reflexión crítica
@@ -1209,7 +1160,7 @@ La IAG aceleró la redacción y el inventario, pero también produjo afirmacione
 
 ### A. Contenido propio entregado a la IAG
 
-1. **Insumo previo:** se revisaron `Proyecto_Final_CircleGuard.tex` (E1.3-E1.7 y la nota de alcance de la Parte 1, que excluye a dashboard del despliegue), `docs/informe/HU-DASH-01.md` (diagnóstico), `docs/informe/HU-DASH-02.md` (19 pruebas, 97.3 % de cobertura), `Jenkinsfile`, `jenkins/vars/*.groovy`, `gradle/jacoco-convention.gradle` y los Dockerfile de los otros servicios.
+1. **Insumo previo:** se revisaron `Proyecto_Final_CircleGuard.tex` (E1.3-E1.7 y la nota de alcance de la Parte 1, que excluye a dashboard del despliegue), el diagnóstico previo de `dashboard-service` y el registro histórico de 19 pruebas con 97,3 % de cobertura (commits `bdf2a14` y predecesores; documentos no versionados en HEAD), `Jenkinsfile`, `jenkins/vars/*.groovy`, `gradle/jacoco-convention.gradle` y los Dockerfile de los otros servicios.
 2. **Contraste con el código:** se determinó que multi-stage, usuario no root, catálogo del Shared Library, quality gate, semver y archivado de reportes ya existían; las brechas reales eran los metadatos OCI no usados, el healthcheck no verificado para dashboard y la falta de evidencia documental del empaquetado.
 3. **Decisión de diseño:** alinear el Dockerfile con el patrón de `file-service` (UID/GID fijo 10001, `COPY --chown`, cachés BuildKit y labels), mantener `deploy: false` en Parte 1 y añadir `dashboard` a la verificación de healthcheck tanto en el catálogo como en el override local del Jenkinsfile.
 4. **Restricción respetada:** no se inventaron evidencias de Jenkins/SonarQube remotas; el informe distingue la verificación local ejecutada de la corrida que debe hacerse en el servidor con `SERVICE=dashboard`.

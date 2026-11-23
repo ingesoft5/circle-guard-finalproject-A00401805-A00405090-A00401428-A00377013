@@ -1,0 +1,2 @@
+172.31.20.46:5000/circleguard-docker/gateway:1.0.0-c3ac704
+172.31.20.46:5000/circleguard-docker/gateway@sha256:db436cb08f03151b1cbb8742653d0f3c07431a4b45ac18b0bd0a16da21d3b33a

@@ -1,0 +1,28 @@
+Nota: containers_after muestra el contenedor Ryuk mientras espera su cierre; el Redis efimero ya fue eliminado. Tras ~20 s Ryuk tambien desaparece (ver FINAL).
+
+Verificacion post-rebase sobre main (PR #22) - 2026-11-08T18:31:03-05:00
+Comando: ./gradlew :services:circleguard-gateway-service:integrationTest
+
+=== RUN 1 start=2026-11-08T18:31:03-05:00 ===
+> Task :services:circleguard-gateway-service:integrationTest
+BUILD SUCCESSFUL in 24s
+RUN 1 rc=0 duration=24s tests=9 failures=0 errors=0 skipped=0 junit_time=3.541s
+containers_after:
+  testcontainers/ryuk:0.6.0 | Up 14 seconds
+
+=== RUN 2 start=2026-11-08T18:31:27-05:00 ===
+> Task :services:circleguard-gateway-service:integrationTest
+BUILD SUCCESSFUL in 24s
+RUN 2 rc=0 duration=25s tests=9 failures=0 errors=0 skipped=0 junit_time=3.628s
+containers_after:
+  testcontainers/ryuk:0.6.0 | Up 14 seconds
+
+=== RUN 3 start=2026-11-08T18:31:52-05:00 ===
+> Task :services:circleguard-gateway-service:integrationTest
+BUILD SUCCESSFUL in 23s
+RUN 3 rc=0 duration=24s tests=9 failures=0 errors=0 skipped=0 junit_time=3.496s
+containers_after:
+  testcontainers/ryuk:0.6.0 | Up 13 seconds
+
+=== FINAL docker ps -a (tras esperar la limpieza de Ryuk) ===
+count=0
