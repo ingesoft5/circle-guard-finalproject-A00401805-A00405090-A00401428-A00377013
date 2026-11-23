@@ -1,9 +1,11 @@
 # CG-DOC: Real Chaos Mesh experiments for the L284 chaos-engineering bonus.
-# Targets are the isolated cg-dev services (the graded deployment) and the
-# chaos resources themselves live in cg-chaos. Experiments are one-shot with a
-# bounded duration and self-heal within the selector scope.
+# Target is the graded cg-dev gateway; the chaos resource lives in cg-chaos.
+# Bounded, one-shot and self-healing: the gateway ReplicaSet recreates the pod.
 #
-# Experiment 1: pod-kill on the gateway deployment (resilience to pod loss).
+# A NetworkChaos (redis delay) was also attempted during validation on this
+# k3d host, but chaos-daemon reported "unable to flush ip sets for pod
+# redis-0" and AllInjected never became True. It is therefore NOT included
+# here and is NOT claimed as verified evidence. See the evidence README.
 apiVersion: chaos-mesh.org/v1alpha1
 kind: PodChaos
 metadata:
@@ -18,22 +20,3 @@ spec:
     labelSelectors:
       app: gateway
   duration: "30s"
----
-# Experiment 2: network delay towards redis (resilience to dependency latency).
-apiVersion: chaos-mesh.org/v1alpha1
-kind: NetworkChaos
-metadata:
-  name: redis-network-delay
-  namespace: cg-chaos
-spec:
-  action: delay
-  mode: all
-  selector:
-    namespaces:
-      - cg-dev
-    labelSelectors:
-      app: redis
-  delay:
-    latency: "2000ms"
-    jitter: "500ms"
-  duration: "60s"
