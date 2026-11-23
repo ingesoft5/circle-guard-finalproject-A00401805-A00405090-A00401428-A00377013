@@ -353,3 +353,11 @@ Documentación:
 - [Operaciones](docs/operaciones/OPERACIONES.md)
 - [Estándares de documentación](docs/standards/documentation.md)
 - Pipeline: [`Jenkinsfile`](Jenkinsfile) y [`jenkins/vars/ci.groovy`](jenkins/vars/ci.groovy)
+
+### Final delivery artifacts
+
+- [Final report (DOCX)](docs/informe/CircleGuard_INFORME_FINAL.docx) and [PDF](docs/informe/CircleGuard_INFORME_FINAL.pdf) — consolidated Parte 1 + Parte 2, ordered and with raw body text justified.
+- [Final presentation (PPTX)](docs/informe/CircleGuard_PRESENTACION_FINAL.pptx) — 15 slides with speaker notes.
+- [IAG registry](IAG_REGISTRO.md) — individual AI-usage traceability, including the rewritten gateway/file-service section.
+- [Coverage index](docs/informe/evidencia/trazabilidad/coverage-reports.md) — JaCoCo artifacts for the core services, including `promotion`.
+- [On-prem cluster status](docs/infra/evidencia/estado-cluster-20261123.md) — read-only diagnosis of the degraded cluster and the external evidence still pending.

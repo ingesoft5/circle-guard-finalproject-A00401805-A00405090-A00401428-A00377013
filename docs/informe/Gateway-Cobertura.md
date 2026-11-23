@@ -28,7 +28,7 @@ Current result (JaCoCo 0.8.12, 24 tests, 0 failures):
 | Methods | 9 / 9 | 100.00 % |
 | Classes | 4 / 4 | 100.00 % |
 
-![JaCoCo coverage](evidencia/gateway-jacoco.png)
+![JaCoCo coverage](evidencia/trazabilidad/gateway-jacoco.png)
 
 ### Acceptance criteria -> tests
 
@@ -81,7 +81,7 @@ Playwright validates:
 
 ## SonarQube
 
-![SonarQube quality gate](evidencia/sonarqube-quality-gate.png)
+![SonarQube quality gate](evidencia/trazabilidad/10-sonarqube-quality-gate.png)
 
 ## Nexus
 
@@ -91,7 +91,7 @@ Published artifact and image:
 <TOOLS_PRIVATE_IP>:5000/circleguard-docker/gateway:<TAG>
 ```
 
-![Nexus artifacts](evidencia/nexus-repositories.png)
+![Nexus artifacts](evidencia/trazabilidad/11-nexus-repositories.png)
 
 ## Pipeline
 
@@ -101,4 +101,4 @@ gate) and `ci.integrationTest` for the gateway, followed by
 reports for every build, including failed builds. The shared library is loaded
 from `main` (`jenkins/vars`).
 
-![Gateway pipeline](evidencia/jenkins-pr15.png)
+![Gateway pipeline](evidencia/trazabilidad/jenkins-pr15.png)

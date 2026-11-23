@@ -114,8 +114,8 @@ Esto hace que la etapa **Unit Tests + JaCoCo** ejecute `./gradlew :services:circ
 
 ## Referencias
 
-- [Gateway-Cobertura.md](docs/informe/Gateway-Cobertura.md) — Estructura de informe similar
-- [CHANGELOG.md](../CHANGELOG.md#unreleased) — Registro de cambios
+- [Gateway-Cobertura.md](Gateway-Cobertura.md) — Estructura de informe similar
+- [CHANGELOG.md](../../CHANGELOG.md#unreleased) — Registro de cambios
 - [JaCoCo 0.8.12](https://www.jacoco.org/jacoco/trunk/doc/) — Herramienta de cobertura
 
 ---

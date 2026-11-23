@@ -7,6 +7,16 @@ Semantic Versioning.
 
 ## [Unreleased]
 
+### Final delivery (2026-11-23)
+
+- **Reporte final**: `CircleGuard_INFORME_FINAL.docx`/`.pdf` ordenados (sección 14 antes de 15), texto crudo justificado, TOC completo, rutas canónicas y contradicciones E2.5/E2.7/E2.10 corregidas; se regeneró el PDF.
+- **IAG**: sección de Daniela reescrita con 9 entradas profesionales para gateway, file-service e infraestructura CI/CD, dejando explícito el criterio humano y el uso de IAG como apoyo; se restauraron registros históricos reales de HU-FILE/HU-GATEWAY/HU-DASH/HU-NOTIF.
+- **Cobertura**: versionado del reporte JaCoCo real de `promotion` (76,9 % de líneas) y actualización del índice de cobertura.
+- **Release notes**: completadas las 7 notas históricas ausentes; ahora hay 35 notas para 34 tags.
+- **K8s**: las sondas de `gateway` y `promotion` usan `httpGet /actuator/health` conforme a `SecurityConfig`; `web` conserva `tcpSocket`.
+- **Sustentación**: añadida `docs/informe/CircleGuard_PRESENTACION_FINAL.pptx` (15 diapositivas con notas del orador).
+- **Evidencia externa**: documentado el estado degradado del clúster on-prem en `docs/infra/evidencia/estado-cluster-20261123.md`; Locust, ZAP, Jaeger y Alertmanager siguen pendientes de ejecución real, sin reportes fabricados.
+
 ### Changed
 
 - **E2.2/E2.3 (HU-DASH-04)**: `dashboard-service` pasa a `deploy: true` en el catálogo compartido y en el `Jenkinsfile`, por lo que la misma imagen versionada se promociona a `cg-dev`, `cg-stage` y `cg-prod` con aprobación manual en producción.
