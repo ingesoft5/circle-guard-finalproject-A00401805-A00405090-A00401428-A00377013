@@ -25,6 +25,7 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError
 from urllib.parse import quote
 
 try:
@@ -150,6 +151,9 @@ def jira_request(method: str, path: str, payload: dict[str, Any] | None, dry_run
         with req as response:
             raw = response.read()
             return json.loads(raw) if raw else {}
+    except HTTPError as exc:  # pragma: no cover
+        detail = exc.read().decode("utf-8", "replace")[:500]
+        raise SyncError(f"Jira API error {exc.code} on {method} {path}: {detail}") from exc
     except Exception as exc:  # pragma: no cover
         raise SyncError(f"Jira API error: {exc}") from exc
 
