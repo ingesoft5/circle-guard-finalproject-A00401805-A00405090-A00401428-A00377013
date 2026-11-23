@@ -4,6 +4,7 @@
 **Periodo:** 3–8 de noviembre de 2026
 **Fecha de revisión:** 8 de noviembre de 2026
 **Tablero:** [DCG en Jira](https://bomastik-site.atlassian.net/jira/software/projects/DCG/boards/67?filter=&groupBy=none)
+**Acta completa:** [Sprint-Review-Sprint-1.docx](../Sprint-Review-Sprint-1.docx)
 
 ## Objetivo revisado
 

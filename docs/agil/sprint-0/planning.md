@@ -45,4 +45,4 @@ infraestructura para que el Sprint 1 pudiera entregar el incremento de producto.
 ## Resultado
 
 El sprint cerró 7/7 ítems y 12/12 puntos. La revisión y las lecciones aprendidas están en
-`docs/agil/sprint-0/retrospective.md` y en `docs/informe/Sprint-Review-Sprint-0.docx`.
+`docs/agil/sprint-0/retrospective.md` y en `docs/agil/Sprint-Review-Sprint-0.docx`.
