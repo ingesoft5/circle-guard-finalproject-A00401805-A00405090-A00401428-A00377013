@@ -93,10 +93,11 @@ To prevent human errors before reaching the remote repository, the project inclu
 
 ### GitHub ↔ Jira integration
 
-The repository uses the versioned `.github/workflows/jira-sync.yml` workflow instead of an organization-level GitHub app (the team is not an org owner). It:
+The repository uses the versioned `.github/workflows/jira-sync.yml` workflow instead of an organization-level GitHub app (the team is not an org owner). It runs asynchronously and does **not** run on pull requests (so it does not add PR checks/delays). It:
 
-- blocks PRs whose title does not contain a `DCG-###` key;
-- mirrors `pull_request` / `pull_request_review` / `issues` events as idempotent Jira comments (marker `circleguard-jira-sync-v1`) via `scripts/jira_sync.py` using Jira REST v3;
-- transitions the Jira issue between *In Progress*, *In Review*, *Done* and *To Do* according to the PR lifecycle.
+- mirrors `issues` events as idempotent Jira comments (marker `circleguard-jira-sync-v1`) via `scripts/jira_sync.py` using Jira REST v3;
+- can be run manually via `workflow_dispatch` (`verify`) when needed.
 
-Required repository secrets: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`. The `HU-*` → `DCG-###` aliases live in `docs/agil/jira-mapping.yml`; only keys evidenced in the repository are registered — unmapped stories must carry their `DCG-###` key directly in the PR title.
+The Jira story identifier (`DCG-###`) should be included in the PR title for traceability; this is a convention enforced by the PR template (and optionally by local hooks), not by a blocking GitHub Action. Required repository secrets: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`. The `HU-*` → `DCG-###` aliases live in `docs/agil/jira-mapping.yml`; only keys evidenced in the repository are registered — unmapped stories must carry their `DCG-###` key directly in the PR title.
+
+> **Branch protection/rulesets**: if GitHub has `Jira key in PR title` (`validate-pr-title`) or `Mirror event to Jira` (`sync-jira`) configured as required status checks, remove them in GitHub Settings > Branches/Rulesets. `validate-pr-title` no longer exists, and `sync-jira` no longer runs on pull requests, so it will not report on PRs.

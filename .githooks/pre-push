@@ -49,5 +49,10 @@ if [ "$CURRENT_BRANCH" != "main" ]; then
     fi
 fi
 
+# Recordatorio no bloqueante: la trazabilidad Jira se mantiene en el título del PR.
+if [ "$CURRENT_BRANCH" != "main" ]; then
+    echo "ℹ️ Recordatorio: incluye la clave Jira (DCG-###) en el título del PR para trazabilidad."
+fi
+
 # Si todo está bien, el script termina con éxito y permite el push
 exit 0
