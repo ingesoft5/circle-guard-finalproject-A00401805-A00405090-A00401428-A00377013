@@ -52,6 +52,11 @@ spec:
                   key: POSTGRES_PASSWORD
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: kafka:9092
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: cg-secrets
+                  key: JWT_SECRET
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: validate
             - name: SPRING_FLYWAY_ENABLED

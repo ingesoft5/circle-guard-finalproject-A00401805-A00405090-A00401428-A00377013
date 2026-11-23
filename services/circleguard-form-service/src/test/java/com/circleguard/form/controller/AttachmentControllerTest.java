@@ -24,8 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Carga el contexto completo de Spring y prueba el endpoint de adjuntos mediante
  * MockMvc. En esta prueba se utiliza el StorageService real.
  */
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest(properties = "jwt.secret=test-only-secret-with-at-least-32-bytes")
+@AutoConfigureMockMvc(addFilters = false)
 @Testcontainers
 @Tag("integration")
 class AttachmentControllerTest {

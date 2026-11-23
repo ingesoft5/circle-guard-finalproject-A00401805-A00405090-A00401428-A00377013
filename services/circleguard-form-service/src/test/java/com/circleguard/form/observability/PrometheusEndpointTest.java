@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = PrometheusEndpointTest.Application.class, properties = "management.health.defaults.enabled=false")
 @AutoConfigureObservability
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 class PrometheusEndpointTest {
     @Autowired MockMvc mvc;
 

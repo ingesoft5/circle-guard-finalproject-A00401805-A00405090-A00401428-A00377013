@@ -24,7 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Verifica los contratos HTTP de certificados usando el servicio simulado;
  * no carga repositorios ni infraestructura de persistencia.
  */
-@WebMvcTest(CertificateValidationController.class)
+@WebMvcTest(value = CertificateValidationController.class, properties = "jwt.secret=test-only-secret-with-at-least-32-bytes")
+@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc(addFilters = false)
 class CertificateValidationControllerTest {
 
     @Autowired

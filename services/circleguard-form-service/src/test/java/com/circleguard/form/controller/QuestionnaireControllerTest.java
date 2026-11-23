@@ -24,7 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Verifica las respuestas HTTP de QuestionnaireController con MockMvc. La
  * lógica de negocio se aísla mediante un mock de QuestionnaireService.
  */
-@WebMvcTest(QuestionnaireController.class)
+@WebMvcTest(value = QuestionnaireController.class, properties = "jwt.secret=test-only-secret-with-at-least-32-bytes")
+@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc(addFilters = false)
 class QuestionnaireControllerTest {
 
     @Autowired

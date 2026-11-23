@@ -13,7 +13,7 @@ import { FORM_BASE_URL } from '@/constants/Config';
 
 export default function QuestionnaireScreen() {
   const router = useRouter();
-  const { anonymousId } = useAuth();
+  const { anonymousId, token } = useAuth();
   const [questionnaire, setQuestionnaire] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -58,7 +58,7 @@ export default function QuestionnaireScreen() {
   };
 
   const uploadAttachment = async () => {
-    if (!attachment) return null;
+    if (!attachment || !token) return null;
     
     setUploading(true);
     try {
@@ -75,6 +75,7 @@ export default function QuestionnaireScreen() {
         body: formData,
         headers: {
           'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -93,7 +94,7 @@ export default function QuestionnaireScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!anonymousId) return;
+    if (!anonymousId || !token) return;
     
     setSubmitting(true);
     try {
@@ -108,7 +109,7 @@ export default function QuestionnaireScreen() {
 
       const response = await fetch(`${FORM_BASE_URL}/api/v1/surveys`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           anonymousId,
           responses,
