@@ -1,3 +1,4 @@
+<!-- CG-DOC: Módulo `storage` (E2.1). -->
 # Módulo `storage` (E2.1)
 
 Declara los buckets MinIO de archivos y backups del ambiente (con versioning)

@@ -1,3 +1,4 @@
+<!-- CG-DOC: 18. Arquitectura y patrones de diseño — CircleGuard. -->
 # 18. Arquitectura y patrones de diseño — CircleGuard
 
 > **Propósito.** Documentar la arquitectura implementada en la Parte 2 y los patrones de

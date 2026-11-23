@@ -1,4 +1,5 @@
-# CG-DOC: FinOps bonus verification (enunciado L284)
+<!-- CG-DOC: FinOps bonus verification (enunciado L284). -->
+# FinOps bonus verification (enunciado L284)
 
 Bonificación de **FinOps** del enunciado L284: monitoreo de costos, spot y
 scale-to-zero. Evidencia **real** obtenida en el clúster on-prem `k3d-cg`

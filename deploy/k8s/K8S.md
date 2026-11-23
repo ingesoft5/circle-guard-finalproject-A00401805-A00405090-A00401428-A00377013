@@ -1,3 +1,4 @@
+<!-- CG-DOC: Kubernetes on-premise (k3d). -->
 # Kubernetes on-premise (k3d)
 
 Manifiestos Kustomize para los ocho servicios de CircleGuard, el cliente web y su

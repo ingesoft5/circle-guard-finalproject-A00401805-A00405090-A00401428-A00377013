@@ -1,3 +1,4 @@
+<!-- CG-DOC: Sprint 1 — Retrospectiva. -->
 # Sprint 1 — Retrospectiva
 
 **Sprint:** DCG Sprint 1

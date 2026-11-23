@@ -1,3 +1,4 @@
+<!-- CG-DOC: Arquitectura CircleGuard — Parte 1. -->
 # Arquitectura CircleGuard — Parte 1
 
 > **Parte 2 (vigente).** La plataforma actual corre on-premise en un único host: Compose `cg-tools` + k3d `cg` con namespaces `cg-dev`/`cg-stage`/`cg-prod` y Traefik `:30080` por header `Host`. Ver [`deploy/k8s/K8S.md`](../../deploy/k8s/K8S.md) y [`infra/onpremise/ONPREMISE.md`](../../infra/onpremise/ONPREMISE.md); el despliegue pasa por `kubectl`/Kustomize desde el pipeline. Este documento describe la Parte 1 y se conserva como referencia histórica.

@@ -1,3 +1,4 @@
+<!-- CG-DOC: HU-FORM-06: isolated cg-dev validation assets. -->
 # HU-FORM-06: isolated cg-dev validation assets
 
 This opt-in overlay reuses the monitoring stack from merged PRs #93 and #138. It has not been

@@ -1,3 +1,4 @@
+<!-- CG-DOC: Entornos dev, stage y prod. -->
 # Entornos dev, stage y prod
 
 > **Parte 1 (histórica).** Este documento describe la topología de cuatro hosts con Compose que

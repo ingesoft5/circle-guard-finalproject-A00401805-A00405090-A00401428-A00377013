@@ -1,3 +1,4 @@
+<!-- CG-DOC: Módulo `observability` (E2.1). -->
 # Módulo `observability` (E2.1)
 
 Declara el namespace de observabilidad del ambiente y los releases Helm de

@@ -1,3 +1,4 @@
+<!-- CG-DOC: Diagnóstico Técnico y Arquitectónico: `circleguard-promotion-service`. -->
 # Diagnóstico Técnico y Arquitectónico: `circleguard-promotion-service`
 
 **Historia de Usuario:** `HU-PROMO-01 (DCG-304)` — Diagnosticar la estructura y dependencias de `promotion-service`

@@ -1,4 +1,5 @@
-# CG-DOC: Patrones de diseño verificados en el código (E2.4)
+<!-- CG-DOC: Patrones de diseño verificados en el código (E2.4). -->
+# Patrones de diseño verificados en el código (E2.4)
 
 ## Patrones existentes (evidencia en código)
 

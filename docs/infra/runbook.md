@@ -1,3 +1,4 @@
+<!-- CG-DOC: Manual de operaciones (runbook). -->
 # Manual de operaciones (runbook)
 
 ## Parte 2 — Kubernetes on-premise (vigente)

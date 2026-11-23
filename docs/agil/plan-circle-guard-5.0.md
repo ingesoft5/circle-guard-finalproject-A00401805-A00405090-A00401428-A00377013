@@ -1,3 +1,4 @@
+<!-- CG-DOC: Plan CircleGuard 5.0 — Cierre P1 + P2 on-prem. -->
 # Plan CircleGuard 5.0 — Cierre P1 + P2 on-prem
 
 **Nombre corto:** Doble Cinco

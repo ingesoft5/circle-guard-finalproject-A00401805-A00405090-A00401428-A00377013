@@ -1,4 +1,5 @@
-# CG-DOC: Service Mesh bonus verification (enunciado L284)
+<!-- CG-DOC: Service Mesh bonus verification (enunciado L284). -->
+# Service Mesh bonus verification (enunciado L284)
 
 Bonificación de **service mesh (Istio con mTLS y canary)** del enunciado L284.
 Evidencia **real** obtenida en el clúster on-prem `k3d-cg` (k3s v1.31.1). No se

@@ -1,4 +1,5 @@
-# CG-DOC: Manual de operaciones (E2.9)
+<!-- CG-DOC: Manual de operaciones (E2.9). -->
+# Manual de operaciones (E2.9)
 
 ## Arranque local
 

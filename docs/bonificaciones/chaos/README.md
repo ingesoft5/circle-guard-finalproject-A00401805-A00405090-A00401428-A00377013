@@ -1,4 +1,5 @@
-# CG-DOC: Chaos engineering bonus verification (enunciado L284)
+<!-- CG-DOC: Chaos engineering bonus verification (enunciado L284). -->
+# Chaos engineering bonus verification (enunciado L284)
 
 Bonificación de **chaos engineering** del enunciado L284.
 

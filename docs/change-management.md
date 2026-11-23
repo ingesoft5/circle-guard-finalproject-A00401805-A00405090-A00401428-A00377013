@@ -1,3 +1,4 @@
+<!-- CG-DOC: Change Management y Release Notes — CircleGuard. -->
 # Change Management y Release Notes — CircleGuard
 
 **Alcance:** cambios de código, infraestructura, configuración y despliegue de la Parte 1.

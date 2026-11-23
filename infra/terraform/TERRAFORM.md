@@ -1,3 +1,4 @@
+<!-- CG-DOC: Terraform de CircleGuard (Parte 2, E2.1). -->
 # Terraform de CircleGuard (Parte 2, E2.1)
 
 La infraestructura completa de la plataforma se declara en módulos

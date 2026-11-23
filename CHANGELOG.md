@@ -1,3 +1,4 @@
+<!-- CG-DOC: Changelog. -->
 # Changelog
 
 All notable changes to CircleGuard are documented here. The format follows

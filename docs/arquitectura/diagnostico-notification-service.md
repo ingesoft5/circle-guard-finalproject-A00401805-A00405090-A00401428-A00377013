@@ -1,3 +1,4 @@
+<!-- CG-DOC: Diagnóstico Técnico y Arquitectónico: `circleguard-notification-service`. -->
 # Diagnóstico Técnico y Arquitectónico: `circleguard-notification-service`
 
 **Historia de Usuario:** `HU-NOTIF-01 (DCG-314)` — Diagnosticar la estructura y dependencias de `notification-service`

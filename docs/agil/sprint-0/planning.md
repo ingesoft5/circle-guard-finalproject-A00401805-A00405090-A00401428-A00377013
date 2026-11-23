@@ -1,3 +1,4 @@
+<!-- CG-DOC: Sprint 0 — Planning. -->
 # Sprint 0 — Planning
 
 **Proyecto:** CircleGuard

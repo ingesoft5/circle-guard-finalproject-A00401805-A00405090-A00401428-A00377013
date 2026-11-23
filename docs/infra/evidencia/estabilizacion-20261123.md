@@ -1,3 +1,4 @@
+<!-- CG-DOC: Estabilización on-prem — 2026-11-23. -->
 # Estabilización on-prem — 2026-11-23
 
 Registro de las correcciones aplicadas sin borrar recursos.

@@ -1,3 +1,4 @@
+<!-- CG-DOC: Sprint 0 Review — CircleGuard. -->
 # Sprint 0 Review — CircleGuard
 
 **Fecha:** 1–2 de noviembre de 2026  

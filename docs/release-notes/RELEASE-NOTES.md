@@ -1,3 +1,4 @@
+<!-- CG-DOC: Release Notes — CircleGuard. -->
 # Release Notes — CircleGuard
 
 El pipeline genera una nota por versión en este directorio:

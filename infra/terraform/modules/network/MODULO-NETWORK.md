@@ -1,3 +1,4 @@
+<!-- CG-DOC: Módulo `network` (E2.1). -->
 # Módulo `network` (E2.1)
 
 Declara el namespace de cada ambiente, su `ResourceQuota` y una `NetworkPolicy`

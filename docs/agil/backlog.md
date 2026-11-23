@@ -1,3 +1,4 @@
+<!-- CG-DOC: Backlog CircleGuard. -->
 # Backlog CircleGuard
 
 **Proyecto:** CircleGuard

@@ -1,3 +1,4 @@
+<!-- CG-DOC: Chaos Engineering Bonus - Verification Record. -->
 # Chaos Engineering Bonus - Verification Record
 # Enunciado L284: Chaos Engineering with Chaos Mesh/Litmus
 

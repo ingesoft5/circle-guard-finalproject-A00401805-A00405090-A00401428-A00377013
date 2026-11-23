@@ -1,3 +1,4 @@
+<!-- CG-DOC: Módulo `compute` (E2.1). -->
 # Módulo `compute` (E2.1)
 
 Declara el cómputo reutilizable del ambiente verificando el clúster k3d compartido

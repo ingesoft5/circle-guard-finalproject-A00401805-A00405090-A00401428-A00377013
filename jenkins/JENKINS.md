@@ -1,3 +1,4 @@
+<!-- CG-DOC: CircleGuard Shared Library. -->
 # CircleGuard Shared Library
 
 The `circleguard` Jenkins Shared Library lives in this directory. JCasC loads it

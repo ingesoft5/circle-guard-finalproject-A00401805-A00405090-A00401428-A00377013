@@ -1,3 +1,4 @@
+<!-- CG-DOC: CI/CD Pipeline — CircleGuard. -->
 # CI/CD Pipeline — CircleGuard
 
 **Jenkins:** multibranch job `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`

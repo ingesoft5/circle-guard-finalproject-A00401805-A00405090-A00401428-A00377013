@@ -1,3 +1,4 @@
+<!-- CG-DOC: Anexo — Migración on-premise de CircleGuard. -->
 # Anexo — Migración on-premise de CircleGuard
 
 **Última actualización:** 17 de noviembre de 2026

@@ -1,3 +1,4 @@
+<!-- CG-DOC: FinOps — Política de instancias Spot y ahorro de costos (enunciado L284). -->
 # FinOps — Política de instancias Spot y ahorro de costos (enunciado L284)
 
 ## Objetivo

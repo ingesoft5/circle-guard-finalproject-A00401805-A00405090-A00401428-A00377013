@@ -1,3 +1,4 @@
+<!-- CG-DOC: Gestión ágil — CircleGuard. -->
 # Gestión ágil — CircleGuard
 
 **Marco:** Scrum con tablero Jira DCG

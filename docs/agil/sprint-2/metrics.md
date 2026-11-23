@@ -1,3 +1,4 @@
+<!-- CG-DOC: Métricas de flujo — Sprint 2 (DCG Sprint 2). -->
 # Métricas de flujo — Sprint 2 (DCG Sprint 2)
 
 Fecha de corte: 2026-11-22. Fuente: registro histórico del cierre del Sprint 2,

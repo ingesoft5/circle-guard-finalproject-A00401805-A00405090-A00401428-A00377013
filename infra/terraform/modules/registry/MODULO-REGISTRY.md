@@ -1,3 +1,4 @@
+<!-- CG-DOC: Módulo `registry` (E2.1). -->
 # Módulo `registry` (E2.1)
 
 Declara el registro de contenedores del ambiente: PVC persistente, Deployment

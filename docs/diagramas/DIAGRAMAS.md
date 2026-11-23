@@ -1,3 +1,4 @@
+<!-- CG-DOC: Infrastructure diagrams (Parte 2, E2.1). -->
 # Infrastructure diagrams (Parte 2, E2.1)
 
 Los diagramas describen la infraestructura declarada con Terraform: módulos

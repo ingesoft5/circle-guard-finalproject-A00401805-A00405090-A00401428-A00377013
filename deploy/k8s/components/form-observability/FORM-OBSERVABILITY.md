@@ -1,3 +1,4 @@
+<!-- CG-DOC: Form observability components. -->
 # Form observability components
 
 These Kustomize components extend the shared stack merged in PR #93. They are selected by the application overlays and monitoring configuration in this branch. They do not create additional monitoring servers, a log collector, or a tracing backend.
