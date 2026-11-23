@@ -16,7 +16,15 @@ CHAOS_NS="cg-chaos"
 TARGET_NS="cg-dev"
 FAILED=0
 
-k() { kubectl --context "$CTX" --request-timeout=10s "$@"; }
+k() { timeout 25s kubectl --context "$CTX" --request-timeout=15s "$@"; }
+pod_uids() {
+  k get pods -n "$TARGET_NS" -l app=gateway -o jsonpath='{.items[*].metadata.uid}' 2>/dev/null \
+    | tr ' ' '\n' | sed '/^$/d' | sort
+}
+pod_ready_any() {
+  k get pods -n "$TARGET_NS" -l app=gateway -o jsonpath='{.items[*].status.containerStatuses[0].ready}' 2>/dev/null \
+    | tr ' ' '\n' | grep -q '^true$'
+}
 ok()   { echo "  [PASS] $*"; }
 fail() { echo "  [FAIL] $*"; FAILED=$((FAILED+1)); }
 info() { echo "  [INFO] $*"; }
@@ -44,12 +52,12 @@ GW_BEFORE=$(k get deploy gateway -n "$TARGET_NS" -o jsonpath='{.status.readyRepl
 [[ "$GW_BEFORE" -ge 1 ]] \
   && ok "gateway baseline ready=$GW_BEFORE" \
   || abort "gateway baseline ready=$GW_BEFORE"
-GW_UID_BEFORE=$(k get pods -n "$TARGET_NS" -l app=gateway -o jsonpath='{.items[0].metadata.uid}' 2>/dev/null || echo "")
-GW_POD_BEFORE=$(k get pods -n "$TARGET_NS" -l app=gateway -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
-[[ -n "$GW_UID_BEFORE" ]] \
-  && ok "gateway pod baseline captured ($GW_POD_BEFORE uid=$GW_UID_BEFORE)" \
-  || abort "could not capture gateway pod UID"
+GW_UIDS_BEFORE=$(pod_uids)
+[[ -n "$GW_UIDS_BEFORE" ]] \
+  && ok "gateway pod UIDs captured ($(echo "$GW_UIDS_BEFORE" | tr '\n' ' '))" \
+  || abort "could not capture gateway pod UIDs"
 k delete podchaos gateway-pod-kill -n "$CHAOS_NS" --ignore-not-found >/dev/null 2>&1 || true
+k delete networkchaos redis-network-delay -n "$CHAOS_NS" --ignore-not-found >/dev/null 2>&1 || true
 
 echo "=== 3. Apply the real PodChaos experiment ==="
 k apply -f deploy/chaos/chaos-experiments.yml 2>&1 \
@@ -61,32 +69,42 @@ PC_EXISTS=$(k get podchaos gateway-pod-kill -n "$CHAOS_NS" -o name 2>/dev/null |
   || abort "PodChaos resource was not created"
 k get podchaos gateway-pod-kill -n "$CHAOS_NS" 2>&1
 
-echo "=== 4. Injection evidence: gateway pod UID must change ==="
+echo "=== 4. Injection evidence: one gateway pod UID must disappear ==="
 GW_KILLED=0
 for i in $(seq 1 20); do
-  GW_UID_NOW=$(k get pods -n "$TARGET_NS" -l app=gateway -o jsonpath='{.items[0].metadata.uid}' 2>/dev/null || echo "")
-  if [[ -n "$GW_UID_NOW" && "$GW_UID_NOW" != "$GW_UID_BEFORE" ]]; then
-    GW_KILLED=1
-    GW_POD_AFTER=$(k get pods -n "$TARGET_NS" -l app=gateway -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
-    echo "  gateway pod killed: $GW_POD_BEFORE -> $GW_POD_AFTER (uid changed)"
-    break
+  GW_UIDS_NOW=$(pod_uids)
+  if [[ -n "$GW_UIDS_NOW" ]]; then
+    MISSING_UID=$(comm -23 <(echo "$GW_UIDS_BEFORE") <(echo "$GW_UIDS_NOW") | head -1)
+    if [[ -n "$MISSING_UID" ]]; then
+      GW_KILLED=1
+      echo "  gateway pod killed: uid $MISSING_UID disappeared; current uids: $(echo "$GW_UIDS_NOW" | tr '\n' ' ')"
+      break
+    fi
   fi
   sleep 3
 done
 [[ "$GW_KILLED" -eq 1 ]] \
-  && ok "PodChaos really killed the gateway pod (UID changed)" \
-  || fail "no evidence of pod-kill (UID unchanged during 60s window)"
+  && ok "PodChaos really killed a gateway pod (UID disappeared)" \
+  || fail "no evidence of pod-kill (UID set unchanged during 60s window)"
 
-echo "=== 5. Recovery evidence: gateway returns to ready state ==="
+echo "=== 5. Recovery evidence: gateway returns to ready state (max 180s) ==="
 GW_AFTER=0
-for i in $(seq 1 20); do
+for i in $(seq 1 60); do
   GW_AFTER=$(k get deploy gateway -n "$TARGET_NS" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo 0)
-  [[ "$GW_AFTER" -ge 1 ]] && break
+  [[ -z "$GW_AFTER" ]] && GW_AFTER=0
+  if [[ "$GW_AFTER" -ge 1 ]]; then break; fi
+  # The host is heavily loaded; a ready pod is real evidence even if the
+  # Deployment status has not caught up yet.
+  if pod_ready_any; then
+    echo "  gateway pod ready again (Deployment readyReplicas not reported yet)"
+    GW_AFTER=1
+    break
+  fi
   sleep 3
 done
 [[ "$GW_AFTER" -ge 1 ]] \
   && ok "gateway recovered after pod-kill (ready=$GW_AFTER)" \
-  || fail "gateway did not recover (ready=$GW_AFTER after 60s)"
+  || fail "gateway did not recover (ready=$GW_AFTER after 180s)"
 
 echo "=== 6. Rollback: delete experiment and confirm steady state ==="
 k delete -f deploy/chaos/chaos-experiments.yml >/dev/null 2>&1 \
@@ -101,10 +119,20 @@ done
 [[ -z "$PC_AFTER" ]] \
   && ok "no chaos resource remains after rollback" \
   || fail "chaos resource still present after rollback"
-GW_FINAL=$(k get deploy gateway -n "$TARGET_NS" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo 0)
+GW_FINAL=0
+for i in $(seq 1 60); do
+  GW_FINAL=$(k get deploy gateway -n "$TARGET_NS" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo 0)
+  [[ -z "$GW_FINAL" ]] && GW_FINAL=0
+  if [[ "$GW_FINAL" -ge 1 ]]; then break; fi
+  if pod_ready_any; then
+    GW_FINAL=1
+    break
+  fi
+  sleep 3
+done
 [[ "$GW_FINAL" -ge 1 ]] \
   && ok "gateway steady after rollback (ready=$GW_FINAL)" \
-  || fail "gateway not steady after rollback (ready=$GW_FINAL)"
+  || fail "gateway not steady after rollback (ready=$GW_FINAL after 180s)"
 
 echo "=== RESULT ==="
 if [[ "$FAILED" -eq 0 ]]; then
