@@ -8,8 +8,6 @@
 def services = []
 def javaServices = []
 def nodeServices = []
-def resolvedFiles = []
-def autoDiffAvailable = false
 
 // The Jenkins container carries the environment addresses and the registry in its
 // process environment (deploy/compose/tools/.env), but a pipeline does not see those
@@ -198,7 +196,6 @@ def resolveServicesLocal(String mode) {
     if (requested == 'auto') {
         if ((env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') && !env.CHANGE_TARGET?.trim()) {
             echo 'Main branch build: building all services.'
-            autoDiffAvailable = true
             return ciServices.catalog()
         }
         def target = env.CHANGE_TARGET?.trim() ?: 'main'
@@ -209,19 +206,13 @@ def resolveServicesLocal(String mode) {
             diff = sh(script: "git diff --name-only origin/${target}...HEAD", returnStdout: true).trim()
         } catch (Exception ex) {
             echo "Could not compute the diff against origin/${target}: ${ex.message}. Building all services."
-            autoDiffAvailable = false
-            resolvedFiles = []
             return ciServices.catalog()
         }
         if (!diff) {
             echo "No service changes relative to origin/${target}."
-            autoDiffAvailable = true
-            resolvedFiles = []
             return []
         }
         def files = diff.readLines().findAll { it.trim() }
-        autoDiffAvailable = true
-        resolvedFiles = files
         def selected = selectServicesFromFilesLocal(files)
         if (!selected) {
             echo "Changes with no matching Gradle service: ${files.join(', ')}"
