@@ -1,56 +1,43 @@
 package com.circleguard.form.service;
 
-import io.micrometer.core.instrument.MeterRegistry;
+import com.circleguard.form.model.FormOutboxEvent;
+import com.circleguard.form.repository.FormOutboxRepository;
 import io.micrometer.tracing.Tracer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.micrometer.tracing.propagation.Propagator;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import java.util.HashMap;
+import java.util.Map;
 
-/** Observes delivery acknowledgements without changing event contracts or retries. */
+/** Persists the event in the caller's PostgreSQL transaction. */
 @Component
 public class FormEventPublisher {
-    private static final Logger log = LoggerFactory.getLogger(FormEventPublisher.class);
-    private final KafkaTemplate<String, Object> kafka;
-    private final MeterRegistry meters;
+    private final FormOutboxRepository outbox;
     private final ObjectProvider<Tracer> tracers;
+    private final ObjectProvider<Propagator> propagators;
 
-    public FormEventPublisher(KafkaTemplate<String, Object> kafka, MeterRegistry meters,
-                              ObjectProvider<Tracer> tracers) {
-        this.kafka = kafka;
-        this.meters = meters;
+    public FormEventPublisher(FormOutboxRepository outbox, ObjectProvider<Tracer> tracers,
+                              ObjectProvider<Propagator> propagators) {
+        this.outbox = outbox;
         this.tracers = tracers;
-        for (String topic : new String[]{"survey.submitted", "certificate.validated"}) {
-            for (String result : new String[]{"success", "failure"}) {
-                meters.counter("circleguard.form.event.publications", "event_type", topic, "result", result);
-            }
-        }
+        this.propagators = propagators;
     }
 
     public void publish(String topic, String key, Object event) {
         if (!"survey.submitted".equals(topic) && !"certificate.validated".equals(topic)) {
             throw new IllegalArgumentException("Unsupported Form event type");
         }
+        if (!(event instanceof Map<?, ?> values)) {
+            throw new IllegalArgumentException("Form event must be a map");
+        }
+        Map<String, Object> payload = new HashMap<>();
+        values.forEach((name, value) -> payload.put((String) name, value));
+        Map<String, String> headers = new HashMap<>();
         Tracer tracer = tracers.getIfAvailable();
-        String traceId = tracer != null && tracer.currentSpan() != null
-                ? tracer.currentSpan().context().traceId() : "none";
-        try {
-            kafka.send(topic, key, event).whenComplete((ack, error) ->
-                    record(topic, error == null ? "success" : "failure", traceId));
-        } catch (RuntimeException error) {
-            record(topic, "failure", traceId);
-            throw error;
+        Propagator propagator = propagators.getIfAvailable();
+        if (tracer != null && propagator != null && tracer.currentSpan() != null) {
+            propagator.inject(tracer.currentSpan().context(), headers, Map::put);
         }
-    }
-
-    private void record(String topic, String result, String traceId) {
-        meters.counter("circleguard.form.event.publications", "event_type", topic, "result", result).increment();
-        // Do not log exception messages, Kafka keys, event payloads or attachment paths.
-        if ("failure".equals(result)) {
-            log.warn("event_type={} result={} trace_id={}", topic, result, traceId);
-        } else {
-            log.info("event_type={} result={} trace_id={}", topic, result, traceId);
-        }
+        outbox.save(new FormOutboxEvent(topic, key, payload, headers.get("traceparent")));
     }
 }
