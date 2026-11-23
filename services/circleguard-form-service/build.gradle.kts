@@ -30,6 +30,7 @@ dependencies {
     testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.kafka:spring-kafka")
+    implementation("io.github.resilience4j:resilience4j-retry:2.2.0")
     implementation("org.flywaydb:flyway-core")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")

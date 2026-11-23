@@ -25,6 +25,13 @@ server:
 jwt:
   secret: ${JWT_SECRET}
 
+form:
+  outbox:
+    ack-timeout-ms: ${FORM_OUTBOX_ACK_TIMEOUT_MS:3000}
+    retry-attempts: ${FORM_OUTBOX_RETRY_ATTEMPTS:3}
+    retry-wait-ms: ${FORM_OUTBOX_RETRY_WAIT_MS:500}
+    poll-ms: ${FORM_OUTBOX_POLL_MS:1000}
+
 management:
   endpoints:
     web:
