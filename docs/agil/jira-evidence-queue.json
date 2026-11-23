@@ -11,6 +11,11 @@
       "paragraph": "L186 - El reto de implementar DevOps",
       "key": "DCG-5",
       "text": "CUMPLE. Brecha DevOps cerrada: Dockerfile multi-stage para los 8 microservicios y el cliente Expo; Jenkinsfile multibranch con Shared Library (jenkins/vars/ci,ciNotify,ciServices,ciVersion); Terraform modular en infra/terraform/envs/{dev,stage,prod}; Actuator y Micrometer en los 8 servicios; Resilience4j en auth, identity y notification; 5 flujos E2E en tests/e2e; credenciales parametrizadas con ${VAR} en deploy/compose/*/docker-compose.yml y solo .env.example versionados. Dashboard de negocio en deploy/k8s/monitoring/grafana.yml. Evidencia: Jenkinsfile, jenkins/vars/, infra/terraform/, deploy/k8s/monitoring/, tests/e2e/, docs/change-management.md."
+    },
+    {
+      "paragraph": "L187-197 - Estructura en dos entregas",
+      "key": "DCG-5",
+      "text": "CUMPLE. Estructura de dos entregas verificada: Parte 1 (15 %) con automatizacion, colaboracion, integracion y entrega continua (Jenkinsfile, jenkins/vars/, PRs revisados, Bash en infra/bootstrap/, GitHub, SonarQube y Playwright en tests/e2e); Parte 2 (25 %) con Terraform modular en infra/terraform/envs/{dev,stage,prod}, Kubernetes en deploy/k8s/overlays, Prometheus/Grafana/Jaeger en deploy/k8s/monitoring/, patrones en docs/patrones/, seguridad y calidad en Jenkins y documentacion completa. Evidencia: Jenkinsfile, infra/bootstrap/, infra/terraform/, deploy/k8s/, docs/patrones/, docs/operaciones/, docs/costos/, README.md."
     }
   ]
 }
