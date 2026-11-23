@@ -36,6 +36,7 @@ SYNC_MARKER = "circleguard-jira-sync-v1"
 DEFAULT_MAPPING = Path(__file__).resolve().parents[1] / "docs/agil/jira-mapping.yml"
 DEFAULT_EVIDENCE = Path(__file__).resolve().parents[1] / "docs/agil/jira-evidence-queue.json"
 DEFAULT_ISSUES = Path(__file__).resolve().parents[1] / "docs/agil/jira-issues-to-create.json"
+DEFAULT_ASSIGNMENTS = Path(__file__).resolve().parents[1] / "docs/agil/jira-sprint-assignment.json"
 
 # Jira Cloud workflow transition names (case-insensitive). Adjust in the mapping file
 # if the DCG board renames them.
@@ -299,6 +300,111 @@ def create_issues(path: Path, dry_run: bool) -> None:
             print(f"[ok] would create - {summary}")
 
 
+def resolve_sprint_ids(board_id: int, names: list[str], dry_run: bool) -> dict[str, int]:
+    """Map sprint names to real Jira Agile IDs from board DCG (67)."""
+    if dry_run:
+        return {name: idx + 1 for idx, name in enumerate(names)}
+    data = jira_request(
+        "GET",
+        f"/rest/agile/1.0/board/{board_id}/sprint?maxResults=50&state=active,closed,future",
+        None,
+        dry_run,
+    )
+    result: dict[str, int] = {}
+    for sprint in data.get("values", []):
+        name = sprint.get("name")
+        sid = sprint.get("id")
+        if name and sid is not None:
+            result[str(name)] = int(sid)
+    return result
+
+
+def resolve_sprint_field(dry_run: bool) -> str | None:
+    """Discover the Jira custom field id whose name is Sprint."""
+    if dry_run:
+        return "customfield_SPRINT"
+    fields = jira_request("GET", "/rest/api/3/field", None, dry_run)
+    if isinstance(fields, list):
+        for field in fields:
+            if str(field.get("name", "")).lower() == "sprint" and field.get("custom"):
+                return field.get("id")
+    return None
+
+
+def current_sprint_ids(key: str, field_id: str, dry_run: bool) -> set[int]:
+    if dry_run:
+        return set()
+    data = jira_request("GET", f"/rest/api/3/issue/{key}?fields={field_id}", None, dry_run)
+    value = (data.get("fields") or {}).get(field_id)
+    if not value:
+        return set()
+    if isinstance(value, str):
+        value = [value]
+    ids: set[int] = set()
+    for entry in value:
+        raw = entry.get("id") if isinstance(entry, dict) else entry
+        try:
+            ids.add(int(raw))
+        except (TypeError, ValueError):
+            continue
+    return ids
+
+
+def assign_sprints(path: Path, dry_run: bool) -> None:
+    """Assign evidence issues to the Jira sprints declared in a JSON file."""
+    if not path.exists():
+        print(f"[warn] sprint assignment file not found: {path}")
+        return
+    config = json.loads(path.read_text(encoding="utf-8"))
+    board_id = int(config.get("board_id", 67))
+    default_names = config.get("sprints", [])
+    field_id = resolve_sprint_field(dry_run)
+    if not field_id:
+        raise SyncError("Jira Sprint custom field not found")
+    all_names = list(default_names)
+    for item in config.get("issues", []):
+        all_names.extend(item.get("sprints") or [])
+    sprint_map = resolve_sprint_ids(board_id, all_names, dry_run)
+
+    for item in config.get("issues", []):
+        key = item.get("key", "")
+        if not re.fullmatch(r"DCG-\d+", key):
+            continue
+        names = item.get("sprints") or default_names
+        wanted: list[int] = []
+        for name in names:
+            sid = sprint_map.get(name)
+            if sid is None:
+                needle = name.lower()
+                match = next(
+                    (sid for sname, sid in sprint_map.items() if needle in sname.lower()), None
+                )
+                if match is not None:
+                    print(f"[ok] sprint '{name}' matched Jira sprint id {match}")
+                    sid = match
+            if sid is None:
+                print(f"[warn] sprint '{name}' not found on board {board_id}")
+                continue
+            wanted.append(sid)
+        if not wanted:
+            continue
+        current = current_sprint_ids(key, field_id, dry_run)
+        merged = sorted(current | set(wanted))
+        if merged == sorted(current):
+            print(f"[skip] sprints already assigned on {key}: {merged}")
+        else:
+            jira_request(
+                "PUT", f"/rest/api/3/issue/{key}", {"fields": {field_id: merged}}, dry_run
+            )
+            print(f"[ok] assigned {key} -> {names} ids={merged}")
+
+        note = item.get("note", "")
+        seed = f"{SYNC_MARKER} | sprint | {key} | {', '.join(names)}\n{note}"
+        digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:12]
+        comment_once(key, digest, adf_document(seed.splitlines()), dry_run)
+        print(f"[ok] sprint note {key} ({digest})")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--event", help="GitHub event name (pull_request, pull_request_review, issues)")
@@ -310,6 +416,8 @@ def main() -> int:
     parser.add_argument("--apply-evidence", action="store_true", help="Post queued paragraph evidence comments")
     parser.add_argument("--create-issues", action="store_true", help="Create missing DCG issues from the issues file")
     parser.add_argument("--issues-file", default=str(DEFAULT_ISSUES))
+    parser.add_argument("--assign-sprints", action="store_true", help="Assign DCG issues to Jira sprints")
+    parser.add_argument("--assignments-file", default=str(DEFAULT_ASSIGNMENTS))
     args = parser.parse_args()
 
     if args.verify:
@@ -318,6 +426,10 @@ def main() -> int:
         print(f"[ok] Jira auth: {me.get('displayName')} <{me.get('emailAddress')}>")
         print(f"[ok] Project: {project.get('key')} - {project.get('name')}")
         return 0
+    if args.assign_sprints:
+        assign_sprints(Path(args.assignments_file), args.dry_run)
+        if not args.event or not args.payload:
+            return 0
     if args.create_issues:
         create_issues(Path(args.issues_file), args.dry_run)
         if not args.event or not args.payload:

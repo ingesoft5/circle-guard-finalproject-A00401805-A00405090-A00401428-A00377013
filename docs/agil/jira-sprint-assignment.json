@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "source": "Auditoría enunciado L230-231: DCG-437 cubre E1.8/bitácora IAG (Sprint 0-1) y el cierre de P2-09 (Sprint 2).",
+  "board_id": 67,
+  "sprints": ["DCG Sprint 1", "DCG Sprint 2"],
+  "issues": [
+    {
+      "key": "DCG-437",
+      "sprints": ["DCG Sprint 1", "DCG Sprint 2"],
+      "note": "Tarea de registro IAG y trazabilidad individual: origen en E1.8 / bitácora IAG (Sprint 0-1) y cierre de evidencia L230-231 / P2-09 (Sprint 2)."
+    }
+  ]
+}
