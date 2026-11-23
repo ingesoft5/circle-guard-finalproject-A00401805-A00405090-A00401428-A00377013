@@ -28,6 +28,60 @@
         "E1.7: plantilla de cambio, política de aprobación, release notes y etiquetado semver (docs/change-management.md).",
         "E1.8: README operativo, diagramas de arquitectura/pipeline y bitácora IAG (docs/arquitectura/, docs/diagramas/, IAG_REGISTRO.md)."
       ]
+    },
+    {
+      "summary": "Verificación entregables E2.1-E2.10 (Parte 2)",
+      "issue_type": "Task",
+      "labels": ["entrega-2", "evidencia", "documentacion"],
+      "description": [
+        "Auditoría del enunciado L271-280 (entregables E2.1 a E2.10 de la Parte 2).",
+        "E2.1 IaC: cinco modulos Terraform, tres entornos con backend S3 + DynamoDB y diagramas en docs/diagramas.",
+        "E2.2 Kubernetes: ocho servicios y middleware, namespaces por overlay, ConfigMaps/Secrets, Ingress, HPA y sondas Actuator.",
+        "E2.3 Pipeline incrementado: terraform plan/apply, aprobacion de produccion, Trivy IaC/imagenes y despliegue Kubernetes.",
+        "E2.4 Patrones: cinco patrones existentes documentados y tres implementados con trade-offs y prueba.",
+        "E2.5 Observabilidad: PARCIAL; falta traza desplegada form -> Kafka -> promotion -> notification en Jaeger.",
+        "E2.6 Seguridad: Trivy, secretos parametrizados, RBAC, TLS y compuerta OWASP ZAP.",
+        "E2.7 Pruebas avanzadas: PARCIAL; suite Locust y ZAP en repo, faltan resultados de ejecucion en cg-stage.",
+        "E2.8 Change management: release notes, rollback ejecutado v1.2.5 y registro de cambios por ambiente.",
+        "E2.9 Documentacion: diagramas, agile, costos, runbook y resumen ejecutivo en ingles.",
+        "E2.10 Presentacion: PENDIENTE de sustentacion en vivo."
+      ]
+    },
+    {
+      "summary": "Traza completa Jaeger form - Kafka - promotion - notification",
+      "issue_type": "Task",
+      "labels": ["e2", "observabilidad", "jaeger", "evidencia"],
+      "description": [
+        "Cierra la brecha de E2.5 detectada en docs/informe/HU-FORM-06.md:13-14,123,135.",
+        "Desplegar la pila de observabilidad (Jaeger/OTLP, Prometheus, Grafana, Loki) en el cluster on-prem.",
+        "Habilitar exportacion OTLP y propagacion W3C en form, promotion y notification.",
+        "Capturar una unica traza form -> Kafka -> promotion -> notification con relaciones padre/hijo verificables en Jaeger.",
+        "Adjuntar captura o export de la traza a docs/informe/evidencia/ y referenciarla desde el informe final."
+      ]
+    },
+    {
+      "summary": "Ejecucion de Locust y ZAP en cg-stage con reporte consolidado",
+      "issue_type": "Task",
+      "labels": ["e2", "rendimiento", "seguridad", "evidencia"],
+      "description": [
+        "Cierra la brecha de E2.7 detectada en docs/informe/evidencia/E2.6-locust.md:25-28.",
+        "Ejecutar tests/performance-locust/locustfile.py contra cg-stage con 50 usuarios concurrentes.",
+        "Registrar p95 de validacion de acceso y login, throughput medio y tasa de errores frente a los objetivos declarados.",
+        "Ejecutar el baseline de OWASP ZAP del pipeline sobre cg-stage y archivar build/reports/security/zap-stage.txt.",
+        "Consolidar resultados de cobertura, calidad, rendimiento y seguridad en docs/informe/evidencia/."
+      ]
+    },
+    {
+      "summary": "Sustentacion final y ensayo de demostracion",
+      "issue_type": "Task",
+      "labels": ["e2", "sustentacion", "demostracion"],
+      "description": [
+        "Cierra E2.10 (Presentacion) del enunciado L280.",
+        "Preparar guion de sustentacion de arquitectura e infraestructura con los diagramas de docs/diagramas.",
+        "Demostrar CI/CD en Jenkins, aplicacion funcionando, dashboards de Grafana y resultados de rendimiento.",
+        "Ensayar el flujo completo en el host on-prem y registrar lecciones aprendidas.",
+        "Adjuntar evidencia de la sustentacion al informe final y al tablero DCG."
+      ]
     }
   ]
 }
