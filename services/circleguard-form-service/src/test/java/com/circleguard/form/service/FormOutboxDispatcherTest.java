@@ -60,6 +60,24 @@ class FormOutboxDispatcherTest {
     }
 
     @Test
+    void eventWithValidTraceparentIsPublishedAndLogged() {
+        FormOutboxRepository outbox = mock(FormOutboxRepository.class);
+        KafkaTemplate<String, Object> kafka = mock(KafkaTemplate.class);
+        var meters = new SimpleMeterRegistry();
+        var event = new FormOutboxEvent("survey.submitted", "user-1", Map.of("hasSymptoms", true),
+                "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+        when(outbox.lockNextDue()).thenReturn(Optional.of(event));
+        when(kafka.send(any(ProducerRecord.class))).thenReturn(CompletableFuture.completedFuture(null));
+        FormOutboxDispatcher dispatcher = dispatcher(outbox, kafka, meters);
+
+        assertTrue(dispatcher.dispatchOne());
+        verify(outbox).delete(event);
+        verify(kafka).send(org.mockito.ArgumentMatchers.<ProducerRecord<String, Object>>argThat(record ->
+                record.headers().lastHeader("traceparent") != null));
+        assertEquals(1, count(meters, "success"));
+    }
+
+    @Test
     void emptyQueueDoesNotCallKafka() {
         FormOutboxRepository outbox = mock(FormOutboxRepository.class);
         KafkaTemplate<String, Object> kafka = mock(KafkaTemplate.class);
