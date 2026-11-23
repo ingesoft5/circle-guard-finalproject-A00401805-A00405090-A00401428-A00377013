@@ -1,0 +1,41 @@
+# CG-DOC: Grafana cost dashboard for the L284 FinOps bonus. Provided as a
+# provisionable ConfigMap; the dashboard visualises OpenCost namespace cost.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: finops-cost-dashboard
+  namespace: monitoring
+  labels:
+    finops: cost
+    grafana_dashboard: "1"
+data:
+  opencost-cost.json: |
+    {
+      "title": "CircleGuard - Cost by Namespace (OpenCost)",
+      "uid": "cg-finops-cost",
+      "schemaVersion": 39,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Costo acumulado por namespace (USD)",
+          "gridPos": {"h": 10, "w": 24, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "sum by (namespace) (opencost_namespace_total_cost)",
+              "legendFormat": "{{namespace}}"
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "title": "Costo por workload",
+          "gridPos": {"h": 10, "w": 24, "x": 0, "y": 10},
+          "targets": [
+            {
+              "expr": "sum by (namespace, workload) (opencost_workload_total_cost)",
+              "format": "table"
+            }
+          ]
+        }
+      ]
+    }
