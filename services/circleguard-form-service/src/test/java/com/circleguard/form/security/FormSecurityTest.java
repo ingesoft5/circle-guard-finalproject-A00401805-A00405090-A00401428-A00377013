@@ -30,9 +30,16 @@ class FormSecurityTest {
     @MockBean QuestionnaireService questionnaires;
 
     private String token(String permission) {
-        return Jwts.builder().setSubject("550e8400-e29b-41d4-a716-446655440000")
-                .claim("permissions", List.of(permission))
-                .setExpiration(new Date(System.currentTimeMillis() + 60000))
+        return token("550e8400-e29b-41d4-a716-446655440000", List.of(permission), 60000);
+    }
+
+    private String token(String subject, Object permissions, long expirationOffsetMillis) {
+        var builder = Jwts.builder();
+        if (subject != null) {
+            builder.setSubject(subject);
+        }
+        return builder.claim("permissions", permissions)
+                .setExpiration(new Date(System.currentTimeMillis() + expirationOffsetMillis))
                 .signWith(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -55,5 +62,50 @@ class FormSecurityTest {
                 .header("Authorization", "Bearer invalid"))
                 .andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/questionnaires/active")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void ignoresAuthorizationHeaderWithoutBearerPrefix() throws Exception {
+        mvc.perform(post("/api/v1/questionnaires")
+                .header("Authorization", "Basic " + token("ROLE_ADMIN")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rejectsTokenWithBlankSubject() throws Exception {
+        mvc.perform(post("/api/v1/questionnaires")
+                .header("Authorization", "Bearer " + token("   ", List.of("ROLE_ADMIN"), 60000)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rejectsTokenWithMissingSubject() throws Exception {
+        mvc.perform(post("/api/v1/questionnaires")
+                .header("Authorization", "Bearer " + token(null, List.of("ROLE_ADMIN"), 60000)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rejectsTokenWithPermissionsThatAreNotAList() throws Exception {
+        mvc.perform(post("/api/v1/questionnaires")
+                .header("Authorization", "Bearer " + token("550e8400-e29b-41d4-a716-446655440000",
+                        "ROLE_ADMIN", 60000)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rejectsTokenWithNonStringPermission() throws Exception {
+        mvc.perform(post("/api/v1/questionnaires")
+                .header("Authorization", "Bearer " + token("550e8400-e29b-41d4-a716-446655440000",
+                        List.of("ROLE_ADMIN", 42), 60000)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rejectsExpiredToken() throws Exception {
+        mvc.perform(post("/api/v1/questionnaires")
+                .header("Authorization", "Bearer " + token("550e8400-e29b-41d4-a716-446655440000",
+                        List.of("ROLE_ADMIN"), -60000)))
+                .andExpect(status().isUnauthorized());
     }
 }
