@@ -120,6 +120,10 @@ docker compose --env-file deploy/compose/dev/.env -f deploy/compose/dev/docker-c
 ```
 *Middleware includes: PostgreSQL, Neo4j, Kafka (KRaft), Redis, and OpenLDAP.*
 
+**Manual seed (Promotion/Neo4j).** `services/circleguard-promotion-service/src/main/resources/seed_faculties.cypher`
+is a manual script: the application does not run it at startup. Execute it from Neo4j Browser
+or `cypher-shell` against the local instance when you need faculty test data.
+
 ### 2. Build & Run
 CircleGuard uses Gradle for parallel builds across services:
 ```bash
@@ -174,6 +178,9 @@ We maintain high system integrity via multi-level testing:
 | `./gradlew test` | Full unit suite (all services) |
 | `./gradlew :services:<name>:test` | Single service unit tests |
 | `./gradlew :services:circleguard-gateway-service:integrationTest` | Gateway tests against an ephemeral Redis container |
+| `tests/e2e` (Playwright) | Browser flows against the deployed web client and gateway — see [`tests/TESTS.md`](tests/TESTS.md) |
+| `tests/security-zap/` | OWASP ZAP baseline — see [`SECURITY-ZAP.md`](tests/security-zap/SECURITY-ZAP.md) |
+| `tests/performance-locust/` | Load tests against the deployed environments |
 
 **Note**: Integration tests use **Testcontainers** to spawn ephemeral Neo4j, PostgreSQL, and Redis instances for zero-side-effect validation. The gateway integration suite requires Docker and is excluded from `test` so unit builds do not depend on it.
 
@@ -201,6 +208,7 @@ circleguard/
 ├── .github/
 │   ├── pull_request_template.md      # Plantilla de cambio y revisión
 │   └── workflows/enforce-pr.yml      # Bloquea pushes directos a main
+├── .githooks/                        # commit-msg (Conventional Commits) y pre-push
 ├── services/                         # 8 microservicios Spring Boot/Kotlin
 │   ├── circleguard-auth-service/     # Dockerfile multi-stage no-root
 │   ├── circleguard-identity-service/
@@ -210,34 +218,76 @@ circleguard/
 │   ├── circleguard-notification-service/
 │   ├── circleguard-file-service/
 │   └── circleguard-dashboard-service/
-├── mobile/                           # Cliente Expo + Dockerfile Nginx no-root
+├── mobile/                           # Cliente Expo (iOS/Android/web) + Dockerfile Nginx
 ├── Jenkinsfile                       # Pipeline multibranch
-├── jenkins/vars/                     # Shared Library circleguard
-│   ├── ci.groovy
-│   ├── ciServices.groovy
-│   ├── ciNotify.groovy
-│   └── ciVersion.groovy
+├── jenkins/
+│   ├── vars/                         # Shared Library: ci, ciServices, ciNotify, ciVersion
+│   ├── test/                         # Pruebas unitarias de la Shared Library
+│   └── JENKINS.md
 ├── infra/
-│   ├── onpremise/                    # Bootstrap on-prem: README, herramientas, k3d, verify
-│   └── bootstrap/                    # SOLO HISTÓRICO (Parte 1, AWS) — ver docs/informe/
+│   ├── onpremise/                    # Bootstrap y verificación de cg-tools + k3d (Parte 2)
+│   ├── terraform/                    # IaC modular: modules/{compute,network,observability,registry,storage}
+│   │                                 # y envs/{dev,stage,prod}
+│   ├── bootstrap/                    # SOLO HISTÓRICO (Parte 1, AWS) — ver docs/informe/
+│   └── INFRA.md
 ├── deploy/
 │   ├── compose/tools/                # cg-tools: Jenkins, SonarQube, Nexus, registro (on-prem)
-│   ├── k8s/{base,overlays}/          # Kustomize: namespaces cg-dev/cg-stage/cg-prod
-│   ├── compose/postgres/init-databases.sh
-│   └── scripts/{deploy,rollback,smoke-test,seed-visitor}.sh
-├── tests/e2e/                        # Playwright: login, formulario, acceso
+│   ├── compose/{dev,stage,prod}/     # Stacks Parte 1: referencia local, no destino de entrega
+│   ├── k8s/                          # Kustomize: base, components, overlays, monitoring, form06-dev
+│   ├── finops/                       # OpenCost, KEDA y dashboard de costos (bonificación)
+│   ├── mesh/istio/                   # Service mesh (bonificación)
+│   ├── chaos/                        # Chaos Mesh (bonificación)
+│   ├── scripts/                      # deploy, rollback, smoke-test, seed (legacy Parte 1)
+│   └── DEPLOY.md
+├── tests/
+│   ├── e2e/                          # Playwright: login, formulario, acceso, promociones
+│   ├── performance-locust/           # Pruebas de carga
+│   ├── security-zap/                 # OWASP ZAP baseline
+│   └── TESTS.md
 ├── docs/
-│   ├── agil/                         # Sprint 0, Sprint 1, backlog
-│   ├── arquitectura/                 # Arquitectura y pipeline
-│   ├── infra/                        # Entornos, CI/CD, runbook
-│   ├── informe/                      # Informe y evidencias
-│   └── release-notes/                # Notas generadas por versión
-├── .githooks/                        # commit-msg y pre-push
+│   ├── agil/                         # Sprint 0-2, backlog, métricas y trazabilidad Jira
+│   ├── arquitectura/                 # Arquitectura, pipeline y diagnósticos
+│   ├── bonificaciones/               # chaos, finops, mesh
+│   ├── costos/                       # Política spot y costos
+│   ├── diagramas/, infra/, informe/, operaciones/, patrones/
+│   ├── release-notes/, standards/
+│   └── change-management.md
+├── scripts/                          # Verificación de bonificaciones y sincronía Jira
+├── gradle/                           # Convenciones JaCoCo y wrapper de Gradle
+├── build.gradle.kts, settings.gradle.kts, gradlew
 ├── BRANCHING-STRATEGY.md
-├── CHANGELOG.md
 ├── README.md
-└── IAG_REGISTRO.md
+├── CHANGELOG.md
+├── IAG_REGISTRO.md
+├── Proyecto_Final_CircleGuard.{tex,pdf}
+└── sonar-project.properties
 ```
+
+**Correspondencia con el árbol sugerido del enunciado.** El texto propone `tests/e2e-playwright/` y
+`observability/{prometheus,grafana,alerts}/` como *estructura sugerida* (`Proyecto_Final_CircleGuard.tex:287`).
+En este repositorio esas responsabilidades están en:
+
+| Enunciado | Ruta real |
+|:---|:---|
+| `tests/e2e-playwright/` | `tests/e2e/` (suite Playwright) |
+| `observability/prometheus/` | `deploy/k8s/monitoring/prometheus.yml` |
+| `observability/grafana/` | `deploy/k8s/monitoring/grafana.yml` y `deploy/finops/grafana-cost-dashboard.yml` |
+| `observability/alerts/` | `deploy/k8s/monitoring/alertmanager.yml`, `deploy/k8s/base/*-alerts.yml` y `deploy/k8s/components/form-observability/monitoring/form-alerts.yml` |
+
+## Repository conventions
+
+- **Documentación:** todo archivo fuente, script, configuración y documento mantenido lleva un encabezado
+  inglés `CG-DOC:` con el propósito del archivo. Los registros históricos y entregables del curso están
+  exentos; la sintaxis y los casos están en [`docs/standards/documentation.md`](docs/standards/documentation.md).
+- **Control de cambios:** GitHub Flow estricto, `main` protegida, squash merge y al menos una aprobación.
+  La especificación canónica está en [`BRANCHING-STRATEGY.md`](BRANCHING-STRATEGY.md).
+- **Trazabilidad:** cuando existe correspondencia con Jira, el título del PR incluye la clave `DCG-*`
+  del tablero [DCG 67](https://bomastik-site.atlassian.net/jira/software/projects/DCG/boards/67).
+  Los estados de los PR no se modifican como parte de tareas de documentación.
+- **Registros históricos:** actas Scrum, release notes, `CHANGELOG.md`, `IAG_REGISTRO.md`, evidencias
+  y el informe final son documentos de corte: no se reescriben para normalizarlos.
+
+---
 
 ## CI/CD Platform
 
@@ -277,6 +327,12 @@ La infraestructura de la Parte 1 (cuatro instancias EC2, scripts `infra/bootstra
 Documentación:
 
 - [Guía on-premise](infra/onpremise/ONPREMISE.md)
+- [Layout de despliegue](deploy/DEPLOY.md)
+- [Pruebas](tests/TESTS.md)
+- [Terraform](infra/terraform/TERRAFORM.md)
+- [Componentes de observabilidad](deploy/k8s/components/form-observability/FORM-OBSERVABILITY.md)
+- [Costos](docs/costos/README.md)
+- Bonificaciones: [FinOps](docs/bonificaciones/finops/README.md), [Service Mesh](docs/bonificaciones/mesh/README.md), [Chaos](docs/bonificaciones/chaos/README.md)
 - [Gestión ágil](docs/agil/AGIL.md)
 - [Arquitectura](docs/arquitectura/ARQUITECTURA.md)
 - [Pipeline](docs/arquitectura/pipeline.md)
