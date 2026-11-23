@@ -1,0 +1,26 @@
+# CG-DOC: On-prem node pricing for OpenCost. There is no cloud billing API on
+# the k3d on-prem cluster, so we declare a transparent per-node hourly price.
+# Values are illustrative local estimates in USD, documented in spot-policy.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opencost-prices
+  namespace: monitoring
+  labels:
+    finops: cost
+data:
+  default.json: |
+    {
+      "k3d-cg-onprem": {
+        "nodePrices": {
+          "*": {
+            "hourlyNodePrice": 0.10,
+            "hourlyCPUPrice": 0.025,
+            "hourlyMemoryPrice": 0.003,
+            "hourlyGPUPrice": 0.0,
+            "spot": false,
+            "description": "on-prem k3d node (local estimate USD/hour)"
+          }
+        }
+      }
+    }
