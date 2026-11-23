@@ -1,0 +1,43 @@
+# CG-DOC: Service mesh mTLS bonus (L284). STRICT mTLS for the CircleGuard
+# namespaces plus ISTIO_MUTUAL origination on services that still receive
+# plaintext from non-meshed infrastructure (Traefik Ingress, seed jobs).
+# Installed with `deploy/mesh/istio/istio-install.sh`.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: circleguard-strict-mtls
+  namespace: cg-dev
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: circleguard-strict-mtls
+  namespace: cg-mesh-canary
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: circleguard-mtls-originate
+  namespace: cg-dev
+spec:
+  host: form.cg-dev.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: circleguard-mtls-originate
+  namespace: cg-mesh-canary
+spec:
+  host: form.cg-dev.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL

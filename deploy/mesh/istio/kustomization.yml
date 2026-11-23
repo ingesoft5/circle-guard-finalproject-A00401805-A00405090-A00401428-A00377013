@@ -1,0 +1,8 @@
+# CG-DOC: Kustomize entrypoint for the Istio mesh bonus (L284).
+# Istio CRDs and the control plane are installed with istio-install.sh;
+# this overlay only manages the CircleGuard-specific mesh policies.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - mtls.yml
+  - canary.yml
