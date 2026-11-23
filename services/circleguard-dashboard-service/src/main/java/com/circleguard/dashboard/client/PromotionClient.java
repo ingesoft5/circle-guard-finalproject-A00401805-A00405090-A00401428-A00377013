@@ -32,7 +32,7 @@ public class PromotionClient {
     @Value("${circleguard.promotion-service.url:http://localhost:8088}")
     private String promotionServiceUrl;
 
-    @Autowired
+    @Autowired(required = false)
     public void setMeterRegistry(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
     }

@@ -63,7 +63,7 @@ No se modificaron los umbrales ni la versión de Trivy del pipeline: `Jenkinsfil
 
 Escaneos locales (detalles y comandos reproducibles en `docs/informe/evidencia/HU-DASH-05/README.md`):
 
-- **IaC:** `trivy config --severity CRITICAL --exit-code 1 deploy/k8s` → rc=0, 30 archivos, 0 CRITICAL. Escaneo complementario `HIGH,CRITICAL`: 74 HIGH, 0 CRITICAL (guías estándar, no bloquean la regla definida). El incremento de 27 a 30 archivos y de 72 a 74 HIGH se debe a los manifiestos nuevos del componente.
+- **IaC:** `trivy config --severity CRITICAL --exit-code 1 deploy/k8s` → rc=0, 31 archivos, 0 CRITICAL. Escaneo complementario `HIGH,CRITICAL`: 74 HIGH, 0 CRITICAL (guías estándar, no bloquean la regla definida). El incremento de 27 a 31 archivos se debe a los tres manifiestos nuevos del componente `dashboard-observability` y a `dashboard-config.yml` de HU-DASH-04; los HIGH pasaron de 72 a 74 por los manifiestos del componente.
 - **Imagen antes de la remediación:** `circleguard-docker/dashboard:hu-dash-05-local` (manifest list `sha256:7a038045f65824b1879408e2086be9d1eb3792b7b8bec6fe9f0f08249686b233`) → **9 CRITICAL y 35 HIGH**, rc=1. Los CRITICAL son 8 en `tomcat-embed-core 10.1.19` y 1 en `spring-webmvc 6.1.5` (CVE-2026-47884), todos con corrección disponible. Esa versión del artefacto habría **bloqueado** el gate; no se afirmó que pasara Trivy ni que se publicara un digest.
 - **Imagen después de la remediación:** `circleguard-docker/dashboard:hu-dash-05-boot4` (image id `sha256:ab6cb91f55ecf97e6b70f20ba8560876a33e7fa34c01587c046d40b8f01e256e`), escaneada desde tarball con **Trivy 0.57.1** (la versión de Jenkins) y **Trivy 0.70.0**: **0 HIGH y 0 CRITICAL** en ambos casos (`trivy-image-0.57.1.json`, `trivy-image-0.70.0.json`). La lógica bloqueante del pipeline no cambió; el gate ya no bloquea este artefacto en la verificación local.
 
@@ -80,7 +80,7 @@ No se bajó el umbral ni se añadieron excepciones. La corrida oficial en Jenkin
 | `python deploy/k8s/components/dashboard-observability/verify.py` (kubectl 1.30.0 / Kustomize 5.0.4 en `/tmp/opencode`) | PASS dev/stage/prod, PASS monitoring, PASS dashboard JSON (7 paneles, filtro `namespace`, panel Loki). |
 | `python deploy/k8s/components/form-observability/verify.py` | PASS dev/stage/prod, PASS monitoring, PASS dashboard JSON (6 paneles) tras la reparación del patch. |
 | `docker build` del Dockerfile actual | `BUILD SUCCESSFUL`; imagen etiquetada localmente, sin publicación remota. |
-| `trivy config` y `trivy image` (0.57.1 y 0.70.0) | IaC 0 CRITICAL / 74 HIGH; imagen post-remediación 0 HIGH / 0 CRITICAL en ambas versiones. Ver sección 3 y la carpeta de evidencia. |
+| `trivy config` y `trivy image` (0.57.1 y 0.70.0) | IaC 31 archivos, 0 CRITICAL / 74 HIGH; imagen post-remediación 0 HIGH / 0 CRITICAL en ambas versiones. Ver sección 3 y la carpeta de evidencia. |
 | `git diff --check` | Sin errores de whitespace al cierre. |
 
 El endpoint Prometheus, los tags y el comportamiento de métricas se probaron con MockMvc y `SimpleMeterRegistry`; **eso no sustituye** un scrape real desde Prometheus.

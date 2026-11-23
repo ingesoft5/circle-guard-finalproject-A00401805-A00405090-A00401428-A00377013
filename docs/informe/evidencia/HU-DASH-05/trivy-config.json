@@ -3,8 +3,8 @@
   "Trivy": {
     "Version": "0.70.0"
   },
-  "ReportID": "01a2064d-327f-7609-95c5-376e3d865369",
-  "CreatedAt": "2026-11-23T02:47:32.223399733Z",
+  "ReportID": "01a20800-b6dd-776f-9fd4-5075d63caef8",
+  "CreatedAt": "2026-11-23T10:43:14.269491206Z",
   "ArtifactName": "deploy/k8s",
   "ArtifactType": "filesystem",
   "Results": [
@@ -162,62 +162,22 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 472,
-            "EndLine": 508,
+            "StartLine": 488,
+            "EndLine": 522,
             "Code": {
               "Lines": [
                 {
-                  "Number": 472,
-                  "Content": "    app: dashboard",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "    \u001b[38;5;33mapp\u001b[0m: dashboard",
-                  "FirstCause": true,
-                  "LastCause": false
-                },
-                {
-                  "Number": 473,
-                  "Content": "spec:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "\u001b[38;5;33mspec\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 474,
-                  "Content": "  replicas: 1",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "  \u001b[38;5;33mreplicas\u001b[0m: \u001b[38;5;37m1",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 475,
-                  "Content": "  selector:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "\u001b[0m  \u001b[38;5;33mselector\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 476,
+                  "Number": 488,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "    \u001b[38;5;33mmatchLabels\u001b[0m:",
-                  "FirstCause": false,
+                  "FirstCause": true,
                   "LastCause": false
                 },
                 {
-                  "Number": 477,
+                  "Number": 489,
                   "Content": "      app: dashboard",
                   "IsCause": true,
                   "Annotation": "",
@@ -227,7 +187,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 478,
+                  "Number": 490,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -237,7 +197,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 479,
+                  "Number": 491,
                   "Content": "    metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -247,17 +207,57 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 480,
+                  "Number": 492,
                   "Content": "      labels:",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "      \u001b[38;5;33mlabels\u001b[0m:",
                   "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 493,
+                  "Content": "        app: dashboard",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mapp\u001b[0m: dashboard",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 494,
+                  "Content": "      annotations:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mannotations\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 495,
+                  "Content": "        prometheus.io/scrape: \"true\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mprometheus.io/scrape\u001b[0m: \u001b[38;5;37m\"true\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 496,
+                  "Content": "        prometheus.io/path: \"/actuator/prometheus\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;33mprometheus.io/path\u001b[0m: \u001b[38;5;37m\"/actuator/prometheus\"",
+                  "FirstCause": false,
                   "LastCause": true
                 },
                 {
-                  "Number": 481,
+                  "Number": 497,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -288,12 +288,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 544,
-            "EndLine": 569,
+            "StartLine": 558,
+            "EndLine": 583,
             "Code": {
               "Lines": [
                 {
-                  "Number": 544,
+                  "Number": 558,
                   "Content": "  name: file",
                   "IsCause": true,
                   "Annotation": "",
@@ -303,7 +303,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 545,
+                  "Number": 559,
                   "Content": "  labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -313,7 +313,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 546,
+                  "Number": 560,
                   "Content": "    app: file",
                   "IsCause": true,
                   "Annotation": "",
@@ -323,7 +323,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 547,
+                  "Number": 561,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -333,7 +333,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 548,
+                  "Number": 562,
                   "Content": "  replicas: 1",
                   "IsCause": true,
                   "Annotation": "",
@@ -343,7 +343,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 549,
+                  "Number": 563,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -353,7 +353,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 550,
+                  "Number": 564,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -363,7 +363,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 551,
+                  "Number": 565,
                   "Content": "      app: file",
                   "IsCause": true,
                   "Annotation": "",
@@ -373,7 +373,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 552,
+                  "Number": 566,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -383,7 +383,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 553,
+                  "Number": 567,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -414,30 +414,10 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 314,
-            "EndLine": 355,
+            "StartLine": 316,
+            "EndLine": 362,
             "Code": {
               "Lines": [
-                {
-                  "Number": 314,
-                  "Content": "    matchLabels:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "    \u001b[38;5;33mmatchLabels\u001b[0m:",
-                  "FirstCause": true,
-                  "LastCause": false
-                },
-                {
-                  "Number": 315,
-                  "Content": "      app: form",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "      \u001b[38;5;33mapp\u001b[0m: form",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
                 {
                   "Number": 316,
                   "Content": "  template:",
@@ -445,7 +425,7 @@
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "  \u001b[38;5;33mtemplate\u001b[0m:",
-                  "FirstCause": false,
+                  "FirstCause": true,
                   "LastCause": false
                 },
                 {
@@ -490,16 +470,36 @@
                 },
                 {
                   "Number": 321,
-                  "Content": "      containers:",
+                  "Content": "      serviceAccountName: form",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "      \u001b[38;5;33mcontainers\u001b[0m:",
+                  "Highlighted": "      \u001b[38;5;33mserviceAccountName\u001b[0m: form",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
                   "Number": 322,
+                  "Content": "      automountServiceAccountToken: false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mautomountServiceAccountToken\u001b[0m: \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 323,
+                  "Content": "      containers:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;33mcontainers\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 324,
                   "Content": "        - name: form",
                   "IsCause": true,
                   "Annotation": "",
@@ -509,7 +509,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 323,
+                  "Number": 325,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -540,12 +540,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 397,
-            "EndLine": 441,
+            "StartLine": 404,
+            "EndLine": 448,
             "Code": {
               "Lines": [
                 {
-                  "Number": 397,
+                  "Number": 404,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -555,7 +555,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 398,
+                  "Number": 405,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -565,7 +565,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 399,
+                  "Number": 406,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -575,7 +575,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 400,
+                  "Number": 407,
                   "Content": "      app: gateway",
                   "IsCause": true,
                   "Annotation": "",
@@ -585,7 +585,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 401,
+                  "Number": 408,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -595,7 +595,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 402,
+                  "Number": 409,
                   "Content": "    metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -605,7 +605,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 403,
+                  "Number": 410,
                   "Content": "      labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -615,7 +615,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 404,
+                  "Number": 411,
                   "Content": "        app: gateway",
                   "IsCause": true,
                   "Annotation": "",
@@ -625,7 +625,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 405,
+                  "Number": 412,
                   "Content": "    spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -635,7 +635,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 406,
+                  "Number": 413,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -792,12 +792,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 604,
-            "EndLine": 647,
+            "StartLine": 618,
+            "EndLine": 661,
             "Code": {
               "Lines": [
                 {
-                  "Number": 604,
+                  "Number": 618,
                   "Content": "    app: notification",
                   "IsCause": true,
                   "Annotation": "",
@@ -807,7 +807,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 605,
+                  "Number": 619,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -817,7 +817,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 606,
+                  "Number": 620,
                   "Content": "  # El HPA (deploy/k8s/base/hpa.yml) es el dueno de spec.replicas.",
                   "IsCause": true,
                   "Annotation": "",
@@ -827,7 +827,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 607,
+                  "Number": 621,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -837,7 +837,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 608,
+                  "Number": 622,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -847,7 +847,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 609,
+                  "Number": 623,
                   "Content": "      app: notification",
                   "IsCause": true,
                   "Annotation": "",
@@ -857,7 +857,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 610,
+                  "Number": 624,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -867,7 +867,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 611,
+                  "Number": 625,
                   "Content": "    metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -877,7 +877,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 612,
+                  "Number": 626,
                   "Content": "      labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -887,7 +887,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 613,
+                  "Number": 627,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -1044,12 +1044,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 677,
-            "EndLine": 697,
+            "StartLine": 691,
+            "EndLine": 711,
             "Code": {
               "Lines": [
                 {
-                  "Number": 677,
+                  "Number": 691,
                   "Content": "      targetPort: 8080",
                   "IsCause": true,
                   "Annotation": "",
@@ -1059,7 +1059,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 678,
+                  "Number": 692,
                   "Content": "---",
                   "IsCause": true,
                   "Annotation": "",
@@ -1069,7 +1069,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 679,
+                  "Number": 693,
                   "Content": "apiVersion: apps/v1",
                   "IsCause": true,
                   "Annotation": "",
@@ -1079,7 +1079,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 680,
+                  "Number": 694,
                   "Content": "kind: Deployment",
                   "IsCause": true,
                   "Annotation": "",
@@ -1089,7 +1089,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 681,
+                  "Number": 695,
                   "Content": "metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1099,7 +1099,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 682,
+                  "Number": 696,
                   "Content": "  name: web",
                   "IsCause": true,
                   "Annotation": "",
@@ -1109,7 +1109,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 683,
+                  "Number": 697,
                   "Content": "  labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1119,7 +1119,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 684,
+                  "Number": 698,
                   "Content": "    app: web",
                   "IsCause": true,
                   "Annotation": "",
@@ -1129,7 +1129,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 685,
+                  "Number": 699,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1139,7 +1139,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 686,
+                  "Number": 700,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -1296,62 +1296,22 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 472,
-            "EndLine": 508,
+            "StartLine": 488,
+            "EndLine": 522,
             "Code": {
               "Lines": [
                 {
-                  "Number": 472,
-                  "Content": "    app: dashboard",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "    \u001b[38;5;33mapp\u001b[0m: dashboard",
-                  "FirstCause": true,
-                  "LastCause": false
-                },
-                {
-                  "Number": 473,
-                  "Content": "spec:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "\u001b[38;5;33mspec\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 474,
-                  "Content": "  replicas: 1",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "  \u001b[38;5;33mreplicas\u001b[0m: \u001b[38;5;37m1",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 475,
-                  "Content": "  selector:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "\u001b[0m  \u001b[38;5;33mselector\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 476,
+                  "Number": 488,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "    \u001b[38;5;33mmatchLabels\u001b[0m:",
-                  "FirstCause": false,
+                  "FirstCause": true,
                   "LastCause": false
                 },
                 {
-                  "Number": 477,
+                  "Number": 489,
                   "Content": "      app: dashboard",
                   "IsCause": true,
                   "Annotation": "",
@@ -1361,7 +1321,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 478,
+                  "Number": 490,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1371,7 +1331,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 479,
+                  "Number": 491,
                   "Content": "    metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1381,17 +1341,57 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 480,
+                  "Number": 492,
                   "Content": "      labels:",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "      \u001b[38;5;33mlabels\u001b[0m:",
                   "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 493,
+                  "Content": "        app: dashboard",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mapp\u001b[0m: dashboard",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 494,
+                  "Content": "      annotations:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mannotations\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 495,
+                  "Content": "        prometheus.io/scrape: \"true\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mprometheus.io/scrape\u001b[0m: \u001b[38;5;37m\"true\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 496,
+                  "Content": "        prometheus.io/path: \"/actuator/prometheus\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;33mprometheus.io/path\u001b[0m: \u001b[38;5;37m\"/actuator/prometheus\"",
+                  "FirstCause": false,
                   "LastCause": true
                 },
                 {
-                  "Number": 481,
+                  "Number": 497,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -1422,12 +1422,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 544,
-            "EndLine": 569,
+            "StartLine": 558,
+            "EndLine": 583,
             "Code": {
               "Lines": [
                 {
-                  "Number": 544,
+                  "Number": 558,
                   "Content": "  name: file",
                   "IsCause": true,
                   "Annotation": "",
@@ -1437,7 +1437,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 545,
+                  "Number": 559,
                   "Content": "  labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1447,7 +1447,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 546,
+                  "Number": 560,
                   "Content": "    app: file",
                   "IsCause": true,
                   "Annotation": "",
@@ -1457,7 +1457,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 547,
+                  "Number": 561,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1467,7 +1467,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 548,
+                  "Number": 562,
                   "Content": "  replicas: 1",
                   "IsCause": true,
                   "Annotation": "",
@@ -1477,7 +1477,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 549,
+                  "Number": 563,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1487,7 +1487,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 550,
+                  "Number": 564,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1497,7 +1497,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 551,
+                  "Number": 565,
                   "Content": "      app: file",
                   "IsCause": true,
                   "Annotation": "",
@@ -1507,7 +1507,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 552,
+                  "Number": 566,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1517,7 +1517,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 553,
+                  "Number": 567,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -1548,30 +1548,10 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 314,
-            "EndLine": 355,
+            "StartLine": 316,
+            "EndLine": 362,
             "Code": {
               "Lines": [
-                {
-                  "Number": 314,
-                  "Content": "    matchLabels:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "    \u001b[38;5;33mmatchLabels\u001b[0m:",
-                  "FirstCause": true,
-                  "LastCause": false
-                },
-                {
-                  "Number": 315,
-                  "Content": "      app: form",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "      \u001b[38;5;33mapp\u001b[0m: form",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
                 {
                   "Number": 316,
                   "Content": "  template:",
@@ -1579,7 +1559,7 @@
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "  \u001b[38;5;33mtemplate\u001b[0m:",
-                  "FirstCause": false,
+                  "FirstCause": true,
                   "LastCause": false
                 },
                 {
@@ -1624,16 +1604,36 @@
                 },
                 {
                   "Number": 321,
-                  "Content": "      containers:",
+                  "Content": "      serviceAccountName: form",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "      \u001b[38;5;33mcontainers\u001b[0m:",
+                  "Highlighted": "      \u001b[38;5;33mserviceAccountName\u001b[0m: form",
                   "FirstCause": false,
                   "LastCause": false
                 },
                 {
                   "Number": 322,
+                  "Content": "      automountServiceAccountToken: false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mautomountServiceAccountToken\u001b[0m: \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 323,
+                  "Content": "      containers:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;33mcontainers\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 324,
                   "Content": "        - name: form",
                   "IsCause": true,
                   "Annotation": "",
@@ -1643,7 +1643,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 323,
+                  "Number": 325,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -1674,12 +1674,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 397,
-            "EndLine": 441,
+            "StartLine": 404,
+            "EndLine": 448,
             "Code": {
               "Lines": [
                 {
-                  "Number": 397,
+                  "Number": 404,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1689,7 +1689,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 398,
+                  "Number": 405,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1699,7 +1699,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 399,
+                  "Number": 406,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1709,7 +1709,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 400,
+                  "Number": 407,
                   "Content": "      app: gateway",
                   "IsCause": true,
                   "Annotation": "",
@@ -1719,7 +1719,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 401,
+                  "Number": 408,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1729,7 +1729,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 402,
+                  "Number": 409,
                   "Content": "    metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1739,7 +1739,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 403,
+                  "Number": 410,
                   "Content": "      labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1749,7 +1749,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 404,
+                  "Number": 411,
                   "Content": "        app: gateway",
                   "IsCause": true,
                   "Annotation": "",
@@ -1759,7 +1759,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 405,
+                  "Number": 412,
                   "Content": "    spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1769,7 +1769,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 406,
+                  "Number": 413,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -1926,12 +1926,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 604,
-            "EndLine": 647,
+            "StartLine": 618,
+            "EndLine": 661,
             "Code": {
               "Lines": [
                 {
-                  "Number": 604,
+                  "Number": 618,
                   "Content": "    app: notification",
                   "IsCause": true,
                   "Annotation": "",
@@ -1941,7 +1941,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 605,
+                  "Number": 619,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1951,7 +1951,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 606,
+                  "Number": 620,
                   "Content": "  # El HPA (deploy/k8s/base/hpa.yml) es el dueno de spec.replicas.",
                   "IsCause": true,
                   "Annotation": "",
@@ -1961,7 +1961,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 607,
+                  "Number": 621,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1971,7 +1971,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 608,
+                  "Number": 622,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -1981,7 +1981,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 609,
+                  "Number": 623,
                   "Content": "      app: notification",
                   "IsCause": true,
                   "Annotation": "",
@@ -1991,7 +1991,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 610,
+                  "Number": 624,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2001,7 +2001,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 611,
+                  "Number": 625,
                   "Content": "    metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2011,7 +2011,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 612,
+                  "Number": 626,
                   "Content": "      labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2021,7 +2021,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 613,
+                  "Number": 627,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -2178,12 +2178,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 677,
-            "EndLine": 697,
+            "StartLine": 691,
+            "EndLine": 711,
             "Code": {
               "Lines": [
                 {
-                  "Number": 677,
+                  "Number": 691,
                   "Content": "      targetPort: 8080",
                   "IsCause": true,
                   "Annotation": "",
@@ -2193,7 +2193,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 678,
+                  "Number": 692,
                   "Content": "---",
                   "IsCause": true,
                   "Annotation": "",
@@ -2203,7 +2203,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 679,
+                  "Number": 693,
                   "Content": "apiVersion: apps/v1",
                   "IsCause": true,
                   "Annotation": "",
@@ -2213,7 +2213,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 680,
+                  "Number": 694,
                   "Content": "kind: Deployment",
                   "IsCause": true,
                   "Annotation": "",
@@ -2223,7 +2223,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 681,
+                  "Number": 695,
                   "Content": "metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2233,7 +2233,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 682,
+                  "Number": 696,
                   "Content": "  name: web",
                   "IsCause": true,
                   "Annotation": "",
@@ -2243,7 +2243,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 683,
+                  "Number": 697,
                   "Content": "  labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2253,7 +2253,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 684,
+                  "Number": 698,
                   "Content": "    app: web",
                   "IsCause": true,
                   "Annotation": "",
@@ -2263,7 +2263,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 685,
+                  "Number": 699,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2273,7 +2273,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 686,
+                  "Number": 700,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -2430,62 +2430,22 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 470,
-            "EndLine": 508,
+            "StartLine": 486,
+            "EndLine": 522,
             "Code": {
               "Lines": [
                 {
-                  "Number": 470,
-                  "Content": "  name: dashboard",
+                  "Number": 486,
+                  "Content": "  # replicas is owned by the dashboard HPA (see hpa.yml).",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
-                  "Highlighted": "  \u001b[38;5;33mname\u001b[0m: dashboard",
+                  "Highlighted": "  \u001b[38;5;239m# replicas is owned by the dashboard HPA (see hpa.yml).",
                   "FirstCause": true,
                   "LastCause": false
                 },
                 {
-                  "Number": 471,
-                  "Content": "  labels:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "  \u001b[38;5;33mlabels\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 472,
-                  "Content": "    app: dashboard",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "    \u001b[38;5;33mapp\u001b[0m: dashboard",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 473,
-                  "Content": "spec:",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "\u001b[38;5;33mspec\u001b[0m:",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 474,
-                  "Content": "  replicas: 1",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "  \u001b[38;5;33mreplicas\u001b[0m: \u001b[38;5;37m1",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 475,
+                  "Number": 487,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2495,7 +2455,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 476,
+                  "Number": 488,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2505,7 +2465,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 477,
+                  "Number": 489,
                   "Content": "      app: dashboard",
                   "IsCause": true,
                   "Annotation": "",
@@ -2515,17 +2475,57 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 478,
+                  "Number": 490,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "  \u001b[38;5;33mtemplate\u001b[0m:",
                   "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 491,
+                  "Content": "    metadata:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mmetadata\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 492,
+                  "Content": "      labels:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mlabels\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 493,
+                  "Content": "        app: dashboard",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mapp\u001b[0m: dashboard",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 494,
+                  "Content": "      annotations:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mannotations\u001b[0m:",
+                  "FirstCause": false,
                   "LastCause": true
                 },
                 {
-                  "Number": 479,
+                  "Number": 495,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -2556,12 +2556,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 542,
-            "EndLine": 569,
+            "StartLine": 556,
+            "EndLine": 583,
             "Code": {
               "Lines": [
                 {
-                  "Number": 542,
+                  "Number": 556,
                   "Content": "kind: Deployment",
                   "IsCause": true,
                   "Annotation": "",
@@ -2571,7 +2571,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 543,
+                  "Number": 557,
                   "Content": "metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2581,7 +2581,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 544,
+                  "Number": 558,
                   "Content": "  name: file",
                   "IsCause": true,
                   "Annotation": "",
@@ -2591,7 +2591,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 545,
+                  "Number": 559,
                   "Content": "  labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2601,7 +2601,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 546,
+                  "Number": 560,
                   "Content": "    app: file",
                   "IsCause": true,
                   "Annotation": "",
@@ -2611,7 +2611,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 547,
+                  "Number": 561,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2621,7 +2621,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 548,
+                  "Number": 562,
                   "Content": "  replicas: 1",
                   "IsCause": true,
                   "Annotation": "",
@@ -2631,7 +2631,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 549,
+                  "Number": 563,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2641,7 +2641,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 550,
+                  "Number": 564,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2651,7 +2651,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 551,
+                  "Number": 565,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -2682,12 +2682,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 395,
-            "EndLine": 441,
+            "StartLine": 402,
+            "EndLine": 448,
             "Code": {
               "Lines": [
                 {
-                  "Number": 395,
+                  "Number": 402,
                   "Content": "  labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2697,7 +2697,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 396,
+                  "Number": 403,
                   "Content": "    app: gateway",
                   "IsCause": true,
                   "Annotation": "",
@@ -2707,7 +2707,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 397,
+                  "Number": 404,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2717,7 +2717,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 398,
+                  "Number": 405,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2727,7 +2727,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 399,
+                  "Number": 406,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2737,7 +2737,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 400,
+                  "Number": 407,
                   "Content": "      app: gateway",
                   "IsCause": true,
                   "Annotation": "",
@@ -2747,7 +2747,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 401,
+                  "Number": 408,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2757,7 +2757,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 402,
+                  "Number": 409,
                   "Content": "    metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2767,7 +2767,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 403,
+                  "Number": 410,
                   "Content": "      labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2777,7 +2777,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 404,
+                  "Number": 411,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -2934,12 +2934,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 602,
-            "EndLine": 647,
+            "StartLine": 616,
+            "EndLine": 661,
             "Code": {
               "Lines": [
                 {
-                  "Number": 602,
+                  "Number": 616,
                   "Content": "  name: notification",
                   "IsCause": true,
                   "Annotation": "",
@@ -2949,7 +2949,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 603,
+                  "Number": 617,
                   "Content": "  labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2959,7 +2959,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 604,
+                  "Number": 618,
                   "Content": "    app: notification",
                   "IsCause": true,
                   "Annotation": "",
@@ -2969,7 +2969,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 605,
+                  "Number": 619,
                   "Content": "spec:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2979,7 +2979,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 606,
+                  "Number": 620,
                   "Content": "  # El HPA (deploy/k8s/base/hpa.yml) es el dueno de spec.replicas.",
                   "IsCause": true,
                   "Annotation": "",
@@ -2989,7 +2989,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 607,
+                  "Number": 621,
                   "Content": "  selector:",
                   "IsCause": true,
                   "Annotation": "",
@@ -2999,7 +2999,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 608,
+                  "Number": 622,
                   "Content": "    matchLabels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -3009,7 +3009,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 609,
+                  "Number": 623,
                   "Content": "      app: notification",
                   "IsCause": true,
                   "Annotation": "",
@@ -3019,7 +3019,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 610,
+                  "Number": 624,
                   "Content": "  template:",
                   "IsCause": true,
                   "Annotation": "",
@@ -3029,7 +3029,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 611,
+                  "Number": 625,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -3186,12 +3186,12 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 675,
-            "EndLine": 697,
+            "StartLine": 689,
+            "EndLine": 711,
             "Code": {
               "Lines": [
                 {
-                  "Number": 675,
+                  "Number": 689,
                   "Content": "    - name: http",
                   "IsCause": true,
                   "Annotation": "",
@@ -3201,7 +3201,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 676,
+                  "Number": 690,
                   "Content": "      port: 80",
                   "IsCause": true,
                   "Annotation": "",
@@ -3211,7 +3211,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 677,
+                  "Number": 691,
                   "Content": "      targetPort: 8080",
                   "IsCause": true,
                   "Annotation": "",
@@ -3221,7 +3221,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 678,
+                  "Number": 692,
                   "Content": "---",
                   "IsCause": true,
                   "Annotation": "",
@@ -3231,7 +3231,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 679,
+                  "Number": 693,
                   "Content": "apiVersion: apps/v1",
                   "IsCause": true,
                   "Annotation": "",
@@ -3241,7 +3241,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 680,
+                  "Number": 694,
                   "Content": "kind: Deployment",
                   "IsCause": true,
                   "Annotation": "",
@@ -3251,7 +3251,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 681,
+                  "Number": 695,
                   "Content": "metadata:",
                   "IsCause": true,
                   "Annotation": "",
@@ -3261,7 +3261,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 682,
+                  "Number": 696,
                   "Content": "  name: web",
                   "IsCause": true,
                   "Annotation": "",
@@ -3271,7 +3271,7 @@
                   "LastCause": false
                 },
                 {
-                  "Number": 683,
+                  "Number": 697,
                   "Content": "  labels:",
                   "IsCause": true,
                   "Annotation": "",
@@ -3281,7 +3281,7 @@
                   "LastCause": true
                 },
                 {
-                  "Number": 684,
+                  "Number": 698,
                   "Content": "",
                   "IsCause": false,
                   "Annotation": "",
@@ -3297,6 +3297,15 @@
     },
     {
       "Target": "base/auth-alerts.yml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 35,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "base/dashboard-config.yml",
       "Class": "config",
       "Type": "kubernetes",
       "MisconfSummary": {
@@ -5287,37 +5296,37 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 12,
-            "EndLine": 14,
+            "StartLine": 17,
+            "EndLine": 19,
             "Code": {
               "Lines": [
                 {
-                  "Number": 12,
+                  "Number": 17,
+                  "Content": "  name: circleguard-deployer",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mname\u001b[0m: circleguard-deployer",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
                   "Content": "rules:",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "\u001b[38;5;33mrules\u001b[0m:",
-                  "FirstCause": true,
+                  "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 13,
+                  "Number": 19,
                   "Content": "  - apiGroups: [\"\"]",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "  - \u001b[38;5;33mapiGroups\u001b[0m: [\u001b[38;5;37m\"\"\u001b[0m]",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 14,
-                  "Content": "    resources: [\"pods\", \"services\", \"configmaps\", \"secrets\", \"persistentvolumeclaims\", \"events\"]",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "    \u001b[38;5;33mresources\u001b[0m: [\u001b[38;5;37m\"pods\"\u001b[0m, \u001b[38;5;37m\"services\"\u001b[0m, \u001b[38;5;37m\"configmaps\"\u001b[0m, \u001b[38;5;37m\"secrets\"\u001b[0m, \u001b[38;5;37m\"persistentvolumeclaims\"\u001b[0m, \u001b[38;5;37m\"events\"\u001b[0m]",
                   "FirstCause": false,
                   "LastCause": true
                 }
@@ -5344,37 +5353,37 @@
           "CauseMetadata": {
             "Provider": "Kubernetes",
             "Service": "general",
-            "StartLine": 21,
-            "EndLine": 23,
+            "StartLine": 26,
+            "EndLine": 28,
             "Code": {
               "Lines": [
                 {
-                  "Number": 21,
+                  "Number": 26,
+                  "Content": "    resources: [\"horizontalpodautoscalers\"]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mresources\u001b[0m: [\u001b[38;5;37m\"horizontalpodautoscalers\"\u001b[0m]",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
                   "Content": "    verbs: [\"get\", \"list\", \"watch\", \"create\", \"update\", \"patch\", \"delete\"]",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "    \u001b[38;5;33mverbs\u001b[0m: [\u001b[38;5;37m\"get\"\u001b[0m, \u001b[38;5;37m\"list\"\u001b[0m, \u001b[38;5;37m\"watch\"\u001b[0m, \u001b[38;5;37m\"create\"\u001b[0m, \u001b[38;5;37m\"update\"\u001b[0m, \u001b[38;5;37m\"patch\"\u001b[0m, \u001b[38;5;37m\"delete\"\u001b[0m]",
-                  "FirstCause": true,
+                  "FirstCause": false,
                   "LastCause": false
                 },
                 {
-                  "Number": 22,
+                  "Number": 28,
                   "Content": "  - apiGroups: [\"networking.k8s.io\"]",
                   "IsCause": true,
                   "Annotation": "",
                   "Truncated": false,
                   "Highlighted": "  - \u001b[38;5;33mapiGroups\u001b[0m: [\u001b[38;5;37m\"networking.k8s.io\"\u001b[0m]",
-                  "FirstCause": false,
-                  "LastCause": false
-                },
-                {
-                  "Number": 23,
-                  "Content": "    resources: [\"ingresses\", \"networkpolicies\"]",
-                  "IsCause": true,
-                  "Annotation": "",
-                  "Truncated": false,
-                  "Highlighted": "    \u001b[38;5;33mresources\u001b[0m: [\u001b[38;5;37m\"ingresses\"\u001b[0m, \u001b[38;5;37m\"networkpolicies\"\u001b[0m]",
                   "FirstCause": false,
                   "LastCause": true
                 }
@@ -5972,7 +5981,7 @@
             "Provider": "Kubernetes",
             "Service": "general",
             "StartLine": 34,
-            "EndLine": 84,
+            "EndLine": 89,
             "Code": {
               "Lines": [
                 {
@@ -6098,7 +6107,7 @@
             "Provider": "Kubernetes",
             "Service": "general",
             "StartLine": 34,
-            "EndLine": 84,
+            "EndLine": 89,
             "Code": {
               "Lines": [
                 {
@@ -6224,7 +6233,7 @@
             "Provider": "Kubernetes",
             "Service": "general",
             "StartLine": 32,
-            "EndLine": 84,
+            "EndLine": 89,
             "Code": {
               "Lines": [
                 {

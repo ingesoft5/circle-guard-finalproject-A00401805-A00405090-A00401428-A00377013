@@ -54,30 +54,42 @@ def verify():
             remove_dashboard_component(baseline / "overlays" / env / "kustomization.yml")
         remove_dashboard_component(baseline / "monitoring" / "kustomization.yml")
 
+        def normalize_dashboard(deployment):
+            """Strip observability-owned fields before comparing renders.
+
+            HU-DASH-04 already puts the scrape annotations and split Actuator
+            probes in the base apps.yml, so both renders carry them; only
+            DASHBOARD_ENVIRONMENT is contributed exclusively by this component.
+            Normalizing both sides keeps the check focused on unrelated drift.
+            """
+            result = deepcopy(deployment)
+            pod = result["spec"]["template"]
+            pod["metadata"].pop("annotations", None)
+            container = next(c for c in pod["spec"]["containers"] if c["name"] == "dashboard")
+            container["env"] = [v for v in container["env"] if v["name"] != "DASHBOARD_ENVIRONMENT"]
+            for probe in ("readinessProbe", "livenessProbe"):
+                container[probe]["httpGet"]["path"] = "/actuator/health"
+            return result
+
         for env in ("dev", "stage", "prod"):
             before, after = (render(path / "overlays" / env) for path in (baseline, active))
             assert before.keys() == after.keys(), "Unexpected application resource changes"
             key = ("Deployment", "cg-" + env, "dashboard")
-            deployment = deepcopy(after[key])
-            pod = deployment["spec"]["template"]
+            active_deployment = after[key]
+            pod = active_deployment["spec"]["template"]
             annotations = pod["metadata"]["annotations"]
             assert annotations["prometheus.io/scrape"] == "true"
             assert annotations["prometheus.io/path"] == "/actuator/prometheus"
             assert annotations["prometheus.io/port"] == "8084"
-            for annotation in ("prometheus.io/scrape", "prometheus.io/path", "prometheus.io/port"):
-                annotations.pop(annotation)
-            if not annotations and "annotations" not in before[key]["spec"]["template"]["metadata"]:
-                pod["metadata"].pop("annotations")
-
             container = next(c for c in pod["spec"]["containers"] if c["name"] == "dashboard")
             variable = next(v for v in container["env"] if v["name"] == "DASHBOARD_ENVIRONMENT")
             assert variable["valueFrom"]["fieldRef"]["fieldPath"] == "metadata.namespace"
-            container["env"].remove(variable)
             for probe in ("readinessProbe", "livenessProbe"):
                 suffix = "readiness" if probe == "readinessProbe" else "liveness"
                 assert container[probe]["httpGet"]["path"] == "/actuator/health/" + suffix
-                container[probe]["httpGet"]["path"] = "/actuator/health"
-            after[key] = deployment
+
+            before[key] = normalize_dashboard(before[key])
+            after[key] = normalize_dashboard(after[key])
             assert before == after, [key for key in before if before[key] != after.get(key)]
             print("PASS", env, "render; replicas, HPA, storage and other applications preserved")
 

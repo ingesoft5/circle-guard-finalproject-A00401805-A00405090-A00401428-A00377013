@@ -24,10 +24,10 @@ docker run --rm -v "$PWD":/work -w /work aquasec/trivy:0.70.0 \
 docker run --rm -v "$PWD":/work -w /work aquasec/trivy:0.70.0 \
   config --skip-version-check --severity HIGH,CRITICAL --format json \
   --output /work/docs/informe/evidencia/HU-DASH-05/trivy-config.json deploy/k8s
-# rc=0; 30 archivos; HIGH=74, CRITICAL=0
+# rc=0; 31 archivos; HIGH=74, CRITICAL=0
 ```
 
-Los `HIGH` son guías estándar (por ejemplo `KSV-0014`, `KSV-0118`, `KSV-0056`). La regla bloqueante del `Jenkinsfile` cuenta solo `CRITICAL`, por lo que este resultado **no bloquea** la etapa de IaC. El aumento frente al registro anterior de 27 archivos / 72 `HIGH` se explica por los tres manifiestos nuevos del componente `dashboard-observability`.
+Los `HIGH` son guías estándar (por ejemplo `KSV-0014`, `KSV-0118`, `KSV-0056`). La regla bloqueante del `Jenkinsfile` cuenta solo `CRITICAL`, por lo que este resultado **no bloquea** la etapa de IaC. El aumento frente al registro anterior de 27 archivos / 72 `HIGH` se explica por los tres manifiestos nuevos del componente `dashboard-observability` y por `dashboard-config.yml`, incorporado por HU-DASH-04 al hacer merge de `main`. Tras ese merge el escaneo se repitió: 31 archivos, 74 `HIGH`, 0 `CRITICAL` (el ConfigMap nuevo no añade `HIGH`).
 
 ## 3. Imagen (E2.3 / E2.6)
 
