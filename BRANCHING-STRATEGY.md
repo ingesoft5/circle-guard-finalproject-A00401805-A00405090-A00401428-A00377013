@@ -93,10 +93,4 @@ To prevent human errors before reaching the remote repository, the project inclu
 
 ### GitHub ↔ Jira integration
 
-The repository uses the versioned `.github/workflows/jira-sync.yml` workflow instead of an organization-level GitHub app (the team is not an org owner). It:
-
-- blocks PRs whose title does not contain a `DCG-###` key;
-- mirrors `pull_request` / `pull_request_review` / `issues` events as idempotent Jira comments (marker `circleguard-jira-sync-v1`) via `scripts/jira_sync.py` using Jira REST v3;
-- transitions the Jira issue between *In Progress*, *In Review*, *Done* and *To Do* according to the PR lifecycle.
-
-Required repository secrets: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`. The `HU-*` → `DCG-###` aliases live in `docs/agil/jira-mapping.yml`; only keys evidenced in the repository are registered — unmapped stories must carry their `DCG-###` key directly in the PR title.
+No hay checks/workflow de Jira en PRs. La validación de PRs se deja a Jenkins; si se requiere trazabilidad Jira, se maneja por convención (título/plantilla) sin checks bloqueantes en GitHub Actions.

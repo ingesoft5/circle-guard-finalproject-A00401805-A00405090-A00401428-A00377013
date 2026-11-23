@@ -355,13 +355,18 @@ def owaspZapGateLocal(String environment) {
     def targets = [
             'auth'        : 'http://auth:8180/actuator/health',
             'promotion'   : 'http://promotion:8088/actuator/health',
-            'notification': 'http://notification:8082/actuator/health'
+            'notification': 'http://notification:8082/actuator/health',
+            'form-active' : 'http://form:8086/api/v1/questionnaires/active',
+            'form-admin'  : 'http://form:8086/api/v1/questionnaires',
+            'form-survey' : 'http://form:8086/api/v1/surveys',
+            'form-cert'   : 'http://form:8086/api/v1/certificates/pending',
+            'form-upload' : 'http://form:8086/api/v1/attachments'
     ]
     sh """
         set -eu
         mkdir -p build/reports/security
         : > build/reports/security/zap-${environment}.txt
-        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion deployment/notification --timeout=180s
+        kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion deployment/notification deployment/form --timeout=180s
     """
     // CG-DOC: Each target uses its own pod name, so baseline scans can run in parallel.
     def zapBranches = [:]
@@ -378,19 +383,20 @@ def owaspZapGateLocal(String environment) {
               --labels="ci-security-gate=true" \\
               --command -- zap-baseline.py -t ${target} -m 1
             kubectl -n ${namespace} wait "pod/${zapPod}" --for=jsonpath='{.status.phase}'=Succeeded --timeout=300s
-            kubectl -n ${namespace} logs ${zapPod} | tee -a build/reports/security/zap-${environment}.txt
+            kubectl -n ${namespace} logs ${zapPod} | tee build/reports/security/zap-${environment}-${svc}.txt
         """
         }
     }
     parallel zapBranches
     sh """
         set -eu
+        cat build/reports/security/zap-${environment}-*.txt > build/reports/security/zap-${environment}.txt
         if grep -qE '^FAIL-NEW:[[:space:]]*[1-9]' build/reports/security/zap-${environment}.txt; then
             echo "OWASP ZAP found blocking vulnerabilities in ${namespace} before promotion to production." >&2
             exit 1
         fi
     """
-    archiveArtifacts artifacts: "build/reports/security/zap-${environment}.txt", allowEmptyArchive: true
+    archiveArtifacts artifacts: "build/reports/security/zap-${environment}*.txt", allowEmptyArchive: true
 }
 
 // The three UI flows (login, questionnaire, access) live in tests/e2e. The on-premise
@@ -813,6 +819,7 @@ pipeline {
                             sh 'npm ci --no-audit --no-fund'
                             sh 'npm run test:coverage'
                         }
+                        archiveArtifacts artifacts: 'mobile/coverage/lcov.info,mobile/coverage/index.html', allowEmptyArchive: true
                     }
                 }
             }

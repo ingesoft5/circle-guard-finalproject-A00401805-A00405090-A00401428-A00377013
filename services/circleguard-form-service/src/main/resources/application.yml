@@ -3,9 +3,9 @@ spring:
   application:
     name: circleguard-form-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/circleguard_form
-    username: admin
-    password: password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/circleguard_form}
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -21,6 +21,16 @@ spring:
 
 server:
   port: 8086
+
+jwt:
+  secret: ${JWT_SECRET}
+
+form:
+  outbox:
+    ack-timeout-ms: ${FORM_OUTBOX_ACK_TIMEOUT_MS:3000}
+    retry-attempts: ${FORM_OUTBOX_RETRY_ATTEMPTS:3}
+    retry-wait-ms: ${FORM_OUTBOX_RETRY_WAIT_MS:500}
+    poll-ms: ${FORM_OUTBOX_POLL_MS:1000}
 
 management:
   endpoints:

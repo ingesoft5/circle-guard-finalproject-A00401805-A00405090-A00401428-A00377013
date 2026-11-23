@@ -26,7 +26,7 @@ public class HealthSurveyService {
     private static final String TOPIC_SURVEY_SUBMITTED = "survey.submitted";
     private static final String TOPIC_CERTIFICATE_VALIDATED = "certificate.validated";
 
-    @Transactional
+    @Transactional("transactionManager")
     public HealthSurvey submitSurvey(HealthSurvey survey) {
         Optional<Questionnaire> activeQuestionnaire = questionnaireService.getActiveQuestionnaire();
         
@@ -60,7 +60,7 @@ public class HealthSurveyService {
         return repository.findByAttachmentPathIsNotNullAndValidationStatus(ValidationStatus.PENDING);
     }
 
-    @Transactional
+    @Transactional("transactionManager")
     public void validateSurvey(UUID surveyId, ValidationStatus status, UUID adminId) {
         HealthSurvey survey = repository.findById(surveyId)
                 .orElseThrow(() -> new RuntimeException("Survey not found: " + surveyId));
