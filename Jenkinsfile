@@ -790,6 +790,7 @@ pipeline {
                             sh 'npm ci --no-audit --no-fund'
                             sh 'npm run test:coverage'
                         }
+                        archiveArtifacts artifacts: 'mobile/coverage/lcov.info,mobile/coverage/index.html', allowEmptyArchive: true
                     }
                 }
             }
