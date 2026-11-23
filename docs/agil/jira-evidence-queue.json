@@ -41,6 +41,11 @@
       "paragraph": "L249-256 - Entregables E1.1-E1.8 (Parte 1)",
       "key": "DCG-438",
       "text": "CUMPLE. Los ocho entregables E1.1-E1.8 de la Parte 1 están verificados: E1.1 gestión ágil y branching (docs/agil/, sprint-0/1, BRANCHING-STRATEGY.md, main protegida); E1.2 infraestructura Bash idempotente con entornos aislados y Jenkins/Sonar/Nexus (infra/bootstrap/, docs/infra/; la migración on-prem posterior está documentada); E1.3 empaquetamiento inmutable con 9 Dockerfiles multi-stage no-root, semver y healthchecks; E1.4 Jenkinsfile multibranch con webhook verificado, Shared Library, Sonar quality gate y ejecución selectiva; E1.5 promoción dev -> E2E -> stage -> aprobación manual -> prod con tag y rollback (Jenkinsfile:1181-1321); E1.6 JaCoCo >= 60 % en los 5 núcleos, integraciones Testcontainers y 5 flujos E2E Playwright; E1.7 plantilla de cambio, política por tipo de cambio, release notes automáticas y etiquetado semver (docs/change-management.md, docs/release-notes/); E1.8 README operativo, diagramas de arquitectura/pipeline y bitácora IAG Nivel 3 (IAG_REGISTRO.md). Se creó el issue DCG-438 (Task) para consolidar esta evidencia."
+    },
+    {
+      "paragraph": "L260 - Alcance de despliegue en la Parte 1",
+      "key": "DCG-438",
+      "text": "CUMPLE. Los cinco servicios núcleo (auth, identity, promotion, form, gateway), su middleware (PostgreSQL, Neo4j, Kafka, Redis, OpenLDAP) y el cliente web quedaron desplegados en dev, stage y prod según docs/infra/environments.md:101 y deploy/compose/{dev,stage,prod}/docker-compose.yml. HU-INFRA-02 figura Done en docs/agil/backlog.md:26 con PRs #34/#38/#39/#40/#41, y docs/informe/E1.2-Informe-Final.md:14,364 registra los tres ambientes aislados en el release 1.2.8. Los servicios notification, file y dashboard fueron compilados, probados y empaquetados en Parte 1: dashboard.deploy=false en docs/informe/HU-DASH-03.md:10; file-service no desplegado en P1 según docs/informe/HU-FILE-04-Integracion-MinIO.md:34,40; notification desplegado en P2 según docs/informe/evidencia/HU-NOTIF-04/README.md:42,154-161. El hecho de que Jenkinsfile:90 incluya notification en deployable refleja la evolución de Parte 2, no una contradicción del alcance P1."
     }
   ]
 }
