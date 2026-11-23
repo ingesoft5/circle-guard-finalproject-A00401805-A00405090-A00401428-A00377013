@@ -60,6 +60,19 @@ Estas comprobaciones sí se ejecutaron y son las que respaldan la HU:
    - `sonar-links.txt` con el enlace `http://10.147.20.67:9000/dashboard?id=circleguard-dashboard-service` y Quality Gate en verde.
    - `image-digest.txt` con `circleguard-docker/dashboard:<TAG>`, el digest y `commit=<sha>`.
 
+## Estado de la corrección (23 nov 2026)
+
+La causa raíz del fallo era únicamente la ausencia de las dos credenciales en la instancia on-prem: el `jenkins.yml` montado en `/var/jenkins_home/cac` (copia del host en `deploy/compose/tools/jenkins/cac/jenkins.yml`, 4667 bytes) estaba desactualizado frente al repo y no declaraba los IDs que consume el `Jenkinsfile` (`terraform-minio-creds` y `terraform-grafana-password`). Las tres variables sí existían en `.env.onpremise` y en el entorno del contenedor `cg-jenkins`.
+
+Acciones ejecutadas:
+
+1. Respaldo del JCasC del host como `jenkins.yml.bak-20261123` e inserción de los dos bloques `credentials` con `${TF_STATE_MINIO_USER}` / `${TF_STATE_MINIO_PASSWORD}` y `${TF_GRAFANA_ADMIN_PASSWORD}`.
+2. Recarga de Configuration as Code vía `POST /manage/configuration-as-code/reload` (HTTP 200, con crumb y cookie de sesión).
+3. Verificación en `/credentials/store/system/domain/_/api/json`: los 6 IDs presentes, incluidos `terraform-minio-creds` y `terraform-grafana-password`.
+4. Relanzamiento de `main` con `SERVICE=circleguard-dashboard-service`, `TAG=`, `SKIP_INTEGRATION=false`, `DEPLOY=false`, `ROLLBACK_TAG=` (cola `queue/item/1547`). El build #54 histórico ya había fallado por esta misma causa antes de la corrección; el nuevo build quedó en cola detrás de `PR-166/5` y `main/57`, que ocupaban los dos executors.
+
+Pendiente al liberarse el executor: capturar consola, `sonar-links.txt` e `image-digest.txt` del build resultante y archivarlos en esta carpeta.
+
 ## Archivos de esta carpeta
 
 - `main-build-53-console.txt` — consola completa del build fallido de `main`.

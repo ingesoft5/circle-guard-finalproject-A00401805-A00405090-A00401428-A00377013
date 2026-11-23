@@ -35,3 +35,8 @@ reducir ese cuello (`docs/agil/plan-circle-guard-5.0.md:52`).
 Nota: no se exportó un gráfico burndown animado; esta tabla es el registro
 verificable del flujo acumulado y la velocidad, con la misma información que
 habría mostrado el gráfico.
+
+Actualización 23 nov 2026: las acciones correctivas siguen abiertas por una
+causa raíz de infraestructura — el nodo `k3d-cg-agent-0` está `NotReady` y
+los PVC afinados a él no se programan. Detalle en
+`docs/infra/evidencia/diagnostico-onprem-20261123.md`.
