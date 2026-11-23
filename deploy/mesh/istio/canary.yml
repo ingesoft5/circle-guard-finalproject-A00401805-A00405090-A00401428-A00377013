@@ -1,0 +1,201 @@
+# CG-DOC: Canary release bonus (L284). 90/10 weighted routing between a stable
+# Form deployment (image 1.4.0) and a canary (image 1.8.0), both living in the
+# isolated cg-mesh-canary namespace with Istio sidecars and STRICT mTLS. The
+# application images are the real ones imported into the k3d nodes (no build
+# is performed here). See mtls.yml for the STRICT PeerAuthentication and the
+# ISTIO_MUTUAL DestinationRules.
+apiVersion: v1
+kind: Service
+metadata:
+  name: form-stable
+  namespace: cg-mesh-canary
+spec:
+  selector:
+    app: form-stable
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: form-stable
+  namespace: cg-mesh-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: form-stable
+  template:
+    metadata:
+      labels:
+        app: form-stable
+    spec:
+      containers:
+        - name: form
+          image: circleguard-docker/form:1.4.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: cg-config
+          env:
+            - name: SERVER_PORT
+              value: "8086"
+            - name: FORM_ENVIRONMENT
+              value: cg-mesh-canary
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres.cg-dev.svc.cluster.local:5432/circleguard_form
+            - name: SPRING_DATASOURCE_USERNAME
+              value: admin
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cg-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka.cg-dev.svc.cluster.local:9092
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: validate
+            - name: SPRING_FLYWAY_ENABLED
+              value: "false"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 12
+          resources:
+            requests:
+              cpu: 100m
+              memory: 320Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: form-hu6
+  namespace: cg-mesh-canary
+spec:
+  selector:
+    app: form-hu6
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: form-hu6
+  namespace: cg-mesh-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: form-hu6
+  template:
+    metadata:
+      labels:
+        app: form-hu6
+    spec:
+      containers:
+        - name: form
+          image: circleguard-docker/form:1.8.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: cg-config
+          env:
+            - name: SERVER_PORT
+              value: "8086"
+            - name: FORM_ENVIRONMENT
+              value: cg-mesh-canary
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres.cg-dev.svc.cluster.local:5432/circleguard_form
+            - name: SPRING_DATASOURCE_USERNAME
+              value: admin
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cg-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka.cg-dev.svc.cluster.local:9092
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: validate
+            - name: SPRING_FLYWAY_ENABLED
+              value: "false"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 12
+          resources:
+            requests:
+              cpu: 100m
+              memory: 320Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: circleguard-canary-gateway
+  namespace: cg-mesh-canary
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: form-canary
+  namespace: cg-mesh-canary
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - circleguard-canary-gateway
+  http:
+    - name: stable-header
+      match:
+        - headers:
+            x-canary:
+              exact: "false"
+      route:
+        - destination:
+            host: form-stable.cg-mesh-canary.svc.cluster.local
+            port:
+              number: 8086
+          weight: 100
+    - name: weighted-canary
+      route:
+        - destination:
+            host: form-stable.cg-mesh-canary.svc.cluster.local
+            port:
+              number: 8086
+          weight: 90
+        - destination:
+            host: form-hu6.cg-mesh-canary.svc.cluster.local
+            port:
+              number: 8086
+          weight: 10
+      retries:
+        attempts: 2
+        perTryTimeout: 2s
