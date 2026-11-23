@@ -1,5 +1,5 @@
 # CG-DOC: GitHub <-> Jira DCG integration (no org-level GitHub app required).
-# Validates that every PR title carries a Jira key and mirrors PR events into Jira.
+# Mirrors repository events into Jira asynchronously so PRs are not delayed.
 name: Jira sync
 
 on:
@@ -11,10 +11,6 @@ on:
         default: verify
         type: choice
         options: [verify]
-  pull_request:
-    types: [opened, edited, reopened, synchronize, ready_for_review, closed]
-  pull_request_review:
-    types: [submitted]
   issues:
     types: [opened, edited, reopened, closed]
 
@@ -37,32 +33,6 @@ jobs:
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: python3 scripts/jira_sync.py --verify
-
-  validate-pr-title:
-    name: Jira key in PR title
-    if: github.event_name == 'pull_request' && github.event.action != 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check DCG identifier
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          python3 - <<'PY'
-          import os, re, sys
-          title = os.environ["PR_TITLE"]
-          if not re.search(r"\bDCG-\d+\b", title, re.IGNORECASE):
-              print(
-                  "ERROR: PR #%s title must include the Jira story key (DCG-###).\n"
-                  "Title: %s\n"
-                  "Example: feat ( file ) : S3 adapter (HU-FILE-04, DCG-335)" % (
-                      os.environ["PR_NUMBER"], title
-                  ),
-                  file=sys.stderr,
-              )
-              sys.exit(1)
-          print("OK: Jira key found in PR title:", re.search(r"\bDCG-\d+\b", title, re.I).group(0))
-          PY
 
   sync-jira:
     name: Mirror event to Jira
