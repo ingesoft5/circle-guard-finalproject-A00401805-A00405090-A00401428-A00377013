@@ -50,7 +50,7 @@ CP=$(find "$LIB" -maxdepth 1 -name 'groovy-*.jar' | tr '\n' ':')
 java -cp "$CP" groovy.ui.GroovyMain jenkins/test/TestCiServices.groovy
 ```
 
-Resultado: `ALL CASES PASSED`, incluidos los casos `global Gradle file` (selecciona los nueve componentes, entre ellos `dashboard`) y `CI-only` (los cambios en `Jenkinsfile`/`jenkins/` no seleccionan microservicios). Por eso la ejecución en Jenkins debe solicitarse con `SERVICE=dashboard` o `SERVICE=all`.
+Resultado: `ALL CASES PASSED`, incluidos los casos `global Gradle file` (selecciona los nueve componentes, entre ellos `dashboard`) y `CI-only` (los cambios en `Jenkinsfile`/`jenkins/` no seleccionan microservicios). Por eso la ejecución en Jenkins debe solicitarse con `SERVICE=circleguard-dashboard-service` o `SERVICE=all`; el valor `dashboard` no existe en la lista de parámetros del job.
 
 ### 3. Imagen multi-stage, no root y con metadatos de release
 
@@ -86,7 +86,7 @@ En Jenkins la misma construcción usa `--build-arg GRADLE_IMAGE=.../circleguard-
 - `resolveSemver()` calcula la versión desde el último tag `vX.Y.Z` y los Conventional Commits posteriores; `ci.dockerBuildPush` etiqueta la imagen con `${TAG}` y escribe el digest en `image-digest.txt`. No se publica `latest`.
 - `ci.archive()` deja en Jenkins los XML de JUnit, el XML/HTML de JaCoCo, los enlaces de SonarQube y el digest de la imagen.
 
-La ejecución en el servidor Jenkins (URL del build, panel de SonarQube y digest publicado en Nexus) no puede reproducirse desde este entorno sin credenciales; se registra cuando el pipeline corre con `SERVICE=dashboard` sobre `main`. La configuración que produce esos resultados quedó verificada por código y por las pruebas locales anteriores.
+Validación remota parcial (23 de noviembre de 2026): el PR [#163](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/163) disparó el build [PR-163/1](http://10.147.20.67:8080/job/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/job/PR-163/1/) y el check `continuous-integration/jenkins/pr-merge` terminó en `success`, cubriendo Build → Unit Tests → JaCoCo → SonarQube → Quality Gate. La corrida sobre `main` con `SERVICE=circleguard-dashboard-service` para capturar la URL del build final, el panel de SonarQube y el digest publicado en Nexus sigue pendiente: requiere autenticación en Jenkins, que no está disponible en este entorno. La configuración que produce esos resultados quedó verificada por código y por las pruebas locales anteriores.
 
 ## Criterios de aceptación
 
