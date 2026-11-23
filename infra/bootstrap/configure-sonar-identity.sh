@@ -48,7 +48,7 @@ gate_id="$(api "${SONAR_URL}/api/qualitygates/list" \
 if [[ -z "${gate_id}" || "${gate_id}" == "null" ]]; then
   gate_id="$(api -X POST "${SONAR_URL}/api/qualitygates/create" \
     --data-urlencode "name=${GATE_NAME}" | jq -r '.id // empty')"
-  [[ -n "${gate_id}" ]] || { echo "No se pudo crear el gate ${GATE_NAME}." >&2; exit 1; }
+  [[ -n "${gate_id}" ]] || { echo "No se creó el gate ${GATE_NAME}." >&2; exit 1; }
   echo "Gate creado: ${GATE_NAME} (${gate_id})"
 else
   echo "Gate existente: ${GATE_NAME} (${gate_id})"

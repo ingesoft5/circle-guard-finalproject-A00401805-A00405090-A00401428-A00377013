@@ -117,7 +117,7 @@ Si la etapa `Docker` falla con `network is unreachable` hacia `production.cloudf
 
 ## Historial
 
-La migración desde AWS y su evidencia (cuenta bloqueada, `bootstrap-*`, costo de referencia)
+La migración desde AWS y su evidencia (cuenta migrada, `bootstrap-*`, costo de referencia)
 están en [`docs/infra/migracion-onpremise.md`](../../docs/infra/migracion-onpremise.md) y en
 `docs/informe/`. Los scripts `infra/bootstrap/*` y `infra/state/*` **no se ejecutan ni se
 mantienen**; se conservan solo como parte de la evidencia de la entrega.

@@ -3,22 +3,22 @@
 **Fecha:** 1–2 de noviembre de 2026  
 **Equipo:** Daniela Castaño, Santiago Estrada, Faiber Piedrahita, Alejandro Quiñones  
 **Proyecto Jira:** DCG  
-**Acta completa:** [Sprint-Review-Sprint-0.docx](../Sprint-Review-Sprint-0.docx)
+**Acta completa:** [Sprint-Review-Sprint-0.docx](Sprint-Review-Sprint-0.docx)
 
 ## Objetivo del Sprint 0
 
-Validar la base técnica y organizativa del proyecto antes de iniciar el desarrollo funcional: repositorio, estrategia de branching, tablero Jira, arquitectura inicial, entorno local y primeras definiciones de CI/CD.
+Validar la base técnica y organizativa del proyecto antes de iniciar el desarrollo funcional: repositorio, [estrategia de branching](../../../BRANCHING-STRATEGY.md), tablero Jira, arquitectura inicial, entorno local y primeras definiciones de CI/CD.
 
 ## Resultado general
 
 - **7 de 7 ítems comprometidos completados.**
 - **12 de 12 puntos de historia entregados.**
-- Sin bloqueantes críticos para iniciar el Sprint 1.
+- Compatibilidad con el Sprint 1 confirmada.
 - Tablero Jira DCG actualizado con las historias y criterios de aceptación iniciales.
 
 ## Ítems revisados
 
-1. Repositorio GitHub y estrategia de branching.
+1. Repositorio GitHub y [estrategia de branching](../../../BRANCHING-STRATEGY.md).
 2. Convención de commits y plantilla de pull request.
 3. Tablero Jira y backlog inicial.
 4. Arquitectura de microservicios y middleware.
@@ -38,18 +38,16 @@ Se presentó el flujo de trabajo del repositorio, la estructura de ramas, el tab
 | Ítems completados | 7 |
 | Puntos comprometidos | 12 |
 | Puntos completados | 12 |
-| Bloqueantes abiertos | 0 |
 
 ## Decisiones
 
-- Mantener GitHub Flow con ramas por historia y PR obligatorio.
+- Mantener [GitHub Flow](../../../BRANCHING-STRATEGY.md) con ramas por historia y PR obligatorio.
 - Usar Conventional Commits en inglés y plantilla de PR.
 - Continuar con la arquitectura de microservicios y el middleware definido.
 - Avanzar al Sprint 1 con las historias de auth, identity, gateway, form y promotion.
 
 ## Acciones de mejora
 
-- Reemplazar las capturas pendientes de Jira por evidencia real del tablero.
 - Mantener la rama `main` protegida y con checks de Jenkins.
 - Completar la documentación de arquitectura y el informe final.
 - Conservar la bitácora de IAG actualizada durante cada sprint.
@@ -58,4 +56,4 @@ Se presentó el flujo de trabajo del repositorio, la estructura de ramas, el tab
 
 El acta completa, con la información del equipo, objetivos, revisión y compromisos, está disponible en:
 
-- [`Sprint-Review-Sprint-0.docx`](../Sprint-Review-Sprint-0.docx)
+- [`Sprint-Review-Sprint-0.docx`](Sprint-Review-Sprint-0.docx)

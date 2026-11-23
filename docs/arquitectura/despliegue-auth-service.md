@@ -80,7 +80,7 @@ En cada ambiente (`dev`, `stage`, `prod`):
 El pipeline declarativo (`Jenkinsfile` + Shared Library en `jenkins/vars/ci.groovy` y `jenkins/vars/ciServices.groovy`) ejecuta las siguientes etapas para `circleguard-auth-service`:
 
 1. **Build & Unit Tests + JaCoCo:** `./gradlew :services:circleguard-auth-service:test :services:circleguard-auth-service:jacocoTestReport :services:circleguard-auth-service:jacocoTestCoverageVerification` (`97.89%` de cobertura de líneas).
-2. **SonarQube + Quality Gate:** escaneo estático con `services/circleguard-auth-service/sonar-project.properties` y bloqueo si el Quality Gate no está en `OK`.
+2. **SonarQube + Quality Gate:** escaneo estático con `services/circleguard-auth-service/sonar-project.properties` y validación obligatoria del Quality Gate en `OK`.
 3. **Package, Publish & Docker:** publicación del artefacto Maven y construcción/push de la imagen `${NEXUS_REGISTRY}/circleguard-docker/auth:${TAG}` en `172.31.20.46:5000`.
 4. **Deploy `dev` (`cg-dev`):** sincronización de `docker-compose.yml` y `deploy/scripts/*.sh` por SSH y ejecución de `deploy.sh dev ${TAG}`, verificando `/actuator/health == UP` tanto en `:8087` (`gateway`) como en `:8180` (`auth`).
 5. **Pruebas E2E (`Playwright`):** ejecución automática de `tests/e2e/access-validation.spec.ts` contra `cg-dev`.

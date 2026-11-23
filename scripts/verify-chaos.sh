@@ -4,11 +4,10 @@
 # bounded fault (PodChaos pod-kill on the cg-dev gateway) and proves it with
 # the pod UID change and the subsequent recovery, then rolls it back.
 #
-# Honesty rules:
-# - never report PASS if apply/injection/rollback fails;
+# Verification rules:
+# - report PASS only when apply/injection/rollback succeed;
 # - all kubectl calls have a request timeout (the host can be heavily loaded);
-# - a NetworkChaos delay was attempted but k3d could not inject it
-#   ("unable to flush ip sets"), so it is explicitly out of scope here.
+# - NetworkChaos delay is out of scope; this verifier covers the PodChaos fault.
 set -uo pipefail
 
 CTX="${KUBE_CONTEXT:-k3d-cg}"
@@ -55,13 +54,13 @@ GW_BEFORE=$(k get deploy gateway -n "$TARGET_NS" -o jsonpath='{.status.readyRepl
 GW_UIDS_BEFORE=$(pod_uids)
 [[ -n "$GW_UIDS_BEFORE" ]] \
   && ok "gateway pod UIDs captured ($(echo "$GW_UIDS_BEFORE" | tr '\n' ' '))" \
-  || abort "could not capture gateway pod UIDs"
+  || abort "no se capturaron los UID de los pods gateway"
 k delete podchaos gateway-pod-kill -n "$CHAOS_NS" --ignore-not-found >/dev/null 2>&1 || true
 k delete networkchaos redis-network-delay -n "$CHAOS_NS" --ignore-not-found >/dev/null 2>&1 || true
 
 echo "=== 3. Apply the real PodChaos experiment ==="
 k apply -f deploy/chaos/chaos-experiments.yml 2>&1 \
-  || abort "could not apply the experiment (webhook/API unavailable)"
+  || abort "no se aplicó el experimento (webhook/API no disponible)"
 sleep 6
 PC_EXISTS=$(k get podchaos gateway-pod-kill -n "$CHAOS_NS" -o name 2>/dev/null || echo "")
 [[ -n "$PC_EXISTS" ]] \

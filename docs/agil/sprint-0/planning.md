@@ -8,7 +8,7 @@
 
 ## Objetivo
 
-Conformar el equipo, definir el marco ágil y la estrategia de branching, construir el
+Conformar el equipo, definir el marco ágil y la [estrategia de branching](../../../BRANCHING-STRATEGY.md), construir el
 backlog inicial con historias y criterios de aceptación, y dejar la base de CI/CD e
 infraestructura para que el Sprint 1 pudiera entregar el incremento de producto.
 
@@ -29,7 +29,7 @@ infraestructura para que el Sprint 1 pudiera entregar el incremento de producto.
 | DCG-1 | Backlog con historias de usuario | 1 | SM |
 | DCG-2 | Subtareas y criterios de aceptación | 2 | SM |
 | DCG-4 | Roles del equipo Scrum | 1 | DC |
-| DCG-5 | CI/CD con GitHub Flow | 3 | DC |
+| DCG-5 | CI/CD con [GitHub Flow](../../../BRANCHING-STRATEGY.md) | 3 | DC |
 | DCG-6 | Conformar el equipo | 1 | Equipo |
 | DCG-7 | Definir el marco ágil | 2 | DC |
 | DCG-8 | Estrategia de branching | 2 | DC |
@@ -45,4 +45,4 @@ infraestructura para que el Sprint 1 pudiera entregar el incremento de producto.
 ## Resultado
 
 El sprint cerró 7/7 ítems y 12/12 puntos. La revisión y las lecciones aprendidas están en
-`docs/agil/sprint-0/retrospective.md` y en `docs/agil/Sprint-Review-Sprint-0.docx`.
+`docs/agil/sprint-0/retrospective.md` y en `docs/agil/sprint-0/Sprint-Review-Sprint-0.docx`.

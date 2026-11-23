@@ -76,7 +76,7 @@ if [[ -n "${NEXUS_PASSWORD:-}" ]]; then
   if curl -fsS -u "${NEXUS_USER}:${NEXUS_PASSWORD}" http://localhost:5000/v2/_catalog 2>/dev/null | grep -q circleguard-docker; then
     verde "Registro Nexus :5000 lista imágenes circleguard-docker/*"
   else
-    rojo "No se pudo listar el catálogo de :5000 con ${NEXUS_USER} o aún no hay imágenes publicadas"
+    rojo "No se lista el catálogo de :5000 con ${NEXUS_USER} o aún no hay imágenes publicadas"
   fi
 else
   info "Sin NEXUS_PASSWORD en $ARCHIVO_ENTORNO; se omite el cheque del registro."

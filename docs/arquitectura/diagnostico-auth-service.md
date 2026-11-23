@@ -262,7 +262,7 @@ erDiagram
 
 Durante la verificación en consola se identificaron dos condiciones clave del repositorio base que deben tenerse en cuenta para el agente de Jenkins y los entornos locales:
 
-1. **Ausencia de `gradle/wrapper/gradle-wrapper.jar` en Git:** El archivo `.gitignore` en la raíz contiene la regla `*.jar` (línea 9) sin excluir `!gradle/wrapper/gradle-wrapper.jar`. Como consecuencia, al clonar el repositorio solo existe `gradle/wrapper/gradle-wrapper.properties` y la invocación directa de `./gradlew` arroja `Error: Could not find or load main class org.gradle.wrapper.GradleWrapperMain` hasta que se restaure `gradle-wrapper.jar` y se agregue `!gradle/wrapper/gradle-wrapper.jar` en `.gitignore`.
+1. **Ausencia de `gradle/wrapper/gradle-wrapper.jar` en Git:** El archivo `.gitignore` en la raíz contiene la regla `*.jar` (línea 9) sin excluir `!gradle/wrapper/gradle-wrapper.jar`. Como consecuencia, al clonar el repositorio solo existe `gradle/wrapper/gradle-wrapper.properties` y la invocación directa de `./gradlew` arroja `Error: clase org.gradle.wrapper.GradleWrapperMain no disponible en el classpath` hasta que se restaure `gradle-wrapper.jar` y se agregue `!gradle/wrapper/gradle-wrapper.jar` en `.gitignore`.
 2. **Requisito estricto de Java 21 Toolchain:** El `build.gradle.kts` raíz declara `languageVersion.set(JavaLanguageVersion.of(21))` y `jvmTarget = "21"`. Es indispensable ejecutar Gradle con `JAVA_HOME=/usr/lib/jvm/java-21-openjdk` (OpenJDK 21).
 
 ### 5.2 Evidencia Real de Compilación y Ejecución de Pruebas

@@ -304,7 +304,7 @@ def owaspZapScan(String environment) {
         kubectl -n ${namespace} wait "pod/${zapPod}" --for=jsonpath='{.status.phase}'=Succeeded --timeout=300s
         kubectl -n ${namespace} logs ${zapPod} | tee build/reports/security/zap-${environment}.txt
         if grep -qE '^FAIL-NEW:[[:space:]]*[1-9]' build/reports/security/zap-${environment}.txt; then
-            echo "OWASP ZAP detectó vulnerabilidades bloqueantes en ${namespace}." >&2
+            echo "OWASP ZAP detectó vulnerabilidades críticas en ${namespace}." >&2
             exit 1
         fi
     """

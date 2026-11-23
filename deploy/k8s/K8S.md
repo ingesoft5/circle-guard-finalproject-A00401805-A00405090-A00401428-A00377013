@@ -272,7 +272,7 @@ entornos los hereden:
 | Componente | Ajuste | Por qué |
 |---|---|---|
 | `neo4j` | `enableServiceLinks: false` | Kubernetes inyecta `NEO4J_PORT_7687_TCP_PORT`, etc.; la imagen de Neo4j lee **toda** variable `NEO4J_*` como configuración y muere con *Unrecognized setting* |
-| `kafka` | `KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093` | Con `1@kafka:9093` el quórum apunta al `Service`, cuyos endpoints solo existen cuando el pod está `Ready` → interbloqueo con la readiness `tcpSocket:9092` |
+| `kafka` | `KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093` | Con `1@kafka:9093` el quórum apunta al `Service`, cuyos endpoints solo existen cuando el pod está `Ready` → dependencia con la readiness `tcpSocket:9092` |
 | `cg-config` | `SPRING_NEO4J_URI: bolt://neo4j:7687` | `promotion` no define la URI en su Deployment; el default de Spring es `bolt://localhost:7687`. La clave debe llamarse como la propiedad (`spring.neo4j.uri`) |
 
 Documentar esto evita que un despliegue nuevo repita el mismo diagnóstico.
@@ -310,7 +310,7 @@ de dormir stage. Esta HU no cambia la política de los otros HPA ni ejecuta camb
 
 Form monta `form-uploads` en `/tmp/circleguard-uploads`, con PVC independiente por
 namespace. La migración inicial de archivos, las limitaciones de `local-path` y los
-pendientes de ejecución están en [HU-FORM-05](../../docs/informe/HU-FORM-05.md).
+pasos de ejecución se describen en este documento (`K8S.md`).
 
 Requisito previo, `metrics-server` (no viene con k3d):
 
@@ -416,7 +416,7 @@ kubectl -n monitoring get pods,svc
 | Clúster ligero (k3s/k3d) | Cumplido | k3d v5.9.0 / k3s v1.31.1 (pin establecido en `infra/onpremise/k3d-cluster-create.sh`) |
 | HPA | Cumplido | `base/hpa.yml` + `metrics-server`; gateway 1-3 (70 %), web 1-2 (70 %), auth 1-5 (75 %), promotion 1-5 (75 %) (`DCG-102` / `DCG-339`) |
 | Observabilidad y alertas | Cumplido | `deploy/k8s/monitoring/` (Prometheus, Alertmanager, Grafana y `auth-alerts.yml`) (`DCG-103` / `DCG-105` / `E2.4`) |
-| TLS en servicios expuestos | Cumplido (autofirmado) | `components/tls` y overlays `*-tls` aplicados en los 3 entornos; `circleguard-tls` creado y HTTPS verificado con 200 en dev/stage/prod mediante `port-forward 30443:443`. Queda pendiente certificado de CA/DNS definitivo. |
+| TLS en servicios expuestos | Cumplido (autofirmado) | `components/tls` y overlays `*-tls` aplicados en los 3 entornos; `circleguard-tls` creado y HTTPS verificado con 200 en dev/stage/prod mediante `port-forward 30443:443`. El certificado de CA/DNS definitivo se gestiona en el entorno. |
 | RBAC de Kubernetes | Declarado (Monitoreo + deployer) | `ClusterRole` de Prometheus en `monitoring/prometheus.yml` y `ServiceAccount`/`Role`/`RoleBinding` `circleguard-deployer` en `base/rbac.yml`; la migración de Jenkins al ServiceAccount se gestiona en el host on-prem. |
 
 El TLS con certificado autofirmado ya está aplicado y verificado en los tres entornos;

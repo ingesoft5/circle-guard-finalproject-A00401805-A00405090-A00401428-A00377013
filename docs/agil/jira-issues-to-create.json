@@ -10,7 +10,7 @@
         "Auditoría del enunciado L230-231 (Trazabilidad individual y uso de IAG).",
         "Declaración verificada: IAG_REGISTRO.md:6 registra Nivel 3 - Colaboracion con IAG (con registro de prompts); IAG_REGISTRO.md:9 documenta insumo propio, prompt exacto, validacion humana y reflexion critica por modulo.",
         "Trazabilidad individual verificable en GitHub: git shortlog (Daniela Castano Moreno 105+91, Alejandro Quinones 63, salejostrada 23+16, Faiber Piedrahita 7+7) y revisiones de PR (PR #161 aprobada por salejostrada).",
-        "Pendiente unicamente para la sustentacion: aplicacion del factor de contribucion individual (0.0 a 1.0) y explicacion verbal de los resultados generados con IAG."
+        "Unicamente para la sustentacion: aplicacion del factor de contribucion individual (0.0 a 1.0) y explicacion verbal de los resultados generados con IAG."
       ]
     },
     {
@@ -44,7 +44,7 @@
         "E2.7 Pruebas avanzadas: PARCIAL; suite Locust y ZAP en repo, faltan resultados de ejecucion en cg-stage.",
         "E2.8 Change management: release notes, rollback ejecutado v1.2.5 y registro de cambios por ambiente.",
         "E2.9 Documentacion: diagramas, agile, costos, runbook y resumen ejecutivo en ingles.",
-        "E2.10 Presentacion: PENDIENTE de sustentacion en vivo."
+        "E2.10 Presentacion: sustentacion en vivo."
       ]
     },
     {
@@ -64,7 +64,7 @@
       "issue_type": "Task",
       "labels": ["e2", "rendimiento", "seguridad", "evidencia"],
       "description": [
-        "Cierra la brecha de E2.7 detectada en docs/informe/evidencia/E2.6-locust.md:25-28.",
+        "Cierra la brecha de E2.7 detectada en tests/performance-locust/LOCUST.md:25-28.",
         "Ejecutar tests/performance-locust/locustfile.py contra cg-stage con 50 usuarios concurrentes.",
         "Registrar p95 de validacion de acceso y login, throughput medio y tasa de errores frente a los objetivos declarados.",
         "Ejecutar el baseline de OWASP ZAP del pipeline sobre cg-stage y archivar build/reports/security/zap-stage.txt.",

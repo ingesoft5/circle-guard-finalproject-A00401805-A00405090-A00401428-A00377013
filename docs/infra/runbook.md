@@ -153,7 +153,7 @@ kubectl delete namespace cg-stage
 ```
 
 Elimina las cargas de trabajo y los volúmenes declarados en los manifiestos. No borres
-`cg-dev` mientras la demostración siga pendiente.
+`cg-dev` durante la demostración.
 
 ### Ver qué se está comiendo la memoria
 
@@ -254,7 +254,7 @@ for env in dev stage prod; do
 done
 ```
 
-`plan -detailed-exitcode`: `0` = sin cambios, `2` = cambios pendientes, `1` = error.
+`plan -detailed-exitcode`: `0` = sin cambios, `2` = cambios detectados, `1` = error.
 Para aplicar un ambiente: `terraform apply` dentro de `infra/terraform/envs/<env>`.
 
 Notas de observabilidad en el host on-prem:
@@ -401,8 +401,8 @@ CONFIRM=yes ./infra/bootstrap/bootstrap-destroy.sh
 | `WeakKeyException ... 128 bits` (`auth`) | `QR_SECRET` de menos de 32 bytes | `openssl rand -hex 24` en `secrets.env` y re-aplicar |
 | `Detected a Non-hex character at 1 or 2 position` (`identity`) | `VAULT_SALT` no es hexadecimal | `openssl rand -hex 16` (hex de longitud par) |
 | `Unrecognized setting ... PORT.7687.TCP.PORT` (`neo4j-0`) | Las *service links* de Kubernetes inyectan variables `NEO4J_*` y la imagen las lee como configuración | `enableServiceLinks: false` en el StatefulSet |
-| `unable to register with the controller quorum` (`kafka-0`) | El quórum apunta al `Service`, cuyos endpoints solo existen cuando el pod está `Ready` | `KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093` |
-| `Unable to connect to localhost:7687` (`promotion`) | No está definido `SPRING_NEO4J_URI` y Spring usa `localhost` por defecto | Clave `SPRING_NEO4J_URI` en el ConfigMap `cg-config` |
+| `sin registro en el quórum del controlador` (`kafka-0`) | El quórum apunta al `Service`, cuyos endpoints solo existen cuando el pod está `Ready` | `KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093` |
+| `sin conexión a localhost:7687` (`promotion`) | No está definido `SPRING_NEO4J_URI` y Spring usa `localhost` por defecto | Clave `SPRING_NEO4J_URI` en el ConfigMap `cg-config` |
 | `Connection refused` a PostgreSQL | Arranque en frío: Flyway `failFast` antes de que Postgres esté `Ready` | Esperar `postgres-0` y reiniciar las aplicaciones |
 | `OOMKilled` (salida 137) en varios pods | Los tres entornos completos no caben en la RAM del host | Bajar el entorno que no se está demostrando |
 | `404 page not found` de Traefik | El header `Host` no coincide con la regla del Ingress | Usar `curl -H "Host: dev.circleguard.local"` |

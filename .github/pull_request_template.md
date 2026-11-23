@@ -18,4 +18,4 @@
 3. 
 
 ---
-*Note for the reviewer: PRs and reviews must be written in English. Keep the `HU-*` alias when applicable. Ensure the branch name follows our GitHub Flow convention and that the code does not contain hardcoded credentials.*
+*Note for the reviewer: PRs and reviews must be written in English. Keep the `HU-*` alias when applicable. Ensure the branch name follows our [GitHub Flow convention](../BRANCHING-STRATEGY.md) and that the code does not contain hardcoded credentials.*

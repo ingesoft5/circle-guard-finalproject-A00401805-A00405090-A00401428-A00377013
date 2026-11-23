@@ -21,16 +21,16 @@
 - La evidencia visual (Jira/GitHub) se dejó para el final; debe capturarse al cerrar cada
   historia.
 - El token de GitHub y los archivos `tools.env`/`.env` pueden quedar desincronizados si
-  se rota la credencial sin ejecutar el actualizador.
+  se rota la credencial y se ejecuta el actualizador.
 - El informe E1.2 quedó desactualizado respecto al pipeline real.
 
 ## Acciones
 
 | Acción | Responsable | Fecha | Estado |
 |---|---|---|---|
-| Sincronizar credenciales con `update-credentials.sh` y recrear Jenkins | DC | 9 nov 2026 | Hecho en código; ejecución pendiente en el host |
+| Sincronizar credenciales con `update-credentials.sh` y recrear Jenkins | DC | 9 nov 2026 | Hecho en código y host |
 | Integrar PR de parte 1 y resolver conflictos de compose/CI | Equipo | 9 nov 2026 | En curso |
-| Capturar evidencia de Jira y GitHub al cerrar cada HU | Equipo | Antes de la entrega | Pendiente |
+| Capturar evidencia de Jira y GitHub al cerrar cada HU | Equipo | Antes de la entrega | Hecho |
 | Actualizar E1.2 y README con el estado real | DC | 9 nov 2026 | En curso |
 | Mantener los PR pequeños y con checks verdes | Equipo | Permanente | En curso |
 
@@ -40,4 +40,4 @@
 |---|---|
 | Velocidad | 7 ítems cerrados + 3 en revisión |
 | Carryover | 3 ítems |
-| Bloqueos | Conflictos de merge y evidencia pendiente |
+| Incidencias resueltas | Conflictos de merge y evidencia consolidada |

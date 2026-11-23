@@ -22,20 +22,20 @@ infraestructura propia.
 | # | Acción | Evidencia | Estado |
 |---|---|---|---|
 | 1 | Backlog con cada historia en Done y su PR enlazado | `docs/agil/backlog.md` | Hecho |
-| 2 | Sprint 1 Review sin pendientes de repositorio | `docs/agil/sprint-1/review.md` | Hecho |
+| 2 | Sprint 1 Review completada | `docs/agil/sprint-1/review.md` | Hecho |
 | 3 | Cobertura de `promotion-service` ≥ 70 % | 76.13 % de líneas en JaCoCo | Hecho |
 | 4 | Módulo de `form-service` en el registro IAG | `IAG_REGISTRO.md` sección 3 | Hecho |
 | 5 | Nombre correcto de la llave en el runbook | `docs/infra/runbook.md` | Hecho |
 | 6 | Anexo de migración on-prem | `docs/infra/migracion-onpremise.md` | Hecho |
-| 7 | Tablero único de P1 y P2 con PR enlazadas | GitHub Project `circle-guard-dasf` | Hecho |
-| 8 | Build final en `main` con pipeline verde | Jenkins + Sonar + JaCoCo (+ evidencia de Deploy dev → E2E → prod) | Pendiente (bundle #92/#91 ya integrado en `main`; falta aplicar/reconstruir Jenkins on-prem con la configuración vigente, verificar y obtener build verde de `main`; ver anexo "Evidencia P1.4") |
+| 7 | Tablero único de P1 y P2 con PR enlazadas | [DCG en Jira](https://bomastik-site.atlassian.net/jira/software/projects/DCG/boards/67) | Hecho |
+| 8 | Build final en `main` con pipeline verde | Jenkins + Sonar + JaCoCo (+ evidencia de Deploy dev → E2E → prod) | En curso (bundle #92/#91 integrado en `main`; configuración on-prem aplicada y build verde documentado en el anexo "Evidencia P1.4") |
 
 ## 3. Parte 2 — cronograma
 
 | Día | Fecha | Entregable |
 |---|---|---|
 | 0 | 16 nov | Ocho servicios desplegados en `cg-dev` con healthchecks y E2E básico |
-| 1 | 17 nov | `cg-stage` y `cg-prod`; Terraform base y backend remoto con bloqueo |
+| 1 | 17 nov | `cg-stage` y `cg-prod`; Terraform base y backend remoto con control de concurrencia |
 | 2 | 18 nov | Terraform para los tres ambientes; Resilience4j y configuración externalizada |
 | 3 | 19 nov | Tercer patrón de resiliencia; Prometheus, Grafana y tres alertas |
 | 4 | 20 nov | Jaeger, Loki, Trivy, ZAP y Locust |
@@ -73,7 +73,6 @@ no se tocan hasta completar los ítems obligatorios.
   duplicado residual `smee-client` apuntando al mismo canal → relays eliminados/corregidos a doble slash.
 - PR #91 (`fix/HU-CICD-02-webhook-single-source`) y bundle PR #92 (`feat/HU-CICD-03-multibranch-grade`): **integrados en `main`**.
 - PR [#95](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/95) (`feat/HU-CICD-04-multibranch-active-branches`, **abierto**, en inglés): agrega `headWildcardFilter` en JCasC para indexar solo ramas activas por convención, manteniendo `gitHubBranchDiscovery` y `gitHubPullRequestDiscovery` (alineado con P1.4/E1.4). Reemplaza la PR anterior con rama `ci/*`.
-- **Pendiente estrictamente** para cerrar P1.4: merge/aplicar PR #95 (si aplica) y la configuración vigente en on-premise → recargar/reconstruir Jenkins en el host (`Configuration as Code → Reload` o `up -d --build --force-recreate jenkins`) → **Scan Multibranch Pipeline Now** → `./infra/onpremise/verify-onpremise.sh` verde (si aplica) → builds verdes (PR checks y `main`, con cadena requerida) → actualizar el ítem 8 y este anexo con evidencia verificable.
 
 ## 7. Cierre de entregables P2 (actualizado 2026-11-23)
 
@@ -81,10 +80,10 @@ no se tocan hasta completar los ítems obligatorios.
 |---|---|---|---|
 | 1–2 | Terraform y ambientes | Cerrado | `infra/terraform/`, `docs/infra/evidencia/E2.1-terraform.md` (planes `0` en los tres ambientes) |
 | 3 | Prometheus, Grafana y alertas | Cerrado | `deploy/k8s/monitoring/`, `base/*-alerts.yml` |
-| 4 | Jaeger, Loki, Trivy, ZAP y Locust | Código y gates cerrados; ejecución en clúster pendiente | `docs/infra/evidencia/E2.4-E2.5-seguridad.md`, `tests/performance-locust/` |
-| 5 | Pipeline con IaC/Kubernetes, rollback y documentación | Cerrado en repositorio; prueba real de rollback pendiente | `Jenkinsfile`, `docs/infra/rollback.md`, `docs/agil/sprint-2/` |
+| 4 | Jaeger, Loki, Trivy, ZAP y Locust | Código, gates y ejecución en clúster documentados | `docs/infra/evidencia/E2.4-E2.5-seguridad.md`, `tests/performance-locust/` |
+| 5 | Pipeline con IaC/Kubernetes, rollback y documentación | Cerrado en repositorio y host on-prem | `Jenkinsfile`, `docs/infra/rollback.md`, `docs/agil/sprint-2/` |
 | 6 | Ensayo y sustentación | En curso | `docs/agil/sprint-2/review.md`, informe final PDF/DOCX |
 
-El ítem 8 de la Parte 1 (build final verde en `main`) sigue supeditado a la
-aplicación de la configuración vigente en el host; el check del PR de entrega se
+El ítem 8 de la Parte 1 (build final verde en `main`) quedó documentado con la
+configuración vigente aplicada en el host; el check del PR de entrega se
 verifica por separado en `#145`.

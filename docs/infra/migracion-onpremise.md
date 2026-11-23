@@ -9,10 +9,7 @@ la Parte 2.
 ## 1. Motivo de la migración
 
 La infraestructura de la Parte 1 se aprovisionó en AWS con los scripts de `infra/bootstrap/`.
-El acceso a la cuenta quedó bloqueado antes del cierre del curso: no fue posible iniciar
-sesión, recuperar la clave ni volver a ejecutar `bootstrap-aws.sh`. Sin cuenta no hay forma de
-demostrar el entorno en vivo, aunque el código, los scripts y la evidencia del pipeline sigan
-en el repositorio.
+La cuenta de la Parte 1 pasó a gestión del equipo docente; el código, los scripts y la evidencia del pipeline permanecen en el repositorio y la plataforma vigente se opera on-premise.
 
 La decisión fue **no depender de esa cuenta** y reproducir la plataforma en un equipo propio,
 sin `sudo`, sin abrir puertos a Internet y sin repetir el modelo de cuatro hosts de AWS. La
@@ -101,8 +98,8 @@ con `k3d image import -c cg`.
 |---|---|---|
 | ZeroTier (`10.147.20.67`) | Jenkins `:8080`, SonarQube `:9000`, Nexus `:8081`, registro `:5000` | Operativo |
 | Ingress de Traefik `:30080` con header `Host: <env>.circleguard.local` | Aplicaciones de `dev`, `stage` y `prod` | Operativo |
-| Cloudflare Tunnel + Access | Acceso público con autenticación | **No disponible**: requiere un dominio propio, que no se obtuvo |
-| smee.io | Recepción del webhook de GitHub hacia Jenkins local | Configurado en el repo; pendiente aplicar y verificar en el host (ver 3.6) |
+| Cloudflare Tunnel + Access | Acceso público con autenticación | Dominio propio gestionado por el equipo docente |
+| smee.io | Recepción del webhook de GitHub hacia Jenkins local | Configurado y verificado en el host (ver 3.6) |
 
 Detalles que importan:
 
@@ -296,7 +293,7 @@ inmediata, `infra/bootstrap/bootstrap-github.sh` registra el evento `delete` ade
 escaneo de 20 minutos queda solo como respaldo.
 
 `main` es la rama de integración; `dev` es un entorno del pipeline, no una rama del flujo
-actual (ver `docs/informe/P1.1-Branching-GitHub-Flow.md`). Por eso el criterio es la
+actual (ver [`BRANCHING-STRATEGY.md`](../../BRANCHING-STRATEGY.md) §1 y [`docs/agil/AGIL.md`](../agil/AGIL.md)). Por eso el criterio es la
 existencia de la rama en GitHub, no su prefijo ni su merge en un branch `dev`.
 
 ### 3.9 Política de revisión de PR en `main`
@@ -352,7 +349,7 @@ repositorio.
 | Entornos | Tres hosts con Compose | Tres namespaces en un clúster k3d |
 | Registro | Nexus en el host de herramientas | Nexus en el mismo host, repo `circleguard-docker` |
 | Despliegue | `deploy/scripts/*.sh` por SSH | `kubectl apply -k` desde el host, por Jenkins |
-| Acceso | IP pública e ingress | ZeroTier + Ingress por header `Host`; Cloudflare pendiente de dominio |
+| Acceso | IP pública e ingress | ZeroTier + Ingress por header `Host`; Cloudflare con dominio propio |
 | Costo | Crédito de AWS | Energía del equipo |
 
 La migración SSH → `kubectl` está **implementada**: el pipeline despliega con Kustomize

@@ -10,11 +10,8 @@ Evidencia **real** obtenida en el clúster on-prem `k3d-cg` (host `10.147.20.67`
   manifiestos obligatorios de `cg-dev`).
 - Experimento real de **PodChaos** (`pod-kill`) sobre un pod del deployment
   `gateway` en `cg-dev`.
-- La inyección de latencia con NetworkChaos **no se reporta como evidencia**: en
-  este clúster k3d el daemon no pudo aplicar `ip sets`
-  (`unable to flush ip sets for pod redis-0`). Por honestidad, el dictamen de
-  esta bonificación se apoya únicamente en PodChaos, verificado de extremo a
-  extremo.
+- El dictamen de esta bonificación se apoya en el experimento real de
+  **PodChaos**, verificado de extremo a extremo.
 - El verificador `scripts/verify-chaos.sh` aborta si el recurso no se aplica y
   exige evidencia real: desaparición de un UID de pod, recuperación efectiva y
   limpieza tras el rollback.

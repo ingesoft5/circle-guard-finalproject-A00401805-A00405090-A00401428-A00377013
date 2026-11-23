@@ -39,5 +39,4 @@ Variables opcionales: `HOST_HEADER` (por defecto `stage.circleguard.local`),
 establece un túnel `ssh -L 30080:127.0.0.1:30080 <host-onprem>` y usa
 `--host http://127.0.0.1:30080`.
 
-Los resultados y recomendaciones se registran en
-`docs/informe/evidencia/E2.6-locust.md`.
+Los resultados y recomendaciones se registran en este documento.

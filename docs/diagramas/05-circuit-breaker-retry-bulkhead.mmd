@@ -1,5 +1,5 @@
 %% CG-DOC: Patrón de resiliencia (E2.4) — Circuit Breaker / Retry / Bulkhead con Resilience4j.
-%% Evidencia: gateway-service e identity-service; prueba de falla inyectada en docs/patrones/README.md.
+%% Evidencia: gateway-service e identity-service; prueba de falla inyectada en docs/patrones/PATRONES.md.
 flowchart LR
     C["Cliente web"] --> GW["Gateway :8087<br/>Resilience4j"]
     GW -->|"llamada"| CB{"Circuit Breaker<br/>identityClient"}

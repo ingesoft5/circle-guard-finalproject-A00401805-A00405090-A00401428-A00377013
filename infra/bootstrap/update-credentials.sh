@@ -12,7 +12,7 @@ sync_tools_credentials() {
   local user token file
   user="$(gh api user -q .login)"
   token="$(gh auth token)"
-  [[ -n "${user}" && -n "${token}" ]] || die "No se pudo leer el usuario o el token de gh."
+  [[ -n "${user}" && -n "${token}" ]] || die "No se obtuvo el usuario o el token de gh."
 
   for file in "${STATE_DIR}/tools.env" "${REPO_ROOT}/deploy/compose/tools/.env"; do
     if [[ ! -f "${file}" ]]; then

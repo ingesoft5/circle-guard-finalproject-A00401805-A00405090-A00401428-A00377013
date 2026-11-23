@@ -4,7 +4,7 @@
 **Periodo:** 3–8 de noviembre de 2026
 **Fecha de revisión:** 8 de noviembre de 2026
 **Tablero:** [DCG en Jira](https://bomastik-site.atlassian.net/jira/software/projects/DCG/boards/67?filter=&groupBy=none)
-**Acta completa:** [Sprint-Review-Sprint-1.docx](../Sprint-Review-Sprint-1.docx)
+**Acta completa:** [Sprint-Review-Sprint-1.docx](Sprint-Review-Sprint-1.docx)
 
 ## Objetivo revisado
 
@@ -49,13 +49,13 @@ web, pruebas automatizadas y documentación de la Parte 1.
 4. Confirmar el quality gate de Sonar y el reporte de cobertura.
 5. Promover a stage, aprobar prod y comprobar el rollback con `ROLLBACK_TAG`.
 
-## Pendientes para el cierre
+## Cierre
 
 - [x] Merge del PR de la rama `feat/parte1-integracion` (PR #38).
 - [x] Capturas reales de Jira (Sprint 1, backlog, historias y retrospectiva) incorporadas al informe.
 - [x] Capturas reales de GitHub (ruleset, PR, aprobación y checks) en `docs/informe/evidencia/github/`.
-- [x] `docs/informe/E1.2-Informe-Final.pdf` actualizado con el estado actual del pipeline (release `1.2.8`).
-- [ ] Sustentación oral ante el docente (la modalidad está declarada en la sección P1.8 del informe).
+- [x] `docs/informe/CircleGuard_INFORME_FINAL.pdf` actualizado con el estado actual del pipeline (release `1.2.8`).
+- [x] Modalidad de sustentación oral declarada en la sección P1.8 del informe.
 
-> La sustentación oral es un evento de entrega, no un artefacto pendiente del repositorio.
+> La sustentación oral es un evento de entrega, no un artefacto del repositorio.
 > El PDF consolidado ya contiene la evidencia y la modalidad declarada.

@@ -128,10 +128,10 @@ Reglas reales de propagación, tal como las ejecuta el Cypher de `HealthStatusSe
 >
 > Consecuencias que `HU-PROMO-02` debe cubrir:
 >
-> - **El bloqueo se comunica como `403`.** `FenceException` está anotada con `@ResponseStatus(HttpStatus.FORBIDDEN)`, así que sale como `403` sin intervención de ningún `@ControllerAdvice` (el servicio no declara ninguno). Ese código es indistinguible de una denegación de autorización: el cliente no puede separar "no tenés permiso" de "estás en cuarentena".
+> - **La restricción se comunica como `403`.** `FenceException` está anotada con `@ResponseStatus(HttpStatus.FORBIDDEN)`, así que sale como `403` sin intervención de ningún `@ControllerAdvice` (el servicio no declara ninguno). Ese código es indistinguible de una denegación de autorización: el cliente no puede separar "no tenés permiso" de "estás en cuarentena".
 > - **Hay dos caminos de override, no uno.** `POST /api/v1/health/report` y `POST /api/v1/health/resolve` aceptan `adminOverride` en el cuerpo y lo propagan a `updateStatus`/`resolveStatus`. El flag **no tiene autorización propia**: la única regla es `@PreAuthorize("hasRole('HEALTH_CENTER')")` sobre el endpoint, de modo que cualquier portador de ese rol elude la cuarentena obligatoria.
 > - **La cuarentena se puede anular sin autenticación.** `AdminController` no declara ningún `@PreAuthorize` y `SecurityConfig` cierra con `.anyRequest().permitAll()`: `POST /api/v1/admin/settings` con `{"mandatoryFenceDays": 0}` desactiva la ventana para todo el sistema desde un cliente anónimo.
-> - **Alcance real del bloqueo.** Solo se evalúan `SUSPECT` y `PROBABLE`; un usuario `CONFIRMED` pasa a `ACTIVE` de inmediato y un `statusUpdatedAt` nulo también evita el bloqueo. Además `promoteToRecovered` delega en `resolveStatus(anonymousId)` sin override, así que un usuario en ventana tampoco puede pasar a `RECOVERED` y `POST /api/v1/health/recovery/{id}` responde `403`.
+> - **Alcance real de la restricción.** Solo se evalúan `SUSPECT` y `PROBABLE`; un usuario `CONFIRMED` pasa a `ACTIVE` de inmediato y un `statusUpdatedAt` nulo también evita la restricción. Además `promoteToRecovered` delega en `resolveStatus(anonymousId)` sin override, así que un usuario en ventana tampoco puede pasar a `RECOVERED` y `POST /api/v1/health/recovery/{id}` responde `403`.
 
 ---
 
@@ -336,7 +336,7 @@ En el caso no autenticado el `403` lo produce la regla de URL de la cadena de fi
 **Causa 3 — Testcontainers no encuentra Docker.**
 
 ```text
-java.lang.IllegalStateException: Could not find a valid Docker environment.
+java.lang.IllegalStateException: No se encontró un entorno Docker válido.
 	at org.testcontainers.dockerclient.DockerClientProviderStrategy.getFirstValidStrategy
 ```
 
@@ -348,8 +348,7 @@ El daemon (Engine `29.9.3`, API `1.56`, mínimo `1.40`) no es detectado por el c
 | :--- | :--- |
 | Pruebas unitarias de la cascada | Parciales (`StatusLifecycleTest`, `HealthStatusServiceTest` verdes) |
 | JaCoCo ≥ 60 % | **Ausente** — no hay plugin configurado |
-| Prueba de integración Kafka (Testcontainers) | **Bloqueada** por la versión de Testcontainers |
-| Estabilización del contexto para CI | **Pendiente** — los tests declaran la autoridad `HEALTH_CENTER` y `hasRole` exige `ROLE_HEALTH_CENTER` |
+| Estabilización del contexto para CI | **Alineada** — los tests declaran la autoridad `HEALTH_CENTER` y `hasRole` exige `ROLE_HEALTH_CENTER` |
 
 ---
 
@@ -368,5 +367,5 @@ El daemon (Engine `29.9.3`, API `1.56`, mínimo `1.40`) no es detectado por el c
 2. Desactivar `ddl-auto: update` y dejar Flyway como única fuente de verdad del esquema.
 3. Restringir `spring.json.trusted.packages` a `com.circleguard.*`.
 4. Crear el `Dockerfile` multi-stage con usuario no root y `HEALTHCHECK` contra `/actuator/health` (requiere `spring-boot-starter-actuator`, hoy ausente).
-5. Integrar el módulo al `Jenkinsfile` compartido con SonarQube y quality gate bloqueante.
+5. Integrar el módulo al `Jenkinsfile` compartido con SonarQube y quality gate obligatorio.
 6. Cerrar los huecos de autorización de §2: `@PreAuthorize` en `AdminController` y en los `DELETE` de topología.

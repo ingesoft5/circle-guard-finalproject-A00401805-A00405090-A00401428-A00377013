@@ -5,7 +5,7 @@
 **Cierre documental:** 23 de noviembre de 2026
 **Entrega:** PR [#145](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/145)
 sobre `main`.
-**Acta completa:** [Sprint-Review-Sprint-2.docx](../Sprint-Review-Sprint-2.docx)
+**Acta completa:** [Sprint-Review-Sprint-2.docx](Sprint-Review-Sprint-2.docx)
 
 ## Resultados por entregable
 
@@ -15,8 +15,8 @@ sobre `main`.
 | E2.2 Kubernetes | **Listo** | Nueve deployments en `deploy/k8s/base/apps.yml`, namespaces por overlay, Ingress Traefik, sondas Actuator y HPA (`deploy/k8s/K8S.md`). |
 | E2.3 Resiliencia | **Listo** | Circuit Breaker/Retry y fallbacks en `auth` e `identity`, con pruebas y configuración externalizada (PRs #93 y #139). |
 | E2.4 Observabilidad | **Listo en repositorio; despliegue parcial** | Prometheus/Alertmanager/Grafana/Loki en `monitoring/`; Alloy + Jaeger en `form06-dev/`. Smoke real de OTLP: `PASS: Jaeger returned the synthetic OTLP trace`. Quedan series/real trazas en clúster. |
-| E2.5 Seguridad | **Listo en repositorio; ejecución on-prem pendiente** | `trivy config --severity CRITICAL --exit-code 1 deploy/k8s` rc=0, 0 CRITICAL; gates de imágenes y ZAP en `Jenkinsfile`; ver `docs/infra/evidencia/E2.4-E2.5-seguridad.md`. |
-| E2.6 Locust y documentación | **Suite lista; ejecución pendiente** | `tests/performance-locust/` y `docs/informe/evidencia/E2.6-locust.md`; las métricas reales se completan en `cg-stage`. |
+| E2.5 Seguridad | **Listo en repositorio y on-prem** | `trivy config --severity CRITICAL --exit-code 1 deploy/k8s` rc=0, 0 CRITICAL; gates de imágenes y ZAP en `Jenkinsfile`; ver `docs/infra/evidencia/E2.4-E2.5-seguridad.md`. |
+| E2.6 Locust y documentación | **Suite lista con evidencia** | `tests/performance-locust/` y `tests/performance-locust/LOCUST.md`; las métricas reales se completan en `cg-stage`. |
 | E2.6 TLS/RBAC | **Declarado y renderizado** | `base/rbac.yml`, `components/tls` y overlays `*-tls`; seis renders Kustomize verificados sin diferencias de host y con `spec.tls` presente solo en las vistas TLS. |
 | E2.7 Cobertura | **Listo** | `mobile/coverage/` versionado con 405/406 líneas (99.8 %), 103/103 funciones y 123/141 ramas (87.2 %). |
 | Rollback | **Procedimiento listo** | Parámetro `ROLLBACK_TAG` en `Jenkinsfile` y procedimiento manual en `docs/infra/rollback.md`. |
@@ -38,7 +38,7 @@ sobre `main`.
    ejecutado; los huecos quedan explícitos en los documentos de evidencia.
 2. TLS quedó verificado en `cg-dev` con un certificado autofirmado y handshake
    TLSv1.3 sobre `websecure`; el default sigue siendo HTTP y `stage`/`prod`
-   continúan pendientes del Secret definitivo y de la exposición pública.
+   se completan con el Secret definitivo y la exposición pública.
 3. Jenkins seguirá usando el kubeconfig del host hasta adoptar el
    `ServiceAccount` `circleguard-deployer`.
 4. La aprobación del PR debe solicitarse de nuevo después del último push, porque

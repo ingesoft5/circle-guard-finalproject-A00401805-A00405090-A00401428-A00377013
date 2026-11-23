@@ -92,4 +92,4 @@ NEXUS_PASSWORD=... \
 - Business rules, security decisions, and Redis failure handling are documented where the behavior is not obvious.
 - Every file includes a `CG-DOC` purpose header.
 
-See `docs/standards/documentation.md` and `docs/FILE_INDEX.md`.
+See `docs/standards/documentation.md`.

@@ -96,7 +96,7 @@ an optional optimization.
 
 ## Quality and coverage matrix
 
-Every component has a blocking coverage gate of **≥ 60 %**. Thresholds are never
+Every component has a mandatory coverage gate of **≥ 60 %**. Thresholds are never
 lowered to make a build pass: when coverage falls below the gate, real tests are added.
 
 | Component | Runner | Gate | Report |
@@ -110,7 +110,7 @@ lowered to make a build pass: when coverage falls below the gate, real tests are
   inline setup and is intentionally left untouched as the reference.
 - `verifyUnitTestsRan` fails when no `TEST-*.xml` exists or any suite was skipped, so a
   cached/empty run cannot satisfy the coverage number.
-- SonarQube: blocking quality gate per project, including `circleguard-mobile`, which
+- SonarQube: mandatory quality gate per project, including `circleguard-mobile`, which
   reads the LCOV report through `mobile/sonar-project.properties`.
 - Integration: Testcontainers in auth, form, gateway, identity, notification and promotion.
 - E2E: Playwright against the web client and the gateway.

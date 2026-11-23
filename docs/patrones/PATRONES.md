@@ -28,8 +28,8 @@ Las figuras de los tres patrones implementados están en `docs/diagramas/`, con
 su fuente Mermaid editable y la imagen PNG generada desde ella:
 
 - Resiliencia (Circuit Breaker / Retry / Bulkhead):
-  [`05-patron-resiliencia.mmd`](../diagramas/05-patron-resiliencia.mmd) ·
-  ![Patrón de resiliencia](../diagramas/05-patron-resiliencia.png)
+  [`05-circuit-breaker-retry-bulkhead.mmd`](../diagramas/05-circuit-breaker-retry-bulkhead.mmd) ·
+  ![Circuit Breaker / Retry / Bulkhead](../diagramas/05-circuit-breaker-retry-bulkhead.png)
 - Configuración (External Configuration / Feature Toggle):
   [`06-patron-configuracion.mmd`](../diagramas/06-patron-configuracion.mmd) ·
   ![Patrón de configuración](../diagramas/06-patron-configuracion.png)
@@ -41,8 +41,7 @@ su fuente Mermaid editable y la imagen PNG generada desde ella:
 
 El [**`INFORME_ARQUITECTURA_PATRONES.md`**](INFORME_ARQUITECTURA_PATRONES.md) presenta
 la arquitectura general, la infraestructura como código y los patrones de diseño, con
-las 7 figuras —las tres de patrones en esta carpeta y las de arquitectura e
-infraestructura en `../diagramas/`— y una explicación detallada bajo cada imagen.
+las 7 figuras —todas en `../diagramas/`— y una explicación detallada bajo cada imagen.
 Ese mismo contenido, en texto e imágenes, se incorpora al `CircleGuard_INFORME_FINAL.docx`.
 
 ## Documento de patrones
@@ -50,12 +49,12 @@ Ese mismo contenido, en texto e imágenes, se incorpora al `CircleGuard_INFORME_
 El documento [**`Patrones_Diseno_CircleGuard.docx`**](Patrones_Diseno_CircleGuard.docx)
 recoge los patrones existentes identificados en código y los tres patrones
 implementados o mejorados, con propósito, evidencia, *trade-offs*, prueba y
-trazabilidad con E2.4/P2.4. Incluye las tres figuras de patrones en esta misma
-carpeta:
+trazabilidad con E2.4/P2.4. Incrusta las tres figuras de patrones; sus fuentes
+canónicas están en `../diagramas/`:
 
-- [`05-patron-resiliencia.png`](05-patron-resiliencia.png)
-- [`06-patron-configuracion.png`](06-patron-configuracion.png)
-- [`07-patron-adicional.png`](07-patron-adicional.png)
+- [`05-circuit-breaker-retry-bulkhead.png`](../diagramas/05-circuit-breaker-retry-bulkhead.png)
+- [`06-patron-configuracion.png`](../diagramas/06-patron-configuracion.png)
+- [`07-patron-adicional.png`](../diagramas/07-patron-adicional.png)
 
 El índice completo de arquitectura e infraestructura está en
 [`docs/diagramas/DIAGRAMAS.md`](../diagramas/DIAGRAMAS.md), incluida la vista general

@@ -3,8 +3,7 @@
 # CI/CD Platform (Parte 1 — histórico, no operativo)
 
 > **Estado: histórico.** Este documento describe el montaje sobre AWS de la Parte 1 (cuatro
-> instancias EC2, `bootstrap-tools.sh`, secretos en `infra/state/*`). Esa cuenta quedó bloqueada y
-> la plataforma se reprodujo on-premise; el flujo vigente es el de
+> instancias EC2, `bootstrap-tools.sh`, secretos en `infra/state/*`). La plataforma se reprodujo on-premise; el flujo vigente es el de
 > [`infra/onpremise/ONPREMISE.md`](../../infra/onpremise/ONPREMISE.md) y
 > [`docs/infra/migracion-onpremise.md`](./migracion-onpremise.md). Se conserva para trazabilidad.
 
@@ -111,7 +110,7 @@ The `Jenkinsfile` is branch-aware: the multibranch job discovers `main`, feature
 2. **Resolve services and version**: `SERVICE=auto` detects changed services from the diff; `SERVICE=all` builds every service; `ciVersion` calculates the semantic version from Git tags and Conventional Commits.
 3. **Build**: Gradle compilation per service.
 4. **Unit tests + JaCoCo**: tests and coverage; auth, identity, gateway and form enforce **line coverage ≥ 60 %**; promotion enforces ≥ 70 %.
-5. **SonarQube + Quality Gate**: scanner and blocking `waitForQualityGate`; the pipeline stops if the gate is red.
+5. **SonarQube + Quality Gate**: scanner and mandatory `waitForQualityGate`; the pipeline stops if the gate is red.
 6. **Integration tests**: Testcontainers tests, separate from unit tests.
 7. **Package**: `bootJar`.
 8. **Git tag** (on `main`): creates and pushes `vX.Y.Z` for publishable services.
@@ -127,7 +126,7 @@ The `Jenkinsfile` is branch-aware: the multibranch job discovers `main`, feature
 
 The `Jenkinsfile` runs three additional stages; a failure in any of them stops the build before `Approval prod`.
 
-- `Trivy IaC Security Gate`: `trivy config` over `deploy/k8s/`, blocking on `CRITICAL`.
+- `Trivy IaC Security Gate`: `trivy config` over `deploy/k8s/`, failing on `CRITICAL`.
 - `Trivy Image Security Gate`: `trivy image --severity CRITICAL --ignore-unfixed --exit-code 1` over every image built in the run (`service.docker`), including `promotion`.
 - `OWASP ZAP Security Gate`: `zap-baseline.py` inside `cg-stage`, one pod per target — `http://auth:8180/actuator/health` and `http://promotion:8088/actuator/health`. The per-target logs are appended to `build/reports/security/zap-stage.txt`, and the build fails when the aggregate report contains a `FAIL-NEW` line.
 

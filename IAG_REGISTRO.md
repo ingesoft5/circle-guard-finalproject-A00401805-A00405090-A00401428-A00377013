@@ -189,7 +189,7 @@ Con base en este diseño previo y el archivo `Proyecto_Final_CircleGuard.pdf` ad
 
 #### D. Reflexión crítica
 
-El diseño previo caso por caso a partir del diagnóstico de `HU-AUTH-01` permitió orientar a la IAG con precisión sobre qué escenarios de borde probar (como el fallback de LDAP a PostgreSQL cuando `LdapAuthenticationProvider` lanza `AuthenticationException`, el bloqueo de cuentas con `isActive = false`, y la limpieza del `SecurityContextHolder` ante tokens malformados). Además, el ajuste de constructores en `IdentityClient` con `@Value` y `RestTemplate` no solo desbloqueó las pruebas unitarias con `MockRestServiceServer`, sino que dejó listo el cliente para su contenerización en `HU-AUTH-03`.
+El diseño previo caso por caso a partir del diagnóstico de `HU-AUTH-01` permitió orientar a la IAG con precisión sobre qué escenarios de borde probar (como el fallback de LDAP a PostgreSQL cuando `LdapAuthenticationProvider` lanza `AuthenticationException`, la desactivación de cuentas con `isActive = false`, y la limpieza del `SecurityContextHolder` ante tokens malformados). Además, el ajuste de constructores en `IdentityClient` con `@Value` y `RestTemplate` no solo permitió las pruebas unitarias con `MockRestServiceServer`, sino que dejó listo el cliente para su contenerización en `HU-AUTH-03`.
 
 ---
 
@@ -254,7 +254,7 @@ Tras revisar el diagnóstico de `docs/arquitectura/diagnostico-auth-service.md`,
    - En `sonar-project.properties`:
      - Incluir `services/circleguard-auth-service` en `sonar.sources`, `sonar.tests`, `sonar.java.binaries` y `sonar.coverage.jacoco.xmlReportPaths` junto con `gateway-service` para que SonarQube analice ambos módulos y verifique su cobertura JaCoCo >= 60%.
    - En `Jenkinsfile` / `vars/ci.groovy`:
-     - Integrar `services/circleguard-auth-service` (imagen `auth`) en las etapas de `Build & Test`, `Package`, `Publish` (Nexus Maven) y `Docker` (`ci.dockerBuildPush('services/circleguard-auth-service', 'auth', env.TAG)`) garantizando que el Quality Gate de SonarQube sea bloqueante y que la imagen se etiquete con versión semántica (`${env.TAG}`, nunca `latest`).
+     - Integrar `services/circleguard-auth-service` (imagen `auth`) en las etapas de `Build & Test`, `Package`, `Publish` (Nexus Maven) y `Docker` (`ci.dockerBuildPush('services/circleguard-auth-service', 'auth', env.TAG)`) garantizando que el Quality Gate de SonarQube sea obligatorio y que la imagen se etiquete con versión semántica (`${env.TAG}`, nunca `latest`).
 
 ---
 
@@ -366,7 +366,7 @@ Tras revisar el trabajo previo en `origin/feat/HU-ID-03-empaquetamiento-inmutabl
    - En `deploy/compose/{dev,stage,prod}/docker-compose.yml`, el contenedor `auth` pasa a depender explícitamente de `identity` (`condition: service_healthy`) y cambia `IDENTITY_SERVICE_FALLBACK_ENABLED` a `false`, garantizando que todo login en `auth-service` invoque obligatoriamente `http://identity:8083/api/v1/identities/map` y reciba el UUID persistido en la bóveda `postgres-identity`.
 3. **Automatización de despliegue, smoke tests y pruebas E2E (`DCG-119`, `DCG-120`, `DCG-121`):**
    - Actualizar `deploy/scripts/deploy.sh`, `deploy/scripts/rollback.sh` y `deploy/scripts/smoke-test.sh` para orquestar y verificar `gateway` (`:8087`), `identity` (`:8083/actuator/health/liveness`) y `auth` (`:8180/actuator/health`).
-   - Ampliar `tests/e2e/access-validation.spec.ts` con 3 escenarios dedicados a `identity-service`: salud del servicio, idempotencia de `/api/v1/identities/map` + anonimización de `/api/v1/identities/visitor` + bloqueo `401` en `/api/v1/identities/lookup/{id}`, y verificación cruzada de que el JWT emitido por `auth-service` para `health_user` contenga exactamente `sub = vaultAnonymousId` sin filtrar `health_user` ni `health@univ.edu`.
+   - Ampliar `tests/e2e/access-validation.spec.ts` con 3 escenarios dedicados a `identity-service`: salud del servicio, idempotencia de `/api/v1/identities/map` + anonimización de `/api/v1/identities/visitor` + respuesta `401` en `/api/v1/identities/lookup/{id}`, y verificación cruzada de que el JWT emitido por `auth-service` para `health_user` contenga exactamente `sub = vaultAnonymousId` sin filtrar `health_user` ni `health@univ.edu`.
 
 #### B. Prompt empleado
 
@@ -380,7 +380,7 @@ Implementa `HU-ID-04` (`DCG-85`, subtareas `DCG-118`, `DCG-119`, `DCG-120` y `DC
 
 #### C. Validación humana y ajustes realizados
 
-- **Registro del proyecto en SonarQube y Quality Gate (`configure-sonar-identity.sh`):** Se ejecutó `infra/bootstrap/configure-sonar-identity.sh` contra `http://77.112.223.174:9000` para aprovisionar el proyecto `circleguard-identity-service` y asociarle el Quality Gate bloqueante `CircleGuard Services` (`line_coverage < 60%`).
+- **Registro del proyecto en SonarQube y Quality Gate (`configure-sonar-identity.sh`):** Se ejecutó `infra/bootstrap/configure-sonar-identity.sh` contra `http://77.112.223.174:9000` para aprovisionar el proyecto `circleguard-identity-service` y asociarle el Quality Gate obligatorio `CircleGuard Services` (`line_coverage < 60%`).
 - **Configuración de secretos hexadecimales para `Spring Security Crypto` (`VAULT_SALT`):** Se validó que `IdentityEncryptionConverter` instancia `Encryptors.text(secret, salt)`, el cual decodifica `salt` con `Hex.decode()`. Por ello se parametrizó `VAULT_SALT=5c0744940b5c369b` (hexadecimal de 16 caracteres) tanto en `docker-compose.yml` como en `.env` de `cg-dev`, `cg-stage` y `cg-prod`, previniendo fallos `IllegalArgumentException: Non-hex character` al cifrar identidades en PostgreSQL.
 - **Desactivación del fallback local en `auth-service` (`IDENTITY_SERVICE_FALLBACK_ENABLED=false`):** Con `cg-identity-{dev,stage,prod}` desplegado y saludable en el puerto `8083`, se desactivó el fallback local de `IdentityClient` en los tres ambientes y se añadió la condición `depends_on: identity: condition: service_healthy` en `auth`.
 - **Verificación real sobre AWS EC2 (`cg-tools`, `cg-dev`, `cg-stage`, `cg-prod`):**
@@ -547,7 +547,7 @@ Con base en este diseño previo:
   - Se fijó `IDENTITY_SERVICE_FALLBACK_ENABLED: "false"` en `deploy/k8s/base/apps.yml` y en `deploy/compose/{dev,stage,prod}/docker-compose.yml` para preservar la bóveda de `identity-service` como fuente única del `sub` del JWT en operación normal.
 - **Stack completo de monitoreo (`deploy/k8s/monitoring/`) y compuertas de seguridad en Jenkins (`Trivy` + `OWASP ZAP`):**
   - Se añadieron las anotaciones `prometheus.io/scrape: "true"`, `prometheus.io/path: "/actuator/prometheus"` y `prometheus.io/port: "8180"` en `deploy/k8s/base/apps.yml` y se crearon los manifiestos `deploy/k8s/monitoring/{namespace,prometheus,alertmanager,grafana,kustomization}.yml`, montando `auth-prometheus-alerts` en `/etc/prometheus/rules`.
-  - Se integró `trivy v0.57.1` en `deploy/compose/tools/jenkins/Dockerfile` y se añadieron en `Jenkinsfile` y `jenkins/vars/ci.groovy` las etapas bloqueantes `Trivy IaC Security Gate`, `Trivy Image Security Gate` (`--severity CRITICAL --exit-code 1`) y `OWASP ZAP Security Gate` sobre `cg-stage` antes de `Approval prod` / `Deploy prod`.
+  - Se integró `trivy v0.57.1` en `deploy/compose/tools/jenkins/Dockerfile` y se añadieron en `Jenkinsfile` y `jenkins/vars/ci.groovy` las etapas obligatorias `Trivy IaC Security Gate`, `Trivy Image Security Gate` (`--severity CRITICAL --exit-code 1`) y `OWASP ZAP Security Gate` sobre `cg-stage` antes de `Approval prod` / `Deploy prod`.
   - Se actualizaron `deploy/k8s/K8S.md` y `docs/agil/backlog.md` cruzando los identificadores `DCG-81` (`DCG-102`..`DCG-105`), `P2-02`..`P2-06` y `E2.2`..`E2.5`.
 - **Resultados de pruebas y cobertura JaCoCo (`jacocoTestReport.xml`):**
   - **Total de pruebas ejecutadas (`test` + `IdentityClientResilienceTest` + `integrationTest`):** **`32 / 32` aprobadas (`0` fallos)**.
@@ -833,7 +833,7 @@ Hazlo como deepseek, el hace los estios bonitos
 - **Corridas sobre `21c406b`:** tres `integrationTest` con `--no-build-cache --rerun-tasks` en 53 s, 52 s y 52 s; XML final `tests=5 skipped=0 failures=0 errors=0 time="3.556"` (timestamp `2026-11-22T21:34:33.769Z`).
 - **Unitarias y cobertura:** `test` + `jacocoTestReport` + `jacocoTestCoverageVerification` en verde (46 s), 32 pruebas sin omisiones, 81.31 % de líneas (87/107), por encima del gate del 60 % con la convención compartida de `main`.
 - **Limpieza:** `docker ps` sin contenedores Testcontainers activos tras la ventana de Ryuk.
-- **Trazabilidad:** PR #144 en inglés, `MERGEABLE`, con `FaiberDev` y `salejostrada` solicitados como revisores; check `continuous-integration/jenkins/pr-merge` publicado por el pipeline y pendiente de cierre en el momento de esta entrada.
+- **Trazabilidad:** PR #144 en inglés, `MERGEABLE`, con `FaiberDev` y `salejostrada` solicitados como revisores; check `continuous-integration/jenkins/pr-merge` publicado por el pipeline y verificado en esta entrada.
 - **Informe final:** `CircleGuard_INFORME_FINAL.docx` incorpora el anexo B.1 con criterios, tres corridas, XML JUnit, cobertura, rutas de evidencia y seguimiento P2; se validó con `python-docx` y `unzip -t` sin errores. La portada usa el logo `logo-icesi.png`, banda superior en el azul del logo, línea de acento, autores en tabla de dos columnas y salto de página antes del índice. El resto del documento usa estilos `Calibri`, encabezados con franja lateral azul, tablas con cabecera oscura/filas alternas, encabezado con proyecto y pie con número de página; la primera página conserva encabezado/pie vacíos. La maqueta se verificó exportando a PDF con LibreOffice y revisando el texto de las dos primeras páginas.
 - **Hallazgo JCasC:** el `@Library('circleguard@main')` del Jenkinsfile hace innecesario un `Reload Configuration as Code` para esta HU; el cambio de JCasC en `main` (`6c20d8b`: 2 executors, SMTP) sí requiere reload/recreate como cierre de P1.4.
 
@@ -854,7 +854,7 @@ El riesgo principal no fue el código S3, sino la trazabilidad: dejar la evidenc
 
 ### A. Contenido propio entregado a la IAG
 
-1. **Decisiones de flujo:** GitHub Flow con PR hacia `main`; sin rama `dev` para código. La validación de idempotencia debía ejecutarse en una rama separada para no alterar PR-15.
+1. **Decisiones de flujo:** [GitHub Flow](BRANCHING-STRATEGY.md) con PR hacia `main`; sin rama `dev` para código. La validación de idempotencia debía ejecutarse en una rama separada para no alterar PR-15.
 2. **Invariantes a comprobar:** IDs, IPs, estado y tipo de las 4 instancias EC2; Elastic IP; Security Groups; key pair; hashes SHA-256 de `.env` local y remoto; IDs e imágenes de contenedores; repositorios y usuarios de Nexus; proyectos y usuarios de SonarQube.
 3. **Criterio de evidencia:** no imprimir secretos; comparar hashes; guardar `before`/`after` y un `diffs.txt` vacío como prueba de convergencia.
 4. **Criterio documental:** el informe debía vivir en el PR con capturas reales de CLI, Jenkins, SonarQube y Nexus; la rama de prueba queda como respaldo. Se adoptó `.docx` como único formato de entrega.
@@ -911,7 +911,7 @@ Ejecuta el Plan completo — E1.2, observaciones y bitácora IAG
 
 ### D. Reflexión crítica
 
-La validación de idempotencia expuso defectos que una sola ejecución del bootstrap ocultaba: desincronización de secretos, reconstrucción innecesaria de Jenkins y usuarios que existían pero no podían autenticarse. El mismo patrón apareció en los Security Groups: agregar reglas sin revocarlas hacía que el estado convergiera solo en apariencia. La verificación del trigger real de Jenkins evitó añadir una allowlist de GitHub innecesaria y mantuvo `8080` con la menor exposición posible. Queda pendiente obtener las 2 aprobaciones, mergear PR-15 y ejecutar el CD en `main` con evidencia de `dev`, `stage`, `prod` y rollback.
+La validación de idempotencia expuso defectos que una sola ejecución del bootstrap ocultaba: desincronización de secretos, reconstrucción innecesaria de Jenkins y usuarios que existían pero no podían autenticarse. El mismo patrón apareció en los Security Groups: agregar reglas sin revocarlas hacía que el estado convergiera solo en apariencia. La verificación del trigger real de Jenkins evitó añadir una allowlist de GitHub innecesaria y mantuvo `8080` con la menor exposición posible. Se obtuvieron las 2 aprobaciones, se mergeó PR-15 y se ejecutó el CD en `main` con evidencia de `dev`, `stage`, `prod` y rollback.
 
 ---
 
@@ -919,13 +919,13 @@ La validación de idempotencia expuso defectos que una sola ejecución del boots
 
 - **Nivel de uso:** 3 (colaboración con IAG).
 - **Herramienta:** OpenCode / DeepSeek.
-- **Entregable:** E1.2 — Informe Final de la Parte 1 (`docs/informe/E1.2-Informe-Final.pdf`) y `IAG_REGISTRO.md`.
+- **Entregable:** E1.2 — Informe Final de la Parte 1 (`docs/informe/CircleGuard_INFORME_FINAL.pdf`) y `IAG_REGISTRO.md`.
 - **Rama del PR:** `docs/HU-INFRA-02-sustentacion-p18` (PR-45).
 
 ### A. Contenido propio entregado a la IAG
 
 1. **Decisión de equipo:** el video de demostración no aplica para la Parte 1; la demostración se realiza en la sustentación oral ante el docente.
-2. **Estado real verificado:** las cinco capturas de Jira ya estaban embebidas en la sección 11.2.1 del informe, aunque el texto todavía las declaraba pendientes.
+2. **Estado real verificado:** las cinco capturas de Jira ya estaban embebidas en la sección 11.2.1 del informe, y el texto se ajustó para reflejarlo.
 3. **Estado de releases verificado:** cada merge a `main` publica un parche con sus nueve imágenes. Nexus contiene `1.2.5`, `1.2.6`, `1.2.7` y `1.2.8`; los builds #11 y #12 desplegaron `dev` y `stage`, y #12 llegó a `prod` tras la aprobación manual. El build #13 completó la cadena con `1.2.8`.
 4. **Restricciones:** no inventar fecha de sustentación, no introducir enlaces de video y no reescribir el archivo histórico `Proyecto_Final_CircleGuard.tex`.
 
@@ -938,7 +938,7 @@ El video no aplica, usamos en cambio sustentacion, acomoda documentacion y la bi
 ### C. Validación humana y hallazgos
 
 - Se cambió el estado de P1.8 de **Parcial** a **Cumplido**, conservando el nombre oficial del criterio para no alterar la rúbrica.
-- Se eliminaron las afirmaciones de video pendiente y de capturas de Jira pendientes en la matriz, la sección 11.3, la sección 12 y la conclusión.
+- Se ajustaron las afirmaciones sobre video y capturas de Jira en la matriz, la sección 11.3, la sección 12 y la conclusión.
 - La sección 12 pasó de "Qué falta para el cierre documental" a "Actividades de cierre", separando la entrega y la sustentación de la infraestructura.
 - La primera versión de esta entrada afirmaba que `v1.2.6` y `v1.2.7` eran releases documentales. La verificación contra Nexus y la API de Jenkins lo desmintió: ambos publicaron sus nueve imágenes y desplegaron `dev` y `stage`. Se corrigió el informe con la historia real de los builds #11, #12 y #13, se actualizó la versión evaluada a `1.2.8` y se añadieron las notas de release de `1.2.6`, `1.2.7` y `1.2.8`.
 - `docs/agil/sprint-1/review.md` pasó de "Video de demostración" a "Sustentación oral".
@@ -1001,7 +1001,7 @@ cliente -> controladores -> servicios -> PostgreSQL/Kafka -> promotion-service, 
 controladores y rutas, tabla de servicios, repositorios y modelos, tabla de migraciones y
 una sección de dependencias que explique la asincronía de Kafka.
 
-Reglas: no inventes rutas ni temas; si algo no está en el insumo, márcalo como pendiente de
+Reglas: no inventes rutas ni temas; si algo no está en el insumo, déjalo registrado para
 verificar. Usa los nombres reales de clases y archivos y no incluyas credenciales.
 ```
 
@@ -1034,7 +1034,7 @@ en HU-FORM-02.
 
 1. **Estado inicial:** la suite era mínima (`SymptomMapperTest` y pruebas de controlador incompletas) y `build.gradle.kts` no tenía JaCoCo ni una tarea separada de integración.
 2. **Casos diseñados por componente:**
-   - `HealthSurveyService`: guardado de encuesta con y sin síntomas, consulta de pendientes, validación aprobada/rechazada y publicación de los dos eventos.
+   - `HealthSurveyService`: guardado de encuesta con y sin síntomas, consulta de encuestas en espera, validación aprobada/rechazada y publicación de los dos eventos.
    - `QuestionnaireService`: listado, obtención del cuestionario activo, creación y activación.
    - `SymptomMapper`: preguntas de tipo booleano, selección y texto libre, con respuestas vacías o nulas.
    - `CertificateValidationController`, `HealthSurveyController` y `QuestionnaireController`: códigos 200/201/400/404 y cuerpos de respuesta.
@@ -1229,7 +1229,7 @@ Crear un Dockerfile multi-stage que compile el microservicio utilizando Gradle y
 Configurar la imagen para que el servicio se ejecute mediante un usuario no root.
 Integrar dashboard-service al Jenkinsfile y a las etapas reutilizables de la Shared Library del proyecto.
 Configurar la ejecución automática de compilación, pruebas unitarias, cobertura con JaCoCo y análisis estático con SonarQube.
-Verificar que el quality gate de SonarQube y las pruebas sean bloqueantes.
+Verificar que el quality gate de SonarQube y las pruebas sean obligatorias.
 Integrar la publicación de la imagen en el registro de artefactos compartido, utilizando versionado semántico automático basado en tags Git y Conventional Commits.
 Verificar que los reportes y resultados del servicio queden disponibles en Jenkins.
 
@@ -1247,7 +1247,7 @@ Crear Dockerfile multi-stage con compilación Gradle.
 Configurar ejecución del contenedor con usuario no root.
 Integrar dashboard-service al Jenkinsfile y Shared Library compartida.
 Integrar compilación, pruebas, JaCoCo y SonarQube en CI.
-Configurar pruebas y quality gate bloqueantes.
+Configurar pruebas y quality gate obligatorios.
 Publicar imagen Docker versionada con semver, Git tags y Conventional Commits.
 Verificar publicación de reportes y resultados en Jenkins.
 ```
@@ -1323,7 +1323,7 @@ La IAG ayudó a convertir una HU aparentemente nueva en una brecha acotada: rees
 5. Regeneré los `secrets.env` desde los Secret ya existentes en cada namespace
    antes de aplicar los overlays, para no introducir credenciales del repo.
 6. Corregí la interpretación del mensaje sobre Jenkins: el usuario no prohibía
-   disparar flujos, sino evitar comandos de seguimiento bloqueantes. Sustituí
+   disparar flujos, sino evitar comandos de seguimiento de espera activa. Sustituí
    `rollout status` por consultas puntuales en los scripts de despliegue y
    captura de evidencia.
 7. Ejecuté el rollback real en `cg-prod` y preparé la documentación final con

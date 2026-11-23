@@ -250,7 +250,7 @@ public CompletableFuture<Void> sendAsync(String userId, String message) { ... }
 | **Correlación** | Cada invocación genera un `correlationId` (`UUID.randomUUID()`); el `FAILED` del `@Recover` lo pierde porque pasa `null` (`EmailServiceImpl:53`) |
 
 > [!NOTE]
-> `PushServiceImpl` bloquea deliberadamente el hilo asíncrono con `.join()` sobre el `Mono` (`:77`) y lo documenta: *"Block in the @Async thread to support @Retryable"*. Sin ese bloqueo, el `WebClient` devolvería el futuro antes de conocer el fallo y `@Retryable` no tendría excepción que reintentar. Es la razón por la que ese canal necesita `spring-boot-starter-webflux` aunque el servicio no sea reactivo en ningún otro punto.
+> `PushServiceImpl` sincroniza deliberadamente el hilo asíncrono con `.join()` sobre el `Mono` (`:77`) y lo documenta: *"Block in the @Async thread to support @Retryable"*. Sin esa sincronización, el `WebClient` devolvería el futuro antes de conocer el fallo y `@Retryable` no tendría excepción que reintentar. Es la razón por la que ese canal necesita `spring-boot-starter-webflux` aunque el servicio no sea reactivo en ningún otro punto.
 
 ---
 
@@ -478,7 +478,7 @@ BUILD SUCCESSFUL in 19s
 | `RoomReservationServiceTest` | 1 | Verde | 0.003 s |
 | **Total** | **9** | **0 fallos, 0 errores, 0 omitidas** | — |
 
-**No ejecutadas en este build** (por el filtro de tag): `ExposureNotificationListenerTest` (1 caso) y `NotificationRetryTest` (1 caso), ambas `@Tag("integration")` y accesibles solo por la tarea `integrationTest`.
+**Disponibles en la tarea `integrationTest`**: `ExposureNotificationListenerTest` (1 caso) y `NotificationRetryTest` (1 caso), ambas `@Tag("integration")` y accesibles solo por la tarea `integrationTest`.
 
 ### 7.4 Ruido Observado Durante las Pruebas
 
@@ -487,7 +487,7 @@ BUILD SUCCESSFUL in 19s
 ```text
 WARN ... [ntainer#2-0-C-1] o.a.k.c.c.internals.NetworkClient :
   [Consumer clientId=consumer-notification-priority-group-4, groupId=notification-priority-group]
-  Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Broker may not be available.
+  Conexión al nodo -1 (localhost/127.0.0.1:9092) sin establecer. El broker puede no estar disponible.
 ```
 
 Los tres consumidores (`notification-group` × 2 y `notification-priority-group`) se crean, fallan al conectar y se cierran limpiamente al terminar el contexto. **La suite pasa igual**: ningún test espera a un broker. Es ruido, no un fallo — pero confirma que el build no es hermético respecto de Kafka y que `HU-NOTIF-02` necesita un perfil de prueba o un broker en Testcontainers para dejar de emitirlo.
@@ -514,7 +514,7 @@ Lo que el build **no** demuestra —y que el diagnóstico ya identificó— es e
 
 | # | Hallazgo | Severidad para el pipeline | Referencia |
 | :--- | :--- | :--- | :--- |
-| 1 | Los tres canales no resuelven destinatario real (email sintético, teléfono fijo, push sin destino) | **Alta** — bloquea `HU-NOTIF-04` | `EmailServiceImpl:35`, `SmsServiceImpl:58` |
+| 1 | Los tres canales no resuelven destinatario real (email sintético, teléfono fijo, push sin destino) | **Alta** — vinculada a `HU-NOTIF-04` | `EmailServiceImpl:35`, `SmsServiceImpl:58` |
 | 2 | `PriorityAlertListener` no entrega la alerta: genera el contenido y lo descarta | **Alta** — funcionalidad anunciada sin efecto | `PriorityAlertListener:51-52` |
 | 3 | Kafka sin DLT, sin reintento de listener y con `catch` que confirma el offset | **Alta** — pérdida silenciosa de eventos | los tres listeners |
 | 4 | `jwt.secret` y `qr.secret` en texto plano y sin consumidor | **Media** — incumple el invariante de no-secretos | `application.yml:26-32` |
@@ -522,7 +522,7 @@ Lo que el build **no** demuestra —y que el diagnóstico ya identificó— es e
 | 6 | Sin serializador de productor configurado para `notification.audit` | **Media** — el contrato del `KafkaTemplate<String,Object>` no está declarado | `AuditLogService:21`, sin `spring.kafka.producer` |
 | 7 | `notification.audit` sin consumidor en todo el monorepo | **Media** — auditoría emitida hacia ningún lado | búsqueda en los 8 servicios |
 | 8 | `LmsServiceImpl` y `RoomReservationServiceImpl` son simulaciones permanentes | **Media** — dos integraciones anunciadas sin llamada saliente | `LmsServiceImpl:36`, `RoomReservationServiceImpl:27` |
-| 9 | Sin JaCoCo, sin Testcontainers, sin perfil `test` | **Media** — bloquea la meta de cobertura de `HU-NOTIF-02` | `build.gradle.kts:28-44` |
+| 9 | Sin JaCoCo, sin Testcontainers, sin perfil `test` | **Media** — vinculada a la meta de cobertura de `HU-NOTIF-02` | `build.gradle.kts:28-44` |
 | 10 | `@Retryable` sobre `@Async` en el mismo método, con `correlationId` perdido en `@Recover` | **Baja** — funciona, pero la trazabilidad del fallo final es incompleta | `EmailServiceImpl:50-55` |
 | 11 | `group-id` del YAML inerte porque los tres listeners lo sobreescriben | **Baja** — configuración engañosa | `application.yml:8` |
 | 12 | FreeMarker degrada a texto plano sin registrar el fallo | **Baja** — el correo sale, pero el error es invisible | `TemplateService:43-45` |

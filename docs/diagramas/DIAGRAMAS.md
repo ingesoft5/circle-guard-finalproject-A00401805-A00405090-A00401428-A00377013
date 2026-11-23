@@ -69,15 +69,15 @@ middleware (PostgreSQL, OpenLDAP, Kafka, Redis, Neo4j y MinIO/S3). Coherente con
 
 Fuente: [`04-arquitectura-servicios.mmd`](04-arquitectura-servicios.mmd).
 
-## 05 Patrón de resiliencia (E2.4)
+## 05 Circuit Breaker / Retry / Bulkhead — resiliencia (E2.4)
 
 Circuit Breaker, Retry y Bulkhead con Resilience4j en gateway/identity, con
 fallback y alerta crítica asociada. Evidencia y *trade-offs* en
 [`docs/patrones/PATRONES.md`](../patrones/PATRONES.md).
 
-![Patrón de resiliencia](05-patron-resiliencia.png)
+![Circuit Breaker / Retry / Bulkhead](05-circuit-breaker-retry-bulkhead.png)
 
-Fuente: [`05-patron-resiliencia.mmd`](05-patron-resiliencia.mmd).
+Fuente: [`05-circuit-breaker-retry-bulkhead.mmd`](05-circuit-breaker-retry-bulkhead.mmd).
 
 ## 06 Patrón de configuración (E2.4)
 

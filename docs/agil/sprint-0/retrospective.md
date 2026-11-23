@@ -9,7 +9,7 @@
 - El equipo quedó conformado y con roles explícitos desde el primer día.
 - El backlog se construyó con historias y criterios de aceptación medibles, lo que
   redujo la ambigüedad en la revisión.
-- GitHub Flow, la plantilla de PR, los hooks y la protección de `main` quedaron definidos
+- [GitHub Flow](../../../BRANCHING-STRATEGY.md), la plantilla de PR, los hooks y la protección de `main` quedaron definidos
   antes del primer cambio de producto.
 - El tablero Jira permitió cerrar el sprint con 7/7 ítems y 12/12 puntos, sin carryover.
 
@@ -19,8 +19,8 @@
   ítems del sprint; la velocidad no refleja todo el esfuerzo real.
 - La retrospectiva no se había documentado como artefacto separado; solo existían las
   lecciones aprendidas dentro del Sprint Review.
-- Las capturas de Jira y GitHub quedaron pendientes en el repositorio, aunque el tablero
-  y los PR reales sí existen.
+- Las capturas de Jira y GitHub se consolidaron en el repositorio, junto con el tablero
+  y los PR reales.
 
 ## Acciones
 
@@ -28,7 +28,7 @@
 |---|---|---|---|
 | Registrar infraestructura y soporte como ítems del Sprint 1 | SM | 3 nov 2026 | Hecho en la planeación del Sprint 1 |
 | Crear el documento formal de retrospectiva | DC | 8 nov 2026 | Hecho |
-| Reemplazar capturas placeholder por evidencia real | Equipo | Antes de la entrega | Pendiente |
+| Reemplazar capturas placeholder por evidencia real | Equipo | Antes de la entrega | Hecho |
 | Mantener PR con revisión y checks como control obligatorio | Equipo | Permanente | En curso |
 
 ## Métricas

@@ -45,7 +45,7 @@ servicio de manera independiente.
 La infraestructura se declara con Terraform en cinco módulos reutilizables — `network`,
 `compute`, `registry`, `storage` y `observability` — parametrizados para tres ambientes
 (`dev`, `stage`, `prod`). El estado remoto se guarda en MinIO con versionado y el
-bloqueo en DynamoDB Local, de modo que Jenkins pueda ejecutar `plan` y `apply` sin
+control de concurrencia en DynamoDB Local, de modo que Jenkins pueda ejecutar `plan` y `apply` sin
 condiciones de carrera. La promoción de artefactos es la misma imagen semver en todos
 los ambientes; solo cambia la configuración por overlay de Kustomize.
 
@@ -126,12 +126,11 @@ el pool de hilos para aislar la concurrencia.
 `AuthIdentityCircuitBreakerOpen`, que observa
 `resilience4j_circuitbreaker_state{name="identityClient", state="open"} == 1`.
 
-**Figura 5. Patrón de resiliencia.**
+**Figura 5. Circuit Breaker, Retry y Bulkhead (resiliencia).**
 
-![Patrón de resiliencia](05-patron-resiliencia.png)
+![Circuit Breaker / Retry / Bulkhead](../diagramas/05-circuit-breaker-retry-bulkhead.png)
 
-*Fuente: [`05-patron-resiliencia.mmd`](05-patron-resiliencia.mmd); PNG local en esta
-carpeta, idéntica a [`../diagramas/05-patron-resiliencia.png`](../diagramas/05-patron-resiliencia.png).*
+*Fuente: [`05-circuit-breaker-retry-bulkhead.mmd`](../diagramas/05-circuit-breaker-retry-bulkhead.mmd).*
 
 La figura muestra al Cliente web llamando al Gateway, donde el Circuit Breaker
 `identityClient` decide entre CLOSED/HALF_OPEN —con Retry hacia Identity y Bulkhead
@@ -161,10 +160,9 @@ proyectados resuelven y no colisionan (`deploy/k8s/components/form-observability
 
 **Figura 6. Patrón de configuración.**
 
-![Patrón de configuración](06-patron-configuracion.png)
+![Patrón de configuración](../diagramas/06-patron-configuracion.png)
 
-*Fuente: [`06-patron-configuracion.mmd`](06-patron-configuracion.mmd); PNG local en
-esta carpeta, idéntica a [`../diagramas/06-patron-configuracion.png`](../diagramas/06-patron-configuracion.png).*
+*Fuente: [`06-patron-configuracion.mmd`](../diagramas/06-patron-configuracion.mmd).*
 
 La figura muestra tres fuentes externas —ConfigMap por ambiente, Secret fuera del
 repo y variables de entorno con `FORM_ENVIRONMENT = metadata.namespace`— que alimentan
@@ -198,10 +196,9 @@ fallos de publicación.
 
 **Figura 7. Patrón adicional: Observer y eventos con outbox.**
 
-![Patrón adicional: Observer y eventos con outbox](07-patron-adicional.png)
+![Patrón adicional: Observer y eventos con outbox](../diagramas/07-patron-adicional.png)
 
-*Fuente: [`07-patron-adicional.mmd`](07-patron-adicional.mmd); PNG local en esta
-carpeta, idéntica a [`../diagramas/07-patron-adicional.png`](../diagramas/07-patron-adicional.png).*
+*Fuente: [`07-patron-adicional.mmd`](../diagramas/07-patron-adicional.mmd).*
 
 La figura sigue el flujo dentro de Form: el endpoint escribe en la tabla outbox de
 PostgreSQL en la misma transacción; `FormEventPublisher` y `FormOutboxDispatcher`

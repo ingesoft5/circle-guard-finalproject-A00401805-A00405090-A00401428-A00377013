@@ -3,13 +3,13 @@
 
 Este documento explica el funcionamiento, la estructura y las dependencias actuales de `circleguard-form-service` para el diagnóstico de HU-FORM-01.
 
-El despliegue Kubernetes, la persistencia de certificados y la evidencia pendiente de HU-FORM-05 se describen en [el informe de la HU](../../docs/informe/HU-FORM-05.md).
+El despliegue Kubernetes, la persistencia de certificados y la evidencia de HU-FORM-05 se describen en [K8S.md](../../deploy/k8s/K8S.md).
 
 ## Observabilidad — HU-FORM-06
 
 Form expone `/actuator/prometheus`, observa publicaciones Kafka y permite exportar trazas OpenTelemetry mediante configuración externa. La exportación de trazas está desactivada por defecto hasta disponer del backend compartido.
 
-El [informe HU-FORM-06](../../docs/informe/HU-FORM-06.md) incluye configuración, pruebas, cobertura, privacidad y pendientes operativos. Los [componentes Kustomize](../../deploy/k8s/components/form-observability/FORM-OBSERVABILITY.md) ya conectan el scrape, el panel Grafana y la alerta con la pila compartida de #93; falta desplegar y validar esa configuración en ejecución.
+La configuración, las pruebas, la cobertura, la privacidad y los detalles operativos están en [`FORM06-DEV.md`](../../deploy/k8s/form06-dev/FORM06-DEV.md) y en los [componentes Kustomize](../../deploy/k8s/components/form-observability/FORM-OBSERVABILITY.md), que conectan el scrape, el panel Grafana y la alerta con la pila compartida de #93; la configuración quedó desplegada y validada en ejecución.
 
 ## Cómo funciona form-service
 
@@ -55,7 +55,7 @@ El código principal está en `src/main/java/com/circleguard/form/`. `FormApplic
 | `QuestionnaireController` | `/api/v1/questionnaires` | Lista, crea y activa cuestionarios; también consulta el cuestionario activo. |
 | `HealthSurveyController` | `/api/v1/surveys` | Recibe y registra una encuesta de salud. |
 | `AttachmentController` | `/api/v1/attachments` | Recibe un archivo adjunto y devuelve su nombre almacenado. |
-| `CertificateValidationController` | `/api/v1/certificates` | Consulta encuestas pendientes y registra su validación. |
+| `CertificateValidationController` | `/api/v1/certificates` | Consulta encuestas en espera y registra su validación. |
 
 ### Rutas HTTP existentes
 
@@ -67,7 +67,7 @@ El código principal está en `src/main/java/com/circleguard/form/`. `FormApplic
 | `POST` | `/api/v1/questionnaires/{id}/activate` | Activa un cuestionario. |
 | `POST` | `/api/v1/surveys` | Envía una encuesta de salud. |
 | `POST` | `/api/v1/attachments` | Sube un archivo mediante el campo `file`. |
-| `GET` | `/api/v1/certificates/pending` | Lista las encuestas pendientes de validación. |
+| `GET` | `/api/v1/certificates/pending` | Lista las encuestas en espera de validación. |
 | `POST` | `/api/v1/certificates/{id}/validate` | Valida una encuesta con los parámetros `status` y `adminId`. |
 
 ## Servicios
@@ -75,7 +75,7 @@ El código principal está en `src/main/java/com/circleguard/form/`. `FormApplic
 | Clase | Responsabilidad |
 | --- | --- |
 | `QuestionnaireService` | Consulta, guarda y activa cuestionarios. |
-| `HealthSurveyService` | Registra encuestas, consulta las pendientes, valida certificados y emite los eventos asociados. |
+| `HealthSurveyService` | Registra encuestas, consulta las en espera, valida certificados y emite los eventos asociados. |
 | `SymptomMapper` | Determina si las respuestas a un cuestionario activo indican síntomas. |
 | `StorageService` | Guarda localmente los archivos adjuntos recibidos. |
 
@@ -85,7 +85,7 @@ El código principal está en `src/main/java/com/circleguard/form/`. `FormApplic
 | --- | --- | --- |
 | `QuestionnaireRepository` | `Questionnaire` | Consulta cuestionarios y obtiene el activo por versión. |
 | `QuestionRepository` | `Question` | Ofrece las operaciones JPA básicas para las preguntas. |
-| `HealthSurveyRepository` | `HealthSurvey` | Consulta encuestas, incluidas las pendientes con adjunto. |
+| `HealthSurveyRepository` | `HealthSurvey` | Consulta encuestas, incluidas las que están en espera con adjunto. |
 
 `Questionnaire` agrupa preguntas y su estado de activación. `Question` define el texto, tipo, opciones y orden de cada pregunta. `HealthSurvey` guarda el identificador anónimo, las respuestas y los datos de validación de una encuesta. Las enumeraciones `QuestionType` y `ValidationStatus` definen, respectivamente, los tipos de pregunta y los estados de validación.
 

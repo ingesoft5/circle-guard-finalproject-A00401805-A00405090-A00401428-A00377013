@@ -73,7 +73,7 @@ Use the comment syntax of the file type:
 
 ## Exclusions
 
-The following are documented in `docs/FILE_INDEX.md` but do not receive inline headers:
+The following do not receive inline headers:
 
 - Binary assets: PDF, PNG, JPG, TTF, JAR.
 - Generated dependency locks: `package-lock.json`.

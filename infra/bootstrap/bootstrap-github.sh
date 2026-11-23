@@ -71,13 +71,13 @@ if [ -n "${hook_id}" ] && [ "${hook_id}" != "null" ]; then
   if gh_api PATCH "${REPO_PATH}/hooks/${hook_id}" "${hook_payload}" >/dev/null; then
     log_info "Webhook de GitHub actualizado: ${HOOK_URL}"
   else
-    log_warn "No se pudo actualizar el webhook ${hook_id}; revisa admin:repo_hook."
+    log_warn "No se actualizó el webhook ${hook_id}; revisa admin:repo_hook."
   fi
 else
   if gh_api POST "${REPO_PATH}/hooks" "${hook_payload}" >/dev/null; then
     log_info "Webhook de GitHub creado: ${HOOK_URL}"
   else
-    log_warn "No se pudo crear el webhook; crealo manualmente en Settings > Webhooks."
+    log_warn "No se creó el webhook; crealo manualmente en Settings > Webhooks."
   fi
 fi
 
@@ -103,12 +103,12 @@ if gh_api GET "${REPO_PATH}/branches/${default_branch}/protection" >/dev/null 2>
   if gh_api PUT "${REPO_PATH}/branches/${default_branch}/protection" "${protection_payload}" >/dev/null; then
     log_info "Branch protection actualizada en ${default_branch} (check ${REQUIRED_CHECK})."
   else
-    log_warn "No se pudo actualizar branch protection; revisa permisos de administracion."
+    log_warn "No se actualizó branch protection; revisa permisos de administracion."
   fi
 else
   if gh_api PUT "${REPO_PATH}/branches/${default_branch}/protection" "${protection_payload}" >/dev/null; then
     log_info "Branch protection creada en ${default_branch} (check ${REQUIRED_CHECK})."
   else
-    log_warn "No se pudo crear branch protection; revisa permisos de administracion."
+    log_warn "No se creó branch protection; revisa permisos de administracion."
   fi
 fi

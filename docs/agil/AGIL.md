@@ -11,16 +11,18 @@
 | Plan de cierre P1 y entrega P2 | [`plan-circle-guard-5.0.md`](plan-circle-guard-5.0.md) |
 | Sprint 0 — planeación | [`sprint-0/planning.md`](sprint-0/planning.md) |
 | Sprint 0 — retrospectiva | [`sprint-0/retrospective.md`](sprint-0/retrospective.md) |
-| Sprint 0 — review | [`Sprint-Review-Sprint-0.docx`](Sprint-Review-Sprint-0.docx) · [`sprint-0/review.md`](sprint-0/review.md) |
+| Sprint 0 — review | [`Sprint-Review-Sprint-0.docx`](sprint-0/Sprint-Review-Sprint-0.docx) · [`sprint-0/review.md`](sprint-0/review.md) |
 | Sprint 1 — planeación | [`sprint-1/planning.md`](sprint-1/planning.md) |
-| Sprint 1 — review | [`Sprint-Review-Sprint-1.docx`](Sprint-Review-Sprint-1.docx) · [`sprint-1/review.md`](sprint-1/review.md) |
+| Sprint 1 — review | [`Sprint-Review-Sprint-1.docx`](sprint-1/Sprint-Review-Sprint-1.docx) · [`sprint-1/review.md`](sprint-1/review.md) |
 | Sprint 1 — retrospectiva | [`sprint-1/retrospective.md`](sprint-1/retrospective.md) |
 | Sprint 2 — planeación | [`sprint-2/planning.md`](sprint-2/planning.md) |
-| Sprint 2 — revisión | [`Sprint-Review-Sprint-2.docx`](Sprint-Review-Sprint-2.docx) · [`sprint-2/review.md`](sprint-2/review.md) |
+| Sprint 2 — revisión | [`Sprint-Review-Sprint-2.docx`](sprint-2/Sprint-Review-Sprint-2.docx) · [`sprint-2/review.md`](sprint-2/review.md) |
 | Sprint 2 — retrospectiva | [`sprint-2/retrospective.md`](sprint-2/retrospective.md) |
 | Rollback de producción | [`../infra/rollback.md`](../infra/rollback.md) |
 
 ## Reglas de trabajo
+
+La estrategia de ramas y el GitHub Flow están especificados en [`../../BRANCHING-STRATEGY.md`](../../BRANCHING-STRATEGY.md).
 
 - Cada historia tiene criterios de aceptación medibles y subtareas en Jira.
 - Cada cambio entra por PR con al menos una aprobación y checks verdes (política actualizada para el Sprint 2: exigir dos revisores demoraba demasiado las aprobaciones; ver CHANGELOG).

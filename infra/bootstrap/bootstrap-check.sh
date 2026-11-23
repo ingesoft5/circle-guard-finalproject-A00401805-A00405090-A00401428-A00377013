@@ -28,7 +28,7 @@ if available="$(aws ec2 describe-instance-types \
     --query 'InstanceTypes[].{Type:InstanceType,vCPU:VCpuInfo.DefaultVCpus,RAM:MemoryInfo.SizeInMiB}' \
     --output table
 else
-  log_warn "No se pudo validar DescribeInstanceTypes (permiso o SCP). Se omite la comprobación."
+  log_warn "No se validó DescribeInstanceTypes (permiso o SCP). Se omite la comprobación."
 fi
 
 log_info "Free Tier only covers t3.micro/t2.micro; these sizes use account credits."

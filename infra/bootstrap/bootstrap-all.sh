@@ -88,7 +88,7 @@ bootstrap_github() {
     return 0
   fi
   if ! bash "${BOOTSTRAP_DIR}/bootstrap-github.sh"; then
-    log_warn "Could not configure GitHub automatically; check the token and permissions."
+    log_warn "GitHub no configurado automáticamente; revisa el token y los permisos."
   fi
 }
 

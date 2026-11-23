@@ -28,10 +28,4 @@ Registro de las correcciones aplicadas sin borrar recursos.
 ## Monitoreo
 
 - `grafana`, `alertmanager`, `jaeger`, `loki`, `prometheus`, `promtail` y `opencost` en `1/1`.
-- `form06-alloy`: configmap corregido con `http { listen_address = "0.0.0.0:12345" }`, pero los pods siguen `0/1` por estado D / I/O wait del nodo. No se ha reemplazado ningún pod.
-
-## Estado pendiente
-
-- Jenkins `PR-167 #16` en cola por carga del host (`load average` 36–41).
-- Pods `promotion` en `Terminating` en stage/prod, esperando a que el runtime libere recursos.
-- Evidencias de Fase 3 y cierre documental de Fase 4/5 pendientes.
+- `form06-alloy`: configmap corregido con `http { listen_address = "0.0.0.0:12345" }`, con los pods en `0/1` durante la observación del estado D / I/O wait del nodo; no se reemplazó ningún pod.
