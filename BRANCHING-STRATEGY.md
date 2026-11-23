@@ -68,18 +68,18 @@ feat ( auth ) !: replace role schema
 
 **Ejemplos válidos:**
 
-- `feat(auth): add JWT token validation`
-- `fix(gateway): correct QR timestamp`
-- `ci(jenkins): add SonarQube analysis stage`
-- `chore: initialize folder structure`
+- `feat ( auth ) : add JWT token validation`
+- `fix ( gateway ) : correct QR timestamp`
+- `ci ( jenkins ) : add SonarQube analysis stage`
+- `chore ( repo ) : initialize folder structure`
 
 ## 4. Control de calidad y gestión de cambios en los Pull Requests
 
 En GitHub Flow, el Pull Request es la compuerta de calidad principal. Para evitar merges incompletos:
 
 1. **Plantilla obligatoria:** todos los PR deben usar `.github/pull_request_template.md` (campos: *Branch Name, Context, What changed, How to test it*).
-2. **Título del PR (trazabilidad):** el título se escribe en **inglés** y debe incluir la clave de Jira (`DCG-###`); conservar el alias `HU-*` cuando exista. El nombre de la rama puede añadirse como contexto. El workflow `Jira sync` de GitHub Actions rechaza cualquier PR sin un identificador `DCG-\d+`. Con *Squash & Merge*, este título se convierte en el mensaje oficial del commit en `main`.
-   - *Ejemplo:* `feat(auth): add login endpoint (HU-AUTH-12, DCG-81)`
+2. **Título del PR (trazabilidad):** el título se escribe en **inglés** y debe incluir la clave de Jira (`DCG-###`); conservar el alias `HU-*` cuando exista. El nombre de la rama puede añadirse como contexto. La clave `DCG-###` se verifica por convención en el título; no hay un check obligatorio de GitHub Actions (ver *Integración GitHub ↔ Jira* al final de este documento). Con *Squash & Merge*, este título se convierte en el mensaje oficial del commit en `main`.
+   - *Ejemplo:* `feat ( auth ) : add login endpoint (HU-AUTH-12, DCG-81)`
 3. **Resolución de conversaciones:** `main` exige *"Require conversation resolution before merging"*. Si un revisor pide contexto, el merge requiere la resolución antes de completarse.
 4. **Compuerta del pipeline:** ningún PR puede mergearse mientras el pipeline de Jenkins esté fallando.
 

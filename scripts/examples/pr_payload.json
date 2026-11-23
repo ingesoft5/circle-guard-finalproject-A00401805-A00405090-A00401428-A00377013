@@ -1,0 +1,21 @@
+{
+  "_comment": "CG-DOC: Minimal GitHub pull_request event payload for offline dry-runs of scripts/jira_sync.py.",
+  "action": "opened",
+  "number": 175,
+  "pull_request": {
+    "number": 175,
+    "title": "feat ( auth ) : add login endpoint (DCG-81)",
+    "html_url": "https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/175",
+    "body": "Example payload for local dry-run only.",
+    "merged": false,
+    "head": {
+      "ref": "feat/HU-AUTH-12-add-login"
+    }
+  },
+  "repository": {
+    "full_name": "ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013"
+  },
+  "sender": {
+    "login": "example-user"
+  }
+}

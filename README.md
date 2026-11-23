@@ -16,6 +16,14 @@ CircleGuard is a state-of-the-art university contact tracing and fencing system 
 
 ---
 
+## Contexto de despliegue: de AWS a on-premise
+
+La Parte 1 se desarrolló y desplegó en AWS con los scripts de `infra/bootstrap/`. Faltando aproximadamente media hora para la entrega, la cuenta de AWS fue bloqueada y perdimos el acceso. Siguiendo la sugerencia del profesor, rehicimos y terminamos toda la plataforma on-premise en el computador de la sala 205M, con dirección privada `10.147.20.67` (ZeroTier).
+
+Allí se reconstruyeron y verificaron Jenkins, SonarQube, Nexus, el registro Docker y el clúster k3d con los namespaces `cg-dev`, `cg-stage` y `cg-prod`. Los scripts y la evidencia de AWS se conservan como registro histórico de la Parte 1; la plataforma vigente y toda la Parte 2 se operan on-premise. El detalle técnico está en [`docs/infra/migracion-onpremise.md`](docs/infra/migracion-onpremise.md).
+
+---
+
 ## Vision & Mission
 
 Our vision is a university campus where health containment speed outpaces lab confirmation timelines without compromising student privacy. CircleGuard leverages campus-native intelligence—class schedules and WiFi infrastructure—to deliver a human-validated, graph-based protection ecosystem.

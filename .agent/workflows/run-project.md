@@ -10,10 +10,10 @@ Ensure Docker Desktop is running on Windows and integrated with WSL.
 
 // turbo
 1. Navigate to the monorepo root:
-   `cd /home/toor/git/circleguard`
+   `cd <repo-root>`
 
 // turbo
-2. Start the infrastructure (PostgreSQL, Neo4j, Kafka, Redis, LDAP):
+2. Start the infrastructure (PostgreSQL, Neo4j, Kafka, Redis, LDAP, MinIO):
    `docker compose --env-file deploy/compose/dev/.env -f deploy/compose/dev/docker-compose.yml up -d`
 
 ### 2. Backend Services (Spring Boot)
@@ -24,9 +24,13 @@ In a monorepo, you must specify which service to run. Launch these in separate t
 
 // turbo
 - **Auth Service:** `./gradlew :services:circleguard-auth-service:bootRun`
+- **Identity Service:** `./gradlew :services:circleguard-identity-service:bootRun`
 - **Promotion Service:** `./gradlew :services:circleguard-promotion-service:bootRun`
+- **Form Service:** `./gradlew :services:circleguard-form-service:bootRun`
+- **Notification Service:** `./gradlew :services:circleguard-notification-service:bootRun`
 - **Gateway Service:** `./gradlew :services:circleguard-gateway-service:bootRun`
 - **Dashboard Service:** `./gradlew :services:circleguard-dashboard-service:bootRun`
+- **File Service:** `./gradlew :services:circleguard-file-service:bootRun`
 
 ### 3. Mobile Frontend (Expo)
 Prepare and launch the React Native application.

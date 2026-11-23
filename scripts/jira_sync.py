@@ -8,7 +8,7 @@
 """Sync GitHub PR events into Jira DCG issues.
 
 Usage:
-  python3 scripts/jira_sync.py --event pull_request --dry-run --payload examples/pr_payload.json
+  python3 scripts/jira_sync.py --event pull_request --dry-run --payload scripts/examples/pr_payload.json
   python3 scripts/jira_sync.py --event pull_request --payload "$GITHUB_EVENT_PATH"
 
 Required environment (when not --dry-run):

@@ -9,8 +9,6 @@
 node_modules
 mobile
 docs
-design-assets
-scratch
 infra/state
 **/.env
 **/.env.*

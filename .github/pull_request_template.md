@@ -1,6 +1,6 @@
 <!-- CG-DOC: Pull request template with context, changes, and test instructions. -->
 ## Branch Name
-<!-- Example: CG-12-feat/implement-login -->
+<!-- Example: feat/HU-AUTH-12-add-login (add the DCG-### key in the PR title) -->
 - Branch: 
 
 ## Context
