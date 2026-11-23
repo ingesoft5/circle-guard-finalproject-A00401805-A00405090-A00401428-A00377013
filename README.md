@@ -120,8 +120,6 @@ docker compose --env-file deploy/compose/dev/.env -f deploy/compose/dev/docker-c
 ```
 *Middleware includes: PostgreSQL, Neo4j, Kafka (KRaft), Redis, and OpenLDAP.*
 
-> `docker-compose.legacy.yml` is a legacy local stack kept for historical reference; the supported stack lives in `deploy/compose/`.
-
 ### 2. Build & Run
 CircleGuard uses Gradle for parallel builds across services:
 ```bash

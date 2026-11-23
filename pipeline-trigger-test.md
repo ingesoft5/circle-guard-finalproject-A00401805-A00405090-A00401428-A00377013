@@ -1,2 +1,0 @@
-# Pipeline Trigger Test
-# Pipeline Trigger Test
