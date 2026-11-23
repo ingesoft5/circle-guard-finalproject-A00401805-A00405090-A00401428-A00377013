@@ -3,36 +3,37 @@
 set -uo pipefail
 
 CTX="${KUBE_CONTEXT:-k3d-cg}"
-TARGET_NS="cg-dev"
+FINOPS_NS="cg-finops"
+MON_NS="monitoring"
 FAILED=0
 
 ok()   { echo "  [PASS] $*"; }
 fail() { echo "  [FAIL] $*"; FAILED=$((FAILED+1)); }
 
 echo "=== 1. KEDA ScaledObject for scale-to-zero ==="
-kubectl --context "$CTX" get scaledobject -n "$TARGET_NS" 2>/dev/null | grep -q file \
+kubectl --context "$CTX" get scaledobject -n "$FINOPS_NS" 2>/dev/null | grep -q file \
   && ok "ScaledObject for file service present" \
   || fail "ScaledObject for file service missing"
 
-kubectl --context "$CTX" get scaledobject -n "$TARGET_NS" 2>/dev/null | grep -q notification \
+kubectl --context "$CTX" get scaledobject -n "$FINOPS_NS" 2>/dev/null | grep -q notification \
   && ok "ScaledObject for notification service present" \
   || fail "ScaledObject for notification service missing"
 
-echo "=== 2. minReplicas:0 configuration ==="
-MIN_REPLICAS=$(kubectl --context "$CTX" get scaledobject file -n "$TARGET_NS" -o jsonpath='{.spec.minReplicas}' 2>/dev/null || echo 0)
+echo "=== 2. minReplicaCount:0 configuration ==="
+MIN_REPLICAS=$(kubectl --context "$CTX" get scaledobject file-finops-scaler -n "$FINOPS_NS" -o jsonpath='{.spec.minReplicaCount}' 2>/dev/null || echo MISSING)
 [[ "$MIN_REPLICAS" == "0" ]] \
-  && ok "file service minReplicas=0 (scale-to-zero)" \
-  || fail "file service minReplicas=$MIN_REPLICAS"
+  && ok "file service minReplicaCount=0 (scale-to-zero)" \
+  || fail "file service minReplicaCount=$MIN_REPLICAS"
 
 echo "=== 3. OpenCost monitoring ==="
-kubectl --context "$CTX" get configmap -n kube-system 2>/dev/null | grep -q opencost \
-  && ok "OpenCost config present" \
-  || fail "OpenCost config missing"
+kubectl --context "$CTX" get configmap opencost-prices -n "$MON_NS" >/dev/null 2>&1 \
+  && ok "OpenCost price config present (opencost-prices in monitoring)" \
+  || fail "OpenCost price config missing"
 
 echo "=== 4. Grafana cost dashboard ==="
-kubectl --context "$CTX" get configmap -n monitoring 2>/dev/null | grep -q grafana \
-  && ok "Grafana dashboards configured" \
-  || fail "Grafana dashboards missing"
+kubectl --context "$CTX" get configmap finops-cost-dashboard -n "$MON_NS" >/dev/null 2>&1 \
+  && ok "Grafana cost dashboard configured (finops-cost-dashboard in monitoring)" \
+  || fail "Grafana cost dashboard missing"
 
 echo "=== 5. Spot policy documentation ==="
 [[ -f docs/costos/spot-policy.md ]] \

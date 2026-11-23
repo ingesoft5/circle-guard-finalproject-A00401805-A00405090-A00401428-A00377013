@@ -61,10 +61,10 @@ metadata:
 spec:
   scaleTargetRef:
     name: file-finops
-  minReplicas: 0
-  maxReplicas: 3
+  minReplicaCount: 0
+  maxReplicaCount: 3
   cooldownPeriod: 60
-  idleReplicas: 0
+  idleReplicaCount: 0
   pollingInterval: 15
   triggers:
     - type: prometheus
@@ -133,10 +133,10 @@ metadata:
 spec:
   scaleTargetRef:
     name: notification-finops
-  minReplicas: 0
-  maxReplicas: 3
+  minReplicaCount: 0
+  maxReplicaCount: 3
   cooldownPeriod: 60
-  idleReplicas: 0
+  idleReplicaCount: 0
   pollingInterval: 15
   triggers:
     - type: prometheus
