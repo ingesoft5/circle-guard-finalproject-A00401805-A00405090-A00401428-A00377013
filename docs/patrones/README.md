@@ -37,6 +37,14 @@ su fuente Mermaid editable y la imagen PNG generada desde ella:
   [`07-patron-adicional.mmd`](../diagramas/07-patron-adicional.mmd) ·
   ![Patrón adicional](../diagramas/07-patron-adicional.png)
 
+## 18. Arquitectura y patrones de diseño (texto + imágenes)
+
+El [**`INFORME_ARQUITECTURA_PATRONES.md`**](INFORME_ARQUITECTURA_PATRONES.md) presenta
+la arquitectura general, la infraestructura como código y los patrones de diseño, con
+las 7 figuras —las tres de patrones en esta carpeta y las de arquitectura e
+infraestructura en `../diagramas/`— y una explicación detallada bajo cada imagen.
+Ese mismo contenido, en texto e imágenes, se incorpora al `CircleGuard_INFORME_FINAL.docx`.
+
 ## Documento de patrones
 
 El documento [**`Patrones_Diseno_CircleGuard.docx`**](Patrones_Diseno_CircleGuard.docx)
