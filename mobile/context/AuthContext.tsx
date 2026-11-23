@@ -27,7 +27,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const id = await storage.getItem('circleguard_anon_id');
       const savedToken = await storage.getItem('circleguard_token');
-      console.log('AuthContext: Loaded from storage', { id, savedToken });
       setAnonymousId(id);
       setToken(savedToken);
     } catch (e) {
