@@ -318,6 +318,8 @@ spec:
       labels:
         app: form
     spec:
+      serviceAccountName: form
+      automountServiceAccountToken: false
       containers:
         - name: form
           image: circleguard-docker/form:1.4.0
