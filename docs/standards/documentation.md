@@ -1,3 +1,4 @@
+<!-- CG-DOC: Documentation conventions for source, configuration, and actively maintained project documentation. -->
 # Documentation Standard
 
 ## Purpose
@@ -12,11 +13,13 @@ This repository uses English for source comments, file headers, API documentatio
 
 ## Required file header
 
-Every source, script, configuration, migration, template, and documentation file starts with a short English block:
+Every new or actively maintained source, script, configuration, migration, template, and documentation file starts with a short English block:
 
 ```text
 CG-DOC: <one sentence describing the file purpose>
 ```
+
+**Exempt files.** The following are preserved as point-in-time records and do not need a `CG-DOC` header: sprint planning/review/retrospective notes, release notes, `CHANGELOG.md`, `IAG_REGISTRO.md`, evidence indexes and evidence files, final reports (PDF/DOCX and their Markdown sources), architecture and pattern reports, and other course deliverables. Do not rewrite them only to add a header; add the header when creating a new active document or when substantially updating an exempt file.
 
 Use the comment syntax of the file type:
 

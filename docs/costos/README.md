@@ -1,6 +1,7 @@
-# CG-DOC: Estimación de costos de infraestructura (E2.9)
+<!-- CG-DOC: Estimación de costos de infraestructura (E2.9) -->
+# Estimación de costos de infraestructura (E2.9)
 
-La solución final es on-premise sobre k3d; el_cost real de nube corresponde a
+La solución final es on-premise sobre k3d; el costo real de nube corresponde a
 la Parte 1 (AWS EC2 para Jenkins, SonarQube y Nexus).
 
 | Concepto | Estimación mensual | Estado |
