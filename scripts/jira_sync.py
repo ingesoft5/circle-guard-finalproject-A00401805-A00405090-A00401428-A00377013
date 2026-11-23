@@ -428,7 +428,8 @@ def assign_sprints(path: Path, dry_run: bool) -> None:
         note = item.get("note", "")
         seed = f"{SYNC_MARKER} | sprint | {key} | {', '.join(names)}\n{note}"
         digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:12]
-        comment_once(key, digest, adf_document(seed.splitlines()), dry_run)
+        body = f"{SYNC_MARKER} | sprint | {digest} | {key} | {', '.join(names)}\n{note}"
+        comment_once(key, digest, adf_document(body.splitlines()), dry_run)
         print(f"[ok] sprint note {key} ({digest})")
 
 
