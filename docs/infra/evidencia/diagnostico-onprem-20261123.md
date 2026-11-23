@@ -67,7 +67,31 @@ de TLS/ServiceAccount y la demostración en vivo.
 4. Subir el límite con `sysctl` → no permitido: `docker is not in the sudoers file`.
 
 El agente fue **restaurado a su configuración original** (imagen v1.35.5 y
-volúmenes iniciales). El clúster queda exactamente en el estado encontrado.
+volúmenes iniciales) al finalizar esa ronda de pruebas.
+
+## Intento final de recuperación (23 nov 2026, 04:30–04:40 UTC)
+
+Siguiendo el plan de cierre de 20 minutos se intentó la recreación controlada
+del agente:
+
+1. Limpieza de pods en `Terminating` afinados al agente.
+2. `k3d node delete k3d-cg-agent-0` → se colgó: el contenedor con ese nombre
+   **no tenía etiquetas `k3d.*`**, por lo que k3d no lo reconoce como nodo
+   gestionado. El nombre real del nodo k3d es `k3d-k3d-cg-agent-0-0`.
+3. `k3d node create ... --image rancher/k3s:v1.31.1-k3s1` con el nombre
+   incorrecto generó un contenedor con prefijo duplicado; al corregir el nombre
+   a `cg-agent-0`, el contenedor quedó en estado `Dead` y `k3d node list` lo
+   mantuvo en `removing`.
+4. Tras 8 minutos sin que el nodo alcanzara `Ready` se aplicó la regla de corte:
+   no se realizaron más intentos. El clúster quedó con `k3d-cg-server-0 Ready`
+   y sin agente operativo (`k3d-cg-agent-0` en `Dead`/`removing`).
+
+**Resultado: PARCIAL.** No se logró recuperar el nodo agente en esta sesión.
+En consecuencia siguen sin poder ejecutarse las evidencias que dependen del
+clúster: trazas Jaeger (DCG-440), Locust/ZAP (DCG-441), rollback real en
+`cg-prod`, TLS/ServiceAccount y la demostración en vivo. Se reporta esta
+limitación de forma explícita en el informe final en lugar de marcar esos
+criterios como completados.
 
 ## Acción correctiva requerida en el host
 
