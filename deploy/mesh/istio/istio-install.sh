@@ -64,6 +64,13 @@ echo "==> Enabling automatic sidecar injection only on ${CANARY_NS}"
 # restarting the mandatory deployment would put the graded app at risk.
 kubectl --context "$KUBE_CONTEXT" label ns "$CANARY_NS" istio-injection=enabled --overwrite
 
+echo "==> Copying cg-dev ConfigMap/Secret into the isolated canary namespace"
+for kindname in "configmap/cg-config" "secret/cg-secrets"; do
+  kubectl --context "$KUBE_CONTEXT" get "$kindname" -n cg-dev -o json \
+    | jq 'del(.metadata.namespace, .metadata.resourceVersion, .metadata.uid, .metadata.creationTimestamp)' \
+    | kubectl --context "$KUBE_CONTEXT" apply -n "$CANARY_NS" -f - >/dev/null
+done
+
 echo "==> Applying STRICT mTLS and canary routing"
 kubectl --context "$KUBE_CONTEXT" apply -f "$(dirname "$0")/mtls.yml"
 kubectl --context "$KUBE_CONTEXT" apply -f "$(dirname "$0")/canary.yml"

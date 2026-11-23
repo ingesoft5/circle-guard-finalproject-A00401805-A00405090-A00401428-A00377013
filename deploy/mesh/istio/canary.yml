@@ -38,11 +38,29 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: cg-config
           env:
             - name: SERVER_PORT
               value: "8086"
             - name: FORM_ENVIRONMENT
               value: cg-mesh-canary
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres.cg-dev.svc.cluster.local:5432/circleguard_form
+            - name: SPRING_DATASOURCE_USERNAME
+              value: admin
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cg-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka.cg-dev.svc.cluster.local:9092
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: validate
+            - name: SPRING_FLYWAY_ENABLED
+              value: "false"
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -91,11 +109,29 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: cg-config
           env:
             - name: SERVER_PORT
               value: "8086"
             - name: FORM_ENVIRONMENT
               value: cg-mesh-canary
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres.cg-dev.svc.cluster.local:5432/circleguard_form
+            - name: SPRING_DATASOURCE_USERNAME
+              value: admin
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cg-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka.cg-dev.svc.cluster.local:9092
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: validate
+            - name: SPRING_FLYWAY_ENABLED
+              value: "false"
           readinessProbe:
             httpGet:
               path: /actuator/health

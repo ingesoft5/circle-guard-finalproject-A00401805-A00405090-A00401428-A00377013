@@ -1,16 +1,36 @@
-# CG-DOC: Service mesh mTLS bonus (L284). STRICT mTLS is applied ONLY to the
-# isolated cg-mesh-canary namespace so the mandatory cg-dev deployment is not
-# restarted (the agent node is currently NotReady). ISTIO_MUTUAL
-# DestinationRules originate mTLS towards both the stable and canary services.
+# CG-DOC: Service mesh mTLS bonus (L284). STRICT mTLS is applied to the two
+# canary workloads on port 8086 (the application/mesh port), while outbound
+# calls to legacy non-meshed dependencies (postgres, kafka in cg-dev) stay
+# plaintext. This keeps mTLS real and verifiable on the canary path without
+# breaking the Form application bootstrap.
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
-  name: circleguard-strict-mtls
+  name: circleguard-canary-mtls
   namespace: cg-mesh-canary
 spec:
-  mtls:
-    mode: STRICT
+  selector:
+    matchLabels:
+      app: form-stable
+  portLevelMtls:
+    "8086":
+      mode: STRICT
 ---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: circleguard-canary-hu6-mtls
+  namespace: cg-mesh-canary
+spec:
+  selector:
+    matchLabels:
+      app: form-hu6
+  portLevelMtls:
+    "8086":
+      mode: STRICT
+---
+# Originate ISTIO_MUTUAL only on the two in-mesh calls. Non-meshed dependencies
+# (postgres/kafka) are excluded explicitly so they keep using plaintext.
 apiVersion: networking.istio.io/v1
 kind: DestinationRule
 metadata:
@@ -32,3 +52,14 @@ spec:
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: legacy-deps-plaintext
+  namespace: cg-mesh-canary
+spec:
+  host: postgres.cg-dev.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE
