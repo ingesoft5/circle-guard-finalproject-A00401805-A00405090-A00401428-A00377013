@@ -15,6 +15,7 @@ Registro de las correcciones aplicadas sin borrar recursos.
 - Secret `circleguard-tls` presente en `cg-dev`, `cg-stage` y `cg-prod`.
 - Overlays `*-tls` aplicados; Ingress con `websecure` y `spec.tls`.
 - Traefik `websecure` expuesto en nodePort `30443`; HTTPS verificado vía port-forward con `curl -k -H Host:` para dev/stage/prod → HTTP 200.
+- El certificado es autofirmado y la comprobación fue por port-forward; aún no hay certificado definitivo, DNS propio ni exposición pública en 443. Detalle en `E2.4-E2.5-seguridad.md`.
 
 ## Sondas
 

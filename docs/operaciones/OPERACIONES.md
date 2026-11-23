@@ -18,10 +18,28 @@ docker compose -f deploy/compose/dev/docker-compose.yml up -d
 
 ## Rollback
 
+El camino controlado es el pipeline: en Jenkins, sobre `main`, usar **Build with Parameters** con `ROLLBACK_TAG=<tag-anterior>`. Eso omite las etapas de compilación y ejecuta `Rollback prod` → `ci.deploy('prod', <tag-anterior>)`. Ver `docs/infra/rollback.md`.
+
+Verificación:
+
 ```bash
-./deploy/scripts/rollback.sh <tag-anterior>
-kubectl -n circleguard-prod rollout status deployment/<servicio>
+kubectl -n cg-prod rollout status deployment/<servicio>
 ```
+
+Camino directo de emergencia:
+
+```bash
+kubectl -n cg-prod set image deployment/<servicio> <contenedor>=circleguard-docker/<servicio>:<tag-anterior>
+kubectl -n cg-prod rollout status deployment/<servicio>
+```
+
+`deploy/scripts/rollback.sh` pertenece al camino legacy de Docker Compose y exige el ambiente como primer argumento:
+
+```bash
+./deploy/scripts/rollback.sh prod <tag-anterior>
+```
+
+No es el mecanismo del despliegue K8s actual, que ejecuta `ci.deploy()` desde `jenkins/vars/ci.groovy`.
 
 ## Troubleshooting
 
