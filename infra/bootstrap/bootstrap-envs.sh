@@ -28,7 +28,7 @@ JWT_SECRET=$(rand_secret)
 EOF
   ensure_env_kv "${dir}/.env" TAG "1.0.0-bootstrap"
   set_env_kv "${dir}/.env" NEXUS_REGISTRY "${NEXUS_REGISTRY}"
-  # La IP privada se refresca en cada bootstrap: si la instancia se recrea cambia,
+  # The private IP is refreshed on each bootstrap: it changes if the instance is recreated,
   # y Kafka anuncia esa dirección en su listener externo.
   set_env_kv "${dir}/.env" ENV_HOST_IP "$(private_ip)"
   ensure_env_kv "${dir}/.env" POSTGRES_PASSWORD "$(rand_secret)"

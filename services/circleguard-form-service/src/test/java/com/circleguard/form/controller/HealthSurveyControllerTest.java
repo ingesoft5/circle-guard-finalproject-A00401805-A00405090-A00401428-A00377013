@@ -22,8 +22,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Prueba únicamente la capa web de HealthSurveyController. El servicio se
- * reemplaza por un mock para evitar acceso a base de datos y Kafka.
+ * Tests only the web layer of HealthSurveyController. The service is
+ * replaced by a mock to avoid database and Kafka access.
  */
 @WebMvcTest(value = HealthSurveyController.class, properties = "jwt.secret=test-only-secret-with-at-least-32-bytes")
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc(addFilters = false)
@@ -37,7 +37,7 @@ class HealthSurveyControllerTest {
 
     @Test
     void shouldSubmitSurveySuccessfully() throws Exception {
-        // Prepara la encuesta que el servicio simulado devolverá al controlador.
+        // Prepares the survey the mocked service will return to the controller.
         UUID surveyId = UUID.randomUUID();
         HealthSurvey surveyResponse = new HealthSurvey();
         surveyResponse.setId(surveyId);
@@ -45,8 +45,8 @@ class HealthSurveyControllerTest {
 
         Mockito.when(surveyService.submitSurvey(Mockito.any(HealthSurvey.class))).thenReturn(surveyResponse);
 
-        // Envía el JSON al endpoint y comprueba que la respuesta sea exitosa
-        // y contenga el identificador de la encuesta creada.
+        // Sends the JSON to the endpoint and checks that the response is successful
+        // and contains the identifier of the created survey.
         mockMvc.perform(post("/api/v1/surveys")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"anonymousId\": \"550e8400-e29b-41d4-a716-446655440000\", \"responses\": {\"q1\": \"YES\"}}"))

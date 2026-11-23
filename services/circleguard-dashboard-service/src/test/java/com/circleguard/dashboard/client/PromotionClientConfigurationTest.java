@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Promotion Client Configuration. */
 package com.circleguard.dashboard.client;
 
 import org.junit.jupiter.api.Test;

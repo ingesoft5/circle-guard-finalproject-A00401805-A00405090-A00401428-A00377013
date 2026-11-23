@@ -1,3 +1,4 @@
+/** CG-DOC: Span exporter that removes sensitive attributes before traces leave the service. */
 package com.circleguard.form.observability;
 
 import io.opentelemetry.api.common.Attributes;

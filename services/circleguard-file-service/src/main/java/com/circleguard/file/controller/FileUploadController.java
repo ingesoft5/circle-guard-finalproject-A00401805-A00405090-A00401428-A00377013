@@ -19,11 +19,11 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class FileUploadController {
-    // CG-DOC: Upload counter tagged by result so Prometheus can alert on failures.
+    // Upload counter tagged by result so Prometheus can alert on failures.
     private static final String UPLOAD_METRIC = "circleguard_file_uploads_total";
     private static final String TAG_RESULT = "result";
 
-    // CG-DOC: FileStorage is the port shared by the local and S3/MinIO adapters (HU-FILE-04).
+    // FileStorage is the port shared by the local and S3/MinIO adapters (HU-FILE-04).
     private final FileStorage storageService;
     private final MeterRegistry meterRegistry;
 

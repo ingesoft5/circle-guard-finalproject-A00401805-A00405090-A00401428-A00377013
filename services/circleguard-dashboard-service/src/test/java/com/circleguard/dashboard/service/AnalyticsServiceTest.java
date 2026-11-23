@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Analytics Service. */
 package com.circleguard.dashboard.service;
 
 import com.circleguard.dashboard.client.PromotionClient;

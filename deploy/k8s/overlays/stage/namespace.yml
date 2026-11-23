@@ -1,4 +1,4 @@
-# CG-DOC: Namespace del entorno de staging. Permite que `kubectl apply -k` sea autosuficiente.
+# CG-DOC: Stage namespace. Allows `kubectl apply -k` to be self-contained.
 apiVersion: v1
 kind: Namespace
 metadata:

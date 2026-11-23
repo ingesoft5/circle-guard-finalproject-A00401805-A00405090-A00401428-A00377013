@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Notification Trace Propagation. */
 package com.circleguard.notification.observability;
 
 import io.opentelemetry.api.common.AttributeKey;

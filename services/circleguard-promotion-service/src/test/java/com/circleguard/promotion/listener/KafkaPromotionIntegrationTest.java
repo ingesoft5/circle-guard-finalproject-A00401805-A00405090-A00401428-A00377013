@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Kafka Promotion Integration. */
 package com.circleguard.promotion.listener;
 
 import com.circleguard.promotion.service.HealthStatusService;

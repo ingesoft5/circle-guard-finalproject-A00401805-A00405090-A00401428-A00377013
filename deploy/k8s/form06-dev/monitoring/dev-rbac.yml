@@ -1,3 +1,4 @@
+# CG-DOC: RBAC rules for the isolated cg-dev monitoring stack.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:

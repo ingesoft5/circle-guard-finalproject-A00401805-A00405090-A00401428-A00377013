@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Prometheus Endpoint. */
 package com.circleguard.form.observability;
 
 import org.junit.jupiter.api.Test;

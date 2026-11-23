@@ -1,5 +1,5 @@
-# CG-DOC: el Ingress pasa del entrypoint `web` al `websecure` de Traefik.
-# El certificado se entrega fuera del repositorio; aquí solo se referencia su Secret.
+# CG-DOC: Switches the Ingress from the Traefik `web` entrypoint to `websecure`.
+# The certificate is delivered outside the repository; only its Secret is referenced here.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

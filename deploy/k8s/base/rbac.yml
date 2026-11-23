@@ -1,5 +1,5 @@
-# CG-DOC: Cuenta de servicio con permisos de despliegue limitados al namespace del overlay.
-# Sustituye el uso directo del kubeconfig admin cuando Jenkins adopte este ServiceAccount.
+# CG-DOC: Service account with deployment permissions limited to the overlay namespace.
+# Replaces direct use of the admin kubeconfig once Jenkins adopts this ServiceAccount.
 apiVersion: v1
 kind: ServiceAccount
 metadata:

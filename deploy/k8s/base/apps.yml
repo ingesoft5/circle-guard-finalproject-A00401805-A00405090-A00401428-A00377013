@@ -616,7 +616,7 @@ metadata:
   labels:
     app: notification
 spec:
-  # El HPA (deploy/k8s/base/hpa.yml) es el dueno de spec.replicas.
+  # The HPA (deploy/k8s/base/hpa.yml) owns spec.replicas.
   selector:
     matchLabels:
       app: notification

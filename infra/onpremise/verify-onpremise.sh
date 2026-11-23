@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Chequeo read-only de la plataforma on-premise de CircleGuard.
-# No crea, borra ni modifica nada: imprime OK/FALLA por cheque y sale != 0 si alguno falla.
+# CG-DOC: Runs read-only verification checks against the on-premise platform.
+# Read-only check of the CircleGuard on-premise platform.
+# Creates, deletes, or modifies nothing: prints OK/FAIL per check and exits != 0 if any fails.
 # Uso: ./infra/onpremise/verify-onpremise.sh
-# Opcional: DEMO_VERIFY=1 (intenta login JWT con staff_guard/password en dev — solo si ya existe)
+# Optional: DEMO_VERIFY=1 (tries JWT login with staff_guard/password in dev - only if it already exists)
 set -uo pipefail
 
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

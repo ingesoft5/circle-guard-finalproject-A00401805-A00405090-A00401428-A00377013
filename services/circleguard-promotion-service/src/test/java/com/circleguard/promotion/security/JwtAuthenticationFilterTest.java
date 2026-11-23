@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for the promotion service JWT authentication filter. */
 package com.circleguard.promotion.security;
 
 import io.jsonwebtoken.Jwts;

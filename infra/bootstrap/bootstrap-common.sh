@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CG-DOC: Shared idempotent helpers for logging, Docker, secrets, SSH, and Compose.
-# bootstrap-common.sh - Utilidades idempotentes para aprovisionamiento y despliegue.
-# Se usa con `source`; no define `set -e` para no alterar al script que lo invoca.
+# bootstrap-common.sh - Idempotent utilities for provisioning and deployment.
+# Sourced with `source`; does not define `set -e` so the caller is unaffected.
 [ -n "${CG_COMMON_LOADED:-}" ] && return 0
 CG_COMMON_LOADED=1
 
@@ -29,7 +29,7 @@ require_cmd() {
 
 rand_secret() { openssl rand -hex 24; }
 
-# Docker con o sin sudo: el grupo docker no aplica hasta una nueva sesión.
+# Docker with or without sudo: the docker group only applies after a new session.
 dk() { if docker info >/dev/null 2>&1; then docker "$@"; else sudo docker "$@"; fi; }
 
 load_state() {
@@ -97,7 +97,7 @@ scp_from() {
     "ubuntu@${ip}:${src}" "${dst}"
 }
 
-# Copia infra/ y deploy/ al host remoto sin secretos locales ni artefactos de build.
+# Copies infra/ and deploy/ to the remote host without local secrets or build artifacts.
 sync_repo() {
   local ip="$1"
   ssh_host "${ip}" "sudo mkdir -p /opt/circleguard && sudo chown -R ubuntu:ubuntu /opt/circleguard"
@@ -173,7 +173,7 @@ ensure_swap() {
   grep -qs '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
 }
 
-# Crea el archivo .env con permisos 600 SOLO si no existe; conserva secretos previos.
+# Creates the .env file with 600 permissions ONLY if absent; preserves existing secrets.
 ensure_env_file() {
   local f="$1"
   if [ -f "$f" ]; then
@@ -244,8 +244,8 @@ compose_up() {
   log_info "${project} listo."
 }
 
-# Dirección privada de la instancia: es la que Jenkins usa para desplegar y la que
-# Kafka anuncia en su listener externo, porque el tráfico entre hosts de la VPC
+# Private address of the instance: used by Jenkins to deploy and by
+# Kafka advertises its external listener because traffic between VPC hosts
 # nunca sale a Internet.
 private_ip() {
   hostname -I | awk '{print $1}'

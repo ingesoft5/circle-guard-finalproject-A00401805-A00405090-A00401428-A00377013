@@ -1,3 +1,4 @@
+# CG-DOC: Prometheus alert rules used by form observability tests.
 rule_files:
   - form-alerts.yml
 evaluation_interval: 30s

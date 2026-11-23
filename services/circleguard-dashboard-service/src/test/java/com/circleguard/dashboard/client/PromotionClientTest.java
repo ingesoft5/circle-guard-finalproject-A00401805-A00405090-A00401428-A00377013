@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for the dashboard service PromotionClient. */
 package com.circleguard.dashboard.client;
 
 import org.junit.jupiter.api.BeforeEach;

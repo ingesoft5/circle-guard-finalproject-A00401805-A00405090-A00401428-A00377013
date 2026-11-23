@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CG-DOC: Replaces the local AWS and GitHub credentials used by the CircleGuard bootstrap.
-# Las claves se escriben en ~/.aws, en el llavero de gh y en los .env locales (600),
-# nunca en el repositorio. Uso: update-credentials.sh [--apply]
+# Keys are written to ~/.aws, the gh keyring, and local .env files (600),
+# never in the repository. Usage: update-credentials.sh [--apply]
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/bootstrap-common.sh"
 

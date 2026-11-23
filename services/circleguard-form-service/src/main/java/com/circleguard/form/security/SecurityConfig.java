@@ -1,3 +1,4 @@
+/** CG-DOC: Security configuration for the form service. */
 package com.circleguard.form.security;
 
 import org.springframework.context.annotation.Bean;

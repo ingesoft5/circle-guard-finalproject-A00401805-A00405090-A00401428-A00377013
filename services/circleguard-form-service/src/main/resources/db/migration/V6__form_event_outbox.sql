@@ -1,3 +1,4 @@
+-- CG-DOC: Database migration creating the form event outbox table.
 CREATE TABLE form_event_outbox (
     id UUID PRIMARY KEY,
     topic VARCHAR(64) NOT NULL,

@@ -94,7 +94,7 @@ def qualityGate(Map service) {
             waitForQualityGate abortPipeline: true
         }
     }
-    // Refuerzo: el webhook puede tardar; se valida el estado real del proyecto por API.
+    // Reinforcement: the webhook may be delayed; the real project state is checked via API.
     withSonarQubeEnv('SonarQube') {
         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
             sh """
@@ -116,7 +116,7 @@ def integrationTest(Map service) {
         return
     }
     sh "./gradlew ${service.path}:integrationTest --no-daemon --no-build-cache --rerun-tasks --console=plain"
-    // GW-CI-02: una corrida sin resultados debe fallar el build, no pasar en silencio.
+    // GW-CI-02: a run without results must fail the build, not pass silently.
     junit testResults: "${service.dir}/build/test-results/integrationTest/*.xml",
             allowEmptyResults: false, keepLongStdio: true
     archiveArtifacts artifacts: "${service.dir}/build/integration-test/*.log",
@@ -172,8 +172,8 @@ def dockerBuildPush(Map service, String tag) {
     withCredentials([usernamePassword(credentialsId: 'nexus-creds',
             usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
         sh "echo \$NEXUS_PASSWORD | docker login ${registry} -u \$NEXUS_USER --password-stdin"
-        // El host no tiene ruta IPv6 al CDN de Docker Hub: las imágenes base se
-        // toman del mirror circleguard-base en Nexus (ver seed-base-images.sh).
+        // The host has no IPv6 route to the Docker Hub CDN: base images are
+        // pulled from the circleguard-base mirror in Nexus (see seed-base-images.sh).
         def base = registry ? "${registry}/circleguard-base" : ''
         def baseArgs = base ? "--build-arg GRADLE_IMAGE=${base}/gradle:8.14-jdk21 --build-arg JDK_IMAGE=${base}/eclipse-temurin:21-jdk --build-arg ALPINE_IMAGE=${base}/eclipse-temurin:21-jre-alpine --build-arg JAMMY_IMAGE=${base}/eclipse-temurin:21-jre-jammy --build-arg NODE_IMAGE=${base}/node:22-alpine --build-arg WEB_IMAGE=${base}/nginx-unprivileged:1.27-alpine" : ''
         sh """
@@ -310,11 +310,11 @@ def owaspZapScan(String environment) {
     """
 }
 
-// Despliega sobre k3d creando un tag del overlay en el workspace y aplicando con
-// Kustomize; no se commitea nada. Las imágenes se leen del mismo registro HTTP del
-// host donde el pipeline hace push, usando el alias loopback que acepta el daemon,
-// y k3d las importa a los nodos porque `IfNotPresent` no llega a un registro
-// con TLS propio del clúster.
+// Deploys to k3d by creating an overlay tag in the workspace and applying with
+// Kustomize; nothing is committed. Images are read from the same HTTP registry of the
+// host where the pipeline pushes, using the loopback alias accepted by the daemon,
+// and k3d imports them into the nodes because `IfNotPresent` does not reach a registry
+// with cluster-native TLS.
 def deploy(String environment, String tag) {
     def namespace = "cg-${environment}"
     def overlay = "deploy/k8s/overlays/${environment}"
@@ -343,10 +343,10 @@ def deploy(String environment, String tag) {
     """
 }
 
-// Cada corrida siembra sus propios visitantes vía kubectl exec (sin SSH ni IPs del
-// mundo AWS); un id fijo reutilizaría el estado que dejó la corrida anterior.
+// Each run seeds its own visitors via kubectl exec (no SSH or IPs from the
+// AWS world); a fixed id would reuse state left by the previous run.
 def e2e() {
-    // Seed Neo4j y ejecuta Playwright contra el Ingress de k3d (Traefik :30080).
+    // Seeds Neo4j and runs Playwright against the k3d Ingress (Traefik :30080).
     def runId = "e2e-${env.BUILD_NUMBER}-${(env.GIT_COMMIT ?: 'local').take(7)}"
     sh """
         set -e

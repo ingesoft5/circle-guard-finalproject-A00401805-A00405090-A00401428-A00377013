@@ -23,8 +23,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Prueba la lógica de encuestas con repositorio, mapper y Kafka simulados.
- * Así se verifican estados y eventos sin usar infraestructura externa.
+ * Tests survey logic with mocked repository, mapper, and Kafka.
+ * This verifies states and events without external infrastructure.
  */
 @ExtendWith(MockitoExtension.class)
 class HealthSurveyServiceTest {
@@ -46,7 +46,7 @@ class HealthSurveyServiceTest {
 
     @Test
     void shouldInferLegacyFieldsAndPublishSurveyEvent() {
-        // Un cuestionario activo con síntomas debe completar los campos heredados.
+        // An active questionnaire with symptoms must fill the inherited fields.
         UUID anonymousId = UUID.randomUUID();
         HealthSurvey survey = survey(anonymousId);
         Questionnaire questionnaire = Questionnaire.builder().build();
@@ -54,7 +54,7 @@ class HealthSurveyServiceTest {
         when(symptomMapper.hasSymptoms(survey, questionnaire)).thenReturn(true);
         when(repository.save(survey)).thenReturn(survey);
 
-        // La encuesta se guarda y se publica el evento que consumiría Kafka.
+        // The survey is saved and the event Kafka would consume is published.
         assertSame(survey, service.submitSurvey(survey));
 
         assertTrue(survey.getHasFever());
@@ -69,7 +69,7 @@ class HealthSurveyServiceTest {
 
     @Test
     void shouldPreserveProvidedLegacyFields() {
-        // Los valores enviados por el cliente no deben ser reemplazados.
+        // Values sent by the client must not be overwritten.
         HealthSurvey survey = survey(UUID.randomUUID());
         survey.setHasFever(false);
         survey.setHasCough(true);
@@ -85,7 +85,7 @@ class HealthSurveyServiceTest {
 
     @Test
     void shouldUseFalseSymptomsWhenThereIsNoActiveQuestionnaire() {
-        // Sin cuestionario activo no se consulta el mapper y los síntomas quedan en false.
+        // Without an active questionnaire, the mapper is not queried and symptoms stay false.
         HealthSurvey survey = survey(UUID.randomUUID());
         when(questionnaireService.getActiveQuestionnaire()).thenReturn(Optional.empty());
         when(repository.save(survey)).thenReturn(survey);
@@ -100,7 +100,7 @@ class HealthSurveyServiceTest {
 
     @Test
     void shouldMarkSurveyWithAttachmentAsPending() {
-        // La presencia de un adjunto inicia la validación en estado pendiente.
+        // The presence of an attachment starts validation in a pending state.
         HealthSurvey survey = survey(UUID.randomUUID());
         survey.setAttachmentPath("certificate.pdf");
         when(questionnaireService.getActiveQuestionnaire()).thenReturn(Optional.empty());
@@ -113,7 +113,7 @@ class HealthSurveyServiceTest {
 
     @Test
     void shouldLeaveValidationStatusUnsetWithoutAttachment() {
-        // Sin adjunto, el servicio no asigna un estado de validación automáticamente.
+        // Without an attachment, the service does not assign a validation status automatically.
         HealthSurvey survey = survey(UUID.randomUUID());
         when(questionnaireService.getActiveQuestionnaire()).thenReturn(Optional.empty());
         when(repository.save(survey)).thenReturn(survey);
@@ -125,7 +125,7 @@ class HealthSurveyServiceTest {
 
     @Test
     void shouldPublishApprovedCertificateEvent() {
-        // Una aprobación debe guardar la decisión y emitir el evento correspondiente.
+        // An approval must save the decision and emit the corresponding event.
         UUID surveyId = UUID.randomUUID();
         UUID anonymousId = UUID.randomUUID();
         UUID adminId = UUID.randomUUID();
@@ -147,7 +147,7 @@ class HealthSurveyServiceTest {
 
     @Test
     void shouldSaveRejectedCertificateWithoutPublishingEvent() {
-        // Un rechazo se persiste, pero no necesita notificar la restauración de acceso.
+        // A rejection is persisted but does not need to notify access restoration.
         UUID surveyId = UUID.randomUUID();
         HealthSurvey survey = survey(UUID.randomUUID());
         when(repository.findById(surveyId)).thenReturn(Optional.of(survey));
@@ -160,7 +160,7 @@ class HealthSurveyServiceTest {
 
     @Test
     void shouldFailValidationWhenSurveyDoesNotExist() {
-        // La validación de una encuesta inexistente debe detenerse antes de guardar.
+        // Validation of a missing survey must stop before saving.
         UUID surveyId = UUID.randomUUID();
         when(repository.findById(surveyId)).thenReturn(Optional.empty());
 
@@ -173,7 +173,7 @@ class HealthSurveyServiceTest {
 
     @Test
     void shouldPropagateRepositoryFailureWithoutPublishingEvent() {
-        // Si falla la persistencia, tampoco debe emitirse un evento de encuesta enviada.
+        // If persistence fails, no survey-sent event should be emitted either.
         HealthSurvey survey = survey(UUID.randomUUID());
         when(questionnaireService.getActiveQuestionnaire()).thenReturn(Optional.empty());
         when(repository.save(survey)).thenThrow(new IllegalStateException("database unavailable"));

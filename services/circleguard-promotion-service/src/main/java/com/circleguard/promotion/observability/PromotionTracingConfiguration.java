@@ -1,3 +1,4 @@
+/** CG-DOC: Configuration for promotion service tracing. */
 package com.circleguard.promotion.observability;
 
 import io.micrometer.common.KeyValues;

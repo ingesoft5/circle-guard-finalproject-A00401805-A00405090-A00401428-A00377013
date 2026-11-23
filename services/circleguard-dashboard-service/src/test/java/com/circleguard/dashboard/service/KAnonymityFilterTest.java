@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for the dashboard k-anonymity filter. */
 package com.circleguard.dashboard.service;
 
 import org.junit.jupiter.api.Test;

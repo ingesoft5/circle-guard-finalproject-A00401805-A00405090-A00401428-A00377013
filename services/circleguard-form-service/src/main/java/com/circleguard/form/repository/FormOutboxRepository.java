@@ -1,3 +1,4 @@
+/** CG-DOC: Repository for querying and updating persisted form outbox events. */
 package com.circleguard.form.repository;
 
 import com.circleguard.form.model.FormOutboxEvent;

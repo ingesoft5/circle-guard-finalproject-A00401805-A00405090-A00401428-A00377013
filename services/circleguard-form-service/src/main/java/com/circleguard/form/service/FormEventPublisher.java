@@ -1,3 +1,4 @@
+/** CG-DOC: Publishes form events through the outbox pattern. */
 package com.circleguard.form.service;
 
 import com.circleguard.form.model.FormOutboxEvent;

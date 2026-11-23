@@ -1,3 +1,4 @@
+/** CG-DOC: Test fixture for distributed tracing assertions. */
 package com.circleguard.form.observability;
 
 import io.micrometer.observation.ObservationRegistry;

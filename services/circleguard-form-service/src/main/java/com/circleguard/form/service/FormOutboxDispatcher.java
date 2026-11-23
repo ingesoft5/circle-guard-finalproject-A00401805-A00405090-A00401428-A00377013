@@ -1,3 +1,4 @@
+/** CG-DOC: Dispatches persisted form outbox events to Kafka. */
 package com.circleguard.form.service;
 
 import com.circleguard.form.model.FormOutboxEvent;

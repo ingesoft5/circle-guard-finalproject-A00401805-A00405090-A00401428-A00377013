@@ -1,3 +1,4 @@
+/** CG-DOC: JWT filter that authenticates requests to the form service. */
 package com.circleguard.form.security;
 
 import io.jsonwebtoken.Claims;

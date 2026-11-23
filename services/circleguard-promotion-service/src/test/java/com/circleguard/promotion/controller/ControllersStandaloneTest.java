@@ -1,3 +1,4 @@
+/** CG-DOC: Standalone web-layer tests for promotion controllers. */
 package com.circleguard.promotion.controller;
 
 import com.circleguard.promotion.model.AccessPoint;

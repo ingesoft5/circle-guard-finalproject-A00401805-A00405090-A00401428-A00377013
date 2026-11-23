@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CG-DOC: Rebuilds the on-premise cluster and middleware from the repository manifests.
 # Idempotent one-command rebuild of the on-premise tools platform.
 # Run from the repository root on the on-premise host as user `docker`.
 set -euo pipefail

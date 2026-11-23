@@ -236,11 +236,11 @@ services:
     networks: [stage-net]
     mem_limit: 448m
 
-  # CG-DOC: notification-service no expone API: consume promotion.status.changed de
-  # Kafka y escribe en notification.audit. El healthcheck mide el proceso porque
-  # management.health.mail.enabled=false (el SMTP es externo y puede no existir).
-  # Los canales arrancan en modo MOCK (AC_MOCK_SID / MOCK_TOKEN): stage inyecta las
-  # credenciales reales por .env y nunca deja secretos en el repositorio.
+  # notification-service exposes no API: it consumes promotion.status.changed from
+  # Kafka and writes to notification.audit. The healthcheck measures the process because
+  # management.health.mail.enabled=false (SMTP is external and may not exist).
+  # Channels start in MOCK mode (AC_MOCK_SID / MOCK_TOKEN): stage injects the
+  # real credentials via .env and never leaves secrets in the repository.
   notification:
     image: ${NEXUS_REGISTRY}/circleguard-docker/notification:${TAG}
     container_name: cg-notification-stage

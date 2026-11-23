@@ -8,8 +8,8 @@ const IDENTITY_URL = process.env.IDENTITY_URL || 'http://localhost:8083';
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8087';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// El Ingress solo publica rutas que exponen los servicios; los actuators son
-// internos del clúster. La "salud" se verifica por comportamiento API.
+// The Ingress only publishes routes that expose services; actuators are
+// internal to the cluster. "Health" is verified through API behavior.
 test('el gateway responde vía ingress', async ({ request }) => {
   const response = await request.post(`${GATEWAY_URL}/api/v1/gate/validate`, {
     data: { token: 'invalid' },
@@ -59,7 +59,7 @@ test('flujo E2E completo: login RBAC en auth-service, generación de QR y valida
 
   const authHeader = { Authorization: `Bearer ${loginData.token}` };
 
-  // 2. Generación de token QR efímero firmado en auth-service
+  // 2. Generate a short-lived signed QR token in auth-service
   const qrRes = await request.get(`${AUTH_URL}/api/v1/auth/qr/generate`, {
     headers: authHeader,
   });
@@ -68,7 +68,7 @@ test('flujo E2E completo: login RBAC en auth-service, generación de QR y valida
   expect(qrData.qrToken).toBeTruthy();
   expect(qrData.expiresIn).toBe('300');
 
-  // 3. Consulta de usuarios por permiso RBAC en auth-service
+  // 3. Query users by RBAC permission in auth-service
   const permRes = await request.get(`${AUTH_URL}/api/v1/users/permissions/alert:receive_priority`, {
     headers: authHeader,
   });
@@ -77,7 +77,7 @@ test('flujo E2E completo: login RBAC en auth-service, generación de QR y valida
   expect(Array.isArray(users)).toBeTruthy();
   expect(users.some((u: { username: string }) => u.username === 'health_user')).toBeTruthy();
 
-  // 4. Validación cruzada en gateway usando el JWT de staff_guard (con gate:scan) y el qrToken emitido por auth-service
+  // 4. Cross-validation in gateway using the staff_guard JWT (with gate:scan) and the qrToken issued by auth-service
   const gateRes = await request.post(`${GATEWAY_URL}/api/v1/gate/validate`, {
     headers: authHeader,
     data: { token: qrData.qrToken },
@@ -88,13 +88,13 @@ test('flujo E2E completo: login RBAC en auth-service, generación de QR y valida
 });
 
 test('identity-service responde vía ingress', async ({ request }) => {
-  // El lookup exige autorización; un 4xx es la prueba de que el servicio está vivo.
+  // The lookup requires authorization; a 4xx proves the service is alive.
   const response = await request.get(`${IDENTITY_URL}/api/v1/identities/lookup/00000000-0000-0000-0000-000000000000`);
   expect([401, 403]).toContain(response.status());
 });
 
 test('identity-service anonimiza identidad real y visitante de forma idempotente y bloquea lookup sin autorización', async ({ request }) => {
-  // 1. Mapeo idempotente en la bóveda criptográfica
+  // 1. Idempotent mapping in the cryptographic vault
   const firstMap = await request.post(`${IDENTITY_URL}/api/v1/identities/map`, {
     data: { realIdentity: 'student_user' },
   });
@@ -109,7 +109,7 @@ test('identity-service anonimiza identidad real y visitante de forma idempotente
   const secondData = await secondMap.json();
   expect(secondData.anonymousId).toBe(firstData.anonymousId);
 
-  // 2. Registro de visitante temporal sin exponer PII
+  // 2. Register a temporary visitor without exposing PII
   const visitorRes = await request.post(`${IDENTITY_URL}/api/v1/identities/visitor`, {
     data: {
       name: 'Visitante Externo',
@@ -122,13 +122,13 @@ test('identity-service anonimiza identidad real y visitante de forma idempotente
   expect(visitorData.anonymousId).toMatch(UUID_REGEX);
   expect(JSON.stringify(visitorData)).not.toContain('visitante@externo.org');
 
-  // 3. Intento de des-anonimización sin autoridad identity:lookup -> 401
+  // 3. De-anonymization attempt without identity:lookup authority -> 401
   const lookupRes = await request.get(`${IDENTITY_URL}/api/v1/identities/lookup/${firstData.anonymousId}`);
   expect([401, 403]).toContain(lookupRes.status());
 });
 
 test('flujo E2E de anonimización: auth-service delega en identity-service y el JWT emitido no expone PII', async ({ request }) => {
-  // 1. Consultar el anonymousId persistido en identity-service para health_user
+  // 1. Query the anonymousId persisted in identity-service for health_user
   const mapRes = await request.post(`${IDENTITY_URL}/api/v1/identities/map`, {
     data: { realIdentity: 'health_user' },
   });
@@ -136,7 +136,7 @@ test('flujo E2E de anonimización: auth-service delega en identity-service y el 
   const { anonymousId: vaultAnonymousId } = await mapRes.json();
   expect(vaultAnonymousId).toMatch(UUID_REGEX);
 
-  // 2. Iniciar sesión en auth-service con health_user y verificar correspondencia exacta con la bóveda
+  // 2. Log in to auth-service as health_user and verify an exact match with the vault
   const loginRes = await request.post(`${AUTH_URL}/api/v1/auth/login`, {
     data: { username: 'health_user', password: 'password' },
   });
@@ -144,7 +144,7 @@ test('flujo E2E de anonimización: auth-service delega en identity-service y el 
   const loginData = await loginRes.json();
   expect(loginData.anonymousId).toBe(vaultAnonymousId);
 
-  // 3. Decodificar el payload del JWT y verificar que solo transporta el anonymousId (<UUID>) sin PII
+  // 3. Decode the JWT payload and verify it carries only anonymousId (<UUID>) without PII
   const payloadBase64 = loginData.token.split('.')[1];
   const decodedPayload = Buffer.from(payloadBase64, 'base64url').toString('utf-8');
   const claims = JSON.parse(decodedPayload);

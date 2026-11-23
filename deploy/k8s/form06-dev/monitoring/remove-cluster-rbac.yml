@@ -1,3 +1,4 @@
+# CG-DOC: Cleanup manifest that removes cluster-wide RBAC from cg-dev.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

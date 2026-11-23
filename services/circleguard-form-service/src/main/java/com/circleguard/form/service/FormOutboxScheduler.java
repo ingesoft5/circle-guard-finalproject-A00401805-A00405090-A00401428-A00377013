@@ -1,3 +1,4 @@
+/** CG-DOC: Schedules retries for pending form outbox events. */
 package com.circleguard.form.service;
 
 import org.springframework.scheduling.annotation.Scheduled;

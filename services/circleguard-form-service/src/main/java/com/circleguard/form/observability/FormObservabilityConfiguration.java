@@ -1,3 +1,4 @@
+/** CG-DOC: Configuration for form service metrics and tracing. */
 package com.circleguard.form.observability;
 
 import io.micrometer.common.KeyValues;

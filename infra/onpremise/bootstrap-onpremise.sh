@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Prepara el stack local de herramientas del equipo, incluido el relay de smee.io.
+# CG-DOC: Bootstraps the CircleGuard on-premise tooling stack.
+# Prepares the local team tooling stack, including the smee.io relay.
 set -euo pipefail
 
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -11,7 +12,7 @@ source "$RAIZ/infra/bootstrap/bootstrap-common.sh"
 [[ -f "$PLANTILLA" ]] || { echo "Falta $PLANTILLA"; exit 1; }
 [[ -f "$ARCHIVO_COMPOSE" ]] || { echo "Falta $ARCHIVO_COMPOSE"; exit 1; }
 
-# Reemplaza o agrega una clave sin romper valores que contengan signos especiales.
+# Replaces or adds a key without breaking values containing special characters.
 establecer_valor() {
   local clave="$1" valor="$2"
   CLAVE="$clave" VALOR="$valor" awk '
@@ -88,7 +89,7 @@ aplicar_credenciales_sonar() {
   fi
 }
 
-# Detecta la dirección de ZeroTier; si no existe, usa la ruta por defecto.
+# Detects the ZeroTier address; falls back to the default route.
 IP_EQUIPO="${IP_EQUIPO:-}"
 if [[ -z "$IP_EQUIPO" ]]; then
   IP_EQUIPO="$(ip -o -4 addr show | awk '$2 ~ /^zt/ {print $4; exit}' | cut -d/ -f1)"
@@ -106,36 +107,36 @@ fi
   exit 1
 }
 
-# Crea el archivo real solo si no existe o está vacío.
+# Creates the real file only if missing or empty.
 if [[ ! -s "$ARCHIVO_ENTORNO" ]]; then
   install -m 600 "$PLANTILLA" "$ARCHIVO_ENTORNO"
 fi
 chmod 600 "$ARCHIVO_ENTORNO"
 
-# Genera únicamente los secretos que todavía tengan el marcador.
+# Generates only secrets that still contain the placeholder.
 while IFS= read -r clave; do
   [[ -n "$clave" ]] || continue
   establecer_valor "$clave" "$(openssl rand -hex 24)"
 done < <(grep -oE '^[A-Z0-9_]+=__GENERATE__$' "$ARCHIVO_ENTORNO" | cut -d= -f1 || true)
 
-# Ajusta las direcciones del equipo en cada ejecución.
+# Adjust the team addresses on each run.
 for clave in TOOLS_IP TOOLS_PRIVATE_IP DEV_PRIVATE_IP STAGE_PRIVATE_IP PROD_PRIVATE_IP; do
   establecer_valor "$clave" "$IP_EQUIPO"
 done
 establecer_valor "JENKINS_URL" "http://${IP_EQUIPO}:8080/"
 
-# El registro y el relay del webhook son fijos en este host.
+# The registry and webhook relay are fixed on this host.
 establecer_valor "NEXUS_REGISTRY" "${IP_EQUIPO}:5000"
 establecer_valor "SMEE_URL" "${SMEE_URL:-https://smee.io/nk4nvlnyB0u6Fqnn}"
 establecer_valor "SMEE_TARGET" "${SMEE_TARGET:-http://localhost:8080/github-webhook//}"
 
-# Pide el usuario y el token personal solo si faltan o siguen con marcador.
+# Prompts for the user and personal token only if missing or still placeholders.
 USUARIO_PERSONAL="$(grep -m1 '^GITHUB_USER=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)"
 TOKEN_PERSONAL="$(grep -m1 '^GITHUB_TOKEN=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)"
 
-# El secreto del webhook NUNCA se genera aleatoriamente: el hook ya existe en
-# GitHub (id 709307452) y valida la firma con este valor exacto. Si no coincide,
-# Jenkins responde 403 y el build del PR nunca arranca.
+# The webhook secret is NEVER generated randomly: the hook already exists in
+# GitHub (id 709307452) and validates the signature with this exact value. If it differs,
+# Jenkins returns 403 and the PR build never starts.
 SECRETO_HOOK="${GITHUB_WEBHOOK_SECRET:-$(grep -m1 '^GITHUB_WEBHOOK_SECRET=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)}"
 if [[ -z "$SECRETO_HOOK" || "$SECRETO_HOOK" == __* ]]; then
   if [[ -t 0 ]]; then
@@ -158,8 +159,8 @@ if [[ -z "${GITHUB_WEBHOOK_SECRET:-}" && "$SECRETO_HOOK" != __GITHUB_* ]]; then
 fi
 establecer_valor "GITHUB_WEBHOOK_SECRET" "$SECRETO_HOOK"
 
-# El token de SonarQube NUNCA se genera aleatoriamente: sonar-scanner responde
-# "Not authorized" si no es un token creado dentro de SonarQube. Créalo con:
+# The SonarQube token is NEVER generated randomly: sonar-scanner responds
+# "Not authorized" if the token was not created inside SonarQube. Create it with:
 #   curl -u admin:admin -X POST http://localhost:9000/api/user_tokens/generate --data-urlencode 'name=jenkins-ci'
 SECRETO_SONAR="${SONAR_TOKEN:-$(grep -m1 '^SONAR_TOKEN=' "$ARCHIVO_ENTORNO" | cut -d= -f2- || true)}"
 if [[ -z "$SECRETO_SONAR" || "$SECRETO_SONAR" == __* ]]; then
@@ -194,20 +195,20 @@ fi
 establecer_valor "GITHUB_USER" "$USUARIO_PERSONAL"
 establecer_valor "GITHUB_TOKEN" "$TOKEN_PERSONAL"
 
-# Verifica que no queden marcadores sin resolver.
+# Verifies that no unresolved placeholders remain.
 if grep -qE '=__(GENERATE|HOST_IP|GITHUB_|SONAR_)' "$ARCHIVO_ENTORNO"; then
   echo "Quedaron marcadores sin reemplazar en $ARCHIVO_ENTORNO:"
   grep -nE '=__(GENERATE|HOST_IP|GITHUB_|SONAR_)' "$ARCHIVO_ENTORNO"
   exit 1
 fi
 
-# Excluye el archivo real del repositorio sin modificar el archivo versionado.
+# Excludes the real file from the repository without modifying the tracked one.
 EXCLUSIONES="$RAIZ/.git/info/exclude"
 mkdir -p "$(dirname "$EXCLUSIONES")"
 grep -qxF 'deploy/compose/tools/.env.onpremise' "$EXCLUSIONES" 2>/dev/null || \
   echo 'deploy/compose/tools/.env.onpremise' >> "$EXCLUSIONES"
 
-# Valida y arranca jenkins, el relay de smee.io y el resto del stack.
+# Validates and starts Jenkins, the smee.io relay, and the rest of the stack.
 docker compose --env-file "$ARCHIVO_ENTORNO" -f "$ARCHIVO_COMPOSE" -p cg-tools config -q
 docker compose --env-file "$ARCHIVO_ENTORNO" -f "$ARCHIVO_COMPOSE" -p cg-tools up -d --build --remove-orphans
 aplicar_credenciales_sonar

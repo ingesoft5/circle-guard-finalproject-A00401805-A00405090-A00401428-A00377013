@@ -69,8 +69,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Verifica que Form publique una encuesta con síntomas y que Promotion la procese
- * después de recibirla desde un broker Kafka temporal.
+ * Verifies that Form publishes a survey with symptoms and Promotion processes it
+ * after receiving it from a temporary Kafka broker.
  */
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(
@@ -93,8 +93,8 @@ class FormPromotionKafkaIntegrationTest {
     @Container
     static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer(
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
-            // El broker con Zookeeper superaba el timeout de 60 s del wait strategy en CI.
-            // KRaft + heap acotado reducen el tiempo de arranque y el consumo de memoria.
+            // The broker with Zookeeper exceeded the 60 s wait strategy timeout in CI.
+            // KRaft + bounded heap reduce startup time and memory usage.
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx512M -Xms256M")
             .withStartupTimeout(Duration.ofMinutes(3));
 
@@ -171,7 +171,7 @@ class FormPromotionKafkaIntegrationTest {
         assertTrue(event.path("timestamp").isIntegralNumber());
         assertTrue(event.path("timestamp").asLong() > 0);
 
-        // El listener se ejecuta mediante Kafka; la espera contempla su procesamiento asíncrono.
+        // The listener runs via Kafka; the wait accounts for its asynchronous processing.
         await().atMost(Duration.ofSeconds(60)).untilAsserted(() ->
                 verify(healthStatusService).updateStatus(anonymousId.toString(), "SUSPECT"));
     }

@@ -18,8 +18,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Pruebas unitarias puras de SymptomMapper: construyen cuestionarios y
- * respuestas en memoria, sin iniciar Spring ni utilizar infraestructura.
+ * Pure unit tests for SymptomMapper: build questionnaires and
+ * in-memory responses, without starting Spring or using infrastructure.
  */
 class SymptomMapperTest {
 
@@ -27,7 +27,7 @@ class SymptomMapperTest {
 
     @Test
     void shouldDetectSymptomsFromFever() {
-        // La respuesta se vincula con la pregunta mediante el mismo UUID.
+        // The answer is linked to the question via the same UUID.
         UUID questionId = UUID.randomUUID();
         Question q = Question.builder()
                 .id(questionId)
@@ -43,14 +43,14 @@ class SymptomMapperTest {
                 .responses(Map.of(questionId.toString(), "YES"))
                 .build();
         
-        // Una respuesta afirmativa a una pregunta de fiebre indica síntomas.
+        // An affirmative answer to a fever question indicates symptoms.
         assertTrue(mapper.hasSymptoms(survey, questionnaire));
     }
 
     @Test
     void shouldNotDetectSymptomsWhenNo() {
-        // Mantiene la misma pregunta, pero cambia la respuesta para probar
-        // el camino negativo de la lógica.
+        // Keeps the same question but changes the answer to test
+        // the negative path of the logic.
         UUID questionId = UUID.randomUUID();
         Question q = Question.builder()
                 .id(questionId)

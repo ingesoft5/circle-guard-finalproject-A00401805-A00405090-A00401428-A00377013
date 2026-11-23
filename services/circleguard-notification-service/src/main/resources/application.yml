@@ -12,8 +12,8 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
-      # El AuditLogService publica un Map por el KafkaTemplate autoconfigurado; sin
-      # serializer explicito el productor no puede serializar el evento de auditoria.
+      # AuditLogService publishes a Map via the auto-configured KafkaTemplate; without
+      # explicit serializer, the producer cannot serialize the audit event.
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   mail:
@@ -53,8 +53,8 @@ management:
     tracing:
       endpoint: ${NOTIFICATION_OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
   health:
-    # El SMTP es externo y puede no estar disponible durante el arranque; el
-    # healthcheck del contenedor debe medir el proceso, no la dependencia de correo.
+    # SMTP is external and may be unavailable during startup; the
+    # container healthcheck must measure the process, not the mail dependency.
     mail:
       enabled: false
 

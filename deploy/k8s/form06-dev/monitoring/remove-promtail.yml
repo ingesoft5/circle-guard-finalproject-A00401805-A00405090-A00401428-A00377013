@@ -1,3 +1,4 @@
+# CG-DOC: Cleanup manifest that removes the shared Promtail daemonset from cg-dev.
 # The shared Promtail watches cg-dev/cg-stage/cg-prod and mounts host logs.
 # Do not activate it during the isolated Form canary; Alloy tails only form-hu6.
 apiVersion: v1

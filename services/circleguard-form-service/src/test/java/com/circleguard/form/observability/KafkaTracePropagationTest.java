@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Kafka Trace Propagation. */
 package com.circleguard.form.observability;
 
 import io.opentelemetry.api.common.AttributeKey;

@@ -1,5 +1,6 @@
-# Herramientas CircleGuard en un solo host, sin sudo y sin SSH.
-# Jenkins y el relay de smee.io corren con network_mode: host; el resto usa tools-net.
+# CG-DOC: Docker Compose definition for on-premise tooling (Jenkins, SonarQube, Nexus, MinIO, DynamoDB).
+# CircleGuard tooling on a single host, without sudo and without SSH.
+# Jenkins and the smee.io relay run with network_mode: host; the rest use tools-net.
 services:
   jenkins:
     build: ./jenkins
@@ -11,9 +12,9 @@ services:
       - .env.onpremise
     environment:
       CASC_JENKINS_CONFIG: /var/jenkins_home/cac/jenkins.yml
-      # JAVA_OPTS queda exportado y cada build de gradlew lo hereda (gradlew
-      # evalúa $JAVA_OPTS para su JVM); el heap del controller va aparte en
-      # JENKINS_JAVA_OPTS, que el entrypoint oficial combina con JAVA_OPTS.
+      # JAVA_OPTS stays exported and every gradlew build inherits it (gradlew
+      # evaluates $JAVA_OPTS for its JVM); the controller heap is set separately in
+      # JENKINS_JAVA_OPTS, which the official entrypoint combines with JAVA_OPTS.
       JAVA_OPTS: ""
       JENKINS_JAVA_OPTS: "-Xms512m -Xmx3g"
       TESTCONTAINERS_HOST_OVERRIDE: "10.147.20.67"
@@ -22,8 +23,8 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./jenkins/cac:/var/jenkins_home/cac:ro
-      # Kubeconfig admin de k3d (k3d cg kubeconfig write ~/.kube/config). Read-only;
-      # la escritura del clúster la hace el pipeline en deploy/k8s/overlays/<env>.
+      # k3d admin kubeconfig (k3d cg kubeconfig write ~/.kube/config). Read-only;
+      # cluster writes are made by the pipeline in deploy/k8s/overlays/<env>.
       - ${HOME}/.kube/config:/var/jenkins_home/.kube/config:ro
       - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
@@ -31,8 +32,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
-    # 4 executors: cada build corre gradle+sonar+trivy dentro de este cgroup;
-    # 8g cubre el peor caso (revisar free -h antes de recrear con dev+stage arriba).
+    # 4 executors: each build runs gradle+sonar+trivy inside this cgroup;
+    # 8g covers the worst case (check free -h before recreating with dev+stage up).
     mem_limit: 8g
 
   smee-client:
@@ -119,7 +120,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${TF_STATE_MINIO_USER}
       MINIO_ROOT_PASSWORD: ${TF_STATE_MINIO_PASSWORD}
-    # CG-DOC: MinIO community images were withdrawn from Docker Hub and Quay in 2026;
+    # MinIO community images were withdrawn from Docker Hub and Quay in 2026;
     # Chainguard publishes the same S3-compatible server as a free image.
     command: server /data --console-address :9001
     ports:
@@ -134,7 +135,7 @@ services:
     image: amazon/dynamodb-local:2.6.1
     container_name: cg-dynamodb-local
     restart: unless-stopped
-    # CG-DOC: In-memory mode avoids SQLite file locks; Terraform recreates the lock table on bootstrap.
+    # In-memory mode avoids SQLite file locks; Terraform recreates the lock table on bootstrap.
     command: -jar DynamoDBLocal.jar -inMemory -port 8000
     ports:
       - "127.0.0.1:8000:8000"

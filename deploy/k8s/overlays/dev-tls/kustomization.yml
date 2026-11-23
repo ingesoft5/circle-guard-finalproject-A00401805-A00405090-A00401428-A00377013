@@ -1,4 +1,4 @@
-# CG-DOC: vista TLS del overlay dev. Requiere el Secret circleguard-tls en cg-dev.
+# CG-DOC: TLS view of the dev overlay. Requires the circleguard-tls Secret in cg-dev.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

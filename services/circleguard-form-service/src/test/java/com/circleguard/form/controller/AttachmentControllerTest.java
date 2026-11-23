@@ -21,8 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Carga el contexto completo de Spring y prueba el endpoint de adjuntos mediante
- * MockMvc. En esta prueba se utiliza el StorageService real.
+ * Loads the full Spring context and tests the attachments endpoint using
+ * MockMvc. This test uses the real StorageService.
  */
 @SpringBootTest(properties = "jwt.secret=test-only-secret-with-at-least-32-bytes")
 @AutoConfigureMockMvc(addFilters = false)
@@ -45,7 +45,7 @@ class AttachmentControllerTest {
 
     @Test
     void shouldUploadFile() throws Exception {
-        // Simula un archivo PDF recibido como parte de una petición multipart.
+        // Simulates a PDF file received as part of a multipart request.
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "test.pdf",
@@ -53,8 +53,8 @@ class AttachmentControllerTest {
                 "test data".getBytes()
         );
 
-        // Ejecuta la petición y verifica que el controlador acepte el archivo
-        // y devuelva el nombre asignado por el servicio de almacenamiento.
+        // Executes the request and verifies that the controller accepts the file
+        // and returns the name assigned by the storage service.
         mockMvc.perform(multipart("/api/v1/attachments").file(file))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.filename").exists());

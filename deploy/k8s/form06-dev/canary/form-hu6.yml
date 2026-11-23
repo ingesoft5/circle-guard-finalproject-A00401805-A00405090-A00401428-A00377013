@@ -1,3 +1,4 @@
+# CG-DOC: Private canary Deployment used to validate HU-FORM-06.
 # Private canary. The existing form Service and Ingress keep selecting app=form.
 apiVersion: v1
 kind: Service

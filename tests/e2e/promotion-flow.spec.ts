@@ -70,8 +70,8 @@ test('el cuestionario sin síntomas no cambia el estado del visitante', async ({
 
   await publish('survey.submitted', { anonymousId, hasSymptoms: false });
 
-  // Sin una espera positiva no se distingue "no promovió" de "todavía no procesó",
-  // así que se deja pasar la ventana en la que un cambio habría aparecido.
+  // Without a positive wait, "did not promote" cannot be distinguished from "not processed yet",
+  // so the window in which a change would have appeared is allowed to pass.
   await new Promise((resolve) => setTimeout(resolve, 5_000));
 
   const after = await statusCounts(request);

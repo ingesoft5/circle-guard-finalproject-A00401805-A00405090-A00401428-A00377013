@@ -145,17 +145,17 @@ ensure_eip() {
 TOOLS_SG="$(ensure_sg circleguard-tools-sg "CircleGuard CI/CD tools")"
 ENVS_SG="$(ensure_sg circleguard-envs-sg "CircleGuard environments")"
 
-# SSH solo para administración y tools.
+# SSH only for administration and tooling.
 allow_cidr "${TOOLS_SG}" 22 "${ADMIN_CIDR}"
 allow_cidr "${ENVS_SG}" 22 "${ADMIN_CIDR}"
 allow_sg "${ENVS_SG}" 22 "${TOOLS_SG}"
 
-# Herramientas de entrada.
-# 80: gateway de dev, público. 443: sin listener, no se expone.
+# Entry tooling.
+# 80: dev gateway, public. 443: no listener, not exposed.
 reconcile_cidr "${TOOLS_SG}" 80 "0.0.0.0/0"
 reconcile_cidr "${TOOLS_SG}" 443
 
-# 8080: UI de Jenkins (solo admin y docente).
+# 8080: Jenkins UI (admin and instructor only).
 read -r -a TEACHER_CIDRS <<< "${TEACHER_CIDR}"
 reconcile_cidr "${TOOLS_SG}" 8080 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}"
 
@@ -167,11 +167,11 @@ reconcile_cidr "${TOOLS_SG}" 8081 "${ADMIN_CIDR}" "${TEACHER_CIDRS[@]}"
 allow_sg "${TOOLS_SG}" 5000 "${ENVS_SG}"
 allow_sg "${TOOLS_SG}" 5000 "${TOOLS_SG}"
 allow_sg "${ENVS_SG}" 8087 "${TOOLS_SG}"
-# 8088 publica promotion-service: la etapa E2E del pipeline consulta sus estadísticas
-# y siembra visitantes desde Jenkins, así que necesita el mismo acceso que el gateway.
+# 8088 exposes promotion-service: the pipeline E2E stage queries its statistics
+# and seeds visitors from Jenkins, so it needs the same access as the gateway.
 allow_sg "${ENVS_SG}" 8088 "${TOOLS_SG}"
 
-# Middleware solo desde tools y administración.
+# Middleware only from tools and administration.
 for port in 8180 8082 8083 8084 8085 8086 5432 7474 7687 9092 29092 6379 389 1389; do
   allow_sg "${ENVS_SG}" "${port}" "${TOOLS_SG}"
   allow_cidr "${ENVS_SG}" "${port}" "${ADMIN_CIDR}"

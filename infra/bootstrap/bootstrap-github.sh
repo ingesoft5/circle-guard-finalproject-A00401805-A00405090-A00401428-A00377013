@@ -21,8 +21,8 @@ if [ "${GITHUB_TOKEN}" = "change-me" ]; then
 fi
 
 API="https://api.github.com"
-# El webhook entra por el canal de smee.io: el host on-prem no es alcanzable
-# desde Internet y no hay dominio propio (ver docs/infra/migracion-onpremise.md, 3.6).
+# The webhook arrives via the smee.io channel: the on-prem host is not reachable
+# from the Internet and there is no custom domain (see docs/infra/migracion-onpremise.md, 3.6).
 HOOK_URL="${SMEE_URL}"
 REQUIRED_CHECK="continuous-integration/jenkins/pr-merge"
 REPO_PATH="repos/${GITHUB_OWNER}/${GITHUB_REPO}"

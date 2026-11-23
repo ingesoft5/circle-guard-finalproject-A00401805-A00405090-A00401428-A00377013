@@ -21,8 +21,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Verifica los contratos HTTP de certificados usando el servicio simulado;
- * no carga repositorios ni infraestructura de persistencia.
+ * Verifies certificate HTTP contracts using the mocked service;
+ * loads no repositories or persistence infrastructure.
  */
 @WebMvcTest(value = CertificateValidationController.class, properties = "jwt.secret=test-only-secret-with-at-least-32-bytes")
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc(addFilters = false)
@@ -36,7 +36,7 @@ class CertificateValidationControllerTest {
 
     @Test
     void shouldReturnPendingSurveys() throws Exception {
-        // El controlador debe devolver correctamente la lista del servicio.
+        // The controller must correctly return the service list.
         when(surveyService.getPendingSurveys()).thenReturn(List.of(new HealthSurvey()));
 
         mockMvc.perform(get("/api/v1/certificates/pending"))
@@ -47,7 +47,7 @@ class CertificateValidationControllerTest {
 
     @Test
     void shouldApproveCertificate() throws Exception {
-        // Envía parámetros válidos y comprueba que se traduzcan al servicio.
+        // Sends valid parameters and checks they are mapped to the service.
         UUID surveyId = UUID.randomUUID();
         UUID adminId = UUID.randomUUID();
 
@@ -61,7 +61,7 @@ class CertificateValidationControllerTest {
 
     @Test
     void shouldRejectCertificate() throws Exception {
-        // El rechazo conserva el mismo contrato HTTP con otro estado válido.
+        // The rejection keeps the same HTTP contract with another valid status.
         UUID surveyId = UUID.randomUUID();
         UUID adminId = UUID.randomUUID();
 
@@ -75,7 +75,7 @@ class CertificateValidationControllerTest {
 
     @Test
     void shouldRejectInvalidStatus() throws Exception {
-        // Un enum desconocido debe rechazarse antes de invocar el servicio.
+        // An unknown enum must be rejected before invoking the service.
         mockMvc.perform(post("/api/v1/certificates/{id}/validate", UUID.randomUUID())
                         .param("status", "INVALID")
                         .param("adminId", UUID.randomUUID().toString()))
@@ -86,7 +86,7 @@ class CertificateValidationControllerTest {
 
     @Test
     void shouldRejectInvalidSurveyId() throws Exception {
-        // Un identificador que no es UUID no debe llegar a la capa de servicio.
+        // A non-UUID identifier must not reach the service layer.
         mockMvc.perform(post("/api/v1/certificates/not-a-uuid/validate")
                         .param("status", "APPROVED")
                         .param("adminId", UUID.randomUUID().toString()))
@@ -97,7 +97,7 @@ class CertificateValidationControllerTest {
 
     @Test
     void shouldRejectMissingAdminId() throws Exception {
-        // El parámetro obligatorio ausente debe producir una respuesta 400.
+        // The missing required parameter must produce a 400 response.
         mockMvc.perform(post("/api/v1/certificates/{id}/validate", UUID.randomUUID())
                         .param("status", "APPROVED"))
                 .andExpect(status().isBadRequest());

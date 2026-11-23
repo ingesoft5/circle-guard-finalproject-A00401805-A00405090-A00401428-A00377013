@@ -1,3 +1,4 @@
+# CG-DOC: Kustomization for the isolated cg-dev monitoring validation stack.
 # Opt-in cg-dev validation overlay. Never apply the shared monitoring base directly for this trial.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Form Outbox Recovery Integration. */
 package com.circleguard.form.integration;
 
 import com.circleguard.form.FormApplication;

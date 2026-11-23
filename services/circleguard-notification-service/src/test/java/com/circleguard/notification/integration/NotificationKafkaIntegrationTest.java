@@ -60,7 +60,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 
 /**
- * Ciclo completo del canal de exposición: promotion.status.changed -> listener ->
+ * Full exposure channel cycle: promotion.status.changed -> listener ->
  * dispatcher -> canales -> notification.audit, sobre un broker Kafka temporal.
  */
 @Testcontainers(disabledWithoutDocker = true)
@@ -81,17 +81,17 @@ class NotificationKafkaIntegrationTest {
     private static final String STATUS_TOPIC = "promotion.status.changed";
     private static final String AUDIT_TOPIC = "notification.audit";
 
-    /** Cada aserción espera el fin del despacho asíncrono; 60 s cubre un host cargado. */
+    /** Each assertion waits for async dispatch to finish; 60 s covers a loaded host. */
     private static final Duration AUDIT_TIMEOUT = Duration.ofSeconds(60);
 
-    /** Ventana de silencio para probar el filtro: el evento ACTIVE no debe auditar nada. */
+    /** Quiet window for filter testing: the ACTIVE event must not audit anything. */
     private static final Duration SILENCE_WINDOW = Duration.ofSeconds(6);
 
     @Container
     static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer(
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
-            // KRaft (imagen Confluent) + heap acotado: el modo Zookeeper superaba el
-            // wait strategy en CI. Nunca volver al KafkaContainer con Zookeeper.
+            // KRaft (Confluent image) + bounded heap: Zookeeper mode exceeded the
+            // wait strategy in CI. Never return to the KafkaContainer with Zookeeper.
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx512M -Xms256M")
             .withStartupTimeout(Duration.ofMinutes(3));
 
@@ -151,12 +151,12 @@ class NotificationKafkaIntegrationTest {
 
         publishStatusChange(anonymousId, "SUSPECT");
 
-        // @Retryable: 3 intentos con 2000 ms de backoff -> RETRY por intento fallido
-        // y un FAILED desde el @Recover cuando se agota el presupuesto.
+        // @Retryable: 3 attempts with 2000 ms backoff -> RETRY per failed attempt
+        // and a FAILED from @Recover when the budget is exhausted.
         assertThat(awaitAudit(anonymousId, "EMAIL", "RETRY")).containsEntry("status", "RETRY");
         assertThat(awaitAudit(anonymousId, "EMAIL", "FAILED")).containsEntry("status", "FAILED");
 
-        // El resto de canales no comparte el fallo del correo.
+        // The other channels do not share the mail failure.
         assertThat(awaitAudit(anonymousId, "SMS", "SUCCESS")).containsEntry("status", "SUCCESS");
     }
 

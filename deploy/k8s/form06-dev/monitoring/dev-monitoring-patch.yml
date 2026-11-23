@@ -1,3 +1,4 @@
+# CG-DOC: Monitoring patch for the isolated cg-dev validation stack.
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Form Outbox Dispatcher. */
 package com.circleguard.form.service;
 
 import com.circleguard.form.model.FormOutboxEvent;

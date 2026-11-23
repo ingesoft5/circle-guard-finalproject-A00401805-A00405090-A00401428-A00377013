@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Form Event Publisher. */
 package com.circleguard.form.observability;
 
 import com.circleguard.form.model.FormOutboxEvent;

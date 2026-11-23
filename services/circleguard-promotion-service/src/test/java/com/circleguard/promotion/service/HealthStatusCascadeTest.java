@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for cascading health-status reevaluation in the promotion service. */
 package com.circleguard.promotion.service;
 
 import com.circleguard.promotion.exception.FenceException;

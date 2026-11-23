@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Promotion Trace Propagation. */
 package com.circleguard.promotion.observability;
 
 import io.opentelemetry.api.common.AttributeKey;

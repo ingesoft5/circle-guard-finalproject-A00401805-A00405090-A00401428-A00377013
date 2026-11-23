@@ -90,7 +90,7 @@ data:
               summary: "High rate of failed PII vault lookups in identity-service"
               description: "More than 0.2 failed identity vault lookup attempts per second over the last 5 minutes."
 ---
-# CG-DOC: Duplicate of deploy/k8s/base/promotion-alerts.yml for the monitoring namespace.
+# Duplicate of deploy/k8s/base/promotion-alerts.yml for the monitoring namespace.
 # CircleGuard's Prometheus runs in `monitoring`, so rules are duplicated here and mounted
 # into /etc/prometheus/rules/promotion (see prometheus.yml volumes).
 apiVersion: v1
@@ -143,7 +143,7 @@ data:
               summary: "Promotion spike detected in promotion-service"
               description: "More than 5 successful promotion encounters per second sustained for 3 minutes — alerta de pico de promociones, revisar capacidad del HPA y de Neo4j."
 ---
-# CG-DOC: Duplicate of deploy/k8s/base/notification-alerts.yml for the monitoring namespace.
+# Duplicate of deploy/k8s/base/notification-alerts.yml for the monitoring namespace.
 # CircleGuard's Prometheus runs in `monitoring`, so rules are duplicated here and mounted
 # into /etc/prometheus/rules/notification (see prometheus.yml volumes).
 apiVersion: v1

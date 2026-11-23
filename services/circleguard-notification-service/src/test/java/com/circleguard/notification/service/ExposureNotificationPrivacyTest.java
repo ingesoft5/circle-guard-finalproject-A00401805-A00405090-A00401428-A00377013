@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for privacy rules in exposure notifications. */
 package com.circleguard.notification.service;
 
 import ch.qos.logback.classic.Logger;

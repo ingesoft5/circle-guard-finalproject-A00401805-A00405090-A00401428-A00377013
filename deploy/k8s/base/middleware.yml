@@ -87,10 +87,10 @@ spec:
               command: ["pg_isready", "-U", "admin", "-d", "circleguard_auth"]
             initialDelaySeconds: 10
             periodSeconds: 10
-          # El primer arranque ejecuta initdb y luego postgres-init. En disco lento tarda
-          # minutos; sin startupProbe el liveness mataba el contenedor a mitad de initdb
-          # (exit 137) y el cluster quedaba sin pg_hba remoto ni las cinco bases.
-          # startupProbe bloquea liveness y readiness hasta que el motor responda.
+          # First boot runs initdb then postgres-init. On slow disks it takes
+          # minutes; without startupProbe, liveness killed the container mid-initdb
+          # (exit 137), leaving the cluster without remote pg_hba or the five databases.
+          # startupProbe blocks liveness and readiness until the engine responds.
           startupProbe:
             exec:
               command: ["pg_isready", "-U", "admin", "-d", "circleguard_auth"]

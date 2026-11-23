@@ -14,7 +14,7 @@ jobs:
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          # Acepta merge commits, merge squash y squash con el formato "titulo (#N)".
+          # Accepts merge commits, squash merges, and squashes with the "title (#N)" format.
           if ! grep -Eq 'Merge pull request|Squash and merge|\(#[0-9]+\)' <<< "$COMMIT_MESSAGE"; then
             echo "ERROR: Se detectó un 'push' directo a la rama main."
             echo "En este repositorio los cambios deben realizarse a través de un Pull Request."

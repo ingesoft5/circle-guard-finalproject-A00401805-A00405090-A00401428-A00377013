@@ -1,3 +1,4 @@
+/** CG-DOC: JPA entity for a form event persisted in the transactional outbox. */
 package com.circleguard.form.model;
 
 import jakarta.persistence.*;

@@ -1,3 +1,4 @@
+/** CG-DOC: Configuration for notification service tracing. */
 package com.circleguard.notification.observability;
 
 import io.micrometer.common.KeyValues;

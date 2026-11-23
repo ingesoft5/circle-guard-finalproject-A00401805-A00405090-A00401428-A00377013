@@ -79,7 +79,7 @@ function auditRecords(): Array<Record<string, unknown>> {
       { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' },
     );
   } catch (error) {
-    // El consumidor sale distinto de cero cuando el topic aún no existe.
+    // The consumer exits non-zero when the topic does not yet exist.
     output = String((error as { stdout?: unknown })?.stdout ?? '');
   }
   return output
@@ -112,7 +112,7 @@ test('el consumidor notification-group está suscrito a promotion.status.changed
               `--bootstrap-server localhost:9092 --describe --group ${CONSUMER_GROUP}`,
           );
         } catch (error) {
-          // El grupo no existe hasta que el consumidor se une al coordinador.
+          // The group does not exist until the consumer joins the coordinator.
           return String((error as { stderr?: unknown })?.stderr ?? '');
         }
       },

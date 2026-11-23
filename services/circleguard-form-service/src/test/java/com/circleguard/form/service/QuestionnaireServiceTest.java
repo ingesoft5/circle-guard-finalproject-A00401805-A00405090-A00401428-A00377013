@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
- * Prueba la lógica de cuestionarios con un repositorio simulado, sin iniciar
- * Spring ni acceder a la base de datos.
+ * Tests questionnaire logic with a mocked repository, without starting
+ * neither Spring nor database access.
  */
 @ExtendWith(MockitoExtension.class)
 class QuestionnaireServiceTest {
@@ -36,7 +36,7 @@ class QuestionnaireServiceTest {
 
     @Test
     void shouldLinkQuestionsBeforeSavingQuestionnaire() {
-        // Prepara un cuestionario con preguntas que inicialmente no tienen padre.
+        // Prepares a questionnaire with questions that initially have no parent.
         Question first = question();
         Question second = question();
         Questionnaire questionnaire = Questionnaire.builder()
@@ -45,7 +45,7 @@ class QuestionnaireServiceTest {
                 .build();
         when(repository.save(questionnaire)).thenReturn(questionnaire);
 
-        // Guarda el cuestionario y comprueba la asociación antes de persistirlo.
+        // Saves the questionnaire and checks the association before persisting it.
         Questionnaire saved = service.saveQuestionnaire(questionnaire);
 
         assertSame(questionnaire, saved);
@@ -56,7 +56,7 @@ class QuestionnaireServiceTest {
 
     @Test
     void shouldSaveQuestionnaireWithoutQuestions() {
-        // Un cuestionario sin preguntas debe delegarse al repositorio sin errores.
+        // A questionnaire without questions must be delegated to the repository without errors.
         Questionnaire questionnaire = Questionnaire.builder().title("Empty Survey").build();
         when(repository.save(questionnaire)).thenReturn(questionnaire);
 
@@ -67,7 +67,7 @@ class QuestionnaireServiceTest {
 
     @Test
     void shouldDeactivateActiveQuestionnairesAndActivateTarget() {
-        // Simula un cuestionario activo, otro inactivo y el objetivo a activar.
+        // Simulates one active questionnaire, one inactive, and the target to activate.
         UUID targetId = UUID.randomUUID();
         Questionnaire active = Questionnaire.builder().isActive(true).build();
         Questionnaire inactive = Questionnaire.builder().isActive(false).build();
@@ -75,7 +75,7 @@ class QuestionnaireServiceTest {
         when(repository.findAll()).thenReturn(List.of(active, inactive));
         when(repository.findById(targetId)).thenReturn(java.util.Optional.of(target));
 
-        // La activación debe cambiar solo los estados que corresponden.
+        // Activation must change only the corresponding states.
         service.activateQuestionnaire(targetId);
 
         verify(repository).save(same(active));

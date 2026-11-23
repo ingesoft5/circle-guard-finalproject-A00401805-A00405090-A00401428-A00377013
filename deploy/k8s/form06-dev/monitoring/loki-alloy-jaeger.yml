@@ -1,3 +1,4 @@
+# CG-DOC: Loki, Alloy, and Jaeger manifests for cg-dev validation.
 # The Loki store is inherited from the shared monitoring stack in origin/main.
 apiVersion: v1
 kind: ConfigMap

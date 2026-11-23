@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Notification Kafka Trace Integration. */
 package com.circleguard.notification.observability;
 
 import com.circleguard.notification.service.ExposureNotificationListener;

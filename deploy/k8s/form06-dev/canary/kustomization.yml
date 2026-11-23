@@ -1,3 +1,4 @@
+# CG-DOC: Kustomization for the HU-FORM-06 canary validation overlay.
 # Apply only after the approved image tag is substituted by release tooling.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

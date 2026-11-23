@@ -1,3 +1,4 @@
+/** CG-DOC: Tests for Form Security. */
 package com.circleguard.form.security;
 
 import com.circleguard.form.controller.QuestionnaireController;

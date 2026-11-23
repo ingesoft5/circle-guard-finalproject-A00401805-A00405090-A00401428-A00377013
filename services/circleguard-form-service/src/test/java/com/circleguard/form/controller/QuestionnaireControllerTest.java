@@ -21,8 +21,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Verifica las respuestas HTTP de QuestionnaireController con MockMvc. La
- * lógica de negocio se aísla mediante un mock de QuestionnaireService.
+ * Verifies QuestionnaireController HTTP responses with MockMvc. The
+ * business logic is isolated with a QuestionnaireService mock.
  */
 @WebMvcTest(value = QuestionnaireController.class, properties = "jwt.secret=test-only-secret-with-at-least-32-bytes")
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc(addFilters = false)
@@ -36,7 +36,7 @@ class QuestionnaireControllerTest {
 
     @Test
     void shouldReturnActiveQuestionnaire() throws Exception {
-        // Configura el servicio para simular que existe un cuestionario activo.
+        // Configures the service to simulate an active questionnaire.
         UUID id = UUID.randomUUID();
         Questionnaire q = Questionnaire.builder()
                 .id(id)
@@ -47,7 +47,7 @@ class QuestionnaireControllerTest {
 
         Mockito.when(questionnaireService.getActiveQuestionnaire()).thenReturn(Optional.of(q));
 
-        // Verifica que el endpoint transforme el resultado en una respuesta 200.
+        // Verifies that the endpoint transforms the result into a 200 response.
         mockMvc.perform(get("/api/v1/questionnaires/active"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Daily Health Check"));
@@ -63,7 +63,7 @@ class QuestionnaireControllerTest {
 
     @Test
     void shouldCreateQuestionnaire() throws Exception {
-        // Representa el cuestionario que devolvería el servicio después de guardarlo.
+        // Represents the questionnaire the service would return after saving it.
         UUID id = UUID.randomUUID();
         Questionnaire q = Questionnaire.builder()
                 .id(id)
@@ -73,7 +73,7 @@ class QuestionnaireControllerTest {
 
         Mockito.when(questionnaireService.saveQuestionnaire(Mockito.any(Questionnaire.class))).thenReturn(q);
 
-        // Envía los datos de creación y valida el contenido de la respuesta JSON.
+        // Sends the creation data and validates the JSON response content.
         mockMvc.perform(post("/api/v1/questionnaires")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\": \"New Survey\", \"version\": 1}"))
