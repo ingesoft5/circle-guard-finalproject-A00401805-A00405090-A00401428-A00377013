@@ -7,7 +7,7 @@
 
 ## Alcance según el enunciado
 
-El enunciado (`Proyecto_Final_CircleGuard.tex`, alcance de la Parte 1) indica que `notification`, `file` y `dashboard` deben ser **compilados, probados y empaquetados** por el pipeline, y que su despliegue queda para la Parte 2. En coherencia, el catálogo mantiene `dashboard.deploy = false`, pero `docker = true`, `publish = true` y `jacoco = true`; los manifiestos de Kubernetes ya consumen `circleguard-docker/dashboard:<TAG>` para la Parte 2.
+El enunciado (`Proyecto_Final_CircleGuard.tex`, alcance de la Parte 1) indica que `notification`, `file` y `dashboard` deben ser **compilados, probados y empaquetados** por el pipeline, y que su despliegue queda para la Parte 2. En coherencia, al cerrar esta HU el catálogo mantenía `dashboard.deploy = false`, pero `docker = true`, `publish = true` y `jacoco = true`; los manifiestos de Kubernetes ya consumían `circleguard-docker/dashboard:<TAG>` para la Parte 2. HU-DASH-04 cambia ese flag a `true` al entrar en la Parte 2.
 
 La HU se encontró parcialmente resuelta por trabajo previo: el Dockerfile multi-stage, las pruebas, la configuración de SonarQube, el catálogo del Shared Library y las etapas del pipeline ya existían. Esta HU cierra tres brechas concretas:
 

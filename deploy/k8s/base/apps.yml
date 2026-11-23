@@ -456,6 +456,11 @@ metadata:
   name: dashboard
   labels:
     app: dashboard
+  annotations:
+    # Prometheus Kubernetes SD scrapes pods that opt in with these annotations.
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "8084"
 spec:
   selector:
     app: dashboard
@@ -471,7 +476,7 @@ metadata:
   labels:
     app: dashboard
 spec:
-  replicas: 1
+  # replicas is owned by the dashboard HPA (see hpa.yml).
   selector:
     matchLabels:
       app: dashboard
@@ -479,6 +484,10 @@ spec:
     metadata:
       labels:
         app: dashboard
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8084"
     spec:
       containers:
         - name: dashboard
@@ -489,11 +498,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: cg-config
+            - configMapRef:
+                name: dashboard-config
           env:
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres:5432/circleguard_dashboard
-            - name: SPRING_DATASOURCE_USERNAME
-              value: admin
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -501,14 +508,14 @@ spec:
                   key: POSTGRES_PASSWORD
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8084
             initialDelaySeconds: 40
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8084
             initialDelaySeconds: 90
             periodSeconds: 20

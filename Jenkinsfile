@@ -87,7 +87,7 @@ def enrichServices(List resolved, boolean includeMobile) {
     if (includeMobile && !selected.any { it.short == 'mobile' }) {
         selected << localMobileService()
     }
-    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification']
+    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification', 'dashboard']
     def covered = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification',
                    'file', 'dashboard', 'mobile']
     selected.each { service ->

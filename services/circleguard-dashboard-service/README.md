@@ -61,11 +61,11 @@ La base configurada es `circleguard_dashboard` en PostgreSQL. La única migraci�
 
 | Dependencia | Uso | Configuración actual |
 | --- | --- | --- |
-| PostgreSQL | Guarda los registros consultados para tendencias. | `application.yml` apunta a `localhost:5432/circleguard_dashboard`. |
-| `promotion-service` | Provee los conteos de salud globales y por departamento. | `PromotionClient` usa `circleguard.promotion-service.url`, con valor predeterminado `http://localhost:8088`. |
+| PostgreSQL | Guarda los registros consultados para tendencias. | `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` (defaults locales en `application.yml`). En Kubernetes los dos primeros vienen de `dashboard-config` y la password de `cg-secrets`. |
+| `promotion-service` | Provee los conteos de salud globales y por departamento. | `circleguard.promotion-service.url` se resuelve desde `PROMOTION_SERVICE_URL` (en clúster: `http://promotion:8088`). |
 | Gradle y Java | Compilan el módulo con Spring Boot 3.2.4. | El wrapper solicita Gradle 8.14 y el proyecto requiere Java 21. |
 
-`PromotionClient` consulta `GET /api/v1/health-status/stats` y `GET /api/v1/health-status/stats/department/{department}`. El servicio expone su API en el puerto `8084`. Para empaquetarlo ya existe un `Dockerfile` cuyo contexto de construcción es la raíz del repositorio. `build.gradle.kts` también declara publicación en Nexus con `NEXUS_URL`, `NEXUS_USER` y `NEXUS_PASSWORD`.
+`PromotionClient` consulta `GET /api/v1/health-status/stats` y `GET /api/v1/health-status/stats/department/{department}`. El servicio expone su API en el puerto `8084` (`SERVER_PORT`) y Actuator en `/actuator/health`, `/actuator/health/{liveness,readiness}` y `/actuator/prometheus`. Para empaquetarlo ya existe un `Dockerfile` cuyo contexto de construcción es la raíz del repositorio. `build.gradle.kts` también declara publicación en Nexus con `NEXUS_URL`, `NEXUS_USER` y `NEXUS_PASSWORD`.
 
 ## Verificación de compilación
 
