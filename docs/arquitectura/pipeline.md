@@ -116,8 +116,9 @@ lowered to make a build pass: when coverage falls below the gate, real tests are
 - E2E: Playwright against the web client and the gateway.
 - Image security: verifies the image does not run as root; services with
   `healthcheck: true` must declare `HEALTHCHECK`. The flagged services are gateway,
-  identity, promotion, notification and dashboard (HU-DASH-03); dashboard was packaged
-  in Parte 1 and its Kubernetes manifests are available in Parte 2. Since HU-DASH-05
+  identity, promotion, notification and dashboard (HU-DASH-03). Dashboard was packaged
+  and published in Parte 1; HU-DASH-04 enables `deploy: true` so the same tagged image
+  is promoted to `cg-dev`, `cg-stage` and `cg-prod` in Parte 2. Since HU-DASH-05
   it also exposes `/actuator/prometheus` and is covered by the global Trivy image gate
   when built on `main`. Its first build reported CRITICAL findings and was blocked;
   the remediation upgraded the shared Spring Boot platform to `4.0.10` without changing
@@ -150,7 +151,9 @@ The images are still recorded in `image-digest.txt` with their advertised
   incomplete. Both variables are injected into the Jenkins container from
   `deploy/compose/tools/.env`.
 - `ROLLBACK_TAG` skips build, tests, Sonar, publish and Docker; it only deploys to
-  production.
+  production. HU-DASH-04 executed this flow (and the equivalent `kubectl rollout undo`)
+  for `dashboard` in `cg-prod`; the captured evidence is linked from
+  `docs/informe/HU-DASH-04.md`.
 - Logs, JaCoCo reports, JUnit results and digests are archived on every build.
 
 ## Resource guardrails

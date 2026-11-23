@@ -81,7 +81,9 @@ contenedores de los otros proyectos del equipo.
 | kind | No | No | `kind load docker-image` | rápido | Descartado: sin Ingress ni LB por defecto |
 | microk8s | Sí (`snap install`) | Addon | `microk8s ctr` | snap | Descartado |
 | kubeadm | Sí | No (instalar CNI e Ingress) | Registry propio | manual y lento | Descartado |
-| EKS | Cuenta AWS (bloqueada) | ALB | ECR | minutos y costo | Descartado |
+
+La comparación se limita a opciones ejecutables en el host on-premise; no se considera
+ningún clúster administrado ni cuenta de nube.
 
 ### Razones a favor
 
@@ -96,9 +98,9 @@ contenedores de los otros proyectos del equipo.
 4. **Traefik y ServiceLB vienen incluidos.** El requisito de Ingress del entregable E2.2
    queda cubierto sin instalar controladores; además la red del clúster está aislada dentro
    de Docker, así que no interfiere con los contenedores ajenos `k8s-worker` e `icesi-inn`.
-5. **Fidelidad con un clúster real.** Los manifiestos Kustomize y los comandos `kubectl` son
-   los mismos que se usarían en EKS, GKE u OpenShift; migrar solo implicaría cambiar el
-   `kubeconfig`, el `newName` de las imágenes y el `imagePullSecret`.
+5. **Fidelidad con la API de Kubernetes.** k3d ejecuta k3s, una distribución certificada,
+   así que los manifiestos Kustomize y los comandos `kubectl` son la API real de Kubernetes
+   sobre el host on-premise. No se requiere ningún servicio de nube para cumplir E2.2.
 
 ### Límites que se asumen
 
@@ -200,6 +202,24 @@ kubectl apply -k deploy/k8s/overlays/dev
 # Verificar
 kubectl -n cg-dev get pods,svc,ingress
 ```
+
+## Dashboard-service (HU-DASH-04)
+
+`dashboard-config` externaliza `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` y
+`PROMOTION_SERVICE_URL`; la contraseña sigue llegando desde `cg-secrets`. El Deployment
+no declara `replicas` porque el HPA `dashboard` (1–3 @70 % CPU) es el propietario. Las
+sondas usan los grupos de Actuator y el Service/pod exponen `/actuator/prometheus`.
+El Ingress publica `/api/v1/analytics` hacia `dashboard:8084` y el componente `tls`
+hereda esa ruta automáticamente.
+
+```bash
+kubectl -n cg-dev get hpa dashboard
+curl -H 'Host: dev.circleguard.local' \
+  http://10.147.20.67:30080/api/v1/analytics/summary
+```
+
+El rollback ejecutado y evidenciado en `cg-prod` está descrito en
+`docs/infra/rollback.md` y `docs/informe/evidencia/HU-DASH-04/`.
 
 ## Arranque en frío
 

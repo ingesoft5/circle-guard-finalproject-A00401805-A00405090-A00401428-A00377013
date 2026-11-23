@@ -3,19 +3,23 @@ spring:
   application:
     name: circleguard-dashboard-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/circleguard_dashboard
-    username: admin
-    password: password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/circleguard_dashboard}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  port: 8084
+  port: ${SERVER_PORT:8084}
+
+circleguard:
+  promotion-service:
+    url: ${PROMOTION_SERVICE_URL:http://localhost:8088}
 
 management:
   endpoints:
@@ -27,10 +31,16 @@ management:
       show-details: never
       probes:
         enabled: true
+    prometheus:
+      enabled: true
   metrics:
     tags:
       service: dashboard
       environment: ${DASHBOARD_ENVIRONMENT:local}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 logging:
   level:

@@ -115,7 +115,7 @@ def catalog() {
                     integration   : false,
                     publish       : true,
                     docker        : true,
-                    deploy        : false,
+                    deploy        : true,
                     healthcheck   : true
             ],
             [

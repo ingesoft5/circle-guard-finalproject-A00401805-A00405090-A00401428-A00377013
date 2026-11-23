@@ -8,6 +8,7 @@ Semantic Versioning.
 
 ### Changed
 
+- **E2.2/E2.3 (HU-DASH-04)**: `dashboard-service` pasa a `deploy: true` en el catálogo compartido y en el `Jenkinsfile`, por lo que la misma imagen versionada se promociona a `cg-dev`, `cg-stage` y `cg-prod` con aprobación manual en producción.
 - **E2.1 (Terraform)**: restaurados los módulos reutilizables `network`, `compute`, `registry`, `storage` y `observability` y los tres ambientes, ahora en `infra/terraform/envs/{dev,stage,prod}`. Terraform vuelve a declarar la plataforma completa conforme al enunciado; `state-backend/` queda como bootstrap del backend remoto.
 - **E2.1/E2.3 (Terraform)**: el apply de cada ambiente es en dos fases (`apply -target=module.compute` antes del plan completo) para verificar el clúster compartido antes de configurar el provider; el `Jenkinsfile` y el runbook documentan esta verificación.
 - **E2.1 (compute)**: el módulo verifica el clúster k3d compartido `cg` (contexto `k3d-cg`) en vez de crear tres clústeres: el puerto `30080` ya está ocupado por `cg` y `fs.inotify.max_user_instances=128` impide un segundo clúster sin privilegios. Los ambientes son namespaces `cg-dev/cg-stage/cg-prod`; `k3s_version` quedó fijado como `v1.35.5-k3s1`.
@@ -21,6 +22,7 @@ Semantic Versioning.
 
 ### Added
 
+- **E2.2/E2.4/E2.5 (HU-DASH-04)**: ConfigMap `dashboard-config` para URL JDBC, usuario y URL de `promotion-service`; sondas `/actuator/health/{readiness,liveness}`, anotaciones de scrape Prometheus, HPA 1–3 @70 % CPU y ruta `/api/v1/analytics` en el Ingress. `docs/informe/HU-DASH-04.md` y su evidencia documentan el despliegue y el rollback ejecutado en `cg-prod`.
 - **E2.1 (Terraform)**: `infra/terraform/state-backend/` crea el bucket de MinIO con versioning y la tabla de DynamoDB Local con `LockID`; los tres ambientes usan `backend "s3" {}` con `backend.hcl` que incluye ambos endpoints y claves `platform/<env>/terraform.tfstate`. Runbook, diagramas y evidencia en `docs/infra/runbook.md`, `docs/diagramas/` y `docs/infra/evidencia/E2.1-terraform.md`.
 - **E2.3 (pipeline)**: el `Jenkinsfile` ejecuta `terraform init/validate/plan/apply` por ambiente con aprobación en prod y `Trivy` bloqueante sobre IaC; la imagen de Jenkins incluye Terraform 1.9.8 y Trivy 0.70.0.
 - **File service (HU-FILE-05)**: sondas nativas de Kubernetes (`/actuator/health/readiness` y `/actuator/health/liveness`), anotaciones de scrape Prometheus en el Service, dependencias Micrometer/OTel/OTLP, contador `circleguard_file_uploads_total` con tag `result` y configuración de management sin secretos. Evidencia en `docs/informe/HU-FILE-05.md` (issue #149).

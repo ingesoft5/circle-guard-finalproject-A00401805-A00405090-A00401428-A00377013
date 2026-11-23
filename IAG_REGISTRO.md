@@ -35,6 +35,7 @@
    - [4.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`](#41-hu-promo-01-dcg-304--diagnosticar-la-estructura-y-dependencias-de-promotion-service)
 5. [Módulo: `circleguard-dashboard-service` e integración CI/CD (HU-DASH-03)](#5-módulo-circleguard-dashboard-service-e-integración-cicd-hu-dash-03)
 6. [Módulo: `circleguard-dashboard-service` — observabilidad y seguridad (HU-DASH-05)](#6-módulo-circleguard-dashboard-service--observabilidad-y-seguridad-hu-dash-05)
+7. [Entrada: Ejecución de HU-DASH-04 (despliegue y rollback on-premise de dashboard-service)](#7-entrada-ejecución-de-hu-dash-04-despliegue-y-rollback-on-premise-de-dashboard-service)
 
 ---
 
@@ -1393,3 +1394,69 @@ La IAG tendió inicialmente a proponer infraestructura nueva (otro colector, otr
 ### E. Registro de la corrida remota
 
 Pendiente. El usuario indicó que proveerá credenciales/acceso. Cuando se realice, debe registrarse aquí el build de Jenkins, el target de Prometheus, el panel con datos, la consulta Loki y el disparo/recepción/recuperación de la alerta. Mientras tanto, `docs/informe/HU-DASH-05.md` y su carpeta de evidencia solo reportan verificaciones locales.
+
+## 7. Entrada: Ejecución de HU-DASH-04 (despliegue y rollback on-premise de dashboard-service)
+
+### A. Solicitud del usuario
+
+> Quiero implementar esta HU, contrastala con el enunciado del proyecto final:
+> **Historia de usuario**: como integrante del equipo DevOps de CircleGuard, quiero desplegar `dashboard-service` en Kubernetes para los ambientes dev, stage y prod, de manera que el servicio pueda ejecutarse de forma controlada, configurable y recuperable dentro de la infraestructura de CircleGuard. **Dependencias**: HU-DASH-03 e infraestructura Kubernetes compartida. **Subtareas previstas**: crear los recursos de Kubernetes necesarios utilizando los mecanismos de configuración del equipo; externalizar la configuración de PostgreSQL y la URL de promotion-service mediante ConfigMaps y Secrets; incorporar Service e Ingress cuando sea necesario; integrar Spring Boot Actuator y sondas liveness/readiness; definir recursos y escalamiento mediante HPA; integrar el despliegue al pipeline compartido para dev, stage y prod usando la misma imagen versionada; verificar aprobación manual para producción; ejecutar y documentar una prueba de rollback. **Criterios de aceptación**: dashboard-service desplegado y operativo en los tres ambientes; configuración externalizada sin credenciales en el repositorio; sondas que identifiquen el estado del servicio; HPA y acceso según la arquitectura; promoción de la misma imagen versionada; aprobación manual en producción; rollback funcional y documentado.
+
+> 1.Si 2.Si 3. Ya se llama asi
+
+> Para el paso 4, ssh docker@10.147.20.67, pwd:****
+
+> Ejecuta el plan
+
+> No voy a usar cloud
+
+> Ajusta todo a on prem, revisa main
+
+> Haz un sonido cuado termines
+
+> No esperes flujos de jenkins, lo hago yo
+
+> No es que no dispares es que no te quedes wathc
+
+> Te falta mucho?
+
+> Termina
+
+### B. Instrucciones y actuación de la IAG
+
+1. Contrasté la HU con el enunciado: jerarquía Parte 1/Parte 2, E1.5, E2.2,
+   E2.3, E2.4, E2.5, E2.6, E2.8 y E2.9. Concluí que no era trabajo desde cero
+   porque ya existían Deployment, Service, overlays y `ci.deploy()` con
+   `dashboard`, y enumeré las brechas reales.
+2. Propuse un plan por bloques (servicio, K8s, pipeline, rollback, documentación
+   y verificación) y recogí las decisiones del usuario: rollback real en
+   producción, mínimo de Prometheus e ID `HU-DASH-04`.
+3. Revisé `main`, `origin/main` y la rama de trabajo (todos en `cbe6cf7`) antes
+   de tocar nada. Tras el aviso "No voy a usar cloud", eliminé la comparativa
+   EKS/GKE del README de K8s y sustituí la etiqueta OCI `SOURCE_URL` de GitHub
+   por `on-premise://10.147.20.67/cg-main-tools`; no se aprovisionó ningún
+   recurso cloud.
+4. Implementé los cambios en el servicio, los manifiestos base y overlays, el
+   catálogo del pipeline y la documentación. Copié el árbol al host on-prem en
+   `/tmp/hu-dash-04` sin sobrescribir el checkout ajeno `/home/docker/cg-main-tools`.
+5. Regeneré los `secrets.env` desde los Secret ya existentes en cada namespace
+   antes de aplicar los overlays, para no introducir credenciales del repo.
+6. Corregí la interpretación del mensaje sobre Jenkins: el usuario no prohibía
+   disparar flujos, sino evitar comandos de seguimiento bloqueantes. Sustituí
+   `rollout status` por consultas puntuales en los scripts de despliegue y
+   captura de evidencia.
+7. Ejecuté el rollback real en `cg-prod` y preparé la documentación final con
+   las rutas de evidencia y el sonido de terminación solicitado.
+
+### C. Validación humana y hallazgos
+
+- `./gradlew :services:circleguard-dashboard-service:check --no-daemon --console=plain`: `BUILD SUCCESSFUL`, 20 tests, 0 fallos, 0 omitidos; JaCoCo 73/75 líneas (97.33 %).
+- Script de aserciones estáticas sobre manifiestos: `ALL STATIC CHECKS PASSED` (sin secretos hardcodeados, HPA y ruta de Ingress presentes, tag único).
+- `jenkins/test/TestCiServices.groovy` con los jars Groovy de Gradle: `ALL CASES PASSED` tras marcar `dashboard.deploy = true`.
+- Construcción de la imagen `circleguard-docker/dashboard:1.10.0` en el host on-prem con imágenes base del mirror local e importación directa al nodo servidor de k3d; el push a `localhost:5000` dio *timeout* HTTPS y no fue necesario para el clúster local.
+- Aplicación de los overlays dev/stage/prod y captura de evidencia puntual por ambiente; rollback ejecutado en `cg-prod` de `1.10.0` a `1.4.0` con captura de `rollout history`, pods, sondas y endpoint analytics.
+- La credencial SSH facilitada por el usuario se usó solo en memoria mediante `SSH_ASKPASS`; no quedó registrada en el repositorio, los informes ni la evidencia.
+
+### D. Reflexión crítica
+
+El mayor riesgo era confundir "la HU ya existe en el repo" con "la HU ya está terminada": el despliegue estaba declarado pero no era funcional (URL de promotion apuntando a `localhost`, sondas genéricas, sin HPA ni Ingress y rollback nunca ejecutado). También fue importante no inventar aprobaciones de Jenkins: la compuerta `input` ya existía y se verificó por código, sin simular una corrida interactiva. El aviso sobre no quedarse en `watch` obligó a separar "disparar una acción" de "esperar pasivamente su stream", dejando comandos acotados y verificaciones puntuales. Finalmente, el requisito on-premise obligó a que la narrativa de la imagen cambiara de GitHub a una etiqueta local verificable, manteniendo la trazabilidad semver sin depender de la nube.
