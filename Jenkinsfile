@@ -72,7 +72,7 @@ def dockerRegistryForDaemon() {
 // Helpers must return their data and Resolve services must assign the locals.
 def enrichServices(List resolved) {
     def selected = resolved
-    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification']
+    def deployable = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification', 'dashboard']
     def covered = ['gateway', 'auth', 'identity', 'promotion', 'form', 'notification',
                    'file', 'dashboard', 'mobile']
     selected.each { service ->

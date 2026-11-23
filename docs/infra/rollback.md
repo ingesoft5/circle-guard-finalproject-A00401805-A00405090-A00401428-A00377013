@@ -65,16 +65,29 @@ Se espera: todos los pods `Ready`, `web=200`, healthcheck `UP` y los PVC
 `Bound`. Si el fallo persiste, repetir con el tag anterior y registrar el
 `traceID` o el mensaje de error en el informe de incidencia.
 
-## 5. Simulación local del cambio de tag
+## 5. Rollback ejecutado en `cg-prod` (HU-DASH-04)
 
-Se renderizó una vista temporal del overlay `prod` con `auth` en `1.3.9`, sin
-modificar el repositorio:
+A diferencia de la simulación local descrita en versiones anteriores de este
+documento, la reversión de `dashboard-service` se ejecutó realmente en el
+namespace `cg-prod` del clúster on-prem `k3d-cg`. Tras desplegar la imagen
+`circleguard-docker/dashboard:1.10.0` se recuperó el estado `1.4.0` con:
 
-```text
-render_rc=0
-643:        image: circleguard-docker/auth:1.3.9
+```bash
+kubectl -n cg-prod rollout undo deploy/dashboard
+kubectl -n cg-prod set image deploy/dashboard \
+  dashboard=circleguard-docker/dashboard:1.4.0
 ```
 
-Esto confirma que Kustomize sustituye solo la imagen seleccionada. La ejecución
-real del rollback en `cg-prod` queda registrada en la retrospectiva del Sprint 2
-como acción con responsable y fecha; no se reporta como ejecutada.
+La evidencia capturada incluye `rollout history`, el estado puntual del
+Deployment (`readyReplicas/replicas`), `get pods`, el ConfigMap efectivo y las
+respuestas de `/actuator/health`, `/actuator/health/readiness`,
+`/actuator/health/liveness` y `/api/v1/analytics/summary`:
+
+- `docs/informe/evidencia/HU-DASH-04/prod/pre-rollback/`
+- `docs/informe/evidencia/HU-DASH-04/prod/post-rollback/`
+- `docs/informe/evidencia/HU-DASH-04/prod/rollback-commands.txt`
+
+El resultado fue un rollout funcional: el Deployment volvió a la imagen `1.4.0`,
+los pods quedaron `Ready` y el endpoint analytics respondió correctamente. Con
+esto se cierra el criterio E2.8 de rollback ejecutado y evidenciado en
+Kubernetes; no debe interpretarse como una simulación de render de Kustomize.
