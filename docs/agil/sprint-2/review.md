@@ -35,8 +35,9 @@ sobre `main`.
 
 1. No se registran métricas de carga ni capturas de clúster que no se hayan
    ejecutado; los huecos quedan explícitos en los documentos de evidencia.
-2. TLS sigue siendo HTTP por defecto hasta crear el Secret `circleguard-tls` y
-   exponer `websecure` en Traefik.
+2. TLS quedó verificado en `cg-dev` con un certificado autofirmado y handshake
+   TLSv1.3 sobre `websecure`; el default sigue siendo HTTP y `stage`/`prod`
+   continúan pendientes del Secret definitivo y de la exposición pública.
 3. Jenkins seguirá usando el kubeconfig del host hasta adoptar el
    `ServiceAccount` `circleguard-deployer`.
 4. La aprobación del PR debe solicitarse de nuevo después del último push, porque
