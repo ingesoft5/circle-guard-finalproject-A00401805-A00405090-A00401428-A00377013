@@ -60,8 +60,9 @@ else
 fi
 
 echo "==> Enabling automatic sidecar injection only on ${CANARY_NS}"
-# cg-dev is intentionally NOT injected: the agent node is NotReady and
-# restarting the mandatory deployment would put the graded app at risk.
+# cg-dev is intentionally NOT injected: restarting the mandatory deployment
+# would put the graded app at risk. Only the isolated canary namespace uses
+# the mesh, so the L284 evidence never touches mandatory services.
 kubectl --context "$KUBE_CONTEXT" label ns "$CANARY_NS" istio-injection=enabled --overwrite
 
 echo "==> Copying cg-dev ConfigMap/Secret into the isolated canary namespace"
