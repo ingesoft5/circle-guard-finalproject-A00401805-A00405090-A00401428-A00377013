@@ -21,6 +21,11 @@
       "paragraph": "L205 - Conformación de equipos",
       "key": "DCG-6",
       "text": "CUMPLE. Equipo de cuatro integrantes del grupo 005 documentado antes del Sprint 0 en docs/agil/sprint-0/planning.md:20 y docs/agil/sprint-1/planning.md:20; DCG-6 \"Conformar equipo\" en docs/agil/backlog.md:20 con estado Done y evidencia en la planeación. No se registra rotación de integrantes despues de la Parte 1; docs/agil/plan-circle-guard-5.0.md:65 documenta la politica de no rotacion y responsables por frente. Evidencia: README.md (Integrantes), docs/agil/sprint-0/planning.md, docs/agil/sprint-1/planning.md, docs/agil/backlog.md, IAG_REGISTRO.md."
+    },
+    {
+      "paragraph": "L207-219 - Marco ágil y ciclo de trabajo",
+      "key": "DCG-7",
+      "text": "CUMPLE. Marco Scrum justificado en docs/agil/README.md:3 con tablero Jira DCG (docs/agil/backlog.md:4,8) y GitHub Project circle-guard-dasf para la Parte 2. Sprint 0 y Sprint 1 con planning/review/retrospective en docs/agil/sprint-0 y docs/agil/sprint-1; métricas de velocidad en sprint-0/retrospective.md:41 (12 puntos) y sprint-1/retrospective.md:41 (7 cerrados + 3 en revisión). Cierre de Sprint 2 documentado en docs/agil/sprint-2/metrics.md con flujo acumulado verificable del GitHub Project #14 (41 Done, 7 In review, 1 In progress, 6 Backlog de 55) y cambio de política de aprobación 2 a 1 revisor en plan-circle-guard-5.0.md:52. DCG-7 'Marco ágil' figura Done en backlog.md:21. Nota: no se exportó un burndown animado; se entrega el registro de flujo acumulado como evidencia verificable."
     }
   ]
 }
