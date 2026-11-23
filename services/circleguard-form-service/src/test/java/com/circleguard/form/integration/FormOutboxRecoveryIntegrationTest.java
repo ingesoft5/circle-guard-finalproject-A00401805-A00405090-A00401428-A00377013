@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Bean;
@@ -72,7 +72,7 @@ class FormOutboxRecoveryIntegrationTest {
     @Autowired HealthSurveyRepository surveyRows;
     @Autowired FormOutboxRepository outbox;
     @Autowired FormOutboxDispatcher dispatcher;
-    @MockBean FormOutboxScheduler scheduler;
+    @MockitoBean FormOutboxScheduler scheduler;
     @Autowired @Qualifier("kafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate;
 
     @TestConfiguration

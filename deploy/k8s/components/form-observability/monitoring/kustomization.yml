@@ -12,3 +12,4 @@ configMapGenerator:
       - form-overview.json
 patches:
   - path: monitoring-patch.yml
+  - path: grafana-patch.yml

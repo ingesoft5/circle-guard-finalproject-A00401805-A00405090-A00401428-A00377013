@@ -34,6 +34,7 @@
 4. [Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)](#4-módulo-circleguard-promotion-service-alejandro-quiñones-caicedo)
    - [4.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`](#41-hu-promo-01-dcg-304--diagnosticar-la-estructura-y-dependencias-de-promotion-service)
 5. [Módulo: `circleguard-dashboard-service` e integración CI/CD (HU-DASH-03)](#5-módulo-circleguard-dashboard-service-e-integración-cicd-hu-dash-03)
+6. [Módulo: `circleguard-dashboard-service` — observabilidad y seguridad (HU-DASH-05)](#6-módulo-circleguard-dashboard-service--observabilidad-y-seguridad-hu-dash-05)
 
 ---
 
@@ -1273,3 +1274,122 @@ La IAG ayudó a convertir una HU aparentemente nueva en una brecha acotada: rees
 - El PR #163 quedó mergeado en `main` (`cbe6cf7`). El build `PR-163/1` terminó en verde, pero el detector de cambios lo clasificó como `CI-only` y omitió Unit Tests, JaCoCo y Sonar.
 - El build `main #53` terminó en `FAILURE` en `Terraform Plan`: falta la credencial Jenkins `terraform-minio-creds`. En consecuencia no se publicó imagen ni se generaron `image-digest.txt` o `sonar-links.txt` con contenido.
 - La IAG dejó el registro honesto en `docs/informe/evidencia/HU-DASH-03/README.md`, junto con las consolas completas y los pasos para crear las credenciales faltantes y repetir la corrida.
+
+---
+
+<a id="hu-dash-05"></a>
+## 6. Módulo: `circleguard-dashboard-service` — observabilidad y seguridad (HU-DASH-05)
+
+- **Fecha:** 23 de noviembre de 2026.
+- **Nivel de uso:** 3 (colaboración con IAG).
+- **Herramienta:** OpenCode / Big Pickle.
+- **Historia / Entregable:** `HU-DASH-05` — E2.2, E2.3, E2.5 y E2.6.
+- **Rama base:** `main` (`526219b`, igual que `origin/main`).
+- **Rama de trabajo:** `feat/HU-DASH-05-integrar-observabilidad-y-seguridad`.
+
+### A. Contenido propio entregado a la IAG
+
+1. **Insumo previo:** se contrastó la HU con `Proyecto_Final_CircleGuard.tex` (E2.2, E2.3, E2.5, E2.6 y la estructura sugerida `observability/`) y con el estado real de `main`: `dashboard-service` ya tenía Actuator y `HEALTHCHECK`, pero no `micrometer-registry-prometheus`, ni bloque `management:`, ni anotaciones de scrape, ni alertas, ni panel, ni instrumentación del cliente HTTP, ni evidencia Trivy propia.
+2. **Restricciones dadas por el estudiante:** la rama debía crearse desde `main` tras `git pull --ff-only`; no se incluirían trazas/OTEL en dashboard porque el enunciado reserva Jaeger para `form → Kafka → promotion → notification`; la integración con monitoring debía seguir lo correcto según el enunciado sin duplicar el stack real de `deploy/k8s/monitoring/`; las credenciales remotas se proveerían por separado, sin pegar secretos en el chat.
+3. **Decisión de diseño:** reutilizar `components/form-observability` como plantilla para un componente `dashboard-observability`, con panel de siete fuentes y dos reglas probadas con `promtool`; instrumentar solo métricas y logs con tags acotados; no tocar umbrales del `Jenkinsfile`. Las versiones de dependencias se actualizaron después por petición explícita del estudiante, sin introducir excepciones ni rebajar el gate.
+4. **Evidencia diferenciada:** se registró por separado lo ejecutado en local (Gradle, promtool, Kustomize, Trivy) y lo pendiente en clúster/Jenkins (scrape real, panel con datos, Loki, entrega de alertas y build remoto).
+
+### B. Prompts empleados
+
+```text
+Necesito hacer esta HU, contraste con el main y el enunciado del proyecto final
+
+Historia de usuario
+
+Como integrante del equipo DevOps de CircleGuard, quiero incorporar métricas, registros y controles de seguridad a dashboard-service, para monitorear su funcionamiento, detectar fallos de comunicación y verificar la seguridad de los artefactos entregados.
+
+Dependencias
+HU-DASH-04 y herramientas compartidas de observabilidad y seguridad
+
+Subtareas previstas
+
+Incorporar Spring Boot Actuator y Micrometer para exponer métricas del servicio en formato Prometheus.
+Integrar las métricas del servicio con la instancia de Prometheus compartida del proyecto.
+Crear un panel en Grafana que permita visualizar estado del servicio, solicitudes, latencia y errores.
+Configurar los registros del servicio para que sean enviados al sistema centralizado de logs.
+Añadir métricas y registros de errores y demoras en la comunicación con promotion-service.
+Configurar al menos una alerta de disponibilidad o errores usando el sistema de alertas compartido.
+Integrar el análisis de seguridad de la imagen y la configuración del servicio con Trivy.
+Verificar los resultados de los escaneos y asegurar que las vulnerabilidades sobre el umbral bloqueen la entrega.
+
+Criterios de aceptación
+
+Prometheus recoge correctamente las métricas de dashboard-service.
+El panel de Grafana muestra información útil y funcional del servicio.
+Los logs del servicio pueden consultarse de forma centralizada.
+Es posible identificar fallos o demoras en la comunicación con promotion-service.
+La alerta configurada se dispara y se puede probar con el sistema compartido.
+Los escaneos de imagen y configuración se ejecutan desde el pipeline compartido y sus resultados son verificables.
+Las vulnerabilidades que superen el umbral bloquean la entrega del artefacto.
+```
+
+```text
+La rama donde vas a implementar se llama feat/HU-DASH-05-integrar-observabilidad-y-seguridad. Debes hacer pull primero.
+```
+
+```text
+Decisiones: solo métricas y logs, sin OTel/Jaeger en dashboard. Para la integración con monitoring, lo que sea correcto según el enunciado del proyecto final. Proveeré credenciales para la validación remota; no pegar secretos en el chat.
+```
+
+```text
+Sí, ya lo desactivé.
+```
+
+La última respuesta corresponde a la autorización para salir del modo Plan y aplicar los cambios en el repositorio.
+
+```text
+Arregla lo de seguridad
+```
+
+```text
+Boot 4.0.10 global (Recommended)
+Misma rama HU-DASH-05 (Recommended)
+```
+
+```text
+Ejecuta el plan
+```
+
+```text
+Haz merge de main aqui y dime que falta para terminar tu HU
+```
+
+```text
+Actualiza con main nuevo
+```
+
+```text
+Haz commit push y PR en ingles si la HU esta lista
+Dame el plan completo
+Pasate a la rama feat/HU-DASH-05-integrar-observabilidad-y-seguridad
+Existe?
+Ya esta mergeada?
+Haz merge con main y dame el plan compelto para terminar esta HU
+Ejecuta el plan
+```
+
+```text
+Haz un sonido cuando termines
+```
+
+Estos prompts posteriores pidieron, en orden: remediar los CRITICAL de Trivy mediante una actualización global a Spring Boot 4.0.10 en la misma rama; mantener la rama sincronizada con `main` en varios puntos; preparar el plan completo de cierre; y avisar con una campana al terminar el rescan de Trivy ejecutado en segundo plano.
+
+### C. Validación humana y hallazgos
+
+- `./gradlew :services:circleguard-dashboard-service:check --no-daemon`: 23 pruebas, 0 fallos, JaCoCo 92/94 líneas (97,87 %) y `verifyUnitTestsRan` sin hallazgos. La primera versión de `PromotionClientMetricsTest` falló porque dos `when(...)` sobre la misma llamada sobrescribían el stub; se corrigió encadenando `thenReturn(...).thenThrow(...)`.
+- `promtool check rules` y `promtool test rules` pasaron para las dos reglas; `verify.py` de dashboard y de Form pasaron después de separar el `monitoring-patch.yml` de Form en dos documentos (Kustomize 5.0.4 rechazaba el archivo multi-doc).
+- Trivy IaC sobre `deploy/k8s`: 30 archivos, 0 CRITICAL. El primer Trivy de imagen (antes de la remediación) reportó 9 CRITICAL y 35 HIGH; al revisar `Jenkinsfile:328-347` se confirmó que el gate cuenta CRITICAL con `jq` y no usa `--exit-code 1` en `trivy image`, por lo que ese build habría sido bloqueado. Por petición del estudiante se actualizó la plataforma compartida a Spring Boot `4.0.10` (Kotlin `2.2.21`, Resilience4j `2.4.0`, starters de test separados, Jackson 2 y WebClient explícitos) sin tocar el umbral ni añadir excepciones. El rescan con Trivy `0.57.1` (versión de Jenkins) y `0.70.0` sobre la imagen reconstruida terminó con **0 HIGH / 0 CRITICAL** en ambos casos y quedó registrado en `docs/informe/evidencia/HU-DASH-05/` (`trivy-image-0.57.1.json` y `trivy-image-0.70.0.json`); la corrida oficial en Jenkins sigue como pendiente remoto.
+- Se revisaron los JSON de evidencia, el `git diff` y los enlaces del informe. No se crearon capturas ni enlaces remotos falsos.
+
+### D. Reflexión crítica
+
+La IAG tendió inicialmente a proponer infraestructura nueva (otro colector, otro panel global, un gate específico para dashboard). El contraste con el código mostró que casi todo ya existía y que el valor estaba en conectar el servicio al stack compartido y en dejar evidencia honesta. El hallazgo más delicado fue el resultado de Trivy: existía la tentación de reportar “escaneo ejecutado” como éxito, cuando el JSON demuestra 9 CRITICAL y el pipeline bloquearía la entrega. Registrar ese bloqueo y no cambiar el umbral preserva la credibilidad de la HU. También quedó claro que `promtool` y `verify.py` validan lógica y render, pero no prueban que Prometheus, Grafana, Loki o Alertmanager estén sirviendo datos reales; esa distinción quedó explicada en el informe y en la evidencia. Finalmente, separar el parche multi-doc de Form fue un efecto colateral inesperado pero necesario para que la integración de ambos componentes funcionara con la versión de Kustomize disponible. Cuando el estudiante pidió «Arregla lo de seguridad», la IAG evaluó rebajar el gate, añadir excepciones y actualizar dependencias; la decisión correcta fue esta última, pero de forma global y controlada (Boot `4.0.10` en los ocho servicios) para no dejar un servicio desalineado. La migración reveló cambios de API en Spring 7, Kotlin 2, Kafka 4, Resilience4j y Micrometer; cada fallo de test se corrigió en código o dependencias, nunca relajando una aserción de seguridad.
+
+### E. Registro de la corrida remota
+
+Pendiente. El usuario indicó que proveerá credenciales/acceso. Cuando se realice, debe registrarse aquí el build de Jenkins, el target de Prometheus, el panel con datos, la consulta Loki y el disparo/recepción/recuperación de la alerta. Mientras tanto, `docs/informe/HU-DASH-05.md` y su carpeta de evidencia solo reportan verificaciones locales.

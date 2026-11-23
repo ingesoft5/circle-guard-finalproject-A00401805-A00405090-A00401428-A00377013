@@ -16,3 +16,25 @@ spring:
 
 server:
   port: 8084
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      service: dashboard
+      environment: ${DASHBOARD_ENVIRONMENT:local}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+  pattern:
+    level: "%5p [dashboard,${DASHBOARD_ENVIRONMENT:local},%X{traceId:-},%X{spanId:-}]"

@@ -33,13 +33,17 @@ English purpose of every tracked repository file.
 
 - `CHANGELOG.md` — Markdown documentation: CHANGELOG.
 
-- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification (includes the `hu-file-04` and `hu-dash-03` entries under the CI/CD section).
+- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification (includes the `hu-file-04`, `hu-dash-03` and `hu-dash-05` entries under the CI/CD section).
 
 - `Jenkinsfile` — Shared Jenkins multibranch pipeline for CircleGuard services, quality gates, semver tags, and Docker publication; on-prem deploys via kubectl/kustomize to k3d.
 
-- `Proyecto_Final_CircleGuard.pdf` — Binary asset.
+- `Informe_Final_CircleGuard.docx` — Final project report (Parts 1 and 2), editable Word version.
 
-- `Proyecto_Final_CircleGuard.tex` — LaTeX source for the CircleGuard final project report.
+- `Informe_Final_CircleGuard.pdf` — Final project report (Parts 1 and 2), PDF version.
+
+- `Proyecto_Final_CircleGuard.pdf` — Enunciado del proyecto final (assignment statement), 9 pages.
+
+- `Proyecto_Final_CircleGuard.tex` — LaTeX source of the enunciado del proyecto final (assignment statement).
 
 - `README.md` — Project overview, setup guide, and architecture summary.
 
@@ -93,6 +97,26 @@ English purpose of every tracked repository file.
 
 - `deploy/k8s/base/middleware.yml` — StatefulSets, Services, and ConfigMaps for PostgreSQL, Redis, Neo4j, Kafka, and OpenLDAP.
 
+- `deploy/k8s/components/dashboard-observability/README.md` — Usage notes for the dashboard-service observability components.
+
+- `deploy/k8s/components/dashboard-observability/verify.py` — Offline Kustomize verifier for the dashboard observability component.
+
+- `deploy/k8s/components/dashboard-observability/app/kustomization.yml` — Scrape annotations, environment variable and Actuator probes for the dashboard pod.
+
+- `deploy/k8s/components/dashboard-observability/monitoring/kustomization.yml` — Generates and mounts the dashboard alert and Grafana ConfigMaps.
+
+- `deploy/k8s/components/dashboard-observability/monitoring/dashboard-alerts.yml` — Dashboard scrape and promotion failure alert rules.
+
+- `deploy/k8s/components/dashboard-observability/monitoring/dashboard-alerts.test.yml` — promtool unit tests for the dashboard alert rules.
+
+- `deploy/k8s/components/dashboard-observability/monitoring/dashboard-overview.json` — Grafana dashboard with seven panels for dashboard-service.
+
+- `deploy/k8s/components/dashboard-observability/monitoring/grafana-patch.yml` — Projects the Circleguard, Form and dashboard Grafana ConfigMaps.
+
+- `deploy/k8s/components/dashboard-observability/monitoring/monitoring-patch.yml` — Projects the Auth, Form and dashboard Prometheus rule ConfigMaps.
+
+- `deploy/k8s/components/form-observability/monitoring/grafana-patch.yml` — Split Grafana projection for the Form component (Kustomize 5 compatibility).
+
 - `deploy/k8s/overlays/dev/kustomization.yml` — Development overlay: namespace `cg-dev` and host `dev.circleguard.local`.
 
 - `deploy/k8s/overlays/dev/namespace.yml` — Namespace manifest for `cg-dev`.
@@ -120,6 +144,10 @@ English purpose of every tracked repository file.
 - `deploy/scripts/seed-visitor.sh` — Seeds Neo4j with the visitors an end-to-end run is going to promote.
 
 - `deploy/scripts/smoke-test.sh` — Runs health and authorization smoke checks against an environment.
+
+## observability
+
+- `observability/README.md` — Index mapping the suggested observability layout to the effective stack and per-service components.
 
 ## design-assets
 
@@ -187,6 +215,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/HU-DASH-03.md` — Dashboard multi-stage image, non-root execution, OCI traceability, and shared CI/CD integration evidence.
 
+- `docs/informe/HU-DASH-05.md` — Dashboard metrics, logs, alerts, Grafana panel, security gate result and pending remote evidence.
+
 - `docs/informe/HU-FORM-05.md` — Form Kubernetes audit, persistent upload configuration, and pending deployment evidence.
 
 - `docs/informe/HU-FILE-03.md` — File-service CI quality gate, idempotent publishing, semver tag policy, and on-prem rebuild evidence.
@@ -208,6 +238,12 @@ English purpose of every tracked repository file.
 - `docs/informe/evidencia/HU-DASH-03/main-build-53-console.txt` — Full console of the failed `main` build (`SERVICE=circleguard-dashboard-service`).
 
 - `docs/informe/evidencia/HU-DASH-03/pr-build-1-console.txt` — Full console of the green PR build that skipped the Java stages.
+
+- `docs/informe/evidencia/HU-DASH-05/README.md` — Index of locally reproduced Trivy, promtool and Kustomize evidence for dashboard observability.
+
+- `docs/informe/evidencia/HU-DASH-05/trivy-config.json` — Trivy IaC findings for `deploy/k8s` with the dashboard component.
+
+- `docs/informe/evidencia/HU-DASH-05/trivy-image.json` — Trivy findings for the locally built dashboard image (9 CRITICAL).
 
 - `docs/informe/evidencia/HU-FILE-04/3-runs.txt` — Summary of three consecutive MinIO integration runs and cleanup.
 
@@ -742,6 +778,10 @@ English purpose of every tracked repository file.
 - `services/circleguard-dashboard-service/src/main/resources/db/migration/V1__initial_dashboard_schema.sql` — Database migration V1__initial_dashboard_schema for the dashboard service.
 
 - `services/circleguard-dashboard-service/src/test/java/com/circleguard/dashboard/controller/AnalyticsControllerTest.java` — Unit or integration tests for Analytics Controller Test in the dashboard service.
+
+- `services/circleguard-dashboard-service/src/test/java/com/circleguard/dashboard/observability/PrometheusEndpointTest.java` — Verifies the Prometheus endpoint, metric tags, health groups and hidden actuator endpoints.
+
+- `services/circleguard-dashboard-service/src/test/java/com/circleguard/dashboard/observability/PromotionClientMetricsTest.java` — Verifies promotion call counters, timers, outcomes and bounded tags without PII.
 
 - `services/circleguard-file-service/build.gradle.kts` — Build configuration for the file service.
 

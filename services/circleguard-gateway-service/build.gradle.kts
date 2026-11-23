@@ -16,8 +16,7 @@ apply(from = "$rootDir/gradle/jacoco-convention.gradle")
 version = System.getenv("TAG") ?: "1.0.0-SNAPSHOT"
 
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
-    testImplementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
+    // Spring Boot BOM is applied centrally in the root build.
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
@@ -34,6 +33,7 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-security-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.testcontainers:junit-jupiter:1.21.4")
 }

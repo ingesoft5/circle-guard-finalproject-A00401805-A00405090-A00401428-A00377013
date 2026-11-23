@@ -77,6 +77,23 @@ Ejecutada el 17 de noviembre de 2026 desde la raíz del repositorio, en la rama 
 
 **Resultado:** `BUILD SUCCESSFUL in 32s`; Gradle reportó `3 actionable tasks: 3 executed` y el proceso terminó con código de salida 0. Gradle informó el uso de funciones obsoletas que serán incompatibles con Gradle 9.0. Esta verificación no inicia el servicio ni ejecuta pruebas.
 
+## Observabilidad y seguridad (HU-DASH-05)
+
+Desde la rama `feat/HU-DASH-05-integrar-observabilidad-y-seguridad`, el servicio declara `micrometer-registry-prometheus` junto al Actuator que ya existía. La configuración `management` expone solo `health`, `info` y `prometheus`, oculta los detalles de salud, habilita los grupos `liveness`/`readiness` y añade las etiquetas comunes `service=dashboard` y `environment=${DASHBOARD_ENVIRONMENT:local}`. El patrón de log incluye `[dashboard,environment,traceId,spanId]`; si no hay trazas activas, los dos últimos campos aparecen como `-`.
+
+| Señal | Nombre / ruta | Uso |
+| --- | --- | --- |
+| Endpoint | `GET /actuator/prometheus` | Scrape interno del pod en el puerto `8084`. |
+| Sondas | `/actuator/health/liveness`, `/actuator/health/readiness` | K8s usa estos grupos mediante el componente `dashboard-observability/app`. |
+| Contador | `circleguard.dashboard.promotion.calls{operation,outcome}` | Llamadas a `promotion-service`, por operación y resultado. |
+| Temporizador | `circleguard.dashboard.promotion.call.duration{operation,outcome}` | Duración de esas llamadas; permite identificar demoras. |
+
+Los tags son acotados (`operation`: `healthStats`/`departmentStats`; `outcome`: `success`/`error`). No se registran departamentos, URLs, cuerpos ni datos personales en métricas ni en los logs propios del cliente. El error conserva únicamente la operación, el resultado y la clase de la excepción.
+
+En Kubernetes, `deploy/k8s/components/dashboard-observability/` añade las anotaciones de scrape, el ambiente desde el namespace y las sondas; su parte de monitoring genera las reglas `DashboardServiceDown` (critical) y `DashboardPromotionCallFailures` (warning), además del panel Grafana `circleguard-dashboard-overview` con siete fuentes (disponibilidad, RPS, 5xx, latencia HTTP, llamadas promotion, p95 y logs Loki). Los componentes ya están referenciados en los overlays `dev`, `stage` y `prod`.
+
+Verificación local: `./gradlew :services:circleguard-dashboard-service:check --no-daemon` (23 pruebas, JaCoCo 97,87 %), `promtool check/test rules`, los `verify.py` de los componentes y los escaneos Trivy listados en `docs/informe/evidencia/HU-DASH-05/README.md`. El scrape real, el panel con datos, Loki, la entrega de alertas y el build remoto siguen pendientes de despliegue autorizado. El escaneo de la imagen construida localmente reportó 9 `CRITICAL`, por lo que el gate actual bloquearía la entrega; no se bajó el umbral. Detalle completo en `docs/informe/HU-DASH-05.md`.
+
 ## Hallazgos para las siguientes HU
 
 1. `getTimeSeries` consulta `status_events`, pero no existe una migración que cree esa tabla. Si la consulta falla, el método devuelve datos simulados; la serie temporal no demuestra datos reales en ese caso.

@@ -17,8 +17,7 @@ apply(from = "$rootDir/gradle/jacoco-convention.gradle")
 extra["testcontainers.version"] = "1.21.4"
 
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
-    testImplementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
+    // Spring Boot BOM is applied centrally in the root build.
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -26,12 +25,14 @@ dependencies {
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
     testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("com.twilio.sdk:twilio:10.1.1")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    // Boot 4 moved WebClient.Builder auto-configuration to spring-boot-webclient.
+    implementation("org.springframework.boot:spring-boot-starter-webclient")
     implementation("org.springframework.boot:spring-boot-starter-freemarker")
-    implementation("org.springframework.retry:spring-retry")
+    implementation("org.springframework.retry:spring-retry:2.0.13")
     implementation("org.springframework:spring-aspects")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

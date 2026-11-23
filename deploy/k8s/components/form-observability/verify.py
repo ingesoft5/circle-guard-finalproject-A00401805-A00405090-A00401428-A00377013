@@ -25,7 +25,8 @@ def render(directory):
 
 def remove_components(path):
     config = yaml.safe_load(path.read_text(encoding="utf-8"))
-    config.pop("components", None)
+    config["components"] = [component for component in config.get("components", [])
+                            if "form-observability" not in component]
     path.write_text(yaml.safe_dump(config), encoding="utf-8")
 
 
@@ -71,16 +72,17 @@ def verify():
         before, after = render(baseline / "monitoring"), render(active / "monitoring")
         generated = [key for key in after if key not in before]
         assert len(generated) == 2 and all(key[0] == "ConfigMap" for key in generated)
-        for server, volume, original, added in (
-            ("prometheus", "alert-rules", "auth-prometheus-alerts", "form-prometheus-alerts"),
-            ("grafana", "dashboards", "grafana-dashboard-circleguard", "grafana-dashboard-form"),
+        for server, volume, original, added, dashboard_added in (
+            ("prometheus", "alert-rules", "auth-prometheus-alerts", "form-prometheus-alerts", "dashboard-prometheus-alerts"),
+            ("grafana", "dashboards", "grafana-dashboard-circleguard", "grafana-dashboard-form", "grafana-dashboard-dashboard"),
         ):
             key = ("Deployment", "monitoring", server)
             spec = after[key]["spec"]["template"]["spec"]
             projected = next(v for v in spec["volumes"] if v["name"] == volume)
             assert "configMap" not in projected, "Volume must have exactly one source type"
             refs = [v["configMap"]["name"] for v in projected["projected"]["sources"]]
-            assert original in refs and len(refs) == 2
+            assert original in refs and len(refs) == 3, refs
+            assert any(ref.startswith(dashboard_added + "-") for ref in refs), refs
             generated_name = next(name for kind, ns, name in generated if name.startswith(added + "-"))
             assert generated_name in refs, "Generated ConfigMap hash not propagated to projection"
             filenames = [name for ref in refs for name in after[("ConfigMap", "monitoring", ref)]["data"]]
