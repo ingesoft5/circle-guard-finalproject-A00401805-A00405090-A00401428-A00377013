@@ -37,6 +37,18 @@ su fuente Mermaid editable y la imagen PNG generada desde ella:
   [`07-patron-adicional.mmd`](../diagramas/07-patron-adicional.mmd) ·
   ![Patrón adicional](../diagramas/07-patron-adicional.png)
 
+## Documento de patrones
+
+El documento [**`Patrones_Diseno_CircleGuard.docx`**](Patrones_Diseno_CircleGuard.docx)
+recoge los patrones existentes identificados en código y los tres patrones
+implementados o mejorados, con propósito, evidencia, *trade-offs*, prueba y
+trazabilidad con E2.4/P2.4. Incluye las tres figuras de patrones en esta misma
+carpeta:
+
+- [`05-patron-resiliencia.png`](05-patron-resiliencia.png)
+- [`06-patron-configuracion.png`](06-patron-configuracion.png)
+- [`07-patron-adicional.png`](07-patron-adicional.png)
+
 El índice completo de arquitectura e infraestructura está en
 [`docs/diagramas/README.md`](../diagramas/README.md), incluida la vista general
 de servicios [`04-arquitectura-servicios.mmd`](../diagramas/04-arquitectura-servicios.mmd).
