@@ -3,9 +3,9 @@ spring:
   application:
     name: circleguard-form-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/circleguard_form
-    username: admin
-    password: password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/circleguard_form}
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -21,6 +21,9 @@ spring:
 
 server:
   port: 8086
+
+jwt:
+  secret: ${JWT_SECRET}
 
 form:
   outbox:

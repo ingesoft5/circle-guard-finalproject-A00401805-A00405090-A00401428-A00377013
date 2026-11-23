@@ -318,6 +318,8 @@ spec:
       labels:
         app: form
     spec:
+      serviceAccountName: form
+      automountServiceAccountToken: false
       containers:
         - name: form
           image: circleguard-docker/form:1.4.0
@@ -339,6 +341,11 @@ spec:
                   key: POSTGRES_PASSWORD
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: kafka:9092
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: cg-secrets
+                  key: JWT_SECRET
           volumeMounts:
             - name: uploads
               mountPath: /tmp/circleguard-uploads

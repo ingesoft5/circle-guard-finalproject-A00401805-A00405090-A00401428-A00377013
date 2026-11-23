@@ -50,7 +50,8 @@ import static org.mockito.Mockito.spy;
         "spring.kafka.producer.properties.delivery.timeout.ms=2000",
         "form.outbox.ack-timeout-ms=1200",
         "form.outbox.retry-attempts=2",
-        "form.outbox.retry-wait-ms=50"
+        "form.outbox.retry-wait-ms=50",
+        "jwt.secret=test-only-secret-with-at-least-32-bytes"
 })
 class FormOutboxRecoveryIntegrationTest {
     @Container static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
