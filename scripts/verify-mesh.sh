@@ -38,14 +38,18 @@ MUTUAL_COUNT="$(kubectl --context "$CTX" get destinationrule -n "$CANARY_NS" -o 
 echo "=== 3. SPIFFE certificate from the Envoy sidecar ==="
 CERT="$(kubectl --context "$CTX" exec -n "$CANARY_NS" deploy/form-stable -c istio-proxy -- curl -s --max-time 5 http://localhost:15000/certs 2>/dev/null)"
 echo "$CERT" | grep -F 'spiffe://cluster.local/ns/cg-mesh-canary/sa/default' | head -2
-printf '%s' "$CERT" | grep -qF 'spiffe://cluster.local/ns/cg-mesh-canary/sa/default' \
-  && ok "workload identity SPIFFE present in sidecar" \
+# `grep -q` exits early and SIGPIPEs printf on the large cert output; with
+# `set -o pipefail` that yields a false 141. Count matches instead.
+SPIFFE_COUNT="$(printf '%s' "$CERT" | grep -cF 'spiffe://cluster.local/ns/cg-mesh-canary/sa/default')"
+[[ "$SPIFFE_COUNT" -ge 1 ]] \
+  && ok "workload identity SPIFFE present in sidecar ($SPIFFE_COUNT matches)" \
   || fail "SPIFFE identity not found in sidecar certs"
 
 echo "=== 4. Traffic through Envoy ==="
 HEALTH="$(curl -s -i --max-time 10 "http://${NODE_IP}:${NODE_PORT}/actuator/health" 2>/dev/null)"
 echo "$HEALTH" | grep -iE '^HTTP/|server: istio-envoy' | head -3
-echo "$HEALTH" | grep -qi 'istio-envoy' && ok "response served by istio-envoy" || fail "no istio-envoy header"
+ENVOY_COUNT="$(printf '%s' "$HEALTH" | grep -ci 'istio-envoy')"
+[[ "$ENVOY_COUNT" -ge 1 ]] && ok "response served by istio-envoy" || fail "no istio-envoy header"
 
 echo "=== 5. Canary 90/10 split (${REQS} requests) ==="
 stats_counter() {
