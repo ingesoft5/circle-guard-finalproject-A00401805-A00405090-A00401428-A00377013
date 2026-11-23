@@ -1,0 +1,23 @@
+%% CG-DOC: Patrón de resiliencia (E2.4) — Circuit Breaker / Retry / Bulkhead con Resilience4j.
+%% Evidencia: gateway-service e identity-service; prueba de falla inyectada en docs/patrones/README.md.
+flowchart LR
+    C["Cliente web"] --> GW["Gateway :8087<br/>Resilience4j"]
+    GW -->|"llamada"| CB{"Circuit Breaker<br/>identityClient"}
+    CB -->|"CLOSED / HALF_OPEN"| RT["Retry<br/>reintentos acotados"]
+    RT --> ID["Identity :8083"]
+    BH["Bulkhead<br/>pool limitado de hilos"] -. "aisla concurrencia" .-> RT
+    CB -->|"OPEN"| FB["Fallback<br/>respuesta degradada / caché"]
+
+    subgraph OBS["Observabilidad del patrón"]
+      M["Micrometer<br/>resilience4j_circuitbreaker_state"]
+      A["Alerta AuthIdentityCircuitBreakerOpen<br/>severity critical"]
+    end
+
+    ID -. métricas .-> M
+    CB -. métricas .-> M
+    M --> A
+
+    classDef ok fill:#d7f7d7,stroke:#2e7d32,color:#1b5e20;
+    classDef warn fill:#fff3cd,stroke:#b8860b,color:#7a5b00;
+    class ID,FB ok;
+    class CB,A warn;

@@ -57,3 +57,46 @@ flowchart TB
 Fuente: [`03-red-y-ambientes.mmd`](03-red-y-ambientes.mmd). Las claves de estado
 son `platform/<env>/terraform.tfstate` y se configuran desde
 `infra/terraform/envs/<env>/backend.hcl.example`.
+
+## 04 Arquitectura general de servicios (Parte 2)
+
+Vista general del sistema on-premise: cliente web → Traefik con TLS → API Gateway →
+los ocho microservicios en los namespaces `cg-dev`/`cg-stage`/`cg-prod` y el
+middleware (PostgreSQL, OpenLDAP, Kafka, Redis, Neo4j y MinIO/S3). Coherente con
+`docs/arquitectura/README.md` y `deploy/k8s/base/apps.yml`.
+
+![Arquitectura general de servicios](04-arquitectura-servicios.png)
+
+Fuente: [`04-arquitectura-servicios.mmd`](04-arquitectura-servicios.mmd).
+
+## 05 Patrón de resiliencia (E2.4)
+
+Circuit Breaker, Retry y Bulkhead con Resilience4j en gateway/identity, con
+fallback y alerta crítica asociada. Evidencia y *trade-offs* en
+[`docs/patrones/README.md`](../patrones/README.md).
+
+![Patrón de resiliencia](05-patron-resiliencia.png)
+
+Fuente: [`05-patron-resiliencia.mmd`](05-patron-resiliencia.mmd).
+
+## 06 Patrón de configuración (E2.4)
+
+External Configuration y Feature Toggle mediante perfiles Spring, ConfigMaps por
+ambiente y variables inyectadas desde Kustomize.
+
+![Patrón de configuración](06-patron-configuracion.png)
+
+Fuente: [`06-patron-configuracion.mmd`](06-patron-configuracion.mmd).
+
+## 07 Patrón adicional (E2.4)
+
+Observer/Micrometer sobre arquitectura dirigida por eventos con outbox en
+`form-service` (`FormEventPublisher` / `FormOutboxDispatcher` /
+`FormOutboxScheduler`) y sus métricas en Actuator.
+
+![Patrón adicional: Observer y eventos con outbox](07-patron-adicional.png)
+
+Fuente: [`07-patron-adicional.mmd`](07-patron-adicional.mmd).
+
+> Las imágenes PNG se generaron desde los archivos `.mmd` con Mermaid CLI, que se
+> conservan como fuente editable. Ningún nombre incluye fechas.

@@ -21,3 +21,22 @@
 3. **Observer/Micrometer instrumentation (adicional)** — contadores y
    histogramas en Actuator consumidos por Prometheus y Grafana. *Trade-off*:
    overhead de medición frente a observabilidad de negocio.
+
+## Diagramas de patrones
+
+Las figuras de los tres patrones implementados están en `docs/diagramas/`, con
+su fuente Mermaid editable y la imagen PNG generada desde ella:
+
+- Resiliencia (Circuit Breaker / Retry / Bulkhead):
+  [`05-patron-resiliencia.mmd`](../diagramas/05-patron-resiliencia.mmd) ·
+  ![Patrón de resiliencia](../diagramas/05-patron-resiliencia.png)
+- Configuración (External Configuration / Feature Toggle):
+  [`06-patron-configuracion.mmd`](../diagramas/06-patron-configuracion.mmd) ·
+  ![Patrón de configuración](../diagramas/06-patron-configuracion.png)
+- Adicional (Observer/Micrometer + eventos con outbox):
+  [`07-patron-adicional.mmd`](../diagramas/07-patron-adicional.mmd) ·
+  ![Patrón adicional](../diagramas/07-patron-adicional.png)
+
+El índice completo de arquitectura e infraestructura está en
+[`docs/diagramas/README.md`](../diagramas/README.md), incluida la vista general
+de servicios [`04-arquitectura-servicios.mmd`](../diagramas/04-arquitectura-servicios.mmd).

@@ -1,0 +1,32 @@
+%% CG-DOC: Patrón adicional (E2.4) — Observer/Micrometer + arquitectura dirigida por eventos con outbox.
+%% Evidencia: FormEventPublisher / FormOutboxDispatcher / FormOutboxScheduler y métricas Actuator.
+flowchart LR
+    subgraph FORM["Form :8086"]
+      API["Endpoint de formulario"]
+      DB[(PostgreSQL<br/>tabla outbox)]
+      PUB["FormEventPublisher"]
+      DISP["FormOutboxDispatcher"]
+      SCH["FormOutboxScheduler<br/>reintento"]
+    end
+
+    API -->|"transacción local"| DB
+    DB --> PUB --> DISP --> K[("Kafka :9092<br/>survey.submitted")]
+    DISP -->|"fallo"| SCH
+    SCH -. "reintento" .-> DISP
+
+    K -. eventos .-> NOTIF["Notification :8082"]
+    K -. eventos .-> PROM["Promotion :8088"]
+
+    subgraph OBS["Observer / Micrometer"]
+      M["Actuator /actuator/prometheus<br/>circleguard_form_event_publications_total"]
+      G["Grafana: técnico + de negocio"]
+      AL["Alerta FormKafkaPublicationFailures"]
+    end
+
+    PUB -. contador .-> M
+    DISP -. contador .-> M
+    M --> G
+    M --> AL
+
+    classDef ev fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c;
+    class PUB,DISP,SCH,K ev;

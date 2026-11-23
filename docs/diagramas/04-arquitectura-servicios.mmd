@@ -1,0 +1,48 @@
+%% CG-DOC: Arquitectura general de la Parte 2 (on-premise, 8 microservicios + cliente web).
+%% Coherente con docs/arquitectura/README.md, deploy/k8s/base/apps.yml y
+%% docs/diagramas/01-arquitectura-onprem.mmd. Sin fechas en el nombre.
+flowchart TB
+    U["Usuario final"]
+    W["Cliente web Expo / Nginx :8080"]
+    T["Traefik Ingress :30080<br/>ruteo por Host + TLS *.circleguard.local"]
+
+    subgraph NS["Clúster k3d cg · namespaces cg-dev / cg-stage / cg-prod"]
+        GW["Gateway :8087<br/>API Gateway + Redis"]
+        AUTH["Auth :8180<br/>PostgreSQL + OpenLDAP"]
+        FORM["Form :8086<br/>PostgreSQL + Kafka + outbox"]
+        PROM["Promotion :8088<br/>PostgreSQL + Neo4j + Kafka + Redis"]
+        ID["Identity :8083<br/>PostgreSQL"]
+        NOTIF["Notification :8082<br/>Kafka + SMTP/SMS"]
+        FILE["File :8085<br/>S3-compatible"]
+        DASH["Dashboard :8084<br/>Neo4j / PostgreSQL"]
+    end
+
+    subgraph MW["Middleware compartido por ambiente"]
+        PG[("PostgreSQL")]
+        LDAP[("OpenLDAP :389")]
+        K[("Kafka :9092")]
+        R[("Redis :6379")]
+        NEO[("Neo4j :7687<br/>ventana 14 días")]
+        S3[("MinIO / S3")]
+    end
+
+    U --> W --> T --> GW
+    GW --> AUTH
+    GW --> FORM
+    GW --> PROM
+    GW --> ID
+    AUTH --> PG
+    AUTH --> LDAP
+    ID --> PG
+    FORM --> PG
+    FORM --> K
+    PROM --> PG
+    PROM --> NEO
+    PROM --> K
+    PROM --> R
+    GW --> R
+    FILE --> S3
+    K -. eventos .-> NOTIF
+    K -. eventos .-> PROM
+    NEO --> DASH
+    PG --> DASH
