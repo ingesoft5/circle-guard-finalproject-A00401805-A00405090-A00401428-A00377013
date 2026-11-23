@@ -7,8 +7,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FormSecurityTest {
     private static final String SECRET = "test-only-secret-with-at-least-32-bytes";
     @Autowired MockMvc mvc;
-    @MockBean QuestionnaireService questionnaires;
+    @MockitoBean QuestionnaireService questionnaires;
 
     private String token(String permission) {
         return Jwts.builder().setSubject("550e8400-e29b-41d4-a716-446655440000")

@@ -1,0 +1,23 @@
+# CG-DOC: Prometheus alert rules for dashboard-service availability and promotion calls.
+groups:
+  - name: circleguard.dashboard
+    interval: 30s
+    rules:
+      - alert: DashboardServiceDown
+        expr: up{app="dashboard",namespace=~"cg-dev|cg-prod"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: dashboard
+        annotations:
+          summary: Dashboard service scrape target is down
+          description: Prometheus cannot scrape dashboard-service in {{ $labels.namespace }} for two minutes. Check the pod, Actuator health and scrape annotations.
+      - alert: DashboardPromotionCallFailures
+        expr: sum by (namespace) (rate(circleguard_dashboard_promotion_calls_total{app="dashboard",namespace=~"cg-dev|cg-prod",outcome="error"}[5m])) >= 0.2
+        for: 2m
+        labels:
+          severity: warning
+          service: dashboard
+        annotations:
+          summary: Dashboard promotion-service calls are failing
+          description: At least 0.2 failed calls per second over five minutes, sustained for two minutes. Check promotion-service connectivity and dashboard logs.

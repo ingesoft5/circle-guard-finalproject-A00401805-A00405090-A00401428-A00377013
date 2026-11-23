@@ -3,6 +3,7 @@ package com.circleguard.form.observability;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
 import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.RoundRobinPartitioner;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.StaticApplicationContext;
@@ -18,7 +19,7 @@ class KafkaTracePropagationTest {
     void realKafkaTemplateInjectsW3cHeadersAndExportsSafeChildSpan() throws Exception {
         try (var tracing = new TracingFixture(); var context = new StaticApplicationContext()) {
             context.getBeanFactory().registerSingleton("observationRegistry", tracing.observations);
-            var producer = new MockProducer<String, String>(true, new StringSerializer(), new StringSerializer());
+            var producer = new MockProducer<String, String>(true, new RoundRobinPartitioner(), new StringSerializer(), new StringSerializer());
             ProducerFactory<String, String> factory = mock(ProducerFactory.class);
             when(factory.createProducer()).thenReturn(producer);
             var template = new KafkaTemplate<>(factory);

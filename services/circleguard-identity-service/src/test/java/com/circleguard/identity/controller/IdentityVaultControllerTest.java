@@ -13,8 +13,8 @@ import io.jsonwebtoken.security.Keys;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,10 +46,10 @@ class IdentityVaultControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private IdentityVaultService vaultService;
 
-    @MockBean
+    @MockitoBean
     private IdentityAuditPublisher auditPublisher;
 
     @Test
@@ -113,7 +113,7 @@ class IdentityVaultControllerTest {
 
         mockMvc.perform(get("/api/v1/identities/lookup/{id}", anonymousId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.instance").value("/api/v1/identities/lookup/" + anonymousId))
                 .andExpect(jsonPath("$.title").value("Not Found"))
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.detail").value("Identity not found"));

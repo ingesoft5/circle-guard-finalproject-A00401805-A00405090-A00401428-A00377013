@@ -6,6 +6,7 @@ namespace: cg-prod
 
 components:
   - ../../components/form-observability/app
+  - ../../components/dashboard-observability/app
 
 resources:
   - namespace.yml

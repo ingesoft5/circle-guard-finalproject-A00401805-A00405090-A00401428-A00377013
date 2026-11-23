@@ -1,0 +1,15 @@
+# CG-DOC: Monitoring component that adds dashboard alert rules and Grafana dashboard to the shared stack.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+configMapGenerator:
+  - name: dashboard-prometheus-alerts
+    namespace: monitoring
+    files:
+      - dashboard-alerts.yml
+  - name: grafana-dashboard-dashboard
+    namespace: monitoring
+    files:
+      - dashboard-overview.json
+patches:
+  - path: monitoring-patch.yml
+  - path: grafana-patch.yml

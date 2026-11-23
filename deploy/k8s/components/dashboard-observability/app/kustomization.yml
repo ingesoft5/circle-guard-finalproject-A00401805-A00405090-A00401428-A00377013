@@ -1,0 +1,37 @@
+# CG-DOC: Application component that enables Prometheus scraping and Actuator probes for dashboard-service.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: dashboard
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: dashboard
+      spec:
+        template:
+          metadata:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/path: /actuator/prometheus
+              prometheus.io/port: "8084"
+          spec:
+            containers:
+              - name: dashboard
+                env:
+                  - name: DASHBOARD_ENVIRONMENT
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.namespace
+                readinessProbe:
+                  httpGet:
+                    path: /actuator/health/readiness
+                    port: 8084
+                livenessProbe:
+                  httpGet:
+                    path: /actuator/health/liveness
+                    port: 8084

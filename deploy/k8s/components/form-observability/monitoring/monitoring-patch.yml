@@ -1,3 +1,4 @@
+# CG-DOC: Project Form alert rules into the shared Prometheus rules volume.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,21 +16,3 @@ spec:
                   name: auth-prometheus-alerts
               - configMap:
                   name: form-prometheus-alerts
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: grafana
-  namespace: monitoring
-spec:
-  template:
-    spec:
-      volumes:
-        - name: dashboards
-          configMap: null
-          projected:
-            sources:
-              - configMap:
-                  name: grafana-dashboard-circleguard
-              - configMap:
-                  name: grafana-dashboard-form

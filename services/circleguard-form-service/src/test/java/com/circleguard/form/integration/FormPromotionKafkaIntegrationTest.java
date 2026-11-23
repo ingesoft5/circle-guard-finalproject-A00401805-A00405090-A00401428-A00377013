@@ -39,9 +39,9 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
+import org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -100,7 +100,7 @@ class FormPromotionKafkaIntegrationTest {
 
     @DynamicPropertySource
     static void kafkaProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.bootstrapServers", kafka::getBootstrapServers);
     }
 
     @Autowired
@@ -111,15 +111,15 @@ class FormPromotionKafkaIntegrationTest {
     @Autowired
     private TracingFixture tracing;
 
-    @MockBean
+    @MockitoBean
     private HealthSurveyRepository repository;
-    @MockBean
+    @MockitoBean
     private FormOutboxRepository outbox;
 
-    @MockBean
+    @MockitoBean
     private QuestionnaireService questionnaireService;
 
-    @MockBean
+    @MockitoBean
     private HealthStatusService healthStatusService;
 
     @Test

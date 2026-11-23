@@ -1,0 +1,224 @@
+{
+  "SchemaVersion": 2,
+  "CreatedAt": "2026-11-23T10:02:14.844517912Z",
+  "ArtifactName": "/scan/dashboard-hu-dash-05-boot4.tar",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.24.4"
+    },
+    "ImageID": "sha256:8a5846429e94917baa66122065827aa2310cbb2d896b183c2960264407fecb06",
+    "DiffIDs": [
+      "sha256:75f1d9657d880da5f75298e8f40e9928bb6e260c50d26f97af196845307e3064",
+      "sha256:83f9fb88790005403a3b122e12296a335f5a1b1049102f177a2a38d5e2574164",
+      "sha256:824cf51ce17e39afa054d8617bea5679e46866208920f64e3408a88f90af8a5e",
+      "sha256:f42e7f2fb4efd761485e12883f9a3c1feb9dce63c763604cf59dfee27e25d352",
+      "sha256:4ef60dc20e69f16bb0f4f0632dd02f46e1e19a541475b2e3b52e6a50c2947e2c",
+      "sha256:975982fbcb7202f9fa4584a8b33ffd6115b8b70758c73183e7d8bb15f3fd3d83",
+      "sha256:2efb7774f3d99f203140dddff4e12e0a6e96abb858619b9b367fd377119ac5e1",
+      "sha256:7943678da533285f78ea9ed2356124e08fa0be1663ad975d0cdc5d022570c311",
+      "sha256:79b2e1bc306c9038a40346ad1155959bb393d711f38c38cbb00d214d95a7bee2"
+    ],
+    "ImageConfig": {
+      "architecture": "amd64",
+      "created": "2026-11-23T03:35:10.061107537-05:00",
+      "history": [
+        {
+          "created": "2026-11-05T18:00:28.583714131Z",
+          "created_by": "ADD alpine-minirootfs-3.24.4-x86_64.tar.gz / # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-05T18:00:28.583714131Z",
+          "created_by": "CMD [\"/bin/sh\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-20T17:43:38.581877793Z",
+          "created_by": "ENV JAVA_HOME=/opt/java/openjdk",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-20T17:43:38.581877793Z",
+          "created_by": "ENV PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-20T17:43:38.581877793Z",
+          "created_by": "ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-20T17:43:38.581877793Z",
+          "created_by": "RUN /bin/sh -c set -eux;     apk add --no-cache         fontconfig ttf-dejavu         gnupg         ca-certificates p11-kit-trust         musl-locales musl-locales-lang         tzdata         coreutils         openssl     ;     rm -rf /var/cache/apk/* # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-20T17:43:38.581877793Z",
+          "created_by": "ENV JAVA_VERSION=jdk-21.0.13.1+2",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-20T17:43:42.37898327Z",
+          "created_by": "RUN /bin/sh -c set -eux;     ARCH=\"$(apk --print-arch)\";     case \"${ARCH}\" in        aarch64)          ESUM='0236751150c82f1ef91be8cc32a36091a95e97650285fea848f2bb82311e5da7';          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13.1%2B2/OpenJDK21U-jre_aarch64_alpine-linux_hotspot_21.0.13.1_2.tar.gz';          ;;        x86_64)          ESUM='72835f41a468ae949fc058f8ec6a73d303ca3e5ea165621e08aacb36bb537bba';          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13.1%2B2/OpenJDK21U-jre_x64_alpine-linux_hotspot_21.0.13.1_2.tar.gz';          ;;        *)          echo \"Unsupported arch: ${ARCH}\";          exit 1;          ;;     esac;     wget -O /tmp/openjdk.tar.gz ${BINARY_URL};     wget -O /tmp/openjdk.tar.gz.sig ${BINARY_URL}.sig;     export GNUPGHOME=\"$(mktemp -d)\";     gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B;     gpg --batch --verify /tmp/openjdk.tar.gz.sig /tmp/openjdk.tar.gz;     rm -rf \"${GNUPGHOME}\" /tmp/openjdk.tar.gz.sig;     echo \"${ESUM} */tmp/openjdk.tar.gz\" | sha256sum -c -;     mkdir -p \"$JAVA_HOME\";     tar --extract         --file /tmp/openjdk.tar.gz         --directory \"$JAVA_HOME\"         --strip-components 1         --no-same-owner     ;     rm -f /tmp/openjdk.tar.gz; # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-20T17:43:42.538312618Z",
+          "created_by": "RUN /bin/sh -c set -eux;     echo \"Verifying install ...\";     echo \"java --version\"; java --version;     echo \"Complete.\" # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-20T17:43:42.576388596Z",
+          "created_by": "COPY --chmod=755 entrypoint.sh /__cacert_entrypoint.sh # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-20T17:43:42.576388596Z",
+          "created_by": "ENTRYPOINT [\"/__cacert_entrypoint.sh\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-23T03:32:23.826527418-05:00",
+          "created_by": "ARG VERSION=dev",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-23T03:32:23.826527418-05:00",
+          "created_by": "ARG GIT_COMMIT=unknown",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-23T03:32:23.826527418-05:00",
+          "created_by": "ARG SOURCE_URL=unknown",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-23T03:32:23.826527418-05:00",
+          "created_by": "LABEL org.opencontainers.image.title=circleguard-dashboard-service org.opencontainers.image.description=Immutable non-root dashboard service org.opencontainers.image.vendor=CircleGuard org.opencontainers.image.version=hu-dash-05-boot4 org.opencontainers.image.revision=9c199167b9fd919263c9c5a187cf049300cb6b6a org.opencontainers.image.source=local",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-23T03:32:23.826527418-05:00",
+          "created_by": "RUN |3 VERSION=hu-dash-05-boot4 GIT_COMMIT=9c199167b9fd919263c9c5a187cf049300cb6b6a SOURCE_URL=local /bin/sh -c addgroup -S -g 10001 circleguard \u0026\u0026     adduser -S -u 10001 -G circleguard circleguard # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-23T03:32:24.165669308-05:00",
+          "created_by": "WORKDIR /app",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-23T03:35:09.52852799-05:00",
+          "created_by": "COPY --chown=circleguard:circleguard /workspace/services/circleguard-dashboard-service/build/libs/ /tmp/libs/ # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-23T03:35:10.061107537-05:00",
+          "created_by": "RUN |3 VERSION=hu-dash-05-boot4 GIT_COMMIT=9c199167b9fd919263c9c5a187cf049300cb6b6a SOURCE_URL=local /bin/sh -c cp \"$(find /tmp/libs -name '*.jar' ! -name '*-plain.jar' | head -n 1)\" /app/app.jar     \u0026\u0026 chown circleguard:circleguard /app/app.jar     \u0026\u0026 rm -rf /tmp/libs # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-11-23T03:35:10.061107537-05:00",
+          "created_by": "USER circleguard",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-23T03:35:10.061107537-05:00",
+          "created_by": "EXPOSE map[8084/tcp:{}]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-23T03:35:10.061107537-05:00",
+          "created_by": "HEALTHCHECK \u0026{[\"CMD-SHELL\" \"wget -qO- http://127.0.0.1:8084/actuator/health | grep -q '\\\"status\\\":\\\"UP\\\"' || exit 1\"] \"30s\" \"5s\" \"45s\" \"0s\" '\\x03'}",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-11-23T03:35:10.061107537-05:00",
+          "created_by": "ENTRYPOINT [\"java\" \"-jar\" \"/app/app.jar\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        }
+      ],
+      "os": "linux",
+      "rootfs": {
+        "type": "layers",
+        "diff_ids": [
+          "sha256:75f1d9657d880da5f75298e8f40e9928bb6e260c50d26f97af196845307e3064",
+          "sha256:83f9fb88790005403a3b122e12296a335f5a1b1049102f177a2a38d5e2574164",
+          "sha256:824cf51ce17e39afa054d8617bea5679e46866208920f64e3408a88f90af8a5e",
+          "sha256:f42e7f2fb4efd761485e12883f9a3c1feb9dce63c763604cf59dfee27e25d352",
+          "sha256:4ef60dc20e69f16bb0f4f0632dd02f46e1e19a541475b2e3b52e6a50c2947e2c",
+          "sha256:975982fbcb7202f9fa4584a8b33ffd6115b8b70758c73183e7d8bb15f3fd3d83",
+          "sha256:2efb7774f3d99f203140dddff4e12e0a6e96abb858619b9b367fd377119ac5e1",
+          "sha256:7943678da533285f78ea9ed2356124e08fa0be1663ad975d0cdc5d022570c311",
+          "sha256:79b2e1bc306c9038a40346ad1155959bb393d711f38c38cbb00d214d95a7bee2"
+        ]
+      },
+      "config": {
+        "Healthcheck": {
+          "Test": [
+            "CMD-SHELL",
+            "wget -qO- http://127.0.0.1:8084/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"
+          ],
+          "Interval": 30000000000,
+          "Timeout": 5000000000,
+          "StartPeriod": 45000000000,
+          "Retries": 3
+        },
+        "Entrypoint": [
+          "java",
+          "-jar",
+          "/app/app.jar"
+        ],
+        "Env": [
+          "PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "JAVA_HOME=/opt/java/openjdk",
+          "LANG=en_US.UTF-8",
+          "LANGUAGE=en_US:en",
+          "LC_ALL=en_US.UTF-8",
+          "JAVA_VERSION=jdk-21.0.13.1+2"
+        ],
+        "Labels": {
+          "org.opencontainers.image.description": "Immutable non-root dashboard service",
+          "org.opencontainers.image.revision": "9c199167b9fd919263c9c5a187cf049300cb6b6a",
+          "org.opencontainers.image.source": "local",
+          "org.opencontainers.image.title": "circleguard-dashboard-service",
+          "org.opencontainers.image.vendor": "CircleGuard",
+          "org.opencontainers.image.version": "hu-dash-05-boot4"
+        },
+        "User": "circleguard",
+        "WorkingDir": "/app",
+        "ExposedPorts": {
+          "8084/tcp": {}
+        }
+      }
+    }
+  },
+  "Results": [
+    {
+      "Target": "/scan/dashboard-hu-dash-05-boot4.tar (alpine 3.24.4)",
+      "Class": "os-pkgs",
+      "Type": "alpine"
+    },
+    {
+      "Target": "Java",
+      "Class": "lang-pkgs",
+      "Type": "jar"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+# CG-DOC: Project the Form dashboard into the shared Grafana dashboards volume.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  template:
+    spec:
+      volumes:
+        - name: dashboards
+          configMap: null
+          projected:
+            sources:
+              - configMap:
+                  name: grafana-dashboard-circleguard
+              - configMap:
+                  name: grafana-dashboard-form
