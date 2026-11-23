@@ -203,6 +203,12 @@ English purpose of every tracked repository file.
 
 - `docs/informe/evidencia/README.md` — Evidence screenshots for the E1.2 Markdown report.
 
+- `docs/informe/evidencia/HU-DASH-03/README.md` — Jenkins run record for dashboard: PR result, failed `main` build, root cause and retry steps.
+
+- `docs/informe/evidencia/HU-DASH-03/main-build-53-console.txt` — Full console of the failed `main` build (`SERVICE=circleguard-dashboard-service`).
+
+- `docs/informe/evidencia/HU-DASH-03/pr-build-1-console.txt` — Full console of the green PR build that skipped the Java stages.
+
 - `docs/informe/evidencia/HU-FILE-04/3-runs.txt` — Summary of three consecutive MinIO integration runs and cleanup.
 
 - `docs/informe/evidencia/HU-FILE-04/integrationTest-run1.log` — Full Gradle log of the first MinIO integration run.
