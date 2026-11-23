@@ -1,0 +1,437 @@
+Pull request #163 opened
+Connecting to https://api.github.com using daniela.castanomoreno/****** (GitHub)
+Obtained Jenkinsfile from 0167909f6155b07138caaeac32e60f6b55e43396+1a9199d3c5639823e23c17c87ffaf99e8c08439e (bc1ccbfd33243e6e95a0963fe9a49fe9a6c46cbf)
+Loading library circleguard@main:jenkins/
+Attempting to resolve main from remote references...
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials GitHub
+ > git ls-remote -- https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git # timeout=10
+Found match: refs/heads/main revision 1a9199d3c5639823e23c17c87ffaf99e8c08439e
+The recommended git tool is: NONE
+using credential github-creds
+Cloning the remote Git repository
+Cloning with configured refspecs honoured and without tags
+Cloning repository https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git
+ > git init /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-163/workspace@libs/3adc49c0f3278c4b9ce0b7736d9e55aa1db443e1b36adc39ed64b2c5ea3af36c # timeout=10
+Fetching upstream changes from https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials GitHub
+ > git fetch --no-tags --force --progress -- https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+Checking out Revision 1a9199d3c5639823e23c17c87ffaf99e8c08439e (main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 1a9199d3c5639823e23c17c87ffaf99e8c08439e # timeout=10
+Commit message: "ci(jira): integrate GitHub events with Jira DCG stories (HU-INFRA-06, DCG-5) (#161)"
+First time build. Skipping changelog.
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-163/workspace
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: NONE
+using credential github-creds
+Cloning the remote Git repository
+Cloning with configured refspecs honoured and without tags
+Cloning repository https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git
+ > git init /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-163/workspace # timeout=10
+Fetching upstream changes from https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials GitHub
+ > git fetch --no-tags --force --progress -- https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git +refs/pull/163/head:refs/remotes/origin/PR-163 +refs/heads/main:refs/remotes/origin/main # timeout=10
+ > git config remote.origin.url https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git # timeout=10
+ > git config --add remote.origin.fetch +refs/pull/163/head:refs/remotes/origin/PR-163 # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/main:refs/remotes/origin/main # timeout=10
+ > git config remote.origin.url https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git # timeout=10
+Fetching without tags
+Fetching upstream changes from https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git
+using GIT_ASKPASS to set credentials GitHub
+ > git fetch --no-tags --force --progress -- https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git +refs/pull/163/head:refs/remotes/origin/PR-163 +refs/heads/main:refs/remotes/origin/main # timeout=10
+Merging remotes/origin/main commit 1a9199d3c5639823e23c17c87ffaf99e8c08439e into PR head commit 0167909f6155b07138caaeac32e60f6b55e43396
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 0167909f6155b07138caaeac32e60f6b55e43396 # timeout=10
+ > git remote # timeout=10
+ > git config --get remote.origin.url # timeout=10
+using GIT_ASKPASS to set credentials GitHub
+ > git merge 1a9199d3c5639823e23c17c87ffaf99e8c08439e # timeout=10
+ > git rev-parse HEAD^{commit} # timeout=10
+Merge succeeded, producing 0167909f6155b07138caaeac32e60f6b55e43396
+Checking out Revision 0167909f6155b07138caaeac32e60f6b55e43396 (PR-163)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 0167909f6155b07138caaeac32e60f6b55e43396 # timeout=10
+Commit message: "feat(dashboard): harden container image and CI healthcheck (HU-DASH-03)"
+First time build. Skipping changelog.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timestamps
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Preflight resources)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
+[2026-11-23T00:52:33.564Z] + awk {print $1} /proc/loadavg
+[2026-11-23T00:52:33.564Z] + load=3.65
+[2026-11-23T00:52:33.564Z] + awk /MemAvailable/ {print int($2/1024)} /proc/meminfo
+[2026-11-23T00:52:33.564Z] + avail=12968
+[2026-11-23T00:52:33.564Z] + echo Host: load=3.65, available memory=12968MB.
+[2026-11-23T00:52:33.564Z] Host: load=3.65, available memory=12968MB.
+[2026-11-23T00:52:33.564Z] + awk -v l=3.65 -v a=12968 BEGIN { exit !(l > 14 || a < 2048) }
+[2026-11-23T00:52:33.564Z] + awk -v l=3.65 -v a=12968 BEGIN { exit !(l > 24 || a < 512) }
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] script
+[Pipeline] {
+[Pipeline] checkout
+[2026-11-23T00:52:37.312Z] The recommended git tool is: NONE
+[2026-11-23T00:52:37.313Z] using credential github-creds
+[2026-11-23T00:52:37.446Z]  > git rev-parse --resolve-git-dir /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-163/workspace/.git # timeout=10
+[2026-11-23T00:52:37.457Z] Fetching changes from the remote Git repository
+[2026-11-23T00:52:37.460Z]  > git config remote.origin.url https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git # timeout=10
+[2026-11-23T00:52:37.473Z] Fetching without tags
+[2026-11-23T00:52:37.473Z] Fetching upstream changes from https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git
+[2026-11-23T00:52:37.473Z]  > git --version # timeout=10
+[2026-11-23T00:52:37.483Z]  > git --version # 'git version 2.47.3'
+[2026-11-23T00:52:37.484Z] using GIT_ASKPASS to set credentials GitHub
+[2026-11-23T00:52:37.514Z]  > git fetch --no-tags --force --progress -- https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013.git +refs/pull/163/head:refs/remotes/origin/PR-163 +refs/heads/main:refs/remotes/origin/main # timeout=10
+[2026-11-23T00:52:37.987Z] Merging remotes/origin/main commit 1a9199d3c5639823e23c17c87ffaf99e8c08439e into PR head commit 0167909f6155b07138caaeac32e60f6b55e43396
+[2026-11-23T00:52:37.987Z]  > git config core.sparsecheckout # timeout=10
+[2026-11-23T00:52:37.999Z]  > git checkout -f 0167909f6155b07138caaeac32e60f6b55e43396 # timeout=10
+[2026-11-23T00:52:38.254Z]  > git remote # timeout=10
+[2026-11-23T00:52:38.257Z]  > git config --get remote.origin.url # timeout=10
+[2026-11-23T00:52:38.261Z] using GIT_ASKPASS to set credentials GitHub
+[2026-11-23T00:52:38.305Z]  > git merge 1a9199d3c5639823e23c17c87ffaf99e8c08439e # timeout=10
+[2026-11-23T00:52:38.310Z]  > git rev-parse HEAD^{commit} # timeout=10
+[2026-11-23T00:52:38.314Z] Merge succeeded, producing 0167909f6155b07138caaeac32e60f6b55e43396
+[2026-11-23T00:52:38.315Z] Checking out Revision 0167909f6155b07138caaeac32e60f6b55e43396 (PR-163)
+[2026-11-23T00:52:38.315Z]  > git config core.sparsecheckout # timeout=10
+[2026-11-23T00:52:38.319Z]  > git checkout -f 0167909f6155b07138caaeac32e60f6b55e43396 # timeout=10
+[2026-11-23T00:52:38.330Z] Commit message: "feat(dashboard): harden container image and CI healthcheck (HU-DASH-03)"
+[Pipeline] sh
+[2026-11-23T00:52:39.828Z] + rm -f sonar-links.txt image-digest.txt .ci-notification.md .ci-slack.json
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Resolve services)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
+[2026-11-23T00:52:45.750Z] + printenv
+[2026-11-23T00:52:45.750Z] + grep -E ^(NEXUS_REGISTRY|NEXUS_URL|TOOLS_IP|TOOLS_PRIVATE_IP|GITHUB_OWNER|GITHUB_REPO)=
+[Pipeline] echo
+[2026-11-23T00:52:48.742Z] Registry 10.147.20.67:5000 is the local plain-HTTP Nexus: Docker daemon will use 127.0.0.1:5000.
+[Pipeline] echo
+[2026-11-23T00:52:49.380Z] Docker login target: 127.0.0.1:5000 (advertised registry: 10.147.20.67:5000)
+[Pipeline] writeFile
+[Pipeline] writeFile
+[Pipeline] sh
+[2026-11-23T00:52:51.574Z] + git fetch --tags --force --quiet
+[Pipeline] sh
+[2026-11-23T00:52:52.357Z] + git describe --tags --exact-match --match v[0-9]* HEAD
+[2026-11-23T00:52:52.357Z] + true
+[Pipeline] sh
+[2026-11-23T00:52:53.224Z] + git tag --list v[0-9]* --sort=-v:refname
+[2026-11-23T00:52:53.224Z] + head -n1
+[Pipeline] sh
+[2026-11-23T00:52:54.188Z] + git log --format=%s v1.16.0..HEAD
+[Pipeline] sh
+[2026-11-23T00:52:55.036Z] + git log --format=%b v1.16.0..HEAD
+[Pipeline] echo
+[2026-11-23T00:52:55.786Z] Calculated semantic version: 1.17.0 (base 1.16.0, breaking=false, feat=true).
+[Pipeline] sh
+[2026-11-23T00:52:56.965Z] + git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+[Pipeline] sh
+[2026-11-23T00:52:57.895Z] + git diff --name-only origin/main...HEAD
+Did you forget the `def` keyword? WorkflowScript seems to be setting a field named autoDiffAvailable (to a value of type Boolean) which could lead to memory leaks or other issues.
+Did you forget the `def` keyword? WorkflowScript seems to be setting a field named resolvedFiles (to a value of type ArrayList) which could lead to memory leaks or other issues.
+[Pipeline] echo
+[2026-11-23T00:52:59.204Z] CI-only change; no Java service selected: Jenkinsfile
+[Pipeline] echo
+[2026-11-23T00:53:00.641Z] CI-only change; no Java service selected: jenkins/vars/ciServices.groovy
+Did you forget the `def` keyword? WorkflowScript seems to be setting a field named javaServices (to a value of type ArrayList) which could lead to memory leaks or other issues.
+[Pipeline] echo
+[2026-11-23T00:53:01.495Z] Semantic version: 1.17.0
+[Pipeline] echo
+[2026-11-23T00:53:02.163Z] Components to build: dashboard
+[Pipeline] echo
+[2026-11-23T00:53:02.909Z] Mobile coverage: false
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Mobile tests + coverage)
+Stage "Mobile tests + coverage" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit Tests + JaCoCo)
+Stage "Unit Tests + JaCoCo" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build)
+Stage "Build" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (SonarQube + Quality Gate)
+Stage "SonarQube + Quality Gate" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Integration Tests)
+Stage "Integration Tests" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Trivy IaC Security Gate)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
+[2026-11-23T00:53:26.700Z] + set -eu
+[2026-11-23T00:53:26.700Z] + command -v trivy
+[Pipeline] sh
+[2026-11-23T00:53:28.198Z] + set -eu
+[2026-11-23T00:53:28.198Z] + export PATH=/usr/local/bin:/var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-163/workspace/.trivy-bin:/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+[2026-11-23T00:53:28.198Z] + mkdir -p build/reports/security
+[2026-11-23T00:53:28.198Z] + trivy config --severity HIGH,CRITICAL --format json --output build/reports/security/trivy-iac.json deploy/k8s/
+[2026-11-23T00:53:28.198Z] 2026-11-23T00:53:28Z	INFO	[misconfig] Misconfiguration scanning is enabled
+[2026-11-23T00:53:28.198Z] 2026-11-23T00:53:28Z	INFO	[checks-client] Using existing checks from cache	path="/root/.cache/trivy/policy/content"
+[2026-11-23T00:53:29.109Z] 2026-11-23T00:53:28Z	WARN	[rego] Module will be skipped as current version of Trivy is older than minimum trivy version required - please update Trivy to use this module	file_path="root/.cache/trivy/policy/content/policies/cloud/policies/aws/cloudfront/enable_logging.rego" minimum_trivy_version="0.72.0"
+[2026-11-23T00:53:30.970Z] 2026-11-23T00:53:30Z	INFO	Detected config files	num=25
+[2026-11-23T00:53:30.970Z] 
+[2026-11-23T00:53:30.970Z] 📣 [34mNotices:[0m
+[2026-11-23T00:53:30.970Z]   - Version 0.76.2 of Trivy is now available, current version is 0.70.0
+[2026-11-23T00:53:30.970Z] 
+[2026-11-23T00:53:30.970Z] To suppress version checks, run Trivy scans with the --skip-version-check flag
+[2026-11-23T00:53:30.970Z] 
+[2026-11-23T00:53:30.970Z] + trivy config --severity CRITICAL --exit-code 1 deploy/k8s/
+[2026-11-23T00:53:30.970Z] + tee build/reports/security/trivy-iac.txt
+[2026-11-23T00:53:31.220Z] 2026-11-23T00:53:31Z	INFO	[misconfig] Misconfiguration scanning is enabled
+[2026-11-23T00:53:31.220Z] 2026-11-23T00:53:31Z	INFO	[checks-client] Using existing checks from cache	path="/root/.cache/trivy/policy/content"
+[2026-11-23T00:53:32.131Z] 2026-11-23T00:53:31Z	WARN	[rego] Module will be skipped as current version of Trivy is older than minimum trivy version required - please update Trivy to use this module	file_path="root/.cache/trivy/policy/content/policies/cloud/policies/aws/cloudfront/enable_logging.rego" minimum_trivy_version="0.72.0"
+[2026-11-23T00:53:34.613Z] 2026-11-23T00:53:34Z	INFO	Detected config files	num=25
+[2026-11-23T00:53:34.613Z] 
+[2026-11-23T00:53:34.613Z] Report Summary
+[2026-11-23T00:53:34.613Z] 
+[2026-11-23T00:53:34.613Z] ┌───────────────────────────────────────────────────────────────┬────────────┬───────────────────┐
+[2026-11-23T00:53:34.613Z] │                            Target                             │    Type    │ Misconfigurations │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ base/apps.yml                                                 │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ base/auth-alerts.yml                                          │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ base/form-storage.yml                                         │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ base/hpa.yml                                                  │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ base/identity-alerts.yml                                      │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ base/ingress.yml                                              │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ base/middleware.yml                                           │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ base/notification-alerts.yml                                  │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ base/promotion-alerts.yml                                     │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ components/form-observability/monitoring/monitoring-patch.yml │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ form06-dev/canary/form-hu6.yml                                │ kubernetes │         0         │
+[2026-11-23T00:53:34.613Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.613Z] │ form06-dev/monitoring/dev-monitoring-patch.yml                │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ form06-dev/monitoring/dev-rbac.yml                            │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ form06-dev/monitoring/loki-alloy-jaeger.yml                   │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ form06-dev/monitoring/remove-cluster-rbac.yml                 │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ form06-dev/monitoring/remove-promtail.yml                     │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ monitoring/alertmanager.yml                                   │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ monitoring/grafana.yml                                        │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ monitoring/loki.yml                                           │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├────────────────────────────────────────────
+[2026-11-23T00:53:34.614Z] 📣 [34mNotices:[0m
+[2026-11-23T00:53:34.614Z]   - Version 0.76.2 of Trivy is now available, current version is 0.70.0
+[2026-11-23T00:53:34.614Z] 
+[2026-11-23T00:53:34.614Z] To suppress version checks, run Trivy scans with the --skip-version-check flag
+[2026-11-23T00:53:34.614Z] 
+[2026-11-23T00:53:34.614Z] ───────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ monitoring/namespace.yml                                      │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ monitoring/prometheus.yml                                     │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ monitoring/promtail.yml                                       │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ overlays/dev/namespace.yml                                    │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ overlays/prod/namespace.yml                                   │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] ├───────────────────────────────────────────────────────────────┼────────────┼───────────────────┤
+[2026-11-23T00:53:34.614Z] │ overlays/stage/namespace.yml                                  │ kubernetes │         0         │
+[2026-11-23T00:53:34.614Z] └───────────────────────────────────────────────────────────────┴────────────┴───────────────────┘
+[2026-11-23T00:53:34.614Z] Legend:
+[2026-11-23T00:53:34.614Z] - '-': Not scanned
+[2026-11-23T00:53:34.614Z] - '0': Clean (no security findings detected)
+[2026-11-23T00:53:34.614Z] 
+[Pipeline] archiveArtifacts
+[2026-11-23T00:53:35.234Z] Archiving artifacts
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Package)
+Stage "Package" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Git tag)
+Stage "Git tag" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Release notes)
+Stage "Release notes" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (GitHub Release)
+Stage "GitHub Release" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Publish)
+Stage "Publish" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Docker)
+Stage "Docker" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Docker client)
+Stage "Docker client" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Trivy Image Security Gate)
+Stage "Trivy Image Security Gate" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy dev)
+Stage "Deploy dev" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (E2E)
+Stage "E2E" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy stage)
+Stage "Deploy stage" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (OWASP ZAP Security Gate)
+Stage "OWASP ZAP Security Gate" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Approval prod)
+Stage "Approval prod" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy prod)
+Stage "Deploy prod" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Rollback prod)
+Stage "Rollback prod" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] fileExists
+[Pipeline] fileExists
+[Pipeline] archiveArtifacts
+[2026-11-23T00:54:58.588Z] Archiving artifacts
+[2026-11-23T00:54:58.633Z] Recording fingerprints
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] echo
+[2026-11-23T00:55:03.293Z] Pipeline succeeded: dashboard 1.17.0
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timestamps
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+
+GitHub has been notified of this commit’s build result
+
+Finished: SUCCESS

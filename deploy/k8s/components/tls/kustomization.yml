@@ -1,0 +1,7 @@
+# CG-DOC: Componente opcional de TLS para el Ingress compartido.
+# Se activa explícitamente desde un overlay cuando ya existen DNS y certificado.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - path: ingress-tls.yml

@@ -115,7 +115,9 @@ lowered to make a build pass: when coverage falls below the gate, real tests are
 - Integration: Testcontainers in auth, form, gateway, identity, notification and promotion.
 - E2E: Playwright against the web client and the gateway.
 - Image security: verifies the image does not run as root; services with
-  `healthcheck: true` must declare `HEALTHCHECK`.
+  `healthcheck: true` must declare `HEALTHCHECK`. The flagged services are gateway,
+  identity, promotion, notification and dashboard (HU-DASH-03); dashboard is packaged
+  and published in Parte 1 but not deployed until Parte 2.
 - Logs, JaCoCo XML, LCOV, JUnit results, Sonar links and image digests are archived on
   every build.
 

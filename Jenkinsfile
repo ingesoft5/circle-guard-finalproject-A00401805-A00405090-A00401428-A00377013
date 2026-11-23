@@ -96,7 +96,7 @@ def enrichServices(List resolved, boolean includeMobile) {
         if (covered.contains(service.short)) {
             service.jacoco = true
         }
-        if (['gateway', 'auth', 'identity', 'promotion', 'form', 'notification'].contains(service.short)) {
+        if (['gateway', 'auth', 'identity', 'promotion', 'form', 'notification', 'dashboard'].contains(service.short)) {
             service.healthcheck = true
         }
         // HU-FILE-04: the shared library is pinned to main, so this PR cannot see the
@@ -304,18 +304,30 @@ def ensureTrivyBinaryLocal() {
 
 def trivyScanIaCLocal() {
     ensureTrivyBinaryLocal()
+    // CG-DOC: One consolidated IaC gate covers Terraform and Kubernetes manifests.
+    // `trivy config` scans both trees for misconfigurations and secrets without
+    // downloading the vulnerability DB, which the on-prem controller may not reach.
+    // Each target is scanned once; jq enforces the blocking CRITICAL threshold.
     sh '''
         set -eu
         export PATH="/usr/local/bin:${WORKSPACE}/.trivy-bin:${PATH}"
         mkdir -p build/reports/security
-        trivy config --severity HIGH,CRITICAL --format json --output build/reports/security/trivy-iac.json deploy/k8s/
-        trivy config --severity CRITICAL --exit-code 1 deploy/k8s/ | tee build/reports/security/trivy-iac.txt
+        SKIP="infra/terraform/state-backend/.terraform,infra/terraform/envs/dev/.terraform,infra/terraform/envs/stage/.terraform,infra/terraform/envs/prod/.terraform"
+        trivy config --severity HIGH,CRITICAL --skip-dirs "$SKIP" --format json --output build/reports/security/trivy-iac-terraform.json infra/terraform
+        trivy config --severity HIGH,CRITICAL --format json --output build/reports/security/trivy-iac-k8s.json deploy/k8s
+        count() { jq '[.Results[]? | ((.Vulnerabilities // []) + (.Misconfigurations // []) + (.Secrets // []))[]? | select(.Severity == "CRITICAL")] | length' "$1"; }
+        criticals=$(( $(count build/reports/security/trivy-iac-terraform.json) + $(count build/reports/security/trivy-iac-k8s.json) ))
+        if [ "$criticals" -gt 0 ]; then
+          echo "Trivy IaC: $criticals CRITICAL findings; blocking build." >&2
+          exit 1
+        fi
     '''
-    archiveArtifacts artifacts: 'build/reports/security/trivy-iac.*', allowEmptyArchive: true
+    archiveArtifacts artifacts: 'build/reports/security/trivy-iac-*.json', allowEmptyArchive: true
 }
 
 def trivyScanImagesLocal(List images, String tag) {
     ensureTrivyBinaryLocal()
+    // CG-DOC: Scan each image once; jq keeps the CRITICAL gate blocking.
     def registry = dockerRegistryForDaemon()
     images.each { service ->
         def image = "${registry}/circleguard-docker/${service.short}:${tag}"
@@ -324,7 +336,11 @@ def trivyScanImagesLocal(List images, String tag) {
             export PATH="/usr/local/bin:\${WORKSPACE}/.trivy-bin:\${PATH}"
             mkdir -p build/reports/security
             trivy image --severity HIGH,CRITICAL --ignore-unfixed --format json --output build/reports/security/trivy-${service.short}-${tag}.json "${image}"
-            trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 "${image}" | tee build/reports/security/trivy-${service.short}-${tag}.txt
+            criticals=\$(jq '[.Results[]? | .Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' build/reports/security/trivy-${service.short}-${tag}.json)
+            if [ "\$criticals" -gt 0 ]; then
+              echo "Trivy image ${service.short}: \$criticals CRITICAL findings; blocking build." >&2
+              exit 1
+            fi
         """
     }
     archiveArtifacts artifacts: 'build/reports/security/trivy-*', allowEmptyArchive: true
@@ -347,7 +363,10 @@ def owaspZapGateLocal(String environment) {
         : > build/reports/security/zap-${environment}.txt
         kubectl -n ${namespace} wait --for=condition=Available deployment/auth deployment/gateway deployment/promotion deployment/notification --timeout=180s
     """
+    // CG-DOC: Each target uses its own pod name, so baseline scans can run in parallel.
+    def zapBranches = [:]
     targets.each { svc, target ->
+        zapBranches["ZAP ${svc}"] = {
         def zapPod = "zap-gate-${svc}-${buildNumber}".toString()
         sh """
             set -eu
@@ -361,7 +380,9 @@ def owaspZapGateLocal(String environment) {
             kubectl -n ${namespace} wait "pod/${zapPod}" --for=jsonpath='{.status.phase}'=Succeeded --timeout=300s
             kubectl -n ${namespace} logs ${zapPod} | tee -a build/reports/security/zap-${environment}.txt
         """
+        }
     }
+    parallel zapBranches
     sh """
         set -eu
         if grep -qE '^FAIL-NEW:[[:space:]]*[1-9]' build/reports/security/zap-${environment}.txt; then
@@ -599,6 +620,70 @@ def registryDigest(String repository, String tag) {
     return digest
 }
 
+// ---------- Terraform (E2.1 / E2.3) ------------------------------------------
+// These helpers live here instead of the Shared Library: a PR pipeline loads
+// `@Library('circleguard@main')` and cannot see methods added in the same branch.
+// Every stage reads Jenkins credentials; no secrets are stored in the repository.
+def terraformPlanEnvironment(String environment) {
+    withCredentials([
+            usernamePassword(credentialsId: 'terraform-minio-creds',
+                    usernameVariable: 'TF_MINIO_USER', passwordVariable: 'TF_MINIO_PASS'),
+            string(credentialsId: 'terraform-grafana-password', variable: 'TF_GRAFANA_PASS')
+    ]) {
+        sh """
+            set -eu
+            cd infra/terraform/envs/${environment}
+            cp -f backend.hcl.example backend.hcl
+            export AWS_ACCESS_KEY_ID="\$TF_MINIO_USER"
+            export AWS_SECRET_ACCESS_KEY="\$TF_MINIO_PASS"
+            export TF_VAR_minio_access_key="\$TF_MINIO_USER"
+            export TF_VAR_minio_secret_key="\$TF_MINIO_PASS"
+            export TF_VAR_grafana_admin_password="\$TF_GRAFANA_PASS"
+            export TF_VAR_kubeconfig="\${KUBECONFIG}"
+            terraform init -input=false -backend-config=backend.hcl
+            terraform validate
+            # CG-DOC: The shared-cluster bootstrap now runs only in terraformApplyEnvironment,
+            # keeping the plan read-only so all three environments can be planned in parallel.
+            set +e
+            terraform plan -input=false -detailed-exitcode -out=tfplan
+            rc=\$?
+            set -e
+            if [ "\$rc" -eq 1 ]; then
+              echo "terraform plan failed for ${environment}"
+              exit 1
+            fi
+            echo "terraform plan ${environment}: exit \$rc (0=no changes, 2=pending changes)"
+        """
+    }
+}
+
+def terraformApplyEnvironment(String environment) {
+    withCredentials([
+            usernamePassword(credentialsId: 'terraform-minio-creds',
+                    usernameVariable: 'TF_MINIO_USER', passwordVariable: 'TF_MINIO_PASS'),
+            string(credentialsId: 'terraform-grafana-password', variable: 'TF_GRAFANA_PASS')
+    ]) {
+        sh """
+            set -eu
+            cd infra/terraform/envs/${environment}
+            cp -f backend.hcl.example backend.hcl
+            export AWS_ACCESS_KEY_ID="\$TF_MINIO_USER"
+            export AWS_SECRET_ACCESS_KEY="\$TF_MINIO_PASS"
+            export TF_VAR_minio_access_key="\$TF_MINIO_USER"
+            export TF_VAR_minio_secret_key="\$TF_MINIO_PASS"
+            export TF_VAR_grafana_admin_password="\$TF_GRAFANA_PASS"
+            export TF_VAR_kubeconfig="\${KUBECONFIG}"
+            # CG-DOC: Reuse the provider cache produced by the plan stage; only bootstrap
+            # when this stage runs alone (for example a rollback-only rerun).
+            if [ ! -d .terraform ]; then
+              terraform init -input=false -backend-config=backend.hcl
+            fi
+            terraform apply -input=false -auto-approve -target=module.compute
+            terraform apply -input=false -auto-approve tfplan
+        """
+    }
+}
+
 pipeline {
     agent any
 
@@ -734,6 +819,28 @@ pipeline {
             post {
                 failure {
                     script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps {
+                script {
+                    // CG-DOC: Plans are read-only after P0, so dev/stage/prod can run in parallel.
+                    def planBranches = [:]
+                    ['dev', 'stage', 'prod'].each { environment ->
+                        planBranches["Plan ${environment}"] = {
+                            echo "Terraform plan for environment ${environment}..."
+                            terraformPlanEnvironment(environment)
+                        }
+                    }
+                    parallel planBranches
                 }
             }
         }
@@ -1054,6 +1161,16 @@ pipeline {
             }
         }
 
+        stage('Terraform Apply dev') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps { script { terraformApplyEnvironment('dev') } }
+        }
+
         stage('Deploy dev') {
             when {
                 allOf {
@@ -1092,6 +1209,16 @@ pipeline {
                     script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
+        }
+
+        stage('Terraform Apply stage') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps { script { terraformApplyEnvironment('stage') } }
         }
 
         stage('Deploy stage') {
@@ -1152,6 +1279,16 @@ pipeline {
                     script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
+        }
+
+        stage('Terraform Apply prod') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { services && !params.ROLLBACK_TAG?.trim() }
+                }
+            }
+            steps { script { terraformApplyEnvironment('prod') } }
         }
 
         stage('Deploy prod') {

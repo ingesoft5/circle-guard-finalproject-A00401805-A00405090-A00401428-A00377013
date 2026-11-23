@@ -1,0 +1,8 @@
+# CG-DOC: Keep runtime state and real backend credentials out of Git.
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+!terraform.tfvars.example
+backend.hcl

@@ -33,7 +33,7 @@ English purpose of every tracked repository file.
 
 - `CHANGELOG.md` — Markdown documentation: CHANGELOG.
 
-- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification (includes the `hu-file-04` entry under the CI/CD section).
+- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification (includes the `hu-file-04` and `hu-dash-03` entries under the CI/CD section).
 
 - `Jenkinsfile` — Shared Jenkins multibranch pipeline for CircleGuard services, quality gates, semver tags, and Docker publication; on-prem deploys via kubectl/kustomize to k3d.
 
@@ -185,6 +185,8 @@ English purpose of every tracked repository file.
 
 - `docs/informe/HU-DASH-02.md` — Dashboard unit-test, JaCoCo coverage, and Promotion failure-response evidence.
 
+- `docs/informe/HU-DASH-03.md` — Dashboard multi-stage image, non-root execution, OCI traceability, and shared CI/CD integration evidence.
+
 - `docs/informe/HU-FORM-05.md` — Form Kubernetes audit, persistent upload configuration, and pending deployment evidence.
 
 - `docs/informe/HU-FILE-03.md` — File-service CI quality gate, idempotent publishing, semver tag policy, and on-prem rebuild evidence.
@@ -200,6 +202,12 @@ English purpose of every tracked repository file.
 - `docs/informe/P1.1-Branching-GitHub-Flow.pdf` — Binary asset.
 
 - `docs/informe/evidencia/README.md` — Evidence screenshots for the E1.2 Markdown report.
+
+- `docs/informe/evidencia/HU-DASH-03/README.md` — Jenkins run record for dashboard: PR result, failed `main` build, root cause and retry steps.
+
+- `docs/informe/evidencia/HU-DASH-03/main-build-53-console.txt` — Full console of the failed `main` build (`SERVICE=circleguard-dashboard-service`).
+
+- `docs/informe/evidencia/HU-DASH-03/pr-build-1-console.txt` — Full console of the green PR build that skipped the Java stages.
 
 - `docs/informe/evidencia/HU-FILE-04/3-runs.txt` — Summary of three consecutive MinIO integration runs and cleanup.
 

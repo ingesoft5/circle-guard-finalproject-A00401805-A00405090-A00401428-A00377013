@@ -33,6 +33,7 @@
    - [3.3 HU-FORM-03 — Empaquetar `form-service` e integrarlo al pipeline](#33-hu-form-03--empaquetar-form-service-e-integrarlo-al-pipeline)
 4. [Módulo: `circleguard-promotion-service` (Alejandro Quiñones Caicedo)](#4-módulo-circleguard-promotion-service-alejandro-quiñones-caicedo)
    - [4.1 HU-PROMO-01 (DCG-304) — Diagnosticar la estructura y dependencias de `promotion-service`](#41-hu-promo-01-dcg-304--diagnosticar-la-estructura-y-dependencias-de-promotion-service)
+5. [Módulo: `circleguard-dashboard-service` e integración CI/CD (HU-DASH-03)](#5-módulo-circleguard-dashboard-service-e-integración-cicd-hu-dash-03)
 
 ---
 
@@ -1192,3 +1193,83 @@ Entregá el resultado como documento Markdown en docs/arquitectura/.
 #### D. Reflexión crítica
 
 La IAG aceleró la redacción y el inventario, pero también produjo afirmaciones plausibles y falsas (un conteo de rutas incompleto y una conclusión de seguridad que contradecía las anotaciones del código). La lección es que el diagnóstico debe cerrarse contra el código y contra una revisión externa: sin ese contraste, el documento habría desviado el trabajo de las HU siguientes.
+
+---
+
+<a id="hu-dash-03"></a>
+## 5. Módulo: `circleguard-dashboard-service` e integración CI/CD (HU-DASH-03)
+
+- **Fecha:** 22 de noviembre de 2026
+- **Nivel de uso:** 3 (colaboración con IAG).
+- **Herramienta:** OpenCode / Big Pickle.
+- **Historia / Entregable:** `HU-DASH-03` — E1.3, E1.4, E1.5, E1.6 y E1.7.
+- **Rama base:** `main` (`1a9199d`).
+
+### A. Contenido propio entregado a la IAG
+
+1. **Insumo previo:** se revisaron `Proyecto_Final_CircleGuard.tex` (E1.3-E1.7 y la nota de alcance de la Parte 1, que excluye a dashboard del despliegue), `docs/informe/HU-DASH-01.md` (diagnóstico), `docs/informe/HU-DASH-02.md` (19 pruebas, 97.3 % de cobertura), `Jenkinsfile`, `jenkins/vars/*.groovy`, `gradle/jacoco-convention.gradle` y los Dockerfile de los otros servicios.
+2. **Contraste con el código:** se determinó que multi-stage, usuario no root, catálogo del Shared Library, quality gate, semver y archivado de reportes ya existían; las brechas reales eran los metadatos OCI no usados, el healthcheck no verificado para dashboard y la falta de evidencia documental del empaquetado.
+3. **Decisión de diseño:** alinear el Dockerfile con el patrón de `file-service` (UID/GID fijo 10001, `COPY --chown`, cachés BuildKit y labels), mantener `deploy: false` en Parte 1 y añadir `dashboard` a la verificación de healthcheck tanto en el catálogo como en el override local del Jenkinsfile.
+4. **Restricción respetada:** no se inventaron evidencias de Jenkins/SonarQube remotas; el informe distingue la verificación local ejecutada de la corrida que debe hacerse en el servidor con `SERVICE=dashboard`.
+
+### B. Prompts empleados
+
+```text
+Contrasta con el enunciado del proyecto final para hacer esta HU:
+Historia de usuario
+
+Como integrante del equipo DevOps de CircleGuard, quiero contenerizar dashboard-service e integrarlo al pipeline CI/CD compartido, para automatizar su compilación, validación y publicación como una imagen Docker versionada y reproducible.
+
+Dependencias
+HU-DASH-01, HU-DASH-02 y pipeline Jenkins compartido
+
+Subtareas previstas
+
+Crear un Dockerfile multi-stage que compile el microservicio utilizando Gradle y genere una imagen de ejecución.
+Configurar la imagen para que el servicio se ejecute mediante un usuario no root.
+Integrar dashboard-service al Jenkinsfile y a las etapas reutilizables de la Shared Library del proyecto.
+Configurar la ejecución automática de compilación, pruebas unitarias, cobertura con JaCoCo y análisis estático con SonarQube.
+Verificar que el quality gate de SonarQube y las pruebas sean bloqueantes.
+Integrar la publicación de la imagen en el registro de artefactos compartido, utilizando versionado semántico automático basado en tags Git y Conventional Commits.
+Verificar que los reportes y resultados del servicio queden disponibles en Jenkins.
+
+Criterios de aceptación
+
+El Dockerfile permite construir una imagen reproducible de dashboard-service mediante una construcción multi-stage.
+El contenedor inicia correctamente y ejecuta la aplicación con un usuario no root.
+Jenkins ejecuta automáticamente las validaciones del servicio mediante el pipeline compartido.
+Los resultados de pruebas, cobertura y análisis estático pueden consultarse desde Jenkins y SonarQube.
+Un fallo en las pruebas o en el quality gate bloquea la publicación de la imagen.
+Las imágenes de release se publican en el registro con una versión semántica trazable a un tag Git, sin utilizar latest.
+La imagen publicada queda disponible para su posterior despliegue en la Parte 2.
+Subtareas:
+Crear Dockerfile multi-stage con compilación Gradle.
+Configurar ejecución del contenedor con usuario no root.
+Integrar dashboard-service al Jenkinsfile y Shared Library compartida.
+Integrar compilación, pruebas, JaCoCo y SonarQube en CI.
+Configurar pruebas y quality gate bloqueantes.
+Publicar imagen Docker versionada con semver, Git tags y Conventional Commits.
+Verificar publicación de reportes y resultados en Jenkins.
+```
+
+```text
+Ejecuta el plan
+```
+
+### C. Validación humana y hallazgos
+
+- `./gradlew :services:circleguard-dashboard-service:clean :...:check` terminó en `BUILD SUCCESSFUL`: 19 tests, 0 fallos, 0 omitidos; JaCoCo 73/75 líneas (97.33 %) y `verifyUnitTestsRan` sin hallazgos.
+- `jenkins/test/TestCiServices.groovy` terminó con `ALL CASES PASSED` tras modificar el catálogo.
+- `docker build` con los `--build-arg` de versión/commit/source terminó correctamente; la imagen resultante ejecuta `id -u` como `10001`, declara `HEALTHCHECK` en 8084, lleva los labels OCI con la revisión `1a9199d...` y no genera tag `latest`.
+- Se revisó el `git diff` de los cinco archivos tocados y se corrigió una redacción del informe antes de cerrarlo.
+
+### D. Reflexión crítica
+
+La IAG ayudó a convertir una HU aparentemente nueva en una brecha acotada: reescribir todo el pipeline habría duplicado trabajo ya cubierto y habría introducido riesgo. El punto delicado fue la distinción entre "imagen que compila" e "imagen auditable": sin los labels y el UID fijo, la imagen pasaría los checks funcionales pero no dejaría rastro del commit ni del tag que la originó. También quedó claro que `Jenkinsfile` y la librería comparten responsabilidades de forma intencional: el override local mantiene el PR verde mientras la librería fijada a `main` no incorpora el cambio, y el catálogo compartido lo vuelve permanente tras el merge. Finalmente, no falsificar enlaces de Jenkins o SonarQube evita que la evidencia parezca verificada cuando solo está configurada.
+
+### E. Registro de la corrida remota (23 de noviembre de 2026)
+
+- Con credenciales de administrador de Jenkins se consultó la API y se lanzó `Build with Parameters` sobre `main` con `SERVICE=circleguard-dashboard-service`, `TAG` vacío y `ROLLBACK_TAG` vacío.
+- El PR #163 quedó mergeado en `main` (`cbe6cf7`). El build `PR-163/1` terminó en verde, pero el detector de cambios lo clasificó como `CI-only` y omitió Unit Tests, JaCoCo y Sonar.
+- El build `main #53` terminó en `FAILURE` en `Terraform Plan`: falta la credencial Jenkins `terraform-minio-creds`. En consecuencia no se publicó imagen ni se generaron `image-digest.txt` o `sonar-links.txt` con contenido.
+- La IAG dejó el registro honesto en `docs/informe/evidencia/HU-DASH-03/README.md`, junto con las consolas completas y los pasos para crear las credenciales faltantes y repetir la corrida.
