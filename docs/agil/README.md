@@ -15,6 +15,10 @@
 | Sprint 1 — planeación | [`sprint-1/planning.md`](sprint-1/planning.md) |
 | Sprint 1 — review | [`sprint-1/review.md`](sprint-1/review.md) |
 | Sprint 1 — retrospectiva | [`sprint-1/retrospective.md`](sprint-1/retrospective.md) |
+| Sprint 2 — planeación | [`sprint-2/planning.md`](sprint-2/planning.md) |
+| Sprint 2 — revisión | [`sprint-2/review.md`](sprint-2/review.md) |
+| Sprint 2 — retrospectiva | [`sprint-2/retrospective.md`](sprint-2/retrospective.md) |
+| Rollback de producción | [`../infra/rollback.md`](../infra/rollback.md) |
 
 ## Reglas de trabajo
 

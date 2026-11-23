@@ -96,7 +96,7 @@ def enrichServices(List resolved, boolean includeMobile) {
         if (covered.contains(service.short)) {
             service.jacoco = true
         }
-        if (['gateway', 'auth', 'identity', 'promotion', 'form', 'notification'].contains(service.short)) {
+        if (['gateway', 'auth', 'identity', 'promotion', 'form', 'notification', 'dashboard'].contains(service.short)) {
             service.healthcheck = true
         }
         // HU-FILE-04: the shared library is pinned to main, so this PR cannot see the
@@ -305,13 +305,15 @@ def ensureTrivyBinaryLocal() {
 def trivyScanIaCLocal() {
     ensureTrivyBinaryLocal()
     // CG-DOC: One consolidated IaC gate covers Terraform and Kubernetes manifests.
+    // `trivy config` scans both trees for misconfigurations and secrets without
+    // downloading the vulnerability DB, which the on-prem controller may not reach.
     // Each target is scanned once; jq enforces the blocking CRITICAL threshold.
     sh '''
         set -eu
         export PATH="/usr/local/bin:${WORKSPACE}/.trivy-bin:${PATH}"
         mkdir -p build/reports/security
         SKIP="infra/terraform/state-backend/.terraform,infra/terraform/envs/dev/.terraform,infra/terraform/envs/stage/.terraform,infra/terraform/envs/prod/.terraform"
-        trivy fs --severity HIGH,CRITICAL --skip-dirs "$SKIP" --format json --output build/reports/security/trivy-iac-terraform.json infra/terraform
+        trivy config --severity HIGH,CRITICAL --skip-dirs "$SKIP" --format json --output build/reports/security/trivy-iac-terraform.json infra/terraform
         trivy config --severity HIGH,CRITICAL --format json --output build/reports/security/trivy-iac-k8s.json deploy/k8s
         count() { jq '[.Results[]? | ((.Vulnerabilities // []) + (.Misconfigurations // []) + (.Secrets // []))[]? | select(.Severity == "CRITICAL")] | length' "$1"; }
         criticals=$(( $(count build/reports/security/trivy-iac-terraform.json) + $(count build/reports/security/trivy-iac-k8s.json) ))

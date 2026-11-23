@@ -1,0 +1,4 @@
+# CG-DOC: generated Locust reports are evidence only, never committed here.
+*.html
+*.csv
+reports/

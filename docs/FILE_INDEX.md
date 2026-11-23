@@ -33,7 +33,7 @@ English purpose of every tracked repository file.
 
 - `CHANGELOG.md` — Markdown documentation: CHANGELOG.
 
-- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification (includes the `hu-file-04` entry under the CI/CD section).
+- `IAG_REGISTRO.md` — Registry of generative AI usage and human verification (includes the `hu-file-04` and `hu-dash-03` entries under the CI/CD section).
 
 - `Jenkinsfile` — Shared Jenkins multibranch pipeline for CircleGuard services, quality gates, semver tags, and Docker publication; on-prem deploys via kubectl/kustomize to k3d.
 
@@ -184,6 +184,8 @@ English purpose of every tracked repository file.
 - `docs/informe/Gateway-Cobertura.md` — Gateway coverage, integration, E2E, and quality evidence report.
 
 - `docs/informe/HU-DASH-02.md` — Dashboard unit-test, JaCoCo coverage, and Promotion failure-response evidence.
+
+- `docs/informe/HU-DASH-03.md` — Dashboard multi-stage image, non-root execution, OCI traceability, and shared CI/CD integration evidence.
 
 - `docs/informe/HU-FORM-05.md` — Form Kubernetes audit, persistent upload configuration, and pending deployment evidence.
 

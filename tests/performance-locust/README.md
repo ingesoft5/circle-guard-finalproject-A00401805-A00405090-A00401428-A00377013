@@ -1,19 +1,43 @@
-# CG-DOC: Pruebas de rendimiento con Locust (E2.7)
+<!-- CG-DOC: E2.6 load test suite: objectives, scenarios and reproduction. -->
+# Locust — pruebas de carga de CircleGuard
 
-Escenarios: validación de acceso con QR y envío de cuestionario de salud.
+Escenarios sobre `cg-stage` que reproducen los dos flujos exigidos en E2.6:
+
+| Escenario | Peticiones medidas | Peso |
+|---|---|---|
+| Validación de acceso | `POST /api/v1/auth/login` → `GET /api/v1/auth/qr/generate` → `POST /api/v1/gate/validate` | 5 |
+| Envío de cuestionario | `GET /api/v1/questionnaires/active` → `POST /api/v1/surveys` | 3 |
+| Control negativo | `POST /api/v1/gate/validate` con token inválido (espera 401/403) | 1 |
+
+## Objetivos declarados (antes de ejecutar)
+
+| Métrica | Objetivo |
+|---|---|
+| p95 de `POST /api/v1/gate/validate` | ≤ 500 ms |
+| p95 de `POST /api/v1/auth/login` | ≤ 800 ms |
+| Tasa de errores global | < 1 % (excluyendo el control negativo, que espera 4xx) |
+| Throughput sostenido | ≥ 50 req/s con 50 usuarios concurrentes |
+| Estabilidad | 5 minutos sin `ConnectionError` ni 5xx |
+
+## Ejecución contra `cg-stage`
+
+El ingress on-prem selecciona el ambiente por cabecera `Host` (ver `docs/infra/runbook.md`).
 
 ```bash
-pip install locust
-mkdir -p tests/performance-locust/results
-locust -f tests/performance-locust/locustfile.py --headless \
-  -u 100 -r 10 -t 5m --host "$TARGET_URL" \
-  --csv tests/performance-locust/results/run
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r tests/performance-locust/requirements.txt
+
+locust -f tests/performance-locust/locustfile.py \
+  --host http://10.147.20.67:30080 \
+  --users 50 --spawn-rate 5 --run-time 5m --headless \
+  --html reports/locust-stage.html --csv reports/locust-stage
 ```
 
-Objetivos declarados: p95 ≤ 800 ms (validación QR), p95 ≤ 1200 ms
-(cuestionario), tasa de error < 1 % y throughput ≥ 50 req/s.
+Variables opcionales: `HOST_HEADER` (por defecto `stage.circleguard.local`),
+`LOADTEST_USER` / `LOADTEST_PASSWORD` (por defecto el usuario semilla
+`staff_guard`). Si el puerto 30080 solo está expuesto dentro del host on-prem,
+establece un túnel `ssh -L 30080:127.0.0.1:30080 <host-onprem>` y usa
+`--host http://127.0.0.1:30080`.
 
-Los CSV generados (`*_stats.csv`, `*_stats_history.csv`) son la evidencia
-de la ejecución; se entregan con el informe final. Si el entorno de demo no
-permite cargar el gateway, se documenta el bloqueo y se ejecuta contra el
-servicio expuesto por el Ingress del ambiente `dev`.
+Los resultados y recomendaciones se registran en
+`docs/informe/evidencia/E2.6-locust.md`.
