@@ -27,13 +27,24 @@ management:
       exposure:
         include: health,info,prometheus
   endpoint:
-    prometheus:
-      enabled: true
     health:
-      show-details: always
+      show-details: never
       probes:
         enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      service: dashboard
+      environment: ${DASHBOARD_ENVIRONMENT:local}
   prometheus:
     metrics:
       export:
         enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+  pattern:
+    level: "%5p [dashboard,${DASHBOARD_ENVIRONMENT:local},%X{traceId:-},%X{spanId:-}]"

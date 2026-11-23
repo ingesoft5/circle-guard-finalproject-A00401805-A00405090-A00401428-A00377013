@@ -13,9 +13,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -48,7 +48,7 @@ class IdentityAuditPublisherResilienceTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private KafkaTemplate<String, Object> kafkaTemplate;
 
     private CircuitBreaker circuitBreaker;
@@ -106,7 +106,7 @@ class IdentityAuditPublisherResilienceTest {
         mockMvc.perform(get("/actuator/prometheus"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(Matchers.containsString(
-                        "resilience4j_circuitbreaker_state{name=\"identityAuditKafka\",state=\"open\",} 1.0")))
+                        "resilience4j_circuitbreaker_state{name=\"identityAuditKafka\",state=\"open\"} 1.0")))
                 .andExpect(content().string(Matchers.containsString(
                         "circleguard_identity_audit_fallback_total")));
     }

@@ -26,10 +26,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
-import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
+import org.springframework.boot.jackson2.autoconfigure.Jackson2AutoConfiguration;
+import org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -97,19 +97,19 @@ class NotificationKafkaIntegrationTest {
 
     @DynamicPropertySource
     static void kafkaProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.bootstrapServers", kafka::getBootstrapServers);
     }
 
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
-    @MockBean
+    @MockitoBean
     private TemplateService templateService;
 
-    @MockBean
+    @MockitoBean
     private LmsService lmsService;
 
-    @MockBean
+    @MockitoBean
     private JavaMailSender mailSender;
 
     @Test
@@ -226,7 +226,7 @@ class NotificationKafkaIntegrationTest {
     @EnableKafka
     @EnableAsync
     @EnableRetry
-    @ImportAutoConfiguration({KafkaAutoConfiguration.class, JacksonAutoConfiguration.class})
+    @ImportAutoConfiguration({KafkaAutoConfiguration.class, Jackson2AutoConfiguration.class})
     @Import({
             ExposureNotificationListener.class,
             NotificationDispatcher.class,

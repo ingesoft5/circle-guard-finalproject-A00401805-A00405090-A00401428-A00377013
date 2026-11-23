@@ -15,8 +15,7 @@ apply(from = "$rootDir/gradle/jacoco-convention.gradle")
 extra["testcontainers.version"] = "1.21.4"
 
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
-    testImplementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.4"))
+    // Spring Boot BOM is applied centrally in the root build.
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
@@ -29,11 +28,12 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
     testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation("io.github.resilience4j:resilience4j-retry:2.2.0")
-    implementation("org.flywaydb:flyway-core")
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-security-test")
     testImplementation(project(":services:circleguard-promotion-service")) {  //SOLO para la prueba de integración FORM -> PROMOTION
         exclude(group = "org.springframework.boot", module = "spring-boot-starter-security")
         // Usa las clases reales sin incluir migraciones ni application.yml de Promotion.

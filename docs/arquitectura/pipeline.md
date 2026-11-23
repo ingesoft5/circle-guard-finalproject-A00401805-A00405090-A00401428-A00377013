@@ -119,7 +119,12 @@ lowered to make a build pass: when coverage falls below the gate, real tests are
   `healthcheck: true` must declare `HEALTHCHECK`. The flagged services are gateway,
   identity, promotion, notification and dashboard (HU-DASH-03). Dashboard was packaged
   and published in Parte 1; HU-DASH-04 enables `deploy: true` so the same tagged image
-  is promoted to `cg-dev`, `cg-stage` and `cg-prod` in Parte 2.
+  is promoted to `cg-dev`, `cg-stage` and `cg-prod` in Parte 2. Since HU-DASH-05
+  it also exposes `/actuator/prometheus` and is covered by the global Trivy image gate
+  when built on `main`. Its first build reported CRITICAL findings and was blocked;
+  the remediation upgraded the shared Spring Boot platform to `4.0.10` without changing
+  the gate, and the rebuilt image scored 0 HIGH / 0 CRITICAL with Trivy `0.57.1` and
+  `0.70.0` as recorded in `docs/informe/evidencia/HU-DASH-05/`.
 - Logs, JaCoCo XML, LCOV, JUnit results, Sonar links and image digests are archived on
   every build.
 

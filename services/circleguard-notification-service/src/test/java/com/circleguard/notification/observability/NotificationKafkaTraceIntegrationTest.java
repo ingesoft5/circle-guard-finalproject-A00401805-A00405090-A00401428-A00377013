@@ -16,9 +16,9 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
+import org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
+import org.springframework.boot.micrometer.metrics.test.autoconfigure.AutoConfigureMetrics;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -52,14 +52,14 @@ import static org.mockito.Mockito.*;
 })
 @Testcontainers(disabledWithoutDocker = true)
 @Tag("integration")
-@AutoConfigureObservability
+@AutoConfigureMetrics
 class NotificationKafkaTraceIntegrationTest {
     @Container static final KafkaContainer KAFKA =
             new KafkaContainer(DockerImageName.parse("apache/kafka:3.7.0"));
 
     @DynamicPropertySource
     static void broker(DynamicPropertyRegistry registry) {
-        registry.add("spring.kafka.bootstrap-servers", KAFKA::getBootstrapServers);
+        registry.add("spring.kafka.bootstrapServers", KAFKA::getBootstrapServers);
     }
 
     @SpringBootConfiguration

@@ -10,12 +10,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.neo4j.core.Neo4jClient;
-import org.mockito.Mock;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -56,28 +55,28 @@ class HealthStatusServiceTest {
     @Autowired
     private HealthStatusService healthStatusService;
 
-    @MockBean
+    @MockitoBean
     private UserNodeRepository userNodeRepository;
 
-    @MockBean
+    @MockitoBean
     private Neo4jClient neo4jClient;
 
-    @MockBean
+    @MockitoBean
     private StringRedisTemplate redisTemplate;
 
-    @Mock
+    @MockitoBean
     private ValueOperations<String, String> valueOperations;
 
-    @MockBean
+    @MockitoBean
     private KafkaTemplate<String, Object> kafkaTemplate;
 
-    @MockBean
+    @MockitoBean
     private org.springframework.cache.CacheManager cacheManager;
 
-    @MockBean
+    @MockitoBean
     private SystemSettingsRepository systemSettingsRepository;
 
-    @MockBean
+    @MockitoBean
     private com.circleguard.promotion.repository.graph.CircleNodeRepository circleNodeRepository;
 
     @Test

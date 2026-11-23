@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -124,7 +124,7 @@ public class IdentityClientResilienceTest {
         mockMvc.perform(get("/actuator/prometheus"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(Matchers.containsString(
-                        "resilience4j_circuitbreaker_state{name=\"identityClient\",state=\"open\",} 1.0")));
+                        "resilience4j_circuitbreaker_state{name=\"identityClient\",state=\"open\"} 1.0")));
 
         mockServer.verify();
     }

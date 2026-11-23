@@ -11,11 +11,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
+import org.springframework.boot.micrometer.metrics.test.autoconfigure.AutoConfigureMetrics;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -60,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
         })
 @Testcontainers(disabledWithoutDocker = true)
 @Tag("integration")
-@AutoConfigureObservability
+@AutoConfigureMetrics
 class KafkaPromotionIntegrationTest {
 
     @Container
@@ -69,16 +69,16 @@ class KafkaPromotionIntegrationTest {
 
     @DynamicPropertySource
     static void kafkaProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.kafka.bootstrap-servers", KAFKA::getBootstrapServers);
+        registry.add("spring.kafka.bootstrapServers", KAFKA::getBootstrapServers);
     }
 
     @SpringBootConfiguration
     @EnableAutoConfiguration(excludeName = {
-            "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration",
-            "org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration",
-            "org.springframework.boot.autoconfigure.data.neo4j.Neo4jReactiveDataAutoConfiguration",
-            "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
-            "org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration"
+            "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration",
+            "org.springframework.boot.neo4j.autoconfigure.Neo4jAutoConfiguration",
+            "org.springframework.boot.neo4j.autoconfigure.Neo4jAutoConfiguration",
+            "org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration",
+            "org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration"
     })
     @EnableConfigurationProperties(KafkaProperties.class)
     @Import({KafkaAutoConfiguration.class, SurveyListener.class})
