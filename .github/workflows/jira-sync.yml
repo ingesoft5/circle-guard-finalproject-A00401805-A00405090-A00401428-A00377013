@@ -86,3 +86,29 @@ jobs:
             --event "${{ github.event_name }}" \
             --payload "$GITHUB_EVENT_PATH" \
             --mapping docs/agil/jira-mapping.yml
+
+      - name: Ensure Jira evidence issues exist
+        continue-on-error: true
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          if [ -z "${JIRA_BASE_URL:-}" ] || [ -z "${JIRA_EMAIL:-}" ] || [ -z "${JIRA_API_TOKEN:-}" ]; then
+            echo "Jira secrets are not configured in this repository; skipping issue creation."
+            exit 0
+          fi
+          python3 scripts/jira_sync.py --create-issues --issues-file docs/agil/jira-issues-to-create.json
+
+      - name: Assign sprints to Jira issues
+        continue-on-error: true
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          if [ -z "${JIRA_BASE_URL:-}" ] || [ -z "${JIRA_EMAIL:-}" ] || [ -z "${JIRA_API_TOKEN:-}" ]; then
+            echo "Jira secrets are not configured in this repository; skipping sprint assignment."
+            exit 0
+          fi
+          python3 scripts/jira_sync.py --assign-sprints --assignments-file docs/agil/jira-sprint-assignment.json
