@@ -1,0 +1,589 @@
+apiVersion: v1
+items:
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app":"auth","app.kubernetes.io/part-of":"circleguard"},"name":"auth","namespace":"cg-stage"},"spec":{"behavior":{"scaleDown":{"stabilizationWindowSeconds":300}},"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":75,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"auth"}}}
+    creationTimestamp: "2026-11-24T04:02:48Z"
+    labels:
+      app: auth
+      app.kubernetes.io/part-of: circleguard
+    name: auth
+    namespace: cg-stage
+    resourceVersion: "40854"
+    uid: cd6fed1a-4f64-433e-a345-739517307d57
+  spec:
+    behavior:
+      scaleDown:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies:
+        - periodSeconds: 15
+          type: Pods
+          value: 4
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+    maxReplicas: 1
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 75
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: auth
+  status:
+    conditions:
+    - lastTransitionTime: "2026-11-24T04:03:03Z"
+      message: recommended size matches current size
+      reason: ReadyForNewScale
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-11-24T08:35:24Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-11-24T08:35:24Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 5
+          averageValue: 5m
+        name: cpu
+      type: Resource
+    currentReplicas: 1
+    desiredReplicas: 1
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app":"dashboard","app.kubernetes.io/part-of":"circleguard"},"name":"dashboard","namespace":"cg-stage"},"spec":{"behavior":{"scaleDown":{"stabilizationWindowSeconds":300}},"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"dashboard"}}}
+    creationTimestamp: "2026-11-24T04:02:48Z"
+    labels:
+      app: dashboard
+      app.kubernetes.io/part-of: circleguard
+    name: dashboard
+    namespace: cg-stage
+    resourceVersion: "40857"
+    uid: 251a0923-6495-4d34-a7b7-f00ab2b47556
+  spec:
+    behavior:
+      scaleDown:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies:
+        - periodSeconds: 15
+          type: Pods
+          value: 4
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+    maxReplicas: 1
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 70
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: dashboard
+  status:
+    conditions:
+    - lastTransitionTime: "2026-11-24T04:03:03Z"
+      message: recommended size matches current size
+      reason: ReadyForNewScale
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-11-24T08:22:31Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-11-24T08:22:46Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 4
+          averageValue: 4m
+        name: cpu
+      type: Resource
+    currentReplicas: 1
+    desiredReplicas: 1
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app":"file","app.kubernetes.io/part-of":"circleguard"},"name":"file","namespace":"cg-stage"},"spec":{"behavior":{"scaleDown":{"stabilizationWindowSeconds":300}},"maxReplicas":2,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":75,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"file"}}}
+    creationTimestamp: "2026-11-24T04:02:48Z"
+    labels:
+      app: file
+      app.kubernetes.io/part-of: circleguard
+    name: file
+    namespace: cg-stage
+    resourceVersion: "40859"
+    uid: 05855c7e-f1cd-4143-bc56-bd4b09f06723
+  spec:
+    behavior:
+      scaleDown:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies:
+        - periodSeconds: 15
+          type: Pods
+          value: 4
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+    maxReplicas: 1
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 75
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: file
+  status:
+    conditions:
+    - lastTransitionTime: "2026-11-24T04:03:03Z"
+      message: recommended size matches current size
+      reason: ReadyForNewScale
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-11-24T08:36:31Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-11-24T08:36:46Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 10
+          averageValue: 5m
+        name: cpu
+      type: Resource
+    currentReplicas: 1
+    desiredReplicas: 1
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app":"gateway","app.kubernetes.io/part-of":"circleguard"},"name":"gateway","namespace":"cg-stage"},"spec":{"behavior":{"scaleDown":{"stabilizationWindowSeconds":300}},"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"gateway"}}}
+    creationTimestamp: "2026-11-24T04:02:48Z"
+    labels:
+      app: gateway
+      app.kubernetes.io/part-of: circleguard
+    name: gateway
+    namespace: cg-stage
+    resourceVersion: "40846"
+    uid: f410a74b-a64a-49fe-9497-0abb613abfe2
+  spec:
+    behavior:
+      scaleDown:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies:
+        - periodSeconds: 15
+          type: Pods
+          value: 4
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+    maxReplicas: 1
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 70
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: gateway
+  status:
+    conditions:
+    - lastTransitionTime: "2026-11-24T04:03:04Z"
+      message: recommended size matches current size
+      reason: ReadyForNewScale
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-11-24T05:38:20Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-11-24T08:38:14Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 3
+          averageValue: 3m
+        name: cpu
+      type: Resource
+    currentReplicas: 1
+    desiredReplicas: 1
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app":"identity","app.kubernetes.io/part-of":"circleguard"},"name":"identity","namespace":"cg-stage"},"spec":{"behavior":{"scaleDown":{"stabilizationWindowSeconds":300}},"maxReplicas":2,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":75,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"identity"}}}
+    creationTimestamp: "2026-11-24T04:02:48Z"
+    labels:
+      app: identity
+      app.kubernetes.io/part-of: circleguard
+    name: identity
+    namespace: cg-stage
+    resourceVersion: "40862"
+    uid: 5d99496b-07be-43f2-b951-5dc16d4b2d2f
+  spec:
+    behavior:
+      scaleDown:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies:
+        - periodSeconds: 15
+          type: Pods
+          value: 4
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+    maxReplicas: 1
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 75
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: identity
+  status:
+    conditions:
+    - lastTransitionTime: "2026-11-24T04:03:04Z"
+      message: recommended size matches current size
+      reason: ReadyForNewScale
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-11-24T08:36:16Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-11-24T08:36:16Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 10
+          averageValue: 10m
+        name: cpu
+      type: Resource
+    currentReplicas: 1
+    desiredReplicas: 1
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app":"notification","app.kubernetes.io/part-of":"circleguard"},"name":"notification","namespace":"cg-stage"},"spec":{"behavior":{"scaleDown":{"stabilizationWindowSeconds":300}},"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":75,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"notification"}}}
+    creationTimestamp: "2026-11-24T04:02:49Z"
+    labels:
+      app: notification
+      app.kubernetes.io/part-of: circleguard
+    name: notification
+    namespace: cg-stage
+    resourceVersion: "40860"
+    uid: 2ec36e94-9a64-4a22-94bc-7c3818048764
+  spec:
+    behavior:
+      scaleDown:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies:
+        - periodSeconds: 15
+          type: Pods
+          value: 4
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+    maxReplicas: 1
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 75
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: notification
+  status:
+    conditions:
+    - lastTransitionTime: "2026-11-24T04:03:04Z"
+      message: recommended size matches current size
+      reason: ReadyForNewScale
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-11-24T06:16:39Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-11-24T08:49:25Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 8
+          averageValue: 8m
+        name: cpu
+      type: Resource
+    currentReplicas: 1
+    desiredReplicas: 1
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app":"promotion","app.kubernetes.io/part-of":"circleguard"},"name":"promotion","namespace":"cg-stage"},"spec":{"behavior":{"scaleDown":{"stabilizationWindowSeconds":300}},"maxReplicas":2,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":75,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"promotion"}}}
+    creationTimestamp: "2026-11-24T04:02:49Z"
+    labels:
+      app: promotion
+      app.kubernetes.io/part-of: circleguard
+    name: promotion
+    namespace: cg-stage
+    resourceVersion: "40867"
+    uid: 27e3b692-0d86-438a-a989-10594fc3444d
+  spec:
+    behavior:
+      scaleDown:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies:
+        - periodSeconds: 15
+          type: Pods
+          value: 4
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+    maxReplicas: 1
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 75
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: promotion
+  status:
+    conditions:
+    - lastTransitionTime: "2026-11-24T04:03:04Z"
+      message: recommended size matches current size
+      reason: ReadyForNewScale
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-11-24T08:23:15Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-11-24T08:23:45Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 10
+          averageValue: 10m
+        name: cpu
+      type: Resource
+    currentReplicas: 1
+    desiredReplicas: 1
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app":"web","app.kubernetes.io/part-of":"circleguard"},"name":"web","namespace":"cg-stage"},"spec":{"behavior":{"scaleDown":{"stabilizationWindowSeconds":300}},"maxReplicas":2,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"web"}}}
+    creationTimestamp: "2026-11-24T04:02:49Z"
+    labels:
+      app: web
+      app.kubernetes.io/part-of: circleguard
+    name: web
+    namespace: cg-stage
+    resourceVersion: "36966"
+    uid: fec18c67-bf77-485f-b6a4-c4838a3c235f
+  spec:
+    behavior:
+      scaleDown:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies:
+        - periodSeconds: 15
+          type: Pods
+          value: 4
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+    maxReplicas: 1
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 70
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: web
+  status:
+    conditions:
+    - lastTransitionTime: "2026-11-24T04:03:04Z"
+      message: recommended size matches current size
+      reason: ReadyForNewScale
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-11-24T08:36:16Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-11-24T06:33:54Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 2
+          averageValue: 1m
+        name: cpu
+      type: Resource
+    currentReplicas: 1
+    desiredReplicas: 1
+kind: List
+metadata:
+  resourceVersion: ""

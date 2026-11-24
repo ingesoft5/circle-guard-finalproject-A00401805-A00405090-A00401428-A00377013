@@ -1,0 +1,2 @@
+NAME              CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   
+k3d-cg-server-0   731m         9%       11314Mi         35%         

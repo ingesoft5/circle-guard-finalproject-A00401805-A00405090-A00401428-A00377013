@@ -1,0 +1,54 @@
+NAMESPACE     NAME                                      READY   STATUS    RESTARTS         AGE     IP            NODE              NOMINATED NODE   READINESS GATES
+cg-dev        auth-7b46c7c4b4-zkxb7                     1/1     Running   0                42m     10.42.0.249   k3d-cg-server-0   <none>           <none>
+cg-dev        dashboard-58b6b6bccf-2psvr                1/1     Running   0                56m     10.42.0.247   k3d-cg-server-0   <none>           <none>
+cg-dev        file-cd5f669d7-mvg97                      1/1     Running   0                4h37m   10.42.0.209   k3d-cg-server-0   <none>           <none>
+cg-dev        form-54cfbf4946-bh6bd                     1/1     Running   0                56m     10.42.0.243   k3d-cg-server-0   <none>           <none>
+cg-dev        gateway-5b6f7d8778-q8r4q                  1/1     Running   0                4h37m   10.42.0.207   k3d-cg-server-0   <none>           <none>
+cg-dev        identity-7b9bf8bc4c-m5t59                 1/1     Running   0                42m     10.42.0.250   k3d-cg-server-0   <none>           <none>
+cg-dev        kafka-0                                   1/1     Running   1                4h38m   10.42.0.183   k3d-cg-server-0   <none>           <none>
+cg-dev        neo4j-0                                   1/1     Running   7 (4h4m ago)     4h38m   10.42.0.192   k3d-cg-server-0   <none>           <none>
+cg-dev        notification-6d8bd654f-c67wd              1/1     Running   0                4h37m   10.42.0.210   k3d-cg-server-0   <none>           <none>
+cg-dev        openldap-0                                1/1     Running   4                4h38m   10.42.0.199   k3d-cg-server-0   <none>           <none>
+cg-dev        postgres-0                                1/1     Running   14 (3h17m ago)   4h38m   10.42.0.190   k3d-cg-server-0   <none>           <none>
+cg-dev        promotion-65c5df5f48-vmhb6                1/1     Running   1 (50m ago)      56m     10.42.0.246   k3d-cg-server-0   <none>           <none>
+cg-dev        redis-0                                   1/1     Running   4                4h38m   10.42.0.193   k3d-cg-server-0   <none>           <none>
+cg-dev        web-88b445cc9-ltt9j                       1/1     Running   0                4h37m   10.42.0.211   k3d-cg-server-0   <none>           <none>
+cg-prod       auth-55cbc58588-7sc8w                     1/1     Running   0                39m     10.42.0.18    k3d-cg-server-0   <none>           <none>
+cg-prod       dashboard-6c559858f7-dj8d5                1/1     Running   0                39m     10.42.0.25    k3d-cg-server-0   <none>           <none>
+cg-prod       file-65794b5b5f-4zsz4                     1/1     Running   0                39m     10.42.0.28    k3d-cg-server-0   <none>           <none>
+cg-prod       form-7df7bd644-lllgt                      1/1     Running   0                39m     10.42.0.27    k3d-cg-server-0   <none>           <none>
+cg-prod       gateway-8d67b778-p9mhk                    1/1     Running   0                39m     10.42.0.26    k3d-cg-server-0   <none>           <none>
+cg-prod       identity-7744554847-x48xh                 1/1     Running   0                39m     10.42.0.15    k3d-cg-server-0   <none>           <none>
+cg-prod       kafka-0                                   1/1     Running   4                4h38m   10.42.0.197   k3d-cg-server-0   <none>           <none>
+cg-prod       neo4j-0                                   1/1     Running   8 (3h52m ago)    4h38m   10.42.0.191   k3d-cg-server-0   <none>           <none>
+cg-prod       notification-77ddbccf4c-r4fhm             1/1     Running   0                39m     10.42.0.29    k3d-cg-server-0   <none>           <none>
+cg-prod       openldap-0                                1/1     Running   1                4h38m   10.42.0.201   k3d-cg-server-0   <none>           <none>
+cg-prod       postgres-0                                1/1     Running   14 (3h17m ago)   4h38m   10.42.0.195   k3d-cg-server-0   <none>           <none>
+cg-prod       promotion-5d4c587df8-p4vqg                1/1     Running   1                39m     10.42.0.21    k3d-cg-server-0   <none>           <none>
+cg-prod       redis-0                                   1/1     Running   4                4h38m   10.42.0.200   k3d-cg-server-0   <none>           <none>
+cg-prod       web-5dd45bc696-656n2                      1/1     Running   0                39m     10.42.0.24    k3d-cg-server-0   <none>           <none>
+cg-stage      auth-6c7d97d8d9-skhnr                     1/1     Running   0                41m     10.42.0.251   k3d-cg-server-0   <none>           <none>
+cg-stage      dashboard-5d6bf48dd6-8pwqk                1/1     Running   0                41m     10.42.0.13    k3d-cg-server-0   <none>           <none>
+cg-stage      file-58c4c999c8-mr66r                     1/1     Running   0                41m     10.42.0.12    k3d-cg-server-0   <none>           <none>
+cg-stage      form-854f86c97c-bss27                     1/1     Running   0                41m     10.42.0.9     k3d-cg-server-0   <none>           <none>
+cg-stage      gateway-f656d798f-f5dwb                   1/1     Running   0                41m     10.42.0.10    k3d-cg-server-0   <none>           <none>
+cg-stage      identity-5cf45555b6-tpdgs                 1/1     Running   0                41m     10.42.0.6     k3d-cg-server-0   <none>           <none>
+cg-stage      kafka-0                                   1/1     Running   1                4h38m   10.42.0.202   k3d-cg-server-0   <none>           <none>
+cg-stage      neo4j-0                                   1/1     Running   8 (3h52m ago)    4h38m   10.42.0.186   k3d-cg-server-0   <none>           <none>
+cg-stage      notification-797c9d9b45-26tsx             1/1     Running   1                41m     10.42.0.7     k3d-cg-server-0   <none>           <none>
+cg-stage      openldap-0                                1/1     Running   1                4h38m   10.42.0.196   k3d-cg-server-0   <none>           <none>
+cg-stage      postgres-0                                1/1     Running   12 (3h28m ago)   4h38m   10.42.0.194   k3d-cg-server-0   <none>           <none>
+cg-stage      promotion-56698884b9-whv2w                1/1     Running   0                41m     10.42.0.11    k3d-cg-server-0   <none>           <none>
+cg-stage      redis-0                                   1/1     Running   4                4h38m   10.42.0.198   k3d-cg-server-0   <none>           <none>
+cg-stage      web-7d68c554b6-ckv6r                      1/1     Running   0                41m     10.42.0.8     k3d-cg-server-0   <none>           <none>
+kube-system   coredns-8db54c48d-vfq8v                   1/1     Running   1                4h39m   10.42.0.160   k3d-cg-server-0   <none>           <none>
+kube-system   local-path-provisioner-5d9d9885bc-5hhcg   1/1     Running   0                4h39m   10.42.0.154   k3d-cg-server-0   <none>           <none>
+kube-system   metrics-server-786d997795-gjqnp           1/1     Running   0                4h39m   10.42.0.156   k3d-cg-server-0   <none>           <none>
+kube-system   svclb-traefik-5e88fd55-7fmnz              2/2     Running   4 (4h38m ago)    5h10m   10.42.0.153   k3d-cg-server-0   <none>           <none>
+kube-system   traefik-9bcdbbd9-4drl4                    1/1     Running   0                4h39m   10.42.0.158   k3d-cg-server-0   <none>           <none>
+monitoring    alertmanager-79bc7577bb-twbnh             1/1     Running   0                38m     10.42.0.30    k3d-cg-server-0   <none>           <none>
+monitoring    grafana-84bb668cbf-vqvsj                  1/1     Running   0                38m     10.42.0.31    k3d-cg-server-0   <none>           <none>
+monitoring    jaeger-6d694b5d86-d878v                   1/1     Running   0                38m     10.42.0.34    k3d-cg-server-0   <none>           <none>
+monitoring    loki-658d976f8-zfncr                      1/1     Running   0                38m     10.42.0.39    k3d-cg-server-0   <none>           <none>
+monitoring    prometheus-7b74b75c6c-pxzjj               1/1     Running   0                38m     10.42.0.32    k3d-cg-server-0   <none>           <none>
+monitoring    promtail-sw2vv                            1/1     Running   0                38m     10.42.0.33    k3d-cg-server-0   <none>           <none>

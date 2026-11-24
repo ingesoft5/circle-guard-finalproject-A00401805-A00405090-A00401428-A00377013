@@ -1,0 +1,63 @@
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS     IMAGES                                                   SELECTOR
+deployment.apps/auth           1/1     1            1           5h9m   auth           172.20.0.1:5000/circleguard-docker/auth:1.17.0           app=auth,app.kubernetes.io/part-of=circleguard
+deployment.apps/dashboard      1/1     1            1           5h9m   dashboard      172.20.0.1:5000/circleguard-docker/dashboard:1.17.0      app=dashboard,app.kubernetes.io/part-of=circleguard
+deployment.apps/file           1/1     1            1           5h9m   file           172.20.0.1:5000/circleguard-docker/file:1.17.0           app=file,app.kubernetes.io/part-of=circleguard
+deployment.apps/form           1/1     1            1           5h9m   form           172.20.0.1:5000/circleguard-docker/form:1.17.0           app=form,app.kubernetes.io/part-of=circleguard
+deployment.apps/gateway        1/1     1            1           5h9m   gateway        172.20.0.1:5000/circleguard-docker/gateway:1.17.0        app=gateway,app.kubernetes.io/part-of=circleguard
+deployment.apps/identity       1/1     1            1           5h9m   identity       172.20.0.1:5000/circleguard-docker/identity:1.17.0       app=identity,app.kubernetes.io/part-of=circleguard
+deployment.apps/notification   1/1     1            1           5h9m   notification   172.20.0.1:5000/circleguard-docker/notification:1.17.0   app=notification,app.kubernetes.io/part-of=circleguard
+deployment.apps/promotion      1/1     1            1           5h9m   promotion      172.20.0.1:5000/circleguard-docker/promotion:1.17.0      app=promotion,app.kubernetes.io/part-of=circleguard
+deployment.apps/web            1/1     1            1           5h9m   web            172.20.0.1:5000/circleguard-docker/web:1.17.0            app=web,app.kubernetes.io/part-of=circleguard
+
+NAME                        READY   AGE    CONTAINERS   IMAGES
+statefulset.apps/kafka      1/1     5h6m   kafka        apache/kafka:3.7.0
+statefulset.apps/neo4j      1/1     5h6m   neo4j        neo4j:5.26-community
+statefulset.apps/openldap   1/1     5h6m   openldap     osixia/openldap:1.5.0
+statefulset.apps/postgres   1/1     5h6m   postgres     postgres:16-alpine
+statefulset.apps/redis      1/1     5h6m   redis        redis:7.2-alpine
+
+NAME                               READY   STATUS    RESTARTS         AGE     IP            NODE              NOMINATED NODE   READINESS GATES
+pod/auth-7b46c7c4b4-zkxb7          1/1     Running   0                42m     10.42.0.249   k3d-cg-server-0   <none>           <none>
+pod/dashboard-58b6b6bccf-2psvr     1/1     Running   0                56m     10.42.0.247   k3d-cg-server-0   <none>           <none>
+pod/file-cd5f669d7-mvg97           1/1     Running   0                4h37m   10.42.0.209   k3d-cg-server-0   <none>           <none>
+pod/form-54cfbf4946-bh6bd          1/1     Running   0                56m     10.42.0.243   k3d-cg-server-0   <none>           <none>
+pod/gateway-5b6f7d8778-q8r4q       1/1     Running   0                4h37m   10.42.0.207   k3d-cg-server-0   <none>           <none>
+pod/identity-7b9bf8bc4c-m5t59      1/1     Running   0                42m     10.42.0.250   k3d-cg-server-0   <none>           <none>
+pod/kafka-0                        1/1     Running   1                4h38m   10.42.0.183   k3d-cg-server-0   <none>           <none>
+pod/neo4j-0                        1/1     Running   7 (4h4m ago)     4h38m   10.42.0.192   k3d-cg-server-0   <none>           <none>
+pod/notification-6d8bd654f-c67wd   1/1     Running   0                4h37m   10.42.0.210   k3d-cg-server-0   <none>           <none>
+pod/openldap-0                     1/1     Running   4                4h38m   10.42.0.199   k3d-cg-server-0   <none>           <none>
+pod/postgres-0                     1/1     Running   14 (3h17m ago)   4h38m   10.42.0.190   k3d-cg-server-0   <none>           <none>
+pod/promotion-65c5df5f48-vmhb6     1/1     Running   1 (50m ago)      56m     10.42.0.246   k3d-cg-server-0   <none>           <none>
+pod/redis-0                        1/1     Running   4                4h38m   10.42.0.193   k3d-cg-server-0   <none>           <none>
+pod/web-88b445cc9-ltt9j            1/1     Running   0                4h37m   10.42.0.211   k3d-cg-server-0   <none>           <none>
+
+NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE    SELECTOR
+service/auth           ClusterIP   10.43.199.116   <none>        8180/TCP            5h9m   app.kubernetes.io/part-of=circleguard,app=auth
+service/dashboard      ClusterIP   10.43.40.238    <none>        8084/TCP            5h9m   app.kubernetes.io/part-of=circleguard,app=dashboard
+service/file           ClusterIP   10.43.187.21    <none>        8085/TCP            5h9m   app.kubernetes.io/part-of=circleguard,app=file
+service/form           ClusterIP   10.43.80.96     <none>        8086/TCP            5h9m   app.kubernetes.io/part-of=circleguard,app=form
+service/gateway        ClusterIP   10.43.54.34     <none>        8087/TCP            5h9m   app.kubernetes.io/part-of=circleguard,app=gateway
+service/identity       ClusterIP   10.43.22.204    <none>        8083/TCP            5h9m   app.kubernetes.io/part-of=circleguard,app=identity
+service/kafka          ClusterIP   10.43.134.114   <none>        9092/TCP,9093/TCP   5h9m   app=kafka
+service/neo4j          ClusterIP   10.43.37.227    <none>        7687/TCP,7474/TCP   5h9m   app=neo4j
+service/notification   ClusterIP   10.43.23.55     <none>        8082/TCP            5h9m   app.kubernetes.io/part-of=circleguard,app=notification
+service/openldap       ClusterIP   10.43.56.64     <none>        389/TCP,636/TCP     5h9m   app=openldap
+service/postgres       ClusterIP   10.43.233.59    <none>        5432/TCP            5h9m   app=postgres
+service/promotion      ClusterIP   10.43.193.213   <none>        8088/TCP            5h9m   app.kubernetes.io/part-of=circleguard,app=promotion
+service/redis          ClusterIP   10.43.134.199   <none>        6379/TCP            5h9m   app=redis
+service/web            ClusterIP   10.43.23.93     <none>        80/TCP              5h9m   app.kubernetes.io/part-of=circleguard,app=web
+
+NAME                                    CLASS     HOSTS                   ADDRESS      PORTS   AGE
+ingress.networking.k8s.io/circleguard   traefik   dev.circleguard.local   172.20.0.2   80      5h9m
+
+NAME                                               REFERENCE                 TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/auth           Deployment/auth           cpu: 4%/75%    1         1         1          5h9m
+horizontalpodautoscaler.autoscaling/dashboard      Deployment/dashboard      cpu: 3%/70%    1         1         1          5h9m
+horizontalpodautoscaler.autoscaling/file           Deployment/file           cpu: 14%/75%   1         1         1          5h9m
+horizontalpodautoscaler.autoscaling/form           Deployment/form           cpu: 8%/70%    1         1         1          5h9m
+horizontalpodautoscaler.autoscaling/gateway        Deployment/gateway        cpu: 3%/70%    1         1         1          5h9m
+horizontalpodautoscaler.autoscaling/identity       Deployment/identity       cpu: 4%/75%    1         1         1          5h9m
+horizontalpodautoscaler.autoscaling/notification   Deployment/notification   cpu: 8%/75%    1         1         1          5h9m
+horizontalpodautoscaler.autoscaling/promotion      Deployment/promotion      cpu: 9%/75%    1         1         1          5h9m
+horizontalpodautoscaler.autoscaling/web            Deployment/web            cpu: 2%/70%    1         1         1          5h9m

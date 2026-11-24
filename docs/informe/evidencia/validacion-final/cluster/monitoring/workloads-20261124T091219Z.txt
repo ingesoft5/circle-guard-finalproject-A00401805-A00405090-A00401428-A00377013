@@ -1,0 +1,21 @@
+NAME                                READY   STATUS    RESTARTS   AGE   IP           NODE              NOMINATED NODE   READINESS GATES
+pod/alertmanager-79bc7577bb-twbnh   1/1     Running   0          38m   10.42.0.30   k3d-cg-server-0   <none>           <none>
+pod/grafana-84bb668cbf-vqvsj        1/1     Running   0          38m   10.42.0.31   k3d-cg-server-0   <none>           <none>
+pod/jaeger-6d694b5d86-d878v         1/1     Running   0          38m   10.42.0.34   k3d-cg-server-0   <none>           <none>
+pod/loki-658d976f8-zfncr            1/1     Running   0          38m   10.42.0.39   k3d-cg-server-0   <none>           <none>
+pod/prometheus-7b74b75c6c-pxzjj     1/1     Running   0          38m   10.42.0.32   k3d-cg-server-0   <none>           <none>
+pod/promtail-sw2vv                  1/1     Running   0          38m   10.42.0.33   k3d-cg-server-0   <none>           <none>
+
+NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)              AGE   SELECTOR
+service/alertmanager   ClusterIP   10.43.69.68     <none>        9093/TCP             38m   app.kubernetes.io/part-of=circleguard,app=alertmanager
+service/grafana        ClusterIP   10.43.27.218    <none>        3000/TCP             38m   app.kubernetes.io/part-of=circleguard,app=grafana
+service/jaeger         ClusterIP   10.43.134.46    <none>        16686/TCP,4318/TCP   38m   app=jaeger
+service/loki           ClusterIP   10.43.165.163   <none>        3100/TCP,9096/TCP    38m   app.kubernetes.io/part-of=circleguard,app=loki
+service/prometheus     ClusterIP   10.43.225.120   <none>        9090/TCP             38m   app.kubernetes.io/part-of=circleguard,app=prometheus
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS     IMAGES                                                    SELECTOR
+deployment.apps/alertmanager   1/1     1            1           38m   alertmanager   172.20.0.1:5000/circleguard-docker/alertmanager:v0.27.0   app=alertmanager,app.kubernetes.io/part-of=circleguard
+deployment.apps/grafana        1/1     1            1           38m   grafana        172.20.0.1:5000/circleguard-docker/grafana:10.4.2         app=grafana,app.kubernetes.io/part-of=circleguard
+deployment.apps/jaeger         1/1     1            1           38m   jaeger         172.20.0.1:5000/circleguard-docker/jaeger:2.23.0          app=jaeger
+deployment.apps/loki           1/1     1            1           38m   loki           172.20.0.1:5000/circleguard-docker/loki:2.9.6             app=loki,app.kubernetes.io/part-of=circleguard
+deployment.apps/prometheus     1/1     1            1           38m   prometheus     172.20.0.1:5000/circleguard-docker/prometheus:v2.51.0     app=prometheus,app.kubernetes.io/part-of=circleguard
