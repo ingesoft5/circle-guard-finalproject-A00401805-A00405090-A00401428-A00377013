@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.auth.controller.UserControllerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:20:34.740Z" hostname="205m07" time="0.044">
+  <properties/>
+  <testcase name="shouldReturnUsersWithGivenPermissionAndHandleNullEmail()" classname="com.circleguard.auth.controller.UserControllerTest" time="0.044"/>
+  <system-out><![CDATA[2026-11-22T01:20:33.982Z  INFO 3430 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.circleguard.auth.controller.UserControllerTest]: UserControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-22T01:20:34.003Z  INFO 3430 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.circleguard.auth.AuthServiceApplication for test class com.circleguard.auth.controller.UserControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.4)
+
+2026-11-22T01:20:34.088Z  INFO 3430 --- [    Test worker] c.c.auth.controller.UserControllerTest   : Starting UserControllerTest using Java 21.0.13 with PID 3430 (started by root in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-142/workspace/services/circleguard-auth-service)
+2026-11-22T01:20:34.089Z  INFO 3430 --- [    Test worker] c.c.auth.controller.UserControllerTest   : No active profile set, falling back to 1 default profile: "default"
+2026-11-22T01:20:34.683Z  INFO 3430 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@7e33b808, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@245deebf, org.springframework.security.web.context.SecurityContextHolderFilter@18a71682, org.springframework.security.web.header.HeaderWriterFilter@3d03f8ea, org.springframework.web.filter.CorsFilter@2b57e35e, org.springframework.security.web.authentication.logout.LogoutFilter@5bac6e4a, com.circleguard.auth.security.JwtAuthenticationFilter@7e3f6b06, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@1d0daf6a, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@59f903c0, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2b8d1741, org.springframework.security.web.access.ExceptionTranslationFilter@5c82f04, org.springframework.security.web.access.intercept.AuthorizationFilter@2804b4e]
+2026-11-22T01:20:34.730Z  INFO 3430 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-22T01:20:34.730Z  INFO 3430 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-22T01:20:34.731Z  INFO 3430 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-11-22T01:20:34.737Z  INFO 3430 --- [    Test worker] c.c.auth.controller.UserControllerTest   : Started UserControllerTest in 0.725 seconds (process running for 42.136)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

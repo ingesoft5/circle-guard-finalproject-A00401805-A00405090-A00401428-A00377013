@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.gateway.service.QrValidationServiceTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:19:04.048Z" hostname="205m07" time="0.728">
+  <properties/>
+  <testcase name="[1] status=SUSPECT" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.636"/>
+  <testcase name="[2] status=PROBABLE" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.007"/>
+  <testcase name="[3] status=CONFIRMED" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.005"/>
+  <testcase name="[4] status=CONTAGIED" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.005"/>
+  <testcase name="[5] status=POTENTIAL" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.005"/>
+  <testcase name="[6] status=UNKNOWN" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.005"/>
+  <testcase name="[7] status=CLEAR" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.006"/>
+  <testcase name="[1] status=ACTIVE" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.005"/>
+  <testcase name="[2] status=RECOVERED" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.005"/>
+  <testcase name="shouldDenyExpiredToken()" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.006"/>
+  <testcase name="shouldPropagateRedisFailure()" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.009"/>
+  <testcase name="shouldDenyWhenStatusIsMissing()" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.005"/>
+  <testcase name="shouldDenyTokenWithoutSubject()" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.004"/>
+  <testcase name="shouldDenyMissingOrMalformedToken()" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.002"/>
+  <testcase name="shouldDenyTokenWithInvalidSignature()" classname="com.circleguard.gateway.service.QrValidationServiceTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.promotion.controller.ControllersStandaloneTest" tests="32" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:35:59.766Z" hostname="205m07" time="101.199">
+  <properties/>
+  <testcase name="deleteFloor_returnsOk()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="99.945"/>
+  <testcase name="encounterValidityEndpoints_delegate()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.051"/>
+  <testcase name="getUserCircles_returnsList()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.112"/>
+  <testcase name="healthEndpoints_delegateToService()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.084"/>
+  <testcase name="getAccessPoint_returnsDtoOr404()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.043"/>
+  <testcase name="getStats_aggregatesRows()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.248"/>
+  <testcase name="createBuilding_returnsDto()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.067"/>
+  <testcase name="getSettings_returnsSettings()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.048"/>
+  <testcase name="reportEncounter_recordsAndEvaluates()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.032"/>
+  <testcase name="updateBuilding_returnsDto()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.028"/>
+  <testcase name="receiveSignal_processesDetection()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.022"/>
+  <testcase name="addMember_returnsNode()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.022"/>
+  <testcase name="listBuildings_returnsList()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.021"/>
+  <testcase name="createCircle_returnsNode()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.02"/>
+  <testcase name="toggleCircleValidity_returnsOk()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.015"/>
+  <testcase name="toggleUnconfirmedFencing_returnsSettings()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.019"/>
+  <testcase name="handshake_registersAndRejectsIncomplete()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.018"/>
+  <testcase name="addFloor_returnsDto()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.027"/>
+  <testcase name="getStatsByDepartment_filtersRows()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.08"/>
+  <testcase name="joinCircle_returnsNode()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.025"/>
+  <testcase name="getMeshStats_returnsCounts()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.024"/>
+  <testcase name="deleteBuilding_returnsOk()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.02"/>
+  <testcase name="forceFenceCircle_returnsOk()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.024"/>
+  <testcase name="updateFloor_returnsDto()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.024"/>
+  <testcase name="getSettings_initializesDefaults()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.014"/>
+  <testcase name="closeSession_returnsNoContent()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.014"/>
+  <testcase name="updateAccessPoint_returnsDto()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.019"/>
+  <testcase name="getAccessPoints_returnsList()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.022"/>
+  <testcase name="updateSettings_appliesFields()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.025"/>
+  <testcase name="addAccessPoint_returnsDto()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.02"/>
+  <testcase name="getFloors_returnsList()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.021"/>
+  <testcase name="deleteAccessPoint_returnsOk()" classname="com.circleguard.promotion.controller.ControllersStandaloneTest" time="0.013"/>
+  <system-out><![CDATA[14:37:38.429 [Test worker] INFO org.hibernate.validator.internal.util.Version -- HV000001: Hibernate Validator 8.0.1.Final
+14:37:39.527 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:39.527 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:39.532 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 4 ms
+14:37:39.754 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:39.754 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:39.754 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:39.758 [Test worker] INFO com.circleguard.promotion.controller.EncounterController -- Toggling validity for encounter relationship: 7
+14:37:39.763 [Test worker] INFO com.circleguard.promotion.controller.EncounterController -- Force fencing encounter relationship: 7
+14:37:39.805 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:39.805 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:39.805 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:39.905 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:39.905 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:39.905 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:39.995 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:39.995 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:39.995 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.031 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.031 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.032 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.280 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.280 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.280 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.352 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.353 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.353 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.396 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.397 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.397 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.399 [Test worker] INFO com.circleguard.promotion.controller.EncounterController -- Reporting encounter: a -> b at A-101
+14:37:40.426 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.426 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.427 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+14:37:40.454 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.454 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.455 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+14:37:40.476 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.476 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.476 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.498 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.498 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.498 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.519 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.519 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.519 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.538 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.539 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.539 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.555 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.555 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.555 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.559 [Test worker] INFO com.circleguard.promotion.controller.AdminController -- Health Authority toggle: Unconfirmed Fencing -> false
+14:37:40.575 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.575 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.575 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.596 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.596 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.597 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.624 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.624 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.625 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.707 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.707 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.708 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+14:37:40.734 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.734 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.734 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.736 [Test worker] INFO com.circleguard.promotion.controller.MeshController -- Fetching mesh visualization stats for user: user-1
+14:37:40.758 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.758 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.759 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+14:37:40.783 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.783 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.783 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.802 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.802 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.802 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.822 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.822 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.822 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.824 [Test worker] INFO com.circleguard.promotion.controller.AdminController -- Initializing default system settings...
+14:37:40.837 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.838 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.838 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.852 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.852 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.852 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.876 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.876 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.877 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+14:37:40.898 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.898 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.899 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+14:37:40.903 [Test worker] INFO com.circleguard.promotion.controller.AdminController -- Updating system settings: SystemSettings(id=null, unconfirmedFencingEnabled=null, autoThresholdSeconds=null, mandatoryFenceDays=null, encounterWindowDays=7)
+14:37:40.922 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.922 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.922 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.944 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.945 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.945 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.963 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.963 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.963 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/root/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.14.12/be4984cb6fd1ef1d11f218a648889dfda44b8a15/byte-buddy-agent-1.14.12.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

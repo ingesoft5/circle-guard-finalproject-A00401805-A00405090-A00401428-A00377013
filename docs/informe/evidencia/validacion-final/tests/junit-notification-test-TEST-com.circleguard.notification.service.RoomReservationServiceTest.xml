@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.notification.service.RoomReservationServiceTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-22T18:24:08.030Z" hostname="205m07" time="0.005">
+  <properties/>
+  <testcase name="testCancelReservation()" classname="com.circleguard.notification.service.RoomReservationServiceTest" time="0.005"/>
+  <system-out><![CDATA[2026-11-22T18:24:08.027Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.circleguard.notification.service.RoomReservationServiceTest]: RoomReservationServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-22T18:24:08.028Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.circleguard.notification.NotificationApplication for test class com.circleguard.notification.service.RoomReservationServiceTest
+2026-11-22T18:24:08.034Z  INFO 277664 --- [circleguard-notification-service] [         task-2] c.c.n.s.RoomReservationServiceImpl       : Room Cancellation: Releasing reservation for fenced circle
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

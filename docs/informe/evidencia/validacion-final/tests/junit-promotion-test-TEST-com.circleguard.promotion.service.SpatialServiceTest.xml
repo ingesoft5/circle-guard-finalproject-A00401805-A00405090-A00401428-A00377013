@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.promotion.service.SpatialServiceTest" tests="20" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:37:56.571Z" hostname="205m07" time="0.042">
+  <properties/>
+  <testcase name="deleteBuilding_deletesWhenNoFloorsExist()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="addFloor_throwsWhenBuildingDoesNotExist()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="updateAccessPoint_updatesAllFields()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="updateBuilding_throwsWhenMissing()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="updateFloor_updatesNumberAndName()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="registerAccessPoint_throwsWhenFloorMissing()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="registerAccessPoint_persistsWhenFloorExists()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="updateAccessPoint_throwsWhenMissing()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="deleteAccessPoint_delegatesToRepository()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="createBuilding_persistsAndReturnsEntity()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.001"/>
+  <testcase name="getAllBuildings_returnsRepositoryResult()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.001"/>
+  <testcase name="updateBuilding_updatesAllFields()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.001"/>
+  <testcase name="deleteFloor_deletesWhenNoAccessPointsExist()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.001"/>
+  <testcase name="deleteBuilding_throwsWhenFloorsExist()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="getAccessPoint_delegatesToRepository()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.001"/>
+  <testcase name="getFloorsByBuilding_returnsRepositoryResult()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.001"/>
+  <testcase name="updateFloor_throwsWhenMissing()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.001"/>
+  <testcase name="getAccessPointsByFloor_delegatesToRepository()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.001"/>
+  <testcase name="deleteFloor_throwsWhenAccessPointsExist()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.002"/>
+  <testcase name="addFloor_persistsWhenBuildingExists()" classname="com.circleguard.promotion.service.SpatialServiceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

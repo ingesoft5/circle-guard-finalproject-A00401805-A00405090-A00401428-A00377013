@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.promotion.service.HealthStatusCascadeTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:37:43.807Z" hostname="205m07" time="0.545">
+  <properties/>
+  <testcase name="updateStatus_largeOutbreakTriggersPriorityAlert()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.445"/>
+  <testcase name="updateStatusToActive_afterFenceWindowSucceeds()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.007"/>
+  <testcase name="updateStatusToActive_insideFenceWindowThrows()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.003"/>
+  <testcase name="resolveStatus_insideFenceWindowThrowsWithoutOverride()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.002"/>
+  <testcase name="promoteToRecovered_setsStatusAndExpiresInThirtyDays()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.048"/>
+  <testcase name="updateStatus_confirmedTriggersPriorityAlert()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.006"/>
+  <testcase name="updateStatus_broadcastsFencedCircles()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.005"/>
+  <testcase name="updateStatus_noResultDoesNotTouchRedis()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.004"/>
+  <testcase name="resolveStatus_releasesContactsAndBroadcasts()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.004"/>
+  <testcase name="updateStatus_batchesRedisWritesAboveTwoThousandEntries()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.01"/>
+  <testcase name="getCachedStatus_readsFromRedis()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.002"/>
+  <testcase name="updateStatus_propagatesContactsToRedisAndKafka()" classname="com.circleguard.promotion.service.HealthStatusCascadeTest" time="0.005"/>
+  <system-out><![CDATA[2026-11-22T14:37:44.243Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Updating health status (Admin Override: false)
+2026-11-22T14:37:44.245Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Batch updating 22 Redis entries based on consolidated propagation
+2026-11-22T14:37:44.249Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Priority Alert triggered. Affected count: 21
+2026-11-22T14:37:44.257Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Updating health status (Admin Override: false)
+2026-11-22T14:37:44.259Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Batch updating 1 Redis entries based on consolidated propagation
+2026-11-22T14:37:44.262Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Updating health status (Admin Override: false)
+2026-11-22T14:37:44.265Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Resolving health status (Admin Override: false)
+2026-11-22T14:37:44.269Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Resolving health status (Admin Override: false)
+2026-11-22T14:37:44.318Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Updating health status (Admin Override: false)
+2026-11-22T14:37:44.319Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Batch updating 2 Redis entries based on consolidated propagation
+2026-11-22T14:37:44.320Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Priority Alert triggered. Affected count: 1
+2026-11-22T14:37:44.324Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Updating health status (Admin Override: false)
+2026-11-22T14:37:44.325Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Batch updating 1 Redis entries based on consolidated propagation
+2026-11-22T14:37:44.325Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Circle fully fenced. Broadcasting circle.fenced event.
+2026-11-22T14:37:44.325Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Priority Alert triggered. Affected count: 0
+2026-11-22T14:37:44.329Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Updating health status (Admin Override: false)
+2026-11-22T14:37:44.334Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Resolving health status (Admin Override: false)
+2026-11-22T14:37:44.341Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Updating health status (Admin Override: false)
+2026-11-22T14:37:44.343Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Batch updating 2002 Redis entries based on consolidated propagation
+2026-11-22T14:37:44.345Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Priority Alert triggered. Affected count: 2001
+2026-11-22T14:37:44.351Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Updating health status (Admin Override: false)
+2026-11-22T14:37:44.352Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.p.service.HealthStatusService        : Batch updating 2 Redis entries based on consolidated propagation
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

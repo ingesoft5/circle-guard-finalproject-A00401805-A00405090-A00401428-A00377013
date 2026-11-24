@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.form.service.SymptomMapperTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:33:57.249Z" hostname="205m07" time="0.013">
+  <properties/>
+  <testcase name="shouldIgnoreResponseWithoutMatchingQuestion()" classname="com.circleguard.form.service.SymptomMapperTest" time="0.001"/>
+  <testcase name="shouldDetectSymptomsFromFever()" classname="com.circleguard.form.service.SymptomMapperTest" time="0.001"/>
+  <testcase name="[1] questionText=Do you have a cough?" classname="com.circleguard.form.service.SymptomMapperTest" time="0.001"/>
+  <testcase name="[2] questionText=DO YOU HAVE TROUBLE BREATHING?" classname="com.circleguard.form.service.SymptomMapperTest" time="0.001"/>
+  <testcase name="shouldReturnFalseForMissingOrEmptyResponsesAndQuestions()" classname="com.circleguard.form.service.SymptomMapperTest" time="0.001"/>
+  <testcase name="shouldDetectSymptomsFromNonEmptyChoiceAboutSymptoms()" classname="com.circleguard.form.service.SymptomMapperTest" time="0.001"/>
+  <testcase name="shouldDetectSymptomsWhenAnyMatchingQuestionIsAffirmative()" classname="com.circleguard.form.service.SymptomMapperTest" time="0.0"/>
+  <testcase name="shouldIgnoreAffirmativeAnswerToUnrelatedQuestion()" classname="com.circleguard.form.service.SymptomMapperTest" time="0.001"/>
+  <testcase name="shouldNotDetectSymptomsFromEmptyChoiceAboutSymptoms()" classname="com.circleguard.form.service.SymptomMapperTest" time="0.001"/>
+  <testcase name="shouldNotDetectSymptomsWhenNo()" classname="com.circleguard.form.service.SymptomMapperTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.auth.service.JwtTokenServiceTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:20:35.251Z" hostname="205m07" time="0.005">
+  <properties/>
+  <testcase name="shouldGenerateSignedJwtWithAnonymousIdSubjectAndPermissionsClaim()" classname="com.circleguard.auth.service.JwtTokenServiceTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

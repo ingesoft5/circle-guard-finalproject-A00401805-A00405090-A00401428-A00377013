@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.promotion.service.BuildingServiceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:37:43.733Z" hostname="205m07" time="0.065">
+  <properties/>
+  <testcase name="updateBuilding_throwsWhenMissing()" classname="com.circleguard.promotion.service.BuildingServiceTest" time="0.054"/>
+  <testcase name="updateBuilding_overwritesAllFields()" classname="com.circleguard.promotion.service.BuildingServiceTest" time="0.001"/>
+  <testcase name="getAllBuildings_returnsRepositoryResult()" classname="com.circleguard.promotion.service.BuildingServiceTest" time="0.002"/>
+  <testcase name="deleteBuilding_throwsWhenFloorsExist()" classname="com.circleguard.promotion.service.BuildingServiceTest" time="0.002"/>
+  <testcase name="createBuilding_persistsEveryField()" classname="com.circleguard.promotion.service.BuildingServiceTest" time="0.002"/>
+  <testcase name="deleteBuilding_deletesWhenEmpty()" classname="com.circleguard.promotion.service.BuildingServiceTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

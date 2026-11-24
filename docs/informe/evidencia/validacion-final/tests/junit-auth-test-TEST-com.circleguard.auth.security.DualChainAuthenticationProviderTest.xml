@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.auth.security.DualChainAuthenticationProviderTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:20:34.793Z" hostname="205m07" time="0.32">
+  <properties/>
+  <testcase name="shouldAuthenticateWithLdapWhenPrimarySucceeds()" classname="com.circleguard.auth.security.DualChainAuthenticationProviderTest" time="0.299"/>
+  <testcase name="shouldThrowExceptionWhenBothProvidersFail()" classname="com.circleguard.auth.security.DualChainAuthenticationProviderTest" time="0.011"/>
+  <testcase name="shouldFallbackToLocalDatabaseWhenLdapThrowsAuthenticationException()" classname="com.circleguard.auth.security.DualChainAuthenticationProviderTest" time="0.004"/>
+  <testcase name="shouldSupportUsernamePasswordAuthenticationToken()" classname="com.circleguard.auth.security.DualChainAuthenticationProviderTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

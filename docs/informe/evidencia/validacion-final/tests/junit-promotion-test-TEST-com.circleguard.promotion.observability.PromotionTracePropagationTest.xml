@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.promotion.observability.PromotionTracePropagationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:37:43.327Z" hostname="205m07" time="0.214">
+  <properties/>
+  <testcase name="statusEventCarriesParentTraceWithoutExportingPayload()" classname="com.circleguard.promotion.observability.PromotionTracePropagationTest" time="0.211"/>
+  <testcase name="exporterDropsUnapprovedAttributesAndExceptionDetails()" classname="com.circleguard.promotion.observability.PromotionTracePropagationTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.identity.service.IdentityVaultServiceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:22:23.868Z" hostname="205m07" time="0.348">
+  <properties/>
+  <testcase name="resolveRealIdentity_WhenMappingExists_ReturnsPlainIdentity()" classname="com.circleguard.identity.service.IdentityVaultServiceTest" time="0.323"/>
+  <testcase name="getOrCreateAnonymousId_WhenMappingExists_ReturnsExistingId()" classname="com.circleguard.identity.service.IdentityVaultServiceTest" time="0.005"/>
+  <testcase name="resolveRealIdentity_WhenMappingDoesNotExist_ThrowsNotFound()" classname="com.circleguard.identity.service.IdentityVaultServiceTest" time="0.008"/>
+  <testcase name="getOrCreateAnonymousId_WhenMappingDoesNotExist_CreatesEncryptedMapping()" classname="com.circleguard.identity.service.IdentityVaultServiceTest" time="0.009"/>
+  <system-out><![CDATA[2026-11-22T01:22:24.203Z  WARN 4571 --- [    Test worker] c.c.i.service.IdentityVaultService       : Identity vault lookup failed: anonymousId=a48f95c5-34f7-4e2c-ab24-6479e9b19717 not found
+2026-11-22T01:22:24.212Z  INFO 4571 --- [    Test worker] c.c.i.service.IdentityVaultService       : Created new encrypted identity vault mapping: anonymousId=bd1a9d9e-5889-4bb2-848b-309e7ea52048
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

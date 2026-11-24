@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.notification.service.TemplateServiceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-22T18:24:08.041Z" hostname="205m07" time="0.098">
+  <properties/>
+  <testcase name="testSmsTemplateGeneration()" classname="com.circleguard.notification.service.TemplateServiceTest" time="0.009"/>
+  <testcase name="testEmailTemplateGeneration()" classname="com.circleguard.notification.service.TemplateServiceTest" time="0.075"/>
+  <testcase name="testPushTemplateGeneration()" classname="com.circleguard.notification.service.TemplateServiceTest" time="0.004"/>
+  <testcase name="testPushMetadataGeneration()" classname="com.circleguard.notification.service.TemplateServiceTest" time="0.008"/>
+  <system-out><![CDATA[2026-11-22T18:24:08.038Z  INFO 277664 --- [circleguard-notification-service] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-6, groupId=notification-group] Node -1 disconnected.
+2026-11-22T18:24:08.038Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.circleguard.notification.service.TemplateServiceTest]: TemplateServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-22T18:24:08.038Z  WARN 277664 --- [circleguard-notification-service] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-6, groupId=notification-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Broker may not be available.
+2026-11-22T18:24:08.039Z  WARN 277664 --- [circleguard-notification-service] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-6, groupId=notification-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-11-22T18:24:08.040Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.circleguard.notification.NotificationApplication for test class com.circleguard.notification.service.TemplateServiceTest
+2026-11-22T18:24:08.058Z  INFO 277664 --- [circleguard-notification-service] [ntainer#2-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-priority-group-4, groupId=notification-priority-group] Node -1 disconnected.
+2026-11-22T18:24:08.058Z  WARN 277664 --- [circleguard-notification-service] [ntainer#2-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-priority-group-4, groupId=notification-priority-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Broker may not be available.
+2026-11-22T18:24:08.058Z  WARN 277664 --- [circleguard-notification-service] [ntainer#2-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-priority-group-4, groupId=notification-priority-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-11-22T18:24:08.096Z  INFO 277664 --- [circleguard-notification-service] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-5, groupId=notification-group] Node -1 disconnected.
+2026-11-22T18:24:08.096Z  WARN 277664 --- [circleguard-notification-service] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-5, groupId=notification-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Broker may not be available.
+2026-11-22T18:24:08.096Z  WARN 277664 --- [circleguard-notification-service] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-5, groupId=notification-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

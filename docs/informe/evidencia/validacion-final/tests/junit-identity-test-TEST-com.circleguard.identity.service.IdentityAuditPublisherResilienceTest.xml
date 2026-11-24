@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.identity.service.IdentityAuditPublisherResilienceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:22:23.563Z" hostname="205m07" time="0.293">
+  <properties/>
+  <testcase name="shouldRetryTransientKafkaFailuresAndSucceedOnThirdAttemptViaAop()" classname="com.circleguard.identity.service.IdentityAuditPublisherResilienceTest" time="0.073"/>
+  <testcase name="shouldOpenCircuitBreakerAfterFiveFailedCallsAndExposePrometheusMetric()" classname="com.circleguard.identity.service.IdentityAuditPublisherResilienceTest" time="0.198"/>
+  <testcase name="shouldLoadExternalizedResilience4jConfigAndProxyBean()" classname="com.circleguard.identity.service.IdentityAuditPublisherResilienceTest" time="0.015"/>
+  <system-out><![CDATA[2026-11-22T01:22:17.998Z  INFO 4571 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.circleguard.identity.service.IdentityAuditPublisherResilienceTest]: IdentityAuditPublisherResilienceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-22T01:22:18.032Z  INFO 4571 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.circleguard.identity.IdentityServiceApplication for test class com.circleguard.identity.service.IdentityAuditPublisherResilienceTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.4)
+
+2026-11-22T01:22:18.138Z  INFO 4571 --- [    Test worker] i.s.IdentityAuditPublisherResilienceTest : Starting IdentityAuditPublisherResilienceTest using Java 21.0.13 with PID 4571 (started by root in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-142/workspace/services/circleguard-identity-service)
+2026-11-22T01:22:18.139Z  INFO 4571 --- [    Test worker] i.s.IdentityAuditPublisherResilienceTest : The following 1 profile is active: "test"
+2026-11-22T01:22:19.080Z  INFO 4571 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-22T01:22:19.095Z  INFO 4571 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 15 ms. Found 1 JPA repository interface.
+2026-11-22T01:22:19.916Z  INFO 4571 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-11-22T01:22:19.919Z  INFO 4571 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn10: url=jdbc:h2:mem:testdb user=SA
+2026-11-22T01:22:19.921Z  INFO 4571 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-11-22T01:22:19.973Z  INFO 4571 --- [    Test worker] org.flywaydb.core.FlywayExecutor         : Database: jdbc:h2:mem:testdb (H2 2.2)
+2026-11-22T01:22:19.983Z  WARN 4571 --- [    Test worker] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: H2 2.2.224 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.220.
+2026-11-22T01:22:19.995Z  INFO 4571 --- [    Test worker] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.008s)
+2026-11-22T01:22:20.005Z  INFO 4571 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 1
+2026-11-22T01:22:20.009Z  INFO 4571 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-11-22T01:22:20.116Z  INFO 4571 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-22T01:22:20.120Z  INFO 4571 --- [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-22T01:22:20.125Z  INFO 4571 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-22T01:22:20.126Z  WARN 4571 --- [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-11-22T01:22:20.217Z  INFO 4571 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-22T01:22:20.227Z  INFO 4571 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-22T01:22:21.169Z  WARN 4571 --- [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-11-22T01:22:21.315Z  WARN 4571 --- [    Test worker] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 396dce96-5774-40af-8c27-7cb5cf2a6474
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-11-22T01:22:22.044Z  INFO 4571 --- [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoint(s) beneath base path '/actuator'
+2026-11-22T01:22:22.154Z  INFO 4571 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@633da1c3, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@a96dd92, org.springframework.security.web.context.SecurityContextHolderFilter@63e7c422, org.springframework.security.web.header.HeaderWriterFilter@e94dc10, org.springframework.web.filter.CorsFilter@5f496080, org.springframework.security.web.authentication.logout.LogoutFilter@28ec7276, com.circleguard.identity.config.JwtAuthenticationFilter@29f5e2ac, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@5bbf6caa, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@59405dfd, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@41063cb6, org.springframework.security.web.access.ExceptionTranslationFilter@504c0d97, org.springframework.security.web.access.intercept.AuthorizationFilter@73faab6e]
+2026-11-22T01:22:23.472Z  INFO 4571 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-22T01:22:23.472Z  INFO 4571 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-22T01:22:23.474Z  INFO 4571 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-11-22T01:22:23.552Z  INFO 4571 --- [    Test worker] i.s.IdentityAuditPublisherResilienceTest : Started IdentityAuditPublisherResilienceTest in 5.506 seconds (process running for 23.462)
+2026-11-22T01:22:23.629Z  INFO 4571 --- [    Test worker] c.c.i.service.IdentityAuditPublisher     : Published identity audit event: eventId=86fbf915-1825-4fcf-a85d-8d874f1e06cd, anonymousId=ec753b96-9f83-4945-9399-a30f1ab07b31, status=SUCCESS
+2026-11-22T01:22:23.667Z  WARN 4571 --- [    Test worker] c.c.i.service.IdentityAuditPublisher     : Identity audit Kafka circuit breaker / fallback activated for eventId=7d0c7986-0565-486e-93a5-20fd4aeb3616, anonymousId=5650f4fe-e961-46df-8374-e2586402e39d, status=SUCCESS: Kafka cluster down
+2026-11-22T01:22:23.689Z  WARN 4571 --- [    Test worker] c.c.i.service.IdentityAuditPublisher     : Identity audit Kafka circuit breaker / fallback activated for eventId=7d0c7986-0565-486e-93a5-20fd4aeb3616, anonymousId=5650f4fe-e961-46df-8374-e2586402e39d, status=SUCCESS: Kafka cluster down
+2026-11-22T01:22:23.713Z  WARN 4571 --- [    Test worker] c.c.i.service.IdentityAuditPublisher     : Identity audit Kafka circuit breaker / fallback activated for eventId=7d0c7986-0565-486e-93a5-20fd4aeb3616, anonymousId=5650f4fe-e961-46df-8374-e2586402e39d, status=SUCCESS: Kafka cluster down
+2026-11-22T01:22:23.736Z  WARN 4571 --- [    Test worker] c.c.i.service.IdentityAuditPublisher     : Identity audit Kafka circuit breaker / fallback activated for eventId=7d0c7986-0565-486e-93a5-20fd4aeb3616, anonymousId=5650f4fe-e961-46df-8374-e2586402e39d, status=SUCCESS: Kafka cluster down
+2026-11-22T01:22:23.773Z  WARN 4571 --- [    Test worker] c.c.i.service.IdentityAuditPublisher     : Identity audit Kafka circuit breaker / fallback activated for eventId=7d0c7986-0565-486e-93a5-20fd4aeb3616, anonymousId=5650f4fe-e961-46df-8374-e2586402e39d, status=SUCCESS: Kafka cluster down
+2026-11-22T01:22:23.777Z  WARN 4571 --- [    Test worker] c.c.i.service.IdentityAuditPublisher     : Identity audit Kafka circuit breaker / fallback activated for eventId=7d0c7986-0565-486e-93a5-20fd4aeb3616, anonymousId=5650f4fe-e961-46df-8374-e2586402e39d, status=SUCCESS: CircuitBreaker 'identityAuditKafka' is OPEN and does not permit further calls
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

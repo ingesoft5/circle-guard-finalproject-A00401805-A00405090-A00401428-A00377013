@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.gateway.security.JwtAuthenticationFilterTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:19:03.934Z" hostname="205m07" time="0.084">
+  <properties/>
+  <testcase name="shouldAuthenticateTokenWithPermissions()" classname="com.circleguard.gateway.security.JwtAuthenticationFilterTest" time="0.072"/>
+  <testcase name="shouldNotAuthenticateInvalidToken()" classname="com.circleguard.gateway.security.JwtAuthenticationFilterTest" time="0.003"/>
+  <testcase name="shouldAuthenticateTokenWithoutPermissions()" classname="com.circleguard.gateway.security.JwtAuthenticationFilterTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

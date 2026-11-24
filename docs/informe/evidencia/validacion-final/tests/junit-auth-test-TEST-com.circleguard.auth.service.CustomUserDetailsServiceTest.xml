@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.auth.service.CustomUserDetailsServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:20:35.236Z" hostname="205m07" time="0.014">
+  <properties/>
+  <testcase name="shouldLoadActiveUserWithRolesAndGranularPermissions()" classname="com.circleguard.auth.service.CustomUserDetailsServiceTest" time="0.007"/>
+  <testcase name="shouldThrowUsernameNotFoundExceptionWhenUserDoesNotExist()" classname="com.circleguard.auth.service.CustomUserDetailsServiceTest" time="0.003"/>
+  <testcase name="shouldThrowDisabledExceptionWhenUserIsInactive()" classname="com.circleguard.auth.service.CustomUserDetailsServiceTest" time="0.002"/>
+  <system-out><![CDATA[2026-11-22T01:20:35.246Z  WARN 3430 --- [    Test worker] c.c.a.service.CustomUserDetailsService   : Local user not found in database: username=nonexistent
+2026-11-22T01:20:35.250Z  WARN 3430 --- [    Test worker] c.c.a.service.CustomUserDetailsService   : Local user account is disabled: username=disabled_user
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

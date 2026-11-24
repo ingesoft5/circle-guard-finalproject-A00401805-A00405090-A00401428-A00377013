@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.form.observability.FormEventPublisherTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:33:53.128Z" hostname="205m07" time="0.397">
+  <properties/>
+  <testcase name="[1] topic=survey.submitted" classname="com.circleguard.form.observability.FormEventPublisherTest" time="0.297"/>
+  <testcase name="[2] topic=certificate.validated" classname="com.circleguard.form.observability.FormEventPublisherTest" time="0.003"/>
+  <testcase name="[1] topic=survey.submitted" classname="com.circleguard.form.observability.FormEventPublisherTest" time="0.005"/>
+  <testcase name="[2] topic=certificate.validated" classname="com.circleguard.form.observability.FormEventPublisherTest" time="0.003"/>
+  <testcase name="rejectsUnboundedEventTypesBeforeSending()" classname="com.circleguard.form.observability.FormEventPublisherTest" time="0.002"/>
+  <testcase name="[1] topic=survey.submitted" classname="com.circleguard.form.observability.FormEventPublisherTest" time="0.075"/>
+  <testcase name="[2] topic=certificate.validated" classname="com.circleguard.form.observability.FormEventPublisherTest" time="0.003"/>
+  <system-out><![CDATA[2026-11-22T14:33:53.417Z  WARN [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] c.c.form.service.FormEventPublisher      : event_type=survey.submitted result=failure trace_id=none
+2026-11-22T14:33:53.429Z  WARN [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] c.c.form.service.FormEventPublisher      : event_type=certificate.validated result=failure trace_id=none
+2026-11-22T14:33:53.436Z  WARN [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] c.c.form.service.FormEventPublisher      : event_type=survey.submitted result=failure trace_id=none
+2026-11-22T14:33:53.441Z  WARN [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] c.c.form.service.FormEventPublisher      : event_type=certificate.validated result=failure trace_id=none
+2026-11-22T14:33:53.515Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] c.c.form.service.FormEventPublisher      : event_type=survey.submitted result=success trace_id=c11017a563a7005b2e3362fef603997e
+2026-11-22T14:33:53.525Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] c.c.form.service.FormEventPublisher      : event_type=certificate.validated result=success trace_id=62472cc43eb2e78468bf1d46efefd617
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

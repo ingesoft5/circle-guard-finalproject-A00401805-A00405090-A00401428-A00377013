@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.promotion.controller.EncounterMetricsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:37:40.968Z" hostname="205m07" time="0.052">
+  <properties/>
+  <testcase name="reportEncounter_successIncrementsSuccessCounterOnly()" classname="com.circleguard.promotion.controller.EncounterMetricsTest" time="0.014"/>
+  <testcase name="reportEncounter_publishesSharedPrometheusExposition()" classname="com.circleguard.promotion.controller.EncounterMetricsTest" time="0.021"/>
+  <testcase name="reportEncounter_repositoryFailureIncrementsFailureCounterOnly()" classname="com.circleguard.promotion.controller.EncounterMetricsTest" time="0.015"/>
+  <system-out><![CDATA[14:37:40.973 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.973 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.973 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.975 [Test worker] INFO com.circleguard.promotion.controller.EncounterController -- Reporting encounter: a -> b at A-101
+14:37:40.993 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:40.993 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:40.993 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+14:37:40.995 [Test worker] INFO com.circleguard.promotion.controller.EncounterController -- Reporting encounter: a -> b at A-101
+14:37:41.013 [Test worker] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+14:37:41.013 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+14:37:41.014 [Test worker] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+14:37:41.015 [Test worker] INFO com.circleguard.promotion.controller.EncounterController -- Reporting encounter: a -> b at A-101
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.auth.controller.LoginControllerTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:20:26.701Z" hostname="205m07" time="0.266">
+  <properties/>
+  <testcase name="shouldRecordMicrometerCountersAcrossLoginAndVisitorHandoffOutcomes()" classname="com.circleguard.auth.controller.LoginControllerTest" time="0.178"/>
+  <testcase name="shouldLoginSuccessfullyAndReturnAnonymizedToken()" classname="com.circleguard.auth.controller.LoginControllerTest" time="0.028"/>
+  <testcase name="shouldReturn401WhenCredentialsAreInvalid()" classname="com.circleguard.auth.controller.LoginControllerTest" time="0.012"/>
+  <testcase name="shouldGenerateVisitorHandoffSuccessfully()" classname="com.circleguard.auth.controller.LoginControllerTest" time="0.011"/>
+  <testcase name="shouldReturn500WhenIdentityClientFails()" classname="com.circleguard.auth.controller.LoginControllerTest" time="0.013"/>
+  <testcase name="shouldReturn400WhenVisitorHandoffMissingAnonymousId()" classname="com.circleguard.auth.controller.LoginControllerTest" time="0.01"/>
+  <system-out><![CDATA[2026-11-22T01:20:25.407Z  INFO 3430 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.circleguard.auth.controller.LoginControllerTest]: LoginControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-22T01:20:25.434Z  INFO 3430 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.circleguard.auth.AuthServiceApplication for test class com.circleguard.auth.controller.LoginControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.4)
+
+2026-11-22T01:20:25.480Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginControllerTest  : Starting LoginControllerTest using Java 21.0.13 with PID 3430 (started by root in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-142/workspace/services/circleguard-auth-service)
+2026-11-22T01:20:25.481Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginControllerTest  : No active profile set, falling back to 1 default profile: "default"
+2026-11-22T01:20:26.569Z  INFO 3430 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@6d1f4ba2, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@739f6bff, org.springframework.security.web.context.SecurityContextHolderFilter@7c74afce, org.springframework.security.web.header.HeaderWriterFilter@2647ce58, org.springframework.web.filter.CorsFilter@2267f174, org.springframework.security.web.authentication.logout.LogoutFilter@657a617f, com.circleguard.auth.security.JwtAuthenticationFilter@302c5d3f, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@79b002d2, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@24049c2d, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@7afbd9c3, org.springframework.security.web.access.ExceptionTranslationFilter@3a6cf0b1, org.springframework.security.web.access.intercept.AuthorizationFilter@5b406083]
+2026-11-22T01:20:26.670Z  INFO 3430 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-22T01:20:26.671Z  INFO 3430 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-22T01:20:26.672Z  INFO 3430 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-11-22T01:20:26.689Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginControllerTest  : Started LoginControllerTest in 1.249 seconds (process running for 34.087)
+2026-11-22T01:20:26.865Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication attempt initiated for username=testuser
+2026-11-22T01:20:26.871Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication succeeded for username=testuser
+2026-11-22T01:20:26.875Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication attempt initiated for username=testuser
+2026-11-22T01:20:26.876Z  WARN 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication failed for username=testuser: Bad credentials
+2026-11-22T01:20:26.877Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Generated visitor handoff token for anonymousId=d6f2efad-45b0-4c9f-946a-acec0aeb2591
+2026-11-22T01:20:26.901Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication attempt initiated for username=testuser
+2026-11-22T01:20:26.902Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication succeeded for username=testuser
+2026-11-22T01:20:26.919Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication attempt initiated for username=testuser
+2026-11-22T01:20:26.921Z  WARN 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication failed for username=testuser: Bad credentials
+2026-11-22T01:20:26.935Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Generated visitor handoff token for anonymousId=ca708716-db83-48ba-88b4-a12d4958f422
+2026-11-22T01:20:26.948Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication attempt initiated for username=testuser
+2026-11-22T01:20:26.949Z  INFO 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Authentication succeeded for username=testuser
+2026-11-22T01:20:26.950Z ERROR 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Unexpected error during login flow for username=testuser: Identity service unavailable
+2026-11-22T01:20:26.962Z  WARN 3430 --- [    Test worker] c.c.auth.controller.LoginController      : Rejected visitor handoff request with missing anonymousId
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

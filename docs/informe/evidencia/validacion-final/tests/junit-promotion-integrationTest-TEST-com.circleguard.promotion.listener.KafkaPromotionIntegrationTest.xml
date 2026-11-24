@@ -1,0 +1,648 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.promotion.listener.KafkaPromotionIntegrationTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-22T20:22:57.079Z" hostname="205m07" time="6.81">
+  <properties/>
+  <testcase name="surveyWithoutSymptoms_isIgnored()" classname="com.circleguard.promotion.listener.KafkaPromotionIntegrationTest" time="6.31"/>
+  <testcase name="surveyListenerExtractsFormTraceparentFromRealKafkaRecord()" classname="com.circleguard.promotion.listener.KafkaPromotionIntegrationTest" time="0.274"/>
+  <testcase name="surveyWithSymptoms_promotesUserToSuspect()" classname="com.circleguard.promotion.listener.KafkaPromotionIntegrationTest" time="0.108"/>
+  <testcase name="approvedCertificate_restoresUserToActive()" classname="com.circleguard.promotion.listener.KafkaPromotionIntegrationTest" time="0.11"/>
+  <system-out><![CDATA[20:22:28.915 [Test worker] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+20:22:28.918 [Test worker] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+20:22:29.486 [Test worker] INFO tc.apache/kafka:3.7.0 -- Creating container for image: apache/kafka:3.7.0
+20:22:29.493 [Test worker] INFO org.testcontainers.utility.RegistryAuthLocator -- Failure when attempting to lookup auth config. Please ignore if you don't have images in an authenticated registry. Details: (dockerImageName: apache/kafka:3.7.0, configFile: /root/.docker/config.json, configEnv: DOCKER_AUTH_CONFIG). Falling back to docker-java default behaviour. Exception message: Status 404: No config supplied. Checked in order: /root/.docker/config.json (file not found), DOCKER_AUTH_CONFIG (not set)
+20:22:39.246 [Test worker] INFO tc.apache/kafka:3.7.0 -- Container apache/kafka:3.7.0 is starting: da8f0a5c06f6d6552a5f4f5238993d925b2b316bb6d4fee6017035d27b1787f8
+20:22:49.456 [Test worker] INFO tc.apache/kafka:3.7.0 -- Container apache/kafka:3.7.0 started in PT19.968830973S
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.4)
+
+2026-11-22T20:22:49.941Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] c.c.p.l.KafkaPromotionIntegrationTest    : Starting KafkaPromotionIntegrationTest using Java 21.0.13 with PID 317367 (started by root in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/main/workspace/services/circleguard-promotion-service)
+2026-11-22T20:22:49.944Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] c.c.p.l.KafkaPromotionIntegrationTest    : No active profile set, falling back to 1 default profile: "default"
+2026-11-22T20:22:51.196Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-11-22T20:22:51.200Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Neo4j repositories in DEFAULT mode.
+2026-11-22T20:22:51.240Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 31 ms. Found 0 Neo4j repository interfaces.
+2026-11-22T20:22:55.636Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.neo4j.driver.internal.DriverFactory    : Direct driver instance 128047821 created for server address localhost:7687
+2026-11-22T20:22:56.127Z  WARN 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: c5219607-3abc-4897-b621-4e49d0899217
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-11-22T20:22:56.326Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoint(s) beneath base path '/actuator'
+2026-11-22T20:22:56.364Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@164e9564, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@1ecb92f9, org.springframework.security.web.context.SecurityContextHolderFilter@7da79fad, org.springframework.security.web.header.HeaderWriterFilter@439af6d8, org.springframework.web.filter.CorsFilter@1add7650, org.springframework.security.web.csrf.CsrfFilter@437674c, org.springframework.security.web.authentication.logout.LogoutFilter@4a6ed4c6, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter@23a3e942, org.springframework.security.web.authentication.ui.DefaultLoginPageGeneratingFilter@6e41351d, org.springframework.security.web.authentication.ui.DefaultLogoutPageGeneratingFilter@c0e2302, org.springframework.security.web.authentication.www.BasicAuthenticationFilter@1b9a38f5, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@245c0664, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6d0d853f, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@6e897252, org.springframework.security.web.access.ExceptionTranslationFilter@431788ba, org.springframework.security.web.access.intercept.AuthorizationFilter@787ac07d]
+2026-11-22T20:22:56.693Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.k.clients.consumer.ConsumerConfig    : ConsumerConfig values: 
+	allow.auto.create.topics = true
+	auto.commit.interval.ms = 5000
+	auto.include.jmx.reporter = true
+	auto.offset.reset = earliest
+	bootstrap.servers = [10.147.20.67:10304]
+	check.crcs = true
+	client.dns.lookup = use_all_dns_ips
+	client.id = consumer-promotion-service-group-1
+	client.rack = 
+	connections.max.idle.ms = 540000
+	default.api.timeout.ms = 60000
+	enable.auto.commit = false
+	exclude.internal.topics = true
+	fetch.max.bytes = 52428800
+	fetch.max.wait.ms = 500
+	fetch.min.bytes = 1
+	group.id = promotion-service-group
+	group.instance.id = null
+	heartbeat.interval.ms = 3000
+	interceptor.classes = []
+	internal.leave.group.on.close = true
+	internal.throw.on.fetch.stable.offset.unsupported = false
+	isolation.level = read_uncommitted
+	key.deserializer = class org.apache.kafka.common.serialization.StringDeserializer
+	max.partition.fetch.bytes = 1048576
+	max.poll.interval.ms = 300000
+	max.poll.records = 500
+	metadata.max.age.ms = 300000
+	metric.reporters = []
+	metrics.num.samples = 2
+	metrics.recording.level = INFO
+	metrics.sample.window.ms = 30000
+	partition.assignment.strategy = [class org.apache.kafka.clients.consumer.RangeAssignor, class org.apache.kafka.clients.consumer.CooperativeStickyAssignor]
+	receive.buffer.bytes = 65536
+	reconnect.backoff.max.ms = 1000
+	reconnect.backoff.ms = 50
+	request.timeout.ms = 30000
+	retry.backoff.ms = 100
+	sasl.client.callback.handler.class = null
+	sasl.jaas.config = null
+	sasl.kerberos.kinit.cmd = /usr/bin/kinit
+	sasl.kerberos.min.time.before.relogin = 60000
+	sasl.kerberos.service.name = null
+	sasl.kerberos.ticket.renew.jitter = 0.05
+	sasl.kerberos.ticket.renew.window.factor = 0.8
+	sasl.login.callback.handler.class = null
+	sasl.login.class = null
+	sasl.login.connect.timeout.ms = null
+	sasl.login.read.timeout.ms = null
+	sasl.login.refresh.buffer.seconds = 300
+	sasl.login.refresh.min.period.seconds = 60
+	sasl.login.refresh.window.factor = 0.8
+	sasl.login.refresh.window.jitter = 0.05
+	sasl.login.retry.backoff.max.ms = 10000
+	sasl.login.retry.backoff.ms = 100
+	sasl.mechanism = GSSAPI
+	sasl.oauthbearer.clock.skew.seconds = 30
+	sasl.oauthbearer.expected.audience = null
+	sasl.oauthbearer.expected.issuer = null
+	sasl.oauthbearer.jwks.endpoint.refresh.ms = 3600000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.max.ms = 10000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.ms = 100
+	sasl.oauthbearer.jwks.endpoint.url = null
+	sasl.oauthbearer.scope.claim.name = scope
+	sasl.oauthbearer.sub.claim.name = sub
+	sasl.oauthbearer.token.endpoint.url = null
+	security.protocol = PLAINTEXT
+	security.providers = null
+	send.buffer.bytes = 131072
+	session.timeout.ms = 45000
+	socket.connection.setup.timeout.max.ms = 30000
+	socket.connection.setup.timeout.ms = 10000
+	ssl.cipher.suites = null
+	ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	ssl.endpoint.identification.algorithm = https
+	ssl.engine.factory.class = null
+	ssl.key.password = null
+	ssl.keymanager.algorithm = SunX509
+	ssl.keystore.certificate.chain = null
+	ssl.keystore.key = null
+	ssl.keystore.location = null
+	ssl.keystore.password = null
+	ssl.keystore.type = JKS
+	ssl.protocol = TLSv1.3
+	ssl.provider = null
+	ssl.secure.random.implementation = null
+	ssl.trustmanager.algorithm = PKIX
+	ssl.truststore.certificates = null
+	ssl.truststore.location = null
+	ssl.truststore.password = null
+	ssl.truststore.type = JKS
+	value.deserializer = class org.springframework.kafka.support.serializer.JsonDeserializer
+
+2026-11-22T20:22:56.957Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka version: 3.6.1
+2026-11-22T20:22:56.958Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka commitId: 5e3c2b738d253ff5
+2026-11-22T20:22:56.958Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka startTimeMs: 1795378976954
+2026-11-22T20:22:56.995Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] fkaConsumerFactory$ExtendedKafkaConsumer : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Subscribed to topic(s): survey.submitted
+2026-11-22T20:22:57.007Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.k.clients.consumer.ConsumerConfig    : ConsumerConfig values: 
+	allow.auto.create.topics = true
+	auto.commit.interval.ms = 5000
+	auto.include.jmx.reporter = true
+	auto.offset.reset = earliest
+	bootstrap.servers = [10.147.20.67:10304]
+	check.crcs = true
+	client.dns.lookup = use_all_dns_ips
+	client.id = consumer-promotion-service-group-2
+	client.rack = 
+	connections.max.idle.ms = 540000
+	default.api.timeout.ms = 60000
+	enable.auto.commit = false
+	exclude.internal.topics = true
+	fetch.max.bytes = 52428800
+	fetch.max.wait.ms = 500
+	fetch.min.bytes = 1
+	group.id = promotion-service-group
+	group.instance.id = null
+	heartbeat.interval.ms = 3000
+	interceptor.classes = []
+	internal.leave.group.on.close = true
+	internal.throw.on.fetch.stable.offset.unsupported = false
+	isolation.level = read_uncommitted
+	key.deserializer = class org.apache.kafka.common.serialization.StringDeserializer
+	max.partition.fetch.bytes = 1048576
+	max.poll.interval.ms = 300000
+	max.poll.records = 500
+	metadata.max.age.ms = 300000
+	metric.reporters = []
+	metrics.num.samples = 2
+	metrics.recording.level = INFO
+	metrics.sample.window.ms = 30000
+	partition.assignment.strategy = [class org.apache.kafka.clients.consumer.RangeAssignor, class org.apache.kafka.clients.consumer.CooperativeStickyAssignor]
+	receive.buffer.bytes = 65536
+	reconnect.backoff.max.ms = 1000
+	reconnect.backoff.ms = 50
+	request.timeout.ms = 30000
+	retry.backoff.ms = 100
+	sasl.client.callback.handler.class = null
+	sasl.jaas.config = null
+	sasl.kerberos.kinit.cmd = /usr/bin/kinit
+	sasl.kerberos.min.time.before.relogin = 60000
+	sasl.kerberos.service.name = null
+	sasl.kerberos.ticket.renew.jitter = 0.05
+	sasl.kerberos.ticket.renew.window.factor = 0.8
+	sasl.login.callback.handler.class = null
+	sasl.login.class = null
+	sasl.login.connect.timeout.ms = null
+	sasl.login.read.timeout.ms = null
+	sasl.login.refresh.buffer.seconds = 300
+	sasl.login.refresh.min.period.seconds = 60
+	sasl.login.refresh.window.factor = 0.8
+	sasl.login.refresh.window.jitter = 0.05
+	sasl.login.retry.backoff.max.ms = 10000
+	sasl.login.retry.backoff.ms = 100
+	sasl.mechanism = GSSAPI
+	sasl.oauthbearer.clock.skew.seconds = 30
+	sasl.oauthbearer.expected.audience = null
+	sasl.oauthbearer.expected.issuer = null
+	sasl.oauthbearer.jwks.endpoint.refresh.ms = 3600000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.max.ms = 10000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.ms = 100
+	sasl.oauthbearer.jwks.endpoint.url = null
+	sasl.oauthbearer.scope.claim.name = scope
+	sasl.oauthbearer.sub.claim.name = sub
+	sasl.oauthbearer.token.endpoint.url = null
+	security.protocol = PLAINTEXT
+	security.providers = null
+	send.buffer.bytes = 131072
+	session.timeout.ms = 45000
+	socket.connection.setup.timeout.max.ms = 30000
+	socket.connection.setup.timeout.ms = 10000
+	ssl.cipher.suites = null
+	ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	ssl.endpoint.identification.algorithm = https
+	ssl.engine.factory.class = null
+	ssl.key.password = null
+	ssl.keymanager.algorithm = SunX509
+	ssl.keystore.certificate.chain = null
+	ssl.keystore.key = null
+	ssl.keystore.location = null
+	ssl.keystore.password = null
+	ssl.keystore.type = JKS
+	ssl.protocol = TLSv1.3
+	ssl.provider = null
+	ssl.secure.random.implementation = null
+	ssl.trustmanager.algorithm = PKIX
+	ssl.truststore.certificates = null
+	ssl.truststore.location = null
+	ssl.truststore.password = null
+	ssl.truststore.type = JKS
+	value.deserializer = class org.springframework.kafka.support.serializer.JsonDeserializer
+
+2026-11-22T20:22:57.020Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka version: 3.6.1
+2026-11-22T20:22:57.020Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka commitId: 5e3c2b738d253ff5
+2026-11-22T20:22:57.020Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka startTimeMs: 1795378977020
+2026-11-22T20:22:57.032Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] fkaConsumerFactory$ExtendedKafkaConsumer : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Subscribed to topic(s): certificate.validated
+2026-11-22T20:22:57.052Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] c.c.p.l.KafkaPromotionIntegrationTest    : Started KafkaPromotionIntegrationTest in 7.508 seconds (process running for 30.826)
+2026-11-22T20:22:57.135Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.k.clients.producer.ProducerConfig    : ProducerConfig values: 
+	acks = -1
+	auto.include.jmx.reporter = true
+	batch.size = 16384
+	bootstrap.servers = [10.147.20.67:10304]
+	buffer.memory = 33554432
+	client.dns.lookup = use_all_dns_ips
+	client.id = producer-1
+	compression.type = none
+	connections.max.idle.ms = 540000
+	delivery.timeout.ms = 120000
+	enable.idempotence = true
+	interceptor.classes = []
+	key.serializer = class org.apache.kafka.common.serialization.StringSerializer
+	linger.ms = 0
+	max.block.ms = 60000
+	max.in.flight.requests.per.connection = 5
+	max.request.size = 1048576
+	metadata.max.age.ms = 300000
+	metadata.max.idle.ms = 300000
+	metric.reporters = []
+	metrics.num.samples = 2
+	metrics.recording.level = INFO
+	metrics.sample.window.ms = 30000
+	partitioner.adaptive.partitioning.enable = true
+	partitioner.availability.timeout.ms = 0
+	partitioner.class = null
+	partitioner.ignore.keys = false
+	receive.buffer.bytes = 32768
+	reconnect.backoff.max.ms = 1000
+	reconnect.backoff.ms = 50
+	request.timeout.ms = 30000
+	retries = 2147483647
+	retry.backoff.ms = 100
+	sasl.client.callback.handler.class = null
+	sasl.jaas.config = null
+	sasl.kerberos.kinit.cmd = /usr/bin/kinit
+	sasl.kerberos.min.time.before.relogin = 60000
+	sasl.kerberos.service.name = null
+	sasl.kerberos.ticket.renew.jitter = 0.05
+	sasl.kerberos.ticket.renew.window.factor = 0.8
+	sasl.login.callback.handler.class = null
+	sasl.login.class = null
+	sasl.login.connect.timeout.ms = null
+	sasl.login.read.timeout.ms = null
+	sasl.login.refresh.buffer.seconds = 300
+	sasl.login.refresh.min.period.seconds = 60
+	sasl.login.refresh.window.factor = 0.8
+	sasl.login.refresh.window.jitter = 0.05
+	sasl.login.retry.backoff.max.ms = 10000
+	sasl.login.retry.backoff.ms = 100
+	sasl.mechanism = GSSAPI
+	sasl.oauthbearer.clock.skew.seconds = 30
+	sasl.oauthbearer.expected.audience = null
+	sasl.oauthbearer.expected.issuer = null
+	sasl.oauthbearer.jwks.endpoint.refresh.ms = 3600000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.max.ms = 10000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.ms = 100
+	sasl.oauthbearer.jwks.endpoint.url = null
+	sasl.oauthbearer.scope.claim.name = scope
+	sasl.oauthbearer.sub.claim.name = sub
+	sasl.oauthbearer.token.endpoint.url = null
+	security.protocol = PLAINTEXT
+	security.providers = null
+	send.buffer.bytes = 131072
+	socket.connection.setup.timeout.max.ms = 30000
+	socket.connection.setup.timeout.ms = 10000
+	ssl.cipher.suites = null
+	ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	ssl.endpoint.identification.algorithm = https
+	ssl.engine.factory.class = null
+	ssl.key.password = null
+	ssl.keymanager.algorithm = SunX509
+	ssl.keystore.certificate.chain = null
+	ssl.keystore.key = null
+	ssl.keystore.location = null
+	ssl.keystore.password = null
+	ssl.keystore.type = JKS
+	ssl.protocol = TLSv1.3
+	ssl.provider = null
+	ssl.secure.random.implementation = null
+	ssl.trustmanager.algorithm = PKIX
+	ssl.truststore.certificates = null
+	ssl.truststore.location = null
+	ssl.truststore.password = null
+	ssl.truststore.type = JKS
+	transaction.timeout.ms = 60000
+	transactional.id = null
+	value.serializer = class org.springframework.kafka.support.serializer.JsonSerializer
+
+2026-11-22T20:22:57.156Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.k.clients.producer.KafkaProducer     : [Producer clientId=producer-1] Instantiated an idempotent producer.
+2026-11-22T20:22:57.194Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka version: 3.6.1
+2026-11-22T20:22:57.194Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka commitId: 5e3c2b738d253ff5
+2026-11-22T20:22:57.195Z  INFO 317367 --- [circleguard-promotion-service] [    Test worker] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka startTimeMs: 1795378977194
+2026-11-22T20:22:57.689Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Error while fetching metadata with correlation id 1 : {survey.submitted=UNKNOWN_TOPIC_OR_PARTITION}
+2026-11-22T20:22:57.690Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Error while fetching metadata with correlation id 2 : {survey.submitted=UNKNOWN_TOPIC_OR_PARTITION}
+2026-11-22T20:22:57.690Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Error while fetching metadata with correlation id 2 : {certificate.validated=UNKNOWN_TOPIC_OR_PARTITION}
+2026-11-22T20:22:57.692Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.Metadata        : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Cluster ID: Some(4L6g3nShT-eMCtK--X86sw)
+2026-11-22T20:22:57.692Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.Metadata        : [Producer clientId=producer-1] Cluster ID: Some(4L6g3nShT-eMCtK--X86sw)
+2026-11-22T20:22:57.692Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.Metadata        : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Cluster ID: Some(4L6g3nShT-eMCtK--X86sw)
+2026-11-22T20:22:57.790Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Error while fetching metadata with correlation id 4 : {certificate.validated=UNKNOWN_TOPIC_OR_PARTITION}
+2026-11-22T20:22:57.790Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Error while fetching metadata with correlation id 4 : {survey.submitted=UNKNOWN_TOPIC_OR_PARTITION}
+2026-11-22T20:22:57.893Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Error while fetching metadata with correlation id 6 : {certificate.validated=UNKNOWN_TOPIC_OR_PARTITION}
+2026-11-22T20:22:57.905Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Error while fetching metadata with correlation id 5 : {survey.submitted=UNKNOWN_TOPIC_OR_PARTITION}
+2026-11-22T20:22:57.997Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Error while fetching metadata with correlation id 8 : {certificate.validated=UNKNOWN_TOPIC_OR_PARTITION}
+2026-11-22T20:22:58.098Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Error while fetching metadata with correlation id 10 : {certificate.validated=UNKNOWN_TOPIC_OR_PARTITION}
+2026-11-22T20:22:58.212Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] o.a.k.c.p.internals.TransactionManager   : [Producer clientId=producer-1] ProducerId set to 0 with epoch 0
+2026-11-22T20:22:58.613Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.615Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] (Re-)joining group
+2026-11-22T20:22:58.615Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.616Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] (Re-)joining group
+2026-11-22T20:22:58.638Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: error response NOT_COORDINATOR. isDisconnected: false. Rediscovery will be attempted.
+2026-11-22T20:22:58.638Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: error response NOT_COORDINATOR. isDisconnected: false. Rediscovery will be attempted.
+2026-11-22T20:22:58.639Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Requesting disconnect from last known coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.639Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Requesting disconnect from last known coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.639Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] JoinGroup failed: This is not the correct coordinator. Marking coordinator unknown. Sent generation was Generation{generationId=-1, memberId='', protocol='null'}
+2026-11-22T20:22:58.639Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] JoinGroup failed: This is not the correct coordinator. Marking coordinator unknown. Sent generation was Generation{generationId=-1, memberId='', protocol='null'}
+2026-11-22T20:22:58.639Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Client requested disconnect from node 2147483646
+2026-11-22T20:22:58.639Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Client requested disconnect from node 2147483646
+2026-11-22T20:22:58.643Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.643Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: coordinator unavailable. isDisconnected: false. Rediscovery will be attempted.
+2026-11-22T20:22:58.644Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Requesting disconnect from last known coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.644Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.645Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: coordinator unavailable. isDisconnected: false. Rediscovery will be attempted.
+2026-11-22T20:22:58.645Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Requesting disconnect from last known coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.746Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.746Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.747Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Request joining group due to: rebalance failed due to 'This is not the correct coordinator.' (NotCoordinatorException)
+2026-11-22T20:22:58.747Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Request joining group due to: rebalance failed due to 'This is not the correct coordinator.' (NotCoordinatorException)
+2026-11-22T20:22:58.748Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] (Re-)joining group
+2026-11-22T20:22:58.748Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] (Re-)joining group
+2026-11-22T20:22:58.751Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: error response NOT_COORDINATOR. isDisconnected: false. Rediscovery will be attempted.
+2026-11-22T20:22:58.751Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: error response NOT_COORDINATOR. isDisconnected: false. Rediscovery will be attempted.
+2026-11-22T20:22:58.751Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Requesting disconnect from last known coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.752Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Requesting disconnect from last known coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.752Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] JoinGroup failed: This is not the correct coordinator. Marking coordinator unknown. Sent generation was Generation{generationId=-1, memberId='', protocol='null'}
+2026-11-22T20:22:58.752Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] JoinGroup failed: This is not the correct coordinator. Marking coordinator unknown. Sent generation was Generation{generationId=-1, memberId='', protocol='null'}
+2026-11-22T20:22:58.752Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Client requested disconnect from node 2147483646
+2026-11-22T20:22:58.752Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Client requested disconnect from node 2147483646
+2026-11-22T20:22:58.754Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.754Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.755Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: coordinator unavailable. isDisconnected: false. Rediscovery will be attempted.
+2026-11-22T20:22:58.755Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: coordinator unavailable. isDisconnected: false. Rediscovery will be attempted.
+2026-11-22T20:22:58.755Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Requesting disconnect from last known coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.755Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Requesting disconnect from last known coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.859Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.859Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Discovered group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null)
+2026-11-22T20:22:58.862Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Request joining group due to: rebalance failed due to 'This is not the correct coordinator.' (NotCoordinatorException)
+2026-11-22T20:22:58.862Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Request joining group due to: rebalance failed due to 'This is not the correct coordinator.' (NotCoordinatorException)
+2026-11-22T20:22:58.863Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] (Re-)joining group
+2026-11-22T20:22:58.864Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] (Re-)joining group
+2026-11-22T20:22:58.882Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Request joining group due to: need to re-join with the given member-id: consumer-promotion-service-group-2-4f6e1a53-6fd7-4b85-9e1f-21d05195bc5f
+2026-11-22T20:22:58.882Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Request joining group due to: need to re-join with the given member-id: consumer-promotion-service-group-1-b7157141-d814-4dc4-86db-78dc3f6e967d
+2026-11-22T20:22:58.883Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Request joining group due to: rebalance failed due to 'The group member needs to have a valid member id before actually entering a consumer group.' (MemberIdRequiredException)
+2026-11-22T20:22:58.883Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Request joining group due to: rebalance failed due to 'The group member needs to have a valid member id before actually entering a consumer group.' (MemberIdRequiredException)
+2026-11-22T20:22:58.883Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] (Re-)joining group
+2026-11-22T20:22:58.884Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] (Re-)joining group
+2026-11-22T20:22:58.909Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Successfully joined group with generation Generation{generationId=1, memberId='consumer-promotion-service-group-1-b7157141-d814-4dc4-86db-78dc3f6e967d', protocol='range'}
+2026-11-22T20:22:58.911Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Successfully joined group with generation Generation{generationId=1, memberId='consumer-promotion-service-group-2-4f6e1a53-6fd7-4b85-9e1f-21d05195bc5f', protocol='range'}
+2026-11-22T20:22:58.931Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Finished assignment for group at generation 1: {consumer-promotion-service-group-1-b7157141-d814-4dc4-86db-78dc3f6e967d=Assignment(partitions=[survey.submitted-0]), consumer-promotion-service-group-2-4f6e1a53-6fd7-4b85-9e1f-21d05195bc5f=Assignment(partitions=[certificate.validated-0])}
+2026-11-22T20:22:58.958Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Successfully synced group in generation Generation{generationId=1, memberId='consumer-promotion-service-group-1-b7157141-d814-4dc4-86db-78dc3f6e967d', protocol='range'}
+2026-11-22T20:22:58.958Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Successfully synced group in generation Generation{generationId=1, memberId='consumer-promotion-service-group-2-4f6e1a53-6fd7-4b85-9e1f-21d05195bc5f', protocol='range'}
+2026-11-22T20:22:58.959Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Notifying assignor about the new Assignment(partitions=[certificate.validated-0])
+2026-11-22T20:22:58.959Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Notifying assignor about the new Assignment(partitions=[survey.submitted-0])
+2026-11-22T20:22:58.967Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Adding newly assigned partitions: survey.submitted-0
+2026-11-22T20:22:58.967Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Adding newly assigned partitions: certificate.validated-0
+2026-11-22T20:22:59.001Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Found no committed offset for partition certificate.validated-0
+2026-11-22T20:22:59.001Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Found no committed offset for partition survey.submitted-0
+2026-11-22T20:22:59.018Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.a.k.c.c.internals.SubscriptionState    : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Resetting offset for partition certificate.validated-0 to position FetchPosition{offset=0, offsetEpoch=Optional.empty, currentLeader=LeaderAndEpoch{leader=Optional[10.147.20.67:10304 (id: 1 rack: null)], epoch=0}}.
+2026-11-22T20:22:59.018Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.c.c.internals.SubscriptionState    : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Resetting offset for partition survey.submitted-0 to position FetchPosition{offset=0, offsetEpoch=Optional.empty, currentLeader=LeaderAndEpoch{leader=Optional[10.147.20.67:10304 (id: 1 rack: null)], epoch=0}}.
+2026-11-22T20:22:59.020Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] o.s.k.l.KafkaMessageListenerContainer    : promotion-service-group: partitions assigned: [certificate.validated-0]
+2026-11-22T20:22:59.020Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.s.k.l.KafkaMessageListenerContainer    : promotion-service-group: partitions assigned: [survey.submitted-0]
+2026-11-22T20:22:59.075Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.k.clients.admin.AdminClientConfig    : AdminClientConfig values: 
+	auto.include.jmx.reporter = true
+	bootstrap.servers = [10.147.20.67:10304]
+	client.dns.lookup = use_all_dns_ips
+	client.id = 
+	connections.max.idle.ms = 300000
+	default.api.timeout.ms = 60000
+	metadata.max.age.ms = 300000
+	metric.reporters = []
+	metrics.num.samples = 2
+	metrics.recording.level = INFO
+	metrics.sample.window.ms = 30000
+	receive.buffer.bytes = 65536
+	reconnect.backoff.max.ms = 1000
+	reconnect.backoff.ms = 50
+	request.timeout.ms = 30000
+	retries = 2147483647
+	retry.backoff.ms = 100
+	sasl.client.callback.handler.class = null
+	sasl.jaas.config = null
+	sasl.kerberos.kinit.cmd = /usr/bin/kinit
+	sasl.kerberos.min.time.before.relogin = 60000
+	sasl.kerberos.service.name = null
+	sasl.kerberos.ticket.renew.jitter = 0.05
+	sasl.kerberos.ticket.renew.window.factor = 0.8
+	sasl.login.callback.handler.class = null
+	sasl.login.class = null
+	sasl.login.connect.timeout.ms = null
+	sasl.login.read.timeout.ms = null
+	sasl.login.refresh.buffer.seconds = 300
+	sasl.login.refresh.min.period.seconds = 60
+	sasl.login.refresh.window.factor = 0.8
+	sasl.login.refresh.window.jitter = 0.05
+	sasl.login.retry.backoff.max.ms = 10000
+	sasl.login.retry.backoff.ms = 100
+	sasl.mechanism = GSSAPI
+	sasl.oauthbearer.clock.skew.seconds = 30
+	sasl.oauthbearer.expected.audience = null
+	sasl.oauthbearer.expected.issuer = null
+	sasl.oauthbearer.jwks.endpoint.refresh.ms = 3600000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.max.ms = 10000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.ms = 100
+	sasl.oauthbearer.jwks.endpoint.url = null
+	sasl.oauthbearer.scope.claim.name = scope
+	sasl.oauthbearer.sub.claim.name = sub
+	sasl.oauthbearer.token.endpoint.url = null
+	security.protocol = PLAINTEXT
+	security.providers = null
+	send.buffer.bytes = 131072
+	socket.connection.setup.timeout.max.ms = 30000
+	socket.connection.setup.timeout.ms = 10000
+	ssl.cipher.suites = null
+	ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	ssl.endpoint.identification.algorithm = https
+	ssl.engine.factory.class = null
+	ssl.key.password = null
+	ssl.keymanager.algorithm = SunX509
+	ssl.keystore.certificate.chain = null
+	ssl.keystore.key = null
+	ssl.keystore.location = null
+	ssl.keystore.password = null
+	ssl.keystore.type = JKS
+	ssl.protocol = TLSv1.3
+	ssl.provider = null
+	ssl.secure.random.implementation = null
+	ssl.trustmanager.algorithm = PKIX
+	ssl.truststore.certificates = null
+	ssl.truststore.location = null
+	ssl.truststore.password = null
+	ssl.truststore.type = JKS
+
+2026-11-22T20:22:59.102Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka version: 3.6.1
+2026-11-22T20:22:59.103Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka commitId: 5e3c2b738d253ff5
+2026-11-22T20:22:59.103Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : Kafka startTimeMs: 1795378979102
+2026-11-22T20:22:59.319Z  INFO 317367 --- [circleguard-promotion-service] [| adminclient-1] [                                                 ] o.a.kafka.common.utils.AppInfoParser     : App info kafka.admin.client for adminclient-1 unregistered
+2026-11-22T20:22:59.330Z  INFO 317367 --- [circleguard-promotion-service] [| adminclient-1] [                                                 ] o.apache.kafka.common.metrics.Metrics    : Metrics scheduler closed
+2026-11-22T20:22:59.330Z  INFO 317367 --- [circleguard-promotion-service] [| adminclient-1] [                                                 ] o.apache.kafka.common.metrics.Metrics    : Closing reporter org.apache.kafka.common.metrics.JmxReporter
+2026-11-22T20:22:59.331Z  INFO 317367 --- [circleguard-promotion-service] [| adminclient-1] [                                                 ] o.apache.kafka.common.metrics.Metrics    : Metrics reporters closed
+2026-11-22T20:22:59.391Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [5821536a8c2bca12eddf7df4dd54c879-f3351842193e347f] c.c.promotion.listener.SurveyListener    : Received survey submission event
+2026-11-22T20:23:00.410Z ERROR 317367 --- [circleguard-promotion-service] [alhost:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: Failed to connect to localhost/127.0.0.1:4318
+
+java.net.ConnectException: Failed to connect to localhost/127.0.0.1:4318
+	at okhttp3.internal.connection.RealConnection.connectSocket(RealConnection.kt:297) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealConnection.connect(RealConnection.kt:207) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ExchangeFinder.findConnection(ExchangeFinder.kt:226) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ExchangeFinder.findHealthyConnection(ExchangeFinder.kt:106) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ExchangeFinder.find(ExchangeFinder.kt:74) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealCall.initExchange$okhttp(RealCall.kt:255) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ConnectInterceptor.intercept(ConnectInterceptor.kt:32) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.cache.CacheInterceptor.intercept(CacheInterceptor.kt:95) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.BridgeInterceptor.intercept(BridgeInterceptor.kt:83) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:76) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.net.ConnectException: Connection refused (connect failed)
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source) ~[na:na]
+	at java.base/java.net.SocksSocketImpl.connect(Unknown Source) ~[na:na]
+	at java.base/java.net.Socket.connect(Unknown Source) ~[na:na]
+	at okhttp3.internal.platform.Platform.connectSocket(Platform.kt:128) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealConnection.connectSocket(RealConnection.kt:295) ~[okhttp-4.12.0.jar:na]
+	... 18 common frames omitted
+
+2026-11-22T20:23:03.564Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [abcdef0123456789abcdef0123456789-43ba13034b7c3350] c.c.promotion.listener.SurveyListener    : Received survey submission event
+2026-11-22T20:23:03.564Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [abcdef0123456789abcdef0123456789-43ba13034b7c3350] c.c.promotion.listener.SurveyListener    : Promoting symptomatic survey subject to SUSPECT
+2026-11-22T20:23:03.677Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [d4228744a0409991a39af29f07942c6c-01ce744713a9f2ef] c.c.promotion.listener.SurveyListener    : Received survey submission event
+2026-11-22T20:23:03.677Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [d4228744a0409991a39af29f07942c6c-01ce744713a9f2ef] c.c.promotion.listener.SurveyListener    : Promoting symptomatic survey subject to SUSPECT
+2026-11-22T20:23:03.792Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [92776088f8326ef9d6d85f1708fbadc0-54286f59eebe6945] c.c.promotion.listener.SurveyListener    : Received certificate validation event
+2026-11-22T20:23:03.792Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [92776088f8326ef9d6d85f1708fbadc0-54286f59eebe6945] c.c.promotion.listener.SurveyListener    : Restoring approved certificate subject to ACTIVE
+2026-11-22T20:23:04.068Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:04.068Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 2147483646 disconnected.
+2026-11-22T20:23:04.068Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:04.069Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Cancelled in-flight FETCH request with correlation id 50 due to node 1 being disconnected (elapsed time since creation: 392ms, elapsed time since send: 392ms, request timeout: 30000ms)
+2026-11-22T20:23:04.070Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 2147483646 disconnected.
+2026-11-22T20:23:04.070Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node -1 disconnected.
+2026-11-22T20:23:04.070Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] o.a.kafka.clients.FetchSessionHandler    : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Error sending fetch request (sessionId=2009310573, epoch=11) to node 1:
+
+org.apache.kafka.common.errors.DisconnectException: null
+
+2026-11-22T20:23:04.071Z  INFO 317367 --- [circleguard-promotion-service] [n-service-group] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:04.071Z  INFO 317367 --- [circleguard-promotion-service] [n-service-group] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Cancelled in-flight FETCH request with correlation id 48 due to node 1 being disconnected (elapsed time since creation: 280ms, elapsed time since send: 280ms, request timeout: 30000ms)
+2026-11-22T20:23:04.072Z  INFO 317367 --- [circleguard-promotion-service] [n-service-group] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node -1 disconnected.
+2026-11-22T20:23:04.072Z  INFO 317367 --- [circleguard-promotion-service] [n-service-group] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Cancelled in-flight METADATA request with correlation id 50 due to node 1 being disconnected (elapsed time since creation: 181ms, elapsed time since send: 181ms, request timeout: 30000ms)
+2026-11-22T20:23:04.072Z  INFO 317367 --- [circleguard-promotion-service] [n-service-group] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node -1 disconnected.
+2026-11-22T20:23:04.072Z  INFO 317367 --- [circleguard-promotion-service] [n-service-group] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: coordinator unavailable. isDisconnected: true. Rediscovery will be attempted.
+2026-11-22T20:23:04.072Z  INFO 317367 --- [circleguard-promotion-service] [n-service-group] [                                                 ] o.a.kafka.clients.FetchSessionHandler    : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Error sending fetch request (sessionId=1001164953, epoch=10) to node 1:
+
+org.apache.kafka.common.errors.DisconnectException: null
+
+2026-11-22T20:23:04.072Z  INFO 317367 --- [circleguard-promotion-service] [n-service-group] [                                                 ] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Group coordinator 10.147.20.67:10304 (id: 2147483646 rack: null) is unavailable or invalid due to cause: coordinator unavailable. isDisconnected: true. Rediscovery will be attempted.
+2026-11-22T20:23:04.169Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:04.169Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.171Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:04.171Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:04.171Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.171Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.269Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:04.270Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.272Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:04.272Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:04.272Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.272Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.474Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:04.475Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.522Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:04.522Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.525Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:04.526Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.829Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:04.829Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:04.880Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:04.880Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:05.026Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:05.026Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:05.417Z ERROR 317367 --- [circleguard-promotion-service] [alhost:4318/...] [                                                 ] i.o.exporter.internal.http.HttpExporter  : Failed to export spans. The request could not be executed. Full error message: Failed to connect to localhost/127.0.0.1:4318
+
+java.net.ConnectException: Failed to connect to localhost/127.0.0.1:4318
+	at okhttp3.internal.connection.RealConnection.connectSocket(RealConnection.kt:297) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealConnection.connect(RealConnection.kt:207) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ExchangeFinder.findConnection(ExchangeFinder.kt:226) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ExchangeFinder.findHealthyConnection(ExchangeFinder.kt:106) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ExchangeFinder.find(ExchangeFinder.kt:74) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealCall.initExchange$okhttp(RealCall.kt:255) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ConnectInterceptor.intercept(ConnectInterceptor.kt:32) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.cache.CacheInterceptor.intercept(CacheInterceptor.kt:95) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.BridgeInterceptor.intercept(BridgeInterceptor.kt:83) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:76) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:517) ~[okhttp-4.12.0.jar:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.net.ConnectException: Connection refused (connect failed)
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source) ~[na:na]
+	at java.base/java.net.SocksSocketImpl.connect(Unknown Source) ~[na:na]
+	at java.base/java.net.Socket.connect(Unknown Source) ~[na:na]
+	at okhttp3.internal.platform.Platform.connectSocket(Platform.kt:128) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealConnection.connectSocket(RealConnection.kt:295) ~[okhttp-4.12.0.jar:na]
+	... 18 common frames omitted
+
+2026-11-22T20:23:05.783Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:05.784Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:05.837Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:05.838Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:05.933Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:05.934Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:06.790Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:06.791Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:06.947Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:06.947Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:06.990Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:06.991Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:07.900Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:07.900Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:08.050Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:08.050Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:08.058Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:08.058Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:08.755Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:08.756Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:08.966Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:08.967Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:09.288Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:09.288Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:09.709Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:09.709Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:09.925Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:09.926Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:10.245Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:10.246Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:10.864Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:10.865Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:10.986Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:10.987Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:11.201Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:11.201Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#0-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-1, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:11.769Z  INFO 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Node 1 disconnected.
+2026-11-22T20:23:11.769Z  WARN 317367 --- [circleguard-promotion-service] [ntainer#1-0-C-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-promotion-service-group-2, groupId=promotion-service-group] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+2026-11-22T20:23:11.944Z  INFO 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Node 1 disconnected.
+2026-11-22T20:23:11.945Z  WARN 317367 --- [circleguard-promotion-service] [ad | producer-1] [                                                 ] org.apache.kafka.clients.NetworkClient   : [Producer clientId=producer-1] Connection to node 1 (/10.147.20.67:10304) could not be established. Broker may not be available.
+]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/root/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.14.12/be4984cb6fd1ef1d11f218a648889dfda44b8a15/byte-buddy-agent-1.14.12.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

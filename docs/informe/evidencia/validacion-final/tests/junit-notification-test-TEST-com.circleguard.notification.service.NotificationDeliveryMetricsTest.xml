@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.notification.service.NotificationDeliveryMetricsTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-22T18:24:06.338Z" hostname="205m07" time="0.161">
+  <properties/>
+  <testcase name="successAuditIncrementsSuccessCounterForItsChannelOnly()" classname="com.circleguard.notification.service.NotificationDeliveryMetricsTest" time="0.13"/>
+  <testcase name="retryAuditCountsAsFailureForItsChannel()" classname="com.circleguard.notification.service.NotificationDeliveryMetricsTest" time="0.003"/>
+  <testcase name="auditStillPublishesTheDeliveryEventToKafkaTopic()" classname="com.circleguard.notification.service.NotificationDeliveryMetricsTest" time="0.003"/>
+  <testcase name="failedAuditCountsAsFailureForItsChannel()" classname="com.circleguard.notification.service.NotificationDeliveryMetricsTest" time="0.002"/>
+  <testcase name="consecutiveAuditsAccumulatePerChannelAndResult()" classname="com.circleguard.notification.service.NotificationDeliveryMetricsTest" time="0.002"/>
+  <testcase name="publishesSharedPrometheusExposition()" classname="com.circleguard.notification.service.NotificationDeliveryMetricsTest" time="0.013"/>
+  <testcase name="auditGeneratesCorrelationIdWhenChannelCallerHasNone()" classname="com.circleguard.notification.service.NotificationDeliveryMetricsTest" time="0.003"/>
+  <system-out><![CDATA[2026-11-22T18:24:06.458Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+2026-11-22T18:24:06.464Z  INFO 277664 --- [circleguard-notification-service] [ntainer#2-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-priority-group-1, groupId=notification-priority-group] Node -1 disconnected.
+2026-11-22T18:24:06.464Z  INFO 277664 --- [circleguard-notification-service] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-2, groupId=notification-group] Node -1 disconnected.
+2026-11-22T18:24:06.465Z  INFO 277664 --- [circleguard-notification-service] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-3, groupId=notification-group] Node -1 disconnected.
+2026-11-22T18:24:06.466Z  WARN 277664 --- [circleguard-notification-service] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-2, groupId=notification-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Broker may not be available.
+2026-11-22T18:24:06.467Z  WARN 277664 --- [circleguard-notification-service] [ntainer#2-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-priority-group-1, groupId=notification-priority-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Broker may not be available.
+2026-11-22T18:24:06.467Z  WARN 277664 --- [circleguard-notification-service] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-2, groupId=notification-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-11-22T18:24:06.467Z  WARN 277664 --- [circleguard-notification-service] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-3, groupId=notification-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Broker may not be available.
+2026-11-22T18:24:06.467Z  WARN 277664 --- [circleguard-notification-service] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-group-3, groupId=notification-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-11-22T18:24:06.467Z  WARN 277664 --- [circleguard-notification-service] [ntainer#2-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-notification-priority-group-1, groupId=notification-priority-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-11-22T18:24:06.471Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+2026-11-22T18:24:06.474Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+2026-11-22T18:24:06.478Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+2026-11-22T18:24:06.480Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+2026-11-22T18:24:06.481Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+2026-11-22T18:24:06.481Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+2026-11-22T18:24:06.482Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+2026-11-22T18:24:06.488Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+2026-11-22T18:24:06.498Z  INFO 277664 --- [circleguard-notification-service] [    Test worker] c.c.n.service.AuditLogService            : Logging notification audit
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

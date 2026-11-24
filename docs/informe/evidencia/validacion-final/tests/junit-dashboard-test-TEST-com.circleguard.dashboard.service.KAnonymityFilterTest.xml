@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.dashboard.service.KAnonymityFilterTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:24:02.531Z" hostname="205m07" time="0.005">
+  <properties/>
+  <testcase name="shouldAllowCustomThresholdAndHandleNull()" classname="com.circleguard.dashboard.service.KAnonymityFilterTest" time="0.001"/>
+  <testcase name="shouldPreservePopulationAtAndAboveThreshold()" classname="com.circleguard.dashboard.service.KAnonymityFilterTest" time="0.001"/>
+  <testcase name="shouldMaskOnlyPositiveCountsBelowThreshold()" classname="com.circleguard.dashboard.service.KAnonymityFilterTest" time="0.001"/>
+  <testcase name="shouldMaskPopulationBelowThresholdAndKeepMetadata()" classname="com.circleguard.dashboard.service.KAnonymityFilterTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

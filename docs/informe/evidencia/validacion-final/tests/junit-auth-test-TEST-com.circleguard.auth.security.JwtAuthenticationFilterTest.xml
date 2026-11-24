@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.auth.security.JwtAuthenticationFilterTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:20:35.115Z" hostname="205m07" time="0.115">
+  <properties/>
+  <testcase name="shouldClearSecurityContextAndContinueWhenTokenIsInvalid()" classname="com.circleguard.auth.security.JwtAuthenticationFilterTest" time="0.099"/>
+  <testcase name="shouldPopulateSecurityContextWhenValidBearerTokenProvided()" classname="com.circleguard.auth.security.JwtAuthenticationFilterTest" time="0.011"/>
+  <testcase name="shouldContinueFilterChainWhenAuthorizationHeaderIsMissingOrNotBearer()" classname="com.circleguard.auth.security.JwtAuthenticationFilterTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

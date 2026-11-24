@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.auth.controller.QrTokenControllerTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:20:31.296Z" hostname="205m07" time="2.679">
+  <properties/>
+  <testcase name="shouldGenerateQrTokenWhenAuthenticated()" classname="com.circleguard.auth.controller.QrTokenControllerTest" time="2.647"/>
+  <testcase name="shouldReturn403WhenUnauthenticated()" classname="com.circleguard.auth.controller.QrTokenControllerTest" time="0.026"/>
+  <system-out><![CDATA[2026-11-22T01:20:26.974Z  INFO 3430 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.circleguard.auth.controller.QrTokenControllerTest]: QrTokenControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-22T01:20:26.986Z  INFO 3430 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.circleguard.auth.AuthServiceApplication for test class com.circleguard.auth.controller.QrTokenControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.4)
+
+2026-11-22T01:20:27.038Z  INFO 3430 --- [    Test worker] c.c.a.controller.QrTokenControllerTest   : Starting QrTokenControllerTest using Java 21.0.13 with PID 3430 (started by root in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-142/workspace/services/circleguard-auth-service)
+2026-11-22T01:20:27.038Z  INFO 3430 --- [    Test worker] c.c.a.controller.QrTokenControllerTest   : No active profile set, falling back to 1 default profile: "default"
+2026-11-22T01:20:30.580Z  INFO 3430 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2974d805, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@33a7f62e, org.springframework.security.web.context.SecurityContextHolderFilter@67fa0669, org.springframework.security.web.header.HeaderWriterFilter@1a74f8ab, org.springframework.web.filter.CorsFilter@336aadd7, org.springframework.security.web.authentication.logout.LogoutFilter@4c951338, com.circleguard.auth.security.JwtAuthenticationFilter@2bb29618, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@4da6fb73, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@466782a5, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1179883f, org.springframework.security.web.access.ExceptionTranslationFilter@48186a48, org.springframework.security.web.access.intercept.AuthorizationFilter@f65aa97]
+2026-11-22T01:20:31.280Z  INFO 3430 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-22T01:20:31.280Z  INFO 3430 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-22T01:20:31.281Z  INFO 3430 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-11-22T01:20:31.292Z  INFO 3430 --- [    Test worker] c.c.a.controller.QrTokenControllerTest   : Started QrTokenControllerTest in 4.301 seconds (process running for 38.69)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

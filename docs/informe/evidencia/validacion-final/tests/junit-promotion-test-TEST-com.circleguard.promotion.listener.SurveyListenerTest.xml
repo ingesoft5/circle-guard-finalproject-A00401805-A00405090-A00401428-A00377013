@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.promotion.listener.SurveyListenerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:37:43.293Z" hostname="205m07" time="0.033">
+  <properties/>
+  <testcase name="surveyFailureDoesNotLogEventOrExceptionMessage()" classname="com.circleguard.promotion.listener.SurveyListenerTest" time="0.027"/>
+  <testcase name="onSurveySubmitted_WithoutSymptoms_DoesNothing()" classname="com.circleguard.promotion.listener.SurveyListenerTest" time="0.002"/>
+  <testcase name="onSurveySubmitted_WithSymptoms_PromotesToSuspect()" classname="com.circleguard.promotion.listener.SurveyListenerTest" time="0.002"/>
+  <system-out><![CDATA[2026-11-22T14:37:43.316Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.promotion.listener.SurveyListener    : Received survey submission event
+2026-11-22T14:37:43.316Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.promotion.listener.SurveyListener    : Promoting symptomatic survey subject to SUSPECT
+2026-11-22T14:37:43.317Z ERROR 173890 --- [circleguard-promotion-service] [    Test worker] c.c.promotion.listener.SurveyListener    : Failed to process survey event (IllegalStateException)
+2026-11-22T14:37:43.323Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.promotion.listener.SurveyListener    : Received survey submission event
+2026-11-22T14:37:43.326Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.promotion.listener.SurveyListener    : Received survey submission event
+2026-11-22T14:37:43.326Z  INFO 173890 --- [circleguard-promotion-service] [    Test worker] c.c.promotion.listener.SurveyListener    : Promoting symptomatic survey subject to SUSPECT
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

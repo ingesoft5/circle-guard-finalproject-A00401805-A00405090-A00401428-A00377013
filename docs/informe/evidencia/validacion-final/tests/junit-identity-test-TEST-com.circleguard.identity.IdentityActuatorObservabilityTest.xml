@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.identity.IdentityActuatorObservabilityTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:22:14.090Z" hostname="205m07" time="1.517">
+  <properties/>
+  <testcase name="shouldExposeHealthProbesAndPrometheusEndpointWithoutAuthentication()" classname="com.circleguard.identity.IdentityActuatorObservabilityTest" time="1.517"/>
+  <system-out><![CDATA[01:22:01.726 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.circleguard.identity.IdentityActuatorObservabilityTest]: IdentityActuatorObservabilityTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+01:22:01.898 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.circleguard.identity.IdentityServiceApplication for test class com.circleguard.identity.IdentityActuatorObservabilityTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.4)
+
+2026-11-22T01:22:02.604Z  INFO 4571 --- [    Test worker] c.c.i.IdentityActuatorObservabilityTest  : Starting IdentityActuatorObservabilityTest using Java 21.0.13 with PID 4571 (started by root in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-142/workspace/services/circleguard-identity-service)
+2026-11-22T01:22:02.606Z  INFO 4571 --- [    Test worker] c.c.i.IdentityActuatorObservabilityTest  : The following 1 profile is active: "test"
+2026-11-22T01:22:04.050Z  INFO 4571 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-22T01:22:04.111Z  INFO 4571 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 51 ms. Found 1 JPA repository interface.
+2026-11-22T01:22:05.366Z  INFO 4571 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-22T01:22:05.719Z  INFO 4571 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb user=SA
+2026-11-22T01:22:05.722Z  INFO 4571 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-22T01:22:05.839Z  INFO 4571 --- [    Test worker] o.f.c.internal.license.VersionPrinter    : Flyway Community Edition 9.22.3 by Redgate
+2026-11-22T01:22:05.840Z  INFO 4571 --- [    Test worker] o.f.c.internal.license.VersionPrinter    : See release notes here: https://rd.gt/416ObMi
+2026-11-22T01:22:05.840Z  INFO 4571 --- [    Test worker] o.f.c.internal.license.VersionPrinter    : 
+2026-11-22T01:22:05.926Z  INFO 4571 --- [    Test worker] org.flywaydb.core.FlywayExecutor         : Database: jdbc:h2:mem:testdb (H2 2.2)
+2026-11-22T01:22:05.934Z  WARN 4571 --- [    Test worker] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: H2 2.2.224 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.220.
+2026-11-22T01:22:05.964Z  INFO 4571 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-11-22T01:22:05.968Z  INFO 4571 --- [    Test worker] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.019s)
+2026-11-22T01:22:05.979Z  INFO 4571 --- [    Test worker] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-11-22T01:22:06.008Z  INFO 4571 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-11-22T01:22:06.014Z  INFO 4571 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - initial identity schema"
+2026-11-22T01:22:06.029Z  INFO 4571 --- [    Test worker] o.f.core.internal.command.DbMigrate      : Successfully applied 1 migration to schema "public", now at version v1 (execution time 00:00.005s)
+2026-11-22T01:22:06.283Z  INFO 4571 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-22T01:22:06.398Z  INFO 4571 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
+2026-11-22T01:22:06.459Z  INFO 4571 --- [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-22T01:22:06.890Z  INFO 4571 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-22T01:22:06.954Z  WARN 4571 --- [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-11-22T01:22:08.904Z  INFO 4571 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-22T01:22:08.945Z  INFO 4571 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-22T01:22:10.913Z  WARN 4571 --- [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-11-22T01:22:11.021Z  WARN 4571 --- [    Test worker] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 2caa7337-97af-47fb-b8bb-7df81bc67a93
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-11-22T01:22:12.041Z  INFO 4571 --- [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoint(s) beneath base path '/actuator'
+2026-11-22T01:22:12.190Z  INFO 4571 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@17ce2a83, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7dec7d41, org.springframework.security.web.context.SecurityContextHolderFilter@7a051398, org.springframework.security.web.header.HeaderWriterFilter@1ae6e1cc, org.springframework.web.filter.CorsFilter@8b09aa7, org.springframework.security.web.authentication.logout.LogoutFilter@14ea123e, com.circleguard.identity.config.JwtAuthenticationFilter@49edaf24, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@304cba1c, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@3e8d4c14, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@32ae2974, org.springframework.security.web.access.ExceptionTranslationFilter@5b09788c, org.springframework.security.web.access.intercept.AuthorizationFilter@50893336]
+2026-11-22T01:22:13.777Z  INFO 4571 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-22T01:22:13.778Z  INFO 4571 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-22T01:22:13.779Z  INFO 4571 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-11-22T01:22:13.948Z  INFO 4571 --- [    Test worker] c.c.i.IdentityActuatorObservabilityTest  : Started IdentityActuatorObservabilityTest in 11.827 seconds (process running for 13.857)
+]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/root/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.14.12/be4984cb6fd1ef1d11f218a648889dfda44b8a15/byte-buddy-agent-1.14.12.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

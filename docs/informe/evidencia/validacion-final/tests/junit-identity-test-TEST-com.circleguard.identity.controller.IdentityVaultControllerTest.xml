@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.identity.controller.IdentityVaultControllerTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-22T01:22:16.940Z" hostname="205m07" time="1.022">
+  <properties/>
+  <testcase name="lookupIdentity_WithValidJwt_ReturnsRealIdentity()" classname="com.circleguard.identity.controller.IdentityVaultControllerTest" time="0.719"/>
+  <testcase name="shouldRecordMicrometerCountersAcrossMappingAndLookupOperations()" classname="com.circleguard.identity.controller.IdentityVaultControllerTest" time="0.032"/>
+  <testcase name="lookupIdentity_NotFound_Returns404ProblemDetail()" classname="com.circleguard.identity.controller.IdentityVaultControllerTest" time="0.133"/>
+  <testcase name="mapIdentity_ReturnsAnonymousId()" classname="com.circleguard.identity.controller.IdentityVaultControllerTest" time="0.022"/>
+  <testcase name="lookupIdentity_WithInvalidJwt_Returns401()" classname="com.circleguard.identity.controller.IdentityVaultControllerTest" time="0.015"/>
+  <testcase name="registerVisitor_ReturnsAnonymousId()" classname="com.circleguard.identity.controller.IdentityVaultControllerTest" time="0.014"/>
+  <testcase name="lookupIdentity_Unauthenticated_Returns401()" classname="com.circleguard.identity.controller.IdentityVaultControllerTest" time="0.011"/>
+  <testcase name="lookupIdentity_WithPermission_ReturnsRealIdentity()" classname="com.circleguard.identity.controller.IdentityVaultControllerTest" time="0.032"/>
+  <testcase name="lookupIdentity_WithoutPermission_Returns403()" classname="com.circleguard.identity.controller.IdentityVaultControllerTest" time="0.02"/>
+  <system-out><![CDATA[2026-11-22T01:22:15.616Z  INFO 4571 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.circleguard.identity.controller.IdentityVaultControllerTest]: IdentityVaultControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-22T01:22:15.633Z  INFO 4571 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.circleguard.identity.IdentityServiceApplication for test class com.circleguard.identity.controller.IdentityVaultControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.4)
+
+2026-11-22T01:22:15.666Z  INFO 4571 --- [    Test worker] c.c.i.c.IdentityVaultControllerTest      : Starting IdentityVaultControllerTest using Java 21.0.13 with PID 4571 (started by root in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-142/workspace/services/circleguard-identity-service)
+2026-11-22T01:22:15.667Z  INFO 4571 --- [    Test worker] c.c.i.c.IdentityVaultControllerTest      : The following 1 profile is active: "test"
+2026-11-22T01:22:16.351Z  WARN 4571 --- [    Test worker] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 684bba90-0912-49d7-86f5-6a214a24b7b8
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-11-22T01:22:16.673Z  INFO 4571 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4ed9314, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@dbb96a7, org.springframework.security.web.context.SecurityContextHolderFilter@108d75d9, org.springframework.security.web.header.HeaderWriterFilter@151a7f12, org.springframework.web.filter.CorsFilter@7726966b, org.springframework.security.web.authentication.logout.LogoutFilter@6e8cfa74, com.circleguard.identity.config.JwtAuthenticationFilter@4facd62a, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@341fa52, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@53f07129, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@176a1efa, org.springframework.security.web.access.ExceptionTranslationFilter@41723269, org.springframework.security.web.access.intercept.AuthorizationFilter@32ba52df]
+2026-11-22T01:22:16.861Z  INFO 4571 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-22T01:22:16.861Z  INFO 4571 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-22T01:22:16.865Z  INFO 4571 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-11-22T01:22:16.906Z  INFO 4571 --- [    Test worker] c.c.i.c.IdentityVaultControllerTest      : Started IdentityVaultControllerTest in 1.267 seconds (process running for 16.815)
+2026-11-22T01:22:17.593Z  INFO 4571 --- [    Test worker] c.c.i.c.IdentityVaultController          : Authorized vault lookup succeeded: anonymousId=d8e45483-0169-47b6-a9db-d4a3a22c0401, requester=anonymous-1
+2026-11-22T01:22:17.674Z  INFO 4571 --- [    Test worker] c.c.i.c.IdentityVaultController          : Registered visitor identity mapping: anonymousId=3fd2d8d0-3854-4a75-b4f4-72482b60635e
+2026-11-22T01:22:17.676Z  INFO 4571 --- [    Test worker] c.c.i.c.IdentityVaultController          : Authorized vault lookup succeeded: anonymousId=3fd2d8d0-3854-4a75-b4f4-72482b60635e, requester=system
+2026-11-22T01:22:17.774Z  WARN 4571 --- [    Test worker] c.c.i.c.IdentityVaultController          : Authorized vault lookup returned 404 NOT_FOUND: anonymousId=02da5acb-c612-495c-b2f8-23ed58bf366a, requester=user
+2026-11-22T01:22:17.881Z  INFO 4571 --- [    Test worker] c.c.i.c.IdentityVaultController          : Registered visitor identity mapping: anonymousId=56bca3c3-cede-41e2-b7fc-c5d565423ca1
+2026-11-22T01:22:17.922Z  INFO 4571 --- [    Test worker] c.c.i.c.IdentityVaultController          : Authorized vault lookup succeeded: anonymousId=f0db9a08-0ff1-4997-b58b-e093cd44fb5c, requester=user
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

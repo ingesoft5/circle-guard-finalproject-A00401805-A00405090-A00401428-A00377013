@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-22T20:17:43.900Z" hostname="205m07" time="1.808">
+  <properties/>
+  <testcase name="deniesExpiredToken()" classname="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" time="1.689"/>
+  <testcase name="[1] status=SUSPECT" classname="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" time="0.029"/>
+  <testcase name="[2] status=CONTAGIED" classname="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" time="0.008"/>
+  <testcase name="[3] status=PROBABLE" classname="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" time="0.008"/>
+  <testcase name="[4] status=CONFIRMED" classname="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" time="0.01"/>
+  <testcase name="[5] status=POTENTIAL" classname="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" time="0.009"/>
+  <testcase name="deniesWhenStatusIsMissing()" classname="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" time="0.007"/>
+  <testcase name="[1] status=ACTIVE" classname="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" time="0.008"/>
+  <testcase name="[2] status=RECOVERED" classname="com.circleguard.gateway.integration.GatewayRedisIntegrationTest" time="0.007"/>
+  <system-out><![CDATA[20:17:24.781 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.circleguard.gateway.integration.GatewayRedisIntegrationTest]: GatewayRedisIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+20:17:24.935 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.circleguard.gateway.GatewayServiceApplication for test class com.circleguard.gateway.integration.GatewayRedisIntegrationTest
+20:17:25.199 [Test worker] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+20:17:25.205 [Test worker] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+20:17:25.483 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+20:17:25.942 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with local Unix socket (unix:///var/run/docker.sock)
+20:17:25.943 [Test worker] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is 10.147.20.67
+20:17:25.961 [Test worker] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 29.9.3
+  API Version: 1.56
+  Operating System: Ubuntu 24.04.5 LTS
+  Total Memory: 32022 MB
+20:17:25.964 [Test worker] WARN org.testcontainers.utility.ResourceReaper -- 
+********************************************************************************
+Ryuk has been disabled. This can cause unexpected behavior in your environment.
+********************************************************************************
+20:17:25.973 [Test worker] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+20:17:25.974 [Test worker] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+20:17:26.460 [Test worker] INFO tc.redis:7.2-alpine -- Creating container for image: redis:7.2-alpine
+20:17:26.468 [Test worker] INFO org.testcontainers.utility.RegistryAuthLocator -- Failure when attempting to lookup auth config. Please ignore if you don't have images in an authenticated registry. Details: (dockerImageName: redis:7.2-alpine, configFile: /root/.docker/config.json, configEnv: DOCKER_AUTH_CONFIG). Falling back to docker-java default behaviour. Exception message: Status 404: No config supplied. Checked in order: /root/.docker/config.json (file not found), DOCKER_AUTH_CONFIG (not set)
+20:17:37.933 [Test worker] INFO tc.redis:7.2-alpine -- Container redis:7.2-alpine is starting: 0fbfaf51811231f24443602c81e2a709e957a36f0ecc9fb2fcc5aec28d76c96b
+20:17:40.354 [Test worker] INFO tc.redis:7.2-alpine -- Container redis:7.2-alpine started in PT13.894153679S
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.4)
+
+2026-11-22T20:17:40.884Z  INFO 315844 --- [circleguard-gateway-service] [    Test worker] c.c.g.i.GatewayRedisIntegrationTest      : Starting GatewayRedisIntegrationTest using Java 21.0.13 with PID 315844 (started by root in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/main/workspace/services/circleguard-gateway-service)
+2026-11-22T20:17:40.885Z  INFO 315844 --- [circleguard-gateway-service] [    Test worker] c.c.g.i.GatewayRedisIntegrationTest      : The following 1 profile is active: "test"
+2026-11-22T20:17:41.944Z  INFO 315844 --- [circleguard-gateway-service] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-11-22T20:17:41.947Z  INFO 315844 --- [circleguard-gateway-service] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-11-22T20:17:41.984Z  INFO 315844 --- [circleguard-gateway-service] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 18 ms. Found 0 Redis repository interfaces.
+2026-11-22T20:17:42.890Z  WARN 315844 --- [circleguard-gateway-service] [    Test worker] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 85412091-ef1f-4dc3-ba0a-d41b335b36b6
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-11-22T20:17:43.329Z  INFO 315844 --- [circleguard-gateway-service] [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoint(s) beneath base path '/actuator'
+2026-11-22T20:17:43.374Z  INFO 315844 --- [circleguard-gateway-service] [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@37b5203, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7728bed, org.springframework.security.web.context.SecurityContextHolderFilter@54a989ec, org.springframework.security.web.header.HeaderWriterFilter@240844b6, org.springframework.web.filter.CorsFilter@434a641c, org.springframework.security.web.authentication.logout.LogoutFilter@6f33e4be, com.circleguard.gateway.security.JwtAuthenticationFilter@1c93530b, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@4544bccb, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@514111ca, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@45a1f1d0, org.springframework.security.web.session.SessionManagementFilter@29b8a9a9, org.springframework.security.web.access.ExceptionTranslationFilter@5adf6039, org.springframework.security.web.access.intercept.AuthorizationFilter@7fef7c55]
+2026-11-22T20:17:43.792Z  INFO 315844 --- [circleguard-gateway-service] [    Test worker] c.c.g.i.GatewayRedisIntegrationTest      : Started GatewayRedisIntegrationTest in 3.393 seconds (process running for 20.484)
+2026-11-22T20:17:46.044Z  INFO 315844 --- [circleguard-gateway-service] [xecutorLoop-1-1] i.l.core.protocol.ConnectionWatchdog     : Reconnecting, last destination was /10.147.20.67:10301
+2026-11-22T20:17:46.069Z  WARN 315844 --- [circleguard-gateway-service] [ioEventLoop-4-2] i.l.core.protocol.ConnectionWatchdog     : Cannot reconnect to [10.147.20.67/<unresolved>:10301]: Connection refused (connect failed): /10.147.20.67:10301
+]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/root/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.14.12/be4984cb6fd1ef1d11f218a648889dfda44b8a15/byte-buddy-agent-1.14.12.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

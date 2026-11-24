@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.circleguard.form.controller.QuestionnaireControllerTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-22T14:33:52.910Z" hostname="205m07" time="0.068">
+  <properties/>
+  <testcase name="shouldCreateQuestionnaire()" classname="com.circleguard.form.controller.QuestionnaireControllerTest" time="0.044"/>
+  <testcase name="shouldActivateQuestionnaire()" classname="com.circleguard.form.controller.QuestionnaireControllerTest" time="0.006"/>
+  <testcase name="shouldReturnNotFoundWhenThereIsNoActiveQuestionnaire()" classname="com.circleguard.form.controller.QuestionnaireControllerTest" time="0.007"/>
+  <testcase name="shouldReturnActiveQuestionnaire()" classname="com.circleguard.form.controller.QuestionnaireControllerTest" time="0.006"/>
+  <system-out><![CDATA[2026-11-22T14:33:52.534Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.circleguard.form.controller.QuestionnaireControllerTest]: QuestionnaireControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-22T14:33:52.542Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.circleguard.form.FormApplication for test class com.circleguard.form.controller.QuestionnaireControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.4)
+
+2026-11-22T14:33:52.572Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] c.c.f.c.QuestionnaireControllerTest      : Starting QuestionnaireControllerTest using Java 21.0.13 with PID 172509 (started by root in /var/jenkins_home/jobs/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/branches/PR-141/workspace/services/circleguard-form-service)
+2026-11-22T14:33:52.572Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] c.c.f.c.QuestionnaireControllerTest      : No active profile set, falling back to 1 default profile: "default"
+2026-11-22T14:33:52.897Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-22T14:33:52.897Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-22T14:33:52.898Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-11-22T14:33:52.907Z  INFO [form,local,,] 172509 --- [circleguard-form-service] [    Test worker] c.c.f.c.QuestionnaireControllerTest      : Started QuestionnaireControllerTest in 0.362 seconds (process running for 8.954)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
