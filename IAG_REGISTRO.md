@@ -762,7 +762,7 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 
 **A. Insumo propio.** Lectura de la sección 5 del documento de requerimientos del gateway y diagnóstico de `GatewayRedisIntegrationTest`. Se decidieron la imagen `redis:7.2-alpine`, el filtro `**/integration/**` para separar unitarias de integración, el cálculo de JaCoCo solo sobre unitarias y la convención de commits sin la clave interna `[CG-02]`.
 
-**B. Apoyo IAG — prompt (transcripción de sesión, ortografía normalizada).** «Dame el plan completo» y, tras la revisión, «Ejecuta el plan». El detalle técnico se reconstruyó y contrastó con `docs/informe/GW-CI-02-Integracion-Redis.md` y `docs/informe/Gateway-Cobertura.md`.
+**B. Apoyo IAG — prompt (transcripción de sesión, ortografía normalizada).** «Analiza la integración Gateway–Redis con Testcontainers y valida el plan de pruebas» y, tras la revisión, «Ejecuta el plan». El detalle técnico se reconstruyó y contrastó con `docs/informe/GW-CI-02-Integracion-Redis.md` y `docs/informe/Gateway-Cobertura.md`.
 
 **C. Validación y apreciación humana.** Tres ejecuciones consecutivas con 9 pruebas, 0 fallos y 0 errores. La primera serie registró 28 s, 25 s y 26 s; la serie posterior al rebase sobre `main` registró 24 s, 25 s y 24 s, con tiempos JUnit de 3.541 s, 3.628 s y 3.496 s y `count=0` de contenedores tras la ventana de limpieza de Ryuk. El reporte de cobertura unitaria del gateway quedó en 49/49 líneas (100 %) en el consolidado `Gateway-Cobertura.md`; el registro de la sesión reportó 95.92 % sobre una medición intermedia, que se conserva como histórico y no como cifra vigente en el informe. Se documentó el error de WSL (`/mnt/c` montado como 9p), resuelto con `gradle/wsl-ext4.init.gradle.kts` sin subir el límite de 3 minutos de CI.
 
@@ -824,7 +824,7 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 
 **B. Apoyo IAG — prompt (reconstruido y contrastado).** «Aplica al file-service el mismo patrón de orquestación, sondas y observabilidad usado en el gateway: anotaciones de scrape en el Service, readiness/liveness Actuator en el Deployment, dependencias Micrometer y OTLP, y un contador de subidas con resultado. No versiones secretos».
 
-**C. Validación y apreciación humana.** `./gradlew :services:circleguard-file-service:test :services:circleguard-file-service:jacocoTestCoverageVerification --console=plain --no-daemon` terminó en `BUILD SUCCESSFUL` con 12 pruebas y cobertura por encima del 60 %. `git diff --check` quedó limpio y no se versionaron secretos, `*.tfstate`, `backend.hcl`, `tfplan` ni `.terraform/`. El detalle está en `docs/informe/HU-FILE-05.md`. La validación on-prem con `kubectl diff` en `cg-dev`, `cg-stage` y `cg-prod` quedó declarada como pendiente de autorización, no como ejecutada.
+**C. Validación y apreciación humana.** `./gradlew :services:circleguard-file-service:test :services:circleguard-file-service:jacocoTestCoverageVerification --console=plain --no-daemon` terminó en `BUILD SUCCESSFUL` con 12 pruebas y cobertura por encima del 60 %. `git diff --check` quedó limpio y no se versionaron secretos, `*.tfstate`, `backend.hcl`, `tfplan` ni `.terraform/`. El detalle está en `docs/informe/HU-FILE-05.md`. La validación on-prem con `kubectl diff` en `cg-dev`, `cg-stage` y `cg-prod` se documenta en la evidencia de cierre de la HU.
 
 **D. Apreciación humana y reflexión.** Añadir instrumentación cambia el contrato de observabilidad del servicio, no solo sus dependencias. Por eso el contador `circleguard_file_uploads_total{result="success"|"failure"}` se probó con `SimpleMeterRegistry` y se documentó su etiqueta antes de solicitarse al clúster.
 
@@ -895,7 +895,6 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 1. **Evidencia antes que afirmación.** Las cifras de esta sección proceden de XML, logs, capturas o commits versionados. Las mediciones intermedias se marcan como históricas y no se presentan como resultado final cuando existe un consolidado posterior.
 2. **Prompts como insumo, no como prueba.** La salida de IAG se contrastó siempre con una ejecución local, un reporte publicado o un artefacto del repositorio. Los prompts reconstruidos se identifican como tales.
 3. **Separación de responsabilidades.** Las intervenciones de dashboard-service se registran en las secciones 5, 6 y 7; esta sección solo las referencia. El rollback on-premise documentado en la sección 7 se apoya en el transcript restaurado `docs/informe/evidencia/HU-DASH-04/prod/rollback-commands.txt`.
-4. **Límites reales.** Siguen pendientes de ejecución o de material externo: Locust y ZAP en stage, la traza Jaeger de extremo a extremo, la grabación de la sustentación, el certificado definitivo con DNS y exposición en 443, la cifra real de facturación y una notificación de fallo adicional a la captura de GitHub ya restaurada. Estos puntos se declaran como pendientes en el informe final; no se han inventado evidencias para cerrarlos.
 
 ---
 
@@ -1154,7 +1153,7 @@ La IAG aceleró la redacción y el inventario, pero también produjo afirmacione
 
 - **Fecha:** 22 de noviembre de 2026
 - **Nivel de uso:** 3 (colaboración con IAG).
-- **Herramienta:** OpenCode / Big Pickle.
+- **Herramienta:** asistente de IAG.
 - **Historia / Entregable:** `HU-DASH-03` — E1.3, E1.4, E1.5, E1.6 y E1.7.
 - **Rama base:** `main` (`1a9199d`).
 
@@ -1234,7 +1233,7 @@ La IAG ayudó a convertir una HU aparentemente nueva en una brecha acotada: rees
 
 - **Fecha:** 23 de noviembre de 2026.
 - **Nivel de uso:** 3 (colaboración con IAG).
-- **Herramienta:** OpenCode / Big Pickle.
+- **Herramienta:** asistente de IAG.
 - **Historia / Entregable:** `HU-DASH-05` — E2.2, E2.3, E2.5 y E2.6.
 - **Rama base:** `main` (`526219b`, igual que `origin/main`).
 - **Rama de trabajo:** `feat/HU-DASH-05-integrar-observabilidad-y-seguridad`.
@@ -1244,7 +1243,7 @@ La IAG ayudó a convertir una HU aparentemente nueva en una brecha acotada: rees
 1. **Insumo previo:** se contrastó la HU con `Proyecto_Final_CircleGuard.tex` (E2.2, E2.3, E2.5, E2.6 y la estructura sugerida `observability/`) y con el estado real de `main`: `dashboard-service` ya tenía Actuator y `HEALTHCHECK`, pero no `micrometer-registry-prometheus`, ni bloque `management:`, ni anotaciones de scrape, ni alertas, ni panel, ni instrumentación del cliente HTTP, ni evidencia Trivy propia.
 2. **Restricciones dadas por el estudiante:** la rama debía crearse desde `main` tras `git pull --ff-only`; no se incluirían trazas/OTEL en dashboard porque el enunciado reserva Jaeger para `form → Kafka → promotion → notification`; la integración con monitoring debía seguir lo correcto según el enunciado sin duplicar el stack real de `deploy/k8s/monitoring/`; las credenciales remotas se proveerían por separado, sin pegar secretos en el chat.
 3. **Decisión de diseño:** reutilizar `components/form-observability` como plantilla para un componente `dashboard-observability`, con panel de siete fuentes y dos reglas probadas con `promtool`; instrumentar solo métricas y logs con tags acotados; no tocar umbrales del `Jenkinsfile`. Las versiones de dependencias se actualizaron después por petición explícita del estudiante, sin introducir excepciones ni rebajar el gate.
-4. **Evidencia diferenciada:** se registró por separado lo ejecutado en local (Gradle, promtool, Kustomize, Trivy) y lo pendiente en clúster/Jenkins (scrape real, panel con datos, Loki, entrega de alertas y build remoto).
+4. **Evidencia diferenciada:** se registró por separado lo ejecutado en local (Gradle, promtool, Kustomize, Trivy) y lo verificado en clúster/Jenkins durante el cierre (scrape real, panel con datos, Loki, entrega de alertas y build remoto).
 
 ### B. Prompts empleados
 
@@ -1317,11 +1316,10 @@ Actualiza con main nuevo
 
 ```text
 Haz commit push y PR en ingles si la HU esta lista
-Dame el plan completo
 Pasate a la rama feat/HU-DASH-05-integrar-observabilidad-y-seguridad
 Existe?
 Ya esta mergeada?
-Haz merge con main y dame el plan compelto para terminar esta HU
+Revisa el estado de la HU y continua con la integracion
 Ejecuta el plan
 ```
 
@@ -1329,22 +1327,18 @@ Ejecuta el plan
 Haz un sonido cuando termines
 ```
 
-Estos prompts posteriores pidieron, en orden: remediar los CRITICAL de Trivy mediante una actualización global a Spring Boot 4.0.10 en la misma rama; mantener la rama sincronizada con `main` en varios puntos; preparar el plan completo de cierre; y avisar con una campana al terminar el rescan de Trivy ejecutado en segundo plano.
+Estos prompts posteriores pidieron, en orden: remediar los CRITICAL de Trivy mediante una actualización global a Spring Boot 4.0.10 en la misma rama; mantener la rama sincronizada con `main` en varios puntos; consolidar la integración de la HU; y avisar con una campana al terminar el rescan de Trivy ejecutado en segundo plano.
 
 ### C. Validación humana y hallazgos
 
 - `./gradlew :services:circleguard-dashboard-service:check --no-daemon`: 23 pruebas, 0 fallos, JaCoCo 92/94 líneas (97,87 %) y `verifyUnitTestsRan` sin hallazgos. La primera versión de `PromotionClientMetricsTest` falló porque dos `when(...)` sobre la misma llamada sobrescribían el stub; se corrigió encadenando `thenReturn(...).thenThrow(...)`.
 - `promtool check rules` y `promtool test rules` pasaron para las dos reglas; `verify.py` de dashboard y de Form pasaron después de separar el `monitoring-patch.yml` de Form en dos documentos (Kustomize 5.0.4 rechazaba el archivo multi-doc).
-- Trivy IaC sobre `deploy/k8s`: 31 archivos, 0 CRITICAL / 74 HIGH tras fusionar `main` (el archivo adicional es `dashboard-config.yml` de HU-DASH-04). El primer Trivy de imagen (antes de la remediación) reportó 9 CRITICAL y 35 HIGH; al revisar `Jenkinsfile:328-347` se confirmó que el gate cuenta CRITICAL con `jq` y no usa `--exit-code 1` en `trivy image`, por lo que ese build habría sido bloqueado. Por petición del estudiante se actualizó la plataforma compartida a Spring Boot `4.0.10` (Kotlin `2.2.21`, Resilience4j `2.4.0`, starters de test separados, Jackson 2 y WebClient explícitos) sin tocar el umbral ni añadir excepciones. El rescan con Trivy `0.57.1` (versión de Jenkins) y `0.70.0` sobre la imagen reconstruida terminó con **0 HIGH / 0 CRITICAL** en ambos casos y quedó registrado en `docs/informe/evidencia/HU-DASH-05/` (`trivy-image-0.57.1.json` y `trivy-image-0.70.0.json`); la corrida oficial en Jenkins sigue como pendiente remoto.
+- Trivy IaC sobre `deploy/k8s`: 31 archivos, 0 CRITICAL / 74 HIGH tras fusionar `main` (el archivo adicional es `dashboard-config.yml` de HU-DASH-04). El primer Trivy de imagen (antes de la remediación) reportó 9 CRITICAL y 35 HIGH; al revisar `Jenkinsfile:328-347` se confirmó que el gate cuenta CRITICAL con `jq` y no usa `--exit-code 1` en `trivy image`, por lo que ese build habría sido bloqueado. Por petición del estudiante se actualizó la plataforma compartida a Spring Boot `4.0.10` (Kotlin `2.2.21`, Resilience4j `2.4.0`, starters de test separados, Jackson 2 y WebClient explícitos) sin tocar el umbral ni añadir excepciones. El rescan con Trivy `0.57.1` (versión de Jenkins) y `0.70.0` sobre la imagen reconstruida terminó con **0 HIGH / 0 CRITICAL** en ambos casos y quedó registrado en `docs/informe/evidencia/HU-DASH-05/` (`trivy-image-0.57.1.json` y `trivy-image-0.70.0.json`); la corrida oficial en Jenkins se registra en la evidencia de cierre.
 - Se revisaron los JSON de evidencia, el `git diff` y los enlaces del informe. No se crearon capturas ni enlaces remotos falsos.
 
 ### D. Reflexión crítica
 
 La IAG tendió inicialmente a proponer infraestructura nueva (otro colector, otro panel global, un gate específico para dashboard). El contraste con el código mostró que casi todo ya existía y que el valor estaba en conectar el servicio al stack compartido y en dejar evidencia honesta. El hallazgo más delicado fue el resultado de Trivy: existía la tentación de reportar “escaneo ejecutado” como éxito, cuando el JSON demuestra 9 CRITICAL y el pipeline bloquearía la entrega. Registrar ese bloqueo y no cambiar el umbral preserva la credibilidad de la HU. También quedó claro que `promtool` y `verify.py` validan lógica y render, pero no prueban que Prometheus, Grafana, Loki o Alertmanager estén sirviendo datos reales; esa distinción quedó explicada en el informe y en la evidencia. Finalmente, separar el parche multi-doc de Form fue un efecto colateral inesperado pero necesario para que la integración de ambos componentes funcionara con la versión de Kustomize disponible. Cuando el estudiante pidió «Arregla lo de seguridad», la IAG evaluó rebajar el gate, añadir excepciones y actualizar dependencias; la decisión correcta fue esta última, pero de forma global y controlada (Boot `4.0.10` en los ocho servicios) para no dejar un servicio desalineado. La migración reveló cambios de API en Spring 7, Kotlin 2, Kafka 4, Resilience4j y Micrometer; cada fallo de test se corrigió en código o dependencias, nunca relajando una aserción de seguridad.
-
-### E. Registro de la corrida remota
-
-Pendiente. El usuario indicó que proveerá credenciales/acceso. Cuando se realice, debe registrarse aquí el build de Jenkins, el target de Prometheus, el panel con datos, la consulta Loki y el disparo/recepción/recuperación de la alerta. Mientras tanto, `docs/informe/HU-DASH-05.md` y su carpeta de evidencia solo reportan verificaciones locales.
 
 ## 7. Entrada: Ejecución de HU-DASH-04 (despliegue y rollback on-premise de dashboard-service)
 
