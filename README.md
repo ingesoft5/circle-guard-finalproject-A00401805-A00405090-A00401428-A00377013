@@ -1,4 +1,4 @@
-<!-- CG-DOC: Project overview, setup guide, and architecture summary. -->
+<!-- CG-DOC: Resumen del proyecto, guía de configuración y arquitectura. -->
 # CircleGuard Monorepo
 
 #### **Integrantes:**
@@ -10,9 +10,9 @@
 
 
 
-**Absolute Privacy. High-Speed Containment. Secure Campus.**
+**Privacidad absoluta. Contención de alta velocidad. Campus seguro.**
 
-CircleGuard is a state-of-the-art university contact tracing and fencing system designed to identify interconnected contact groups ("Circles") and apply rapid health fences while preserving individual anonymity.
+CircleGuard es un sistema universitario de seguimiento de contactos y acordonamiento sanitario de última generación, diseñado para identificar grupos de contacto interconectados («Círculos») y aplicar cercos de salud rápidos sin comprometer el anonimato individual.
 
 ---
 
@@ -24,175 +24,175 @@ Allí se reconstruyeron y verificaron Jenkins, SonarQube, Nexus, el registro Doc
 
 ---
 
-## Vision & Mission
+## Visión y misión
 
-Our vision is a university campus where health containment speed outpaces lab confirmation timelines without compromising student privacy. CircleGuard leverages campus-native intelligence—class schedules and WiFi infrastructure—to deliver a human-validated, graph-based protection ecosystem.
+Nuestra visión es un campus universitario donde la velocidad de contención sanitaria supera los tiempos de confirmación de laboratorio sin comprometer la privacidad de los estudiantes. CircleGuard aprovecha la inteligencia nativa del campus —horarios de clase e infraestructura WiFi— para ofrecer un ecosistema de protección basado en grafos y validado por personas.
 
-### Key Differentiators
-- **Privacy-as-Code**: Zero real-name exposure outside a secure Health Center vault.
-- **Recursive Containment**: Status promotion cascades (Suspect → Probable → Confirmed) that trigger in milliseconds.
-- **Campus Integration**: Smart check-ins using existing WiFi AP triangulation and Bluetooth Low Energy (BLE).
+### Diferenciadores clave
+- **Privacidad como código**: sin exposición de nombres reales fuera de una bóveda segura del Centro de Salud.
+- **Contención recursiva**: cascadas de promoción de estado (Sospechoso → Probable → Confirmado) que se disparan en milisegundos.
+- **Integración con el campus**: check-in inteligente mediante triangulación de puntos de acceso WiFi y Bluetooth Low Energy (BLE).
 
 ---
 
-## Success Metrics
+## Métricas de éxito
 
-| Metric | Target | Measurement |
+| Métrica | Objetivo | Medición |
 |:---|:---|:---|
-| **Containment Speed** | < 60 Seconds | Automated test of promotion engine cascade |
-| **Privacy Compliance** | 100% Anonymity | Penetration test on graph database (Zero real names) |
-| **Check-in Adoption** | > 70% | Analytics on scheduled class contact validation |
-| **False Positive Rate** | < 15% | Post-fence surveys of actual vs. suspected contact |
-| **System Uptime** | 99.5% | 7:00 AM – 10:00 PM (Academic Peak Hours) |
+| **Velocidad de contención** | < 60 segundos | Prueba automatizada de la cascada del motor de promoción |
+| **Cumplimiento de privacidad** | 100 % de anonimato | Prueba de penetración sobre la base de datos de grafos (cero nombres reales) |
+| **Adopción de check-in** | > 70 % | Analítica sobre la validación de contactos en clases programadas |
+| **Tasa de falsos positivos** | < 15 % | Encuestas posteriores al cerco sobre contactos reales frente a sospechosos |
+| **Disponibilidad del sistema** | 99,5 % | 07:00–22:00 (horas pico académicas) |
 
 ---
 
-## Architecture Overview
+## Resumen de arquitectura
 
-CircleGuard follows a **Microservice Architecture** built on a **Hybrid Data Model**.
+CircleGuard sigue una **arquitectura de microservicios** sobre un **modelo de datos híbrido**.
 
-### Core Engine
-1. **Status Promotion Machine**: Uses **Neo4j** for recursive graph traversals to identify contacts within a 14-day temporal window.
-2. **Anonymization Vault**: A segregated **PostgreSQL** vault handles salted-hash identity mapping, compliant with **FERPA** regulations.
-3. **Event-Driven Core**: **Apache Kafka** manages asynchronous status changes, audit logs, and notification dispatches.
+### Motor central
+1. **Máquina de promoción de estados**: usa **Neo4j** para recorridos recursivos de grafo que identifican contactos dentro de una ventana temporal de 14 días.
+2. **Bóveda de anonimización**: una **PostgreSQL** segregada gestiona la correspondencia de identidades mediante hash con sal, conforme a la normativa **FERPA**.
+3. **Núcleo orientado a eventos**: **Apache Kafka** gestiona los cambios de estado asíncronos, los registros de auditoría y el despacho de notificaciones.
 
-### Services Directory
-- **Auth Service**: Dual-chain LDAP (University) / Local (Guest) auth with Dynamic RBAC.
-- **Identity Service**: Cryptographic vault for anonymizing real identities.
-- **Promotion Service**: The status engine (Recursive Graph Processing).
-- **Notification Service**: Multi-channel dispatcher (Push/Email/SMS).
-- **Form Service**: Dynamic health questionnaire engine.
-- **Gateway Service**: Campus entry validation via signed, time-limited QR tokens.
-- **Dashboard Service**: Geospatial hotspot analytics (Privacy-preserving).
-- **File Service**: Secure certificate and document storage (S3-compatible).
+### Directorio de servicios
+- **Servicio de autenticación**: autenticación de doble vía LDAP (Universidad) / Local (Invitados) con RBAC dinámico.
+- **Servicio de identidad**: bóveda criptográfica para anonimizar identidades reales.
+- **Servicio de promoción**: el motor de estados (procesamiento recursivo de grafos).
+- **Servicio de notificaciones**: despachador multicanal (Push/correo/SMS).
+- **Servicio de formularios**: motor dinámico de cuestionarios de salud.
+- **Servicio de gateway**: validación de acceso al campus mediante tokens QR firmados y con vigencia limitada.
+- **Servicio de dashboard**: analítica geoespacial de puntos calientes que preserva la privacidad.
+- **Servicio de archivos**: almacenamiento seguro de certificados y documentos (compatible con S3).
 
 ---
 
-## Technical Stack
+## Stack técnico
 
-| Layer | Technology | Rationale |
+| Capa | Tecnología | Justificación |
 |:---|:---|:---|
-| **Backend** | Spring Boot 3.2.4 / Kotlin 1.9.24 / Java 21 | Typed, reactive JVM services. |
-| **Graph DB** | Neo4j 5.26 | High-performance recursive traversals unreachable with SQL. |
-| **Relational DB**| PostgreSQL 16 | ACID compliant storage for identity and configuration. |
-| **Message Bus** | Apache Kafka 3.7.0 (KRaft) | Persistent, audit-trailed event log for status dispatches. |
-| **Caching** | Redis 7.2 | L2 distributed cache for rapid entry-gate status validation. |
-| **Mobile/Web** | Expo (React Native) | Unified codebase across iOS, Android, and Browser. |
-| **Infra** | Docker Compose on-prem (`cg-tools`) + k3d cluster (`cg`) | k3d ejecuta k3s (Kubernetes certificado por la CNCF): la API es idéntica a K8s, pero se empaqueta sobre Docker para operar un host compartido sin `sudo` ni exponer puertos; ver [CI/CD](#cicd-platform) y `infra/onpremise/ONPREMISE.md`. |
+| **Backend** | Spring Boot 3.2.4 / Kotlin 1.9.24 / Java 21 | Servicios JVM tipados y reactivos. |
+| **Base de datos de grafos** | Neo4j 5.26 | Recorridos recursivos de alto rendimiento que no se logran con SQL. |
+| **Base de datos relacional** | PostgreSQL 16 | Almacenamiento conforme a ACID para identidad y configuración. |
+| **Bus de mensajes** | Apache Kafka 3.7.0 (KRaft) | Registro de eventos persistente y con trazabilidad de auditoría para el despacho de estados. |
+| **Caché** | Redis 7.2 | Caché distribuida L2 para la validación rápida del estado en el acceso al campus. |
+| **Mobile/Web** | Expo (React Native) | Una sola base de código para iOS, Android y navegador. |
+| **Infraestructura** | Docker Compose on-premise (`cg-tools`) + clúster k3d (`cg`) | k3d ejecuta k3s (Kubernetes certificado por la CNCF): la API es idéntica a K8s, pero se empaqueta sobre Docker para operar un host compartido sin `sudo` ni exponer puertos; ver [CI/CD](#plataforma-cicd) y `infra/onpremise/ONPREMISE.md`. |
 
 ---
 
-## Roadmap
+## Hoja de ruta
 
-### Phase 1: MVP — The Intelligence Core (Current)
-- [x] Status Promotion Machine (Suspect → Probable → Confirmed).
-- [x] Temporal graph with 14-day TTL edges.
-- [x] Multi-channel fence notifications (Push/Email/SMS).
-- [ ] Health Center de-identification console.
+### Fase 1: MVP — El núcleo inteligente (actual)
+- [x] Máquina de promoción de estados (Sospechoso → Probable → Confirmado).
+- [x] Grafo temporal con aristas TTL de 14 días.
+- [x] Notificaciones de cerco multicanal (Push/correo/SMS).
+- [ ] Consola de desidentificación del Centro de Salud.
 
-### Phase 2: Growth — Spatial Intelligence
-- [ ] WiFi AP triangulation integration.
-- [ ] Campus entry validation (Gatekeeper) QR integration.
-- [ ] LMS integration for "Remote Attendance" status automation.
+### Fase 2: Crecimiento — Inteligencia espacial
+- [ ] Integración de triangulación de puntos de acceso WiFi.
+- [ ] Validación de acceso al campus (Gatekeeper) mediante QR.
+- [ ] Integración con LMS para automatizar el estado «Asistencia remota».
 
-### Phase 3: Vision — Full Ecosystem
-- [ ] Off-campus circle detection via P2P Bluetooth.
-- [ ] Global Health Dashboard with hotspot visualization.
-- [ ] Lab API bridge for automated test result ingestion.
+### Fase 3: Visión — Ecosistema completo
+- [ ] Detección de círculos fuera del campus mediante Bluetooth P2P.
+- [ ] Panel global de salud con visualización de puntos calientes.
+- [ ] Puente con API de laboratorio para la ingestión automatizada de resultados de pruebas.
 
 ---
 
-## Local Development
+## Desarrollo local
 
-### 1. Infrastructure
-For the current on-premise platform (Compose `cg-tools` + k3d `cg`, namespaces `cg-dev`/`cg-stage`/`cg-prod`) follow [`infra/onpremise/ONPREMISE.md`](infra/onpremise/ONPREMISE.md) and [`docs/infra/migracion-onpremise.md`](docs/infra/migracion-onpremise.md).
+### 1. Infraestructura
+Para la plataforma on-premise vigente (Compose `cg-tools` + k3d `cg`, namespaces `cg-dev`/`cg-stage`/`cg-prod`), sigue [`infra/onpremise/ONPREMISE.md`](infra/onpremise/ONPREMISE.md) y [`docs/infra/migracion-onpremise.md`](docs/infra/migracion-onpremise.md).
 
-The `deploy/compose/{dev,stage,prod}` stacks are kept as a **local legacy reference** from Parte 1 (they define the same services + middleware for a single machine); they are no longer the delivery target.
+Los stacks `deploy/compose/{dev,stage,prod}` se conservan como **referencia local histórica** de la Parte 1 (definen los mismos servicios y middleware para una sola máquina); ya no son el destino de entrega.
 
-To run the legacy local stack, copy the environment template, set `TAG` and `NEXUS_REGISTRY`, and replace every `change-me` placeholder before starting:
+Para ejecutar el stack local histórico, copia la plantilla de entorno, define `TAG` y `NEXUS_REGISTRY`, y reemplaza todos los marcadores `change-me` antes de iniciar:
 
 - `POSTGRES_PASSWORD`
 - `NEO4J_PASSWORD`
 - `OPENLDAP_ADMIN_PASSWORD`
 - `QR_SECRET`
 - `JWT_SECRET`
-- `VAULT_SECRET` (use a real value of at least 32 characters)
+- `VAULT_SECRET` (usa un valor real de al menos 32 caracteres)
 - `VAULT_SALT`
 - `VAULT_HASH_SALT`
 
-Set `ENV_HOST_IP` if the stack must be reachable from outside the host.
+Define `ENV_HOST_IP` si el stack debe ser alcanzable desde fuera del host.
 
 ```bash
 cp deploy/compose/dev/.env.example deploy/compose/dev/.env
 docker compose --env-file deploy/compose/dev/.env -f deploy/compose/dev/docker-compose.yml up -d
 ```
-*Middleware includes: PostgreSQL, Neo4j, Kafka (KRaft), Redis, and OpenLDAP.*
+*El middleware incluye: PostgreSQL, Neo4j, Kafka (KRaft), Redis y OpenLDAP.*
 
-**Manual seed (Promotion/Neo4j).** `services/circleguard-promotion-service/src/main/resources/seed_faculties.cypher`
-is a manual script: the application does not run it at startup. Execute it from Neo4j Browser
-or `cypher-shell` against the local instance when you need faculty test data.
+**Siembra manual (Promotion/Neo4j).** `services/circleguard-promotion-service/src/main/resources/seed_faculties.cypher`
+es un script manual: la aplicación no lo ejecuta al iniciar. Ejecútalo desde Neo4j Browser
+o `cypher-shell` contra la instancia local cuando necesites datos de prueba de facultades.
 
-### 2. Build & Run
-CircleGuard uses Gradle for parallel builds across services:
+### 2. Compilación y ejecución
+CircleGuard usa Gradle para compilar los servicios en paralelo:
 ```bash
-# Start all microservices in parallel
+# Iniciar todos los microservicios en paralelo
 ./gradlew bootRun --parallel
 
-# Start a specific service
+# Iniciar un servicio específico
 ./gradlew :services:<service-name>:bootRun
 ```
 
-### 3. API Exploration
-Every service exposes an OpenAPI 3.0 interface. Once running, visit:
+### 3. Exploración de la API
+Cada servicio expone una interfaz OpenAPI 3.0. Una vez en ejecución, visita:
 `http://localhost:<service-port>/swagger-ui/index.html`
 
 ---
 
-## Frontend Development
+## Desarrollo del frontend
 
-The frontend is built using **Expo (React Native)**, supporting iOS, Android, and Web from a single codebase located in `/mobile`.
+El frontend está construido con **Expo (React Native)** y admite iOS, Android y Web desde una sola base de código ubicada en `/mobile`.
 
-### 1. Prerequisites
-Ensure you have Node.js installed and dependencies loaded:
+### 1. Requisitos previos
+Asegúrate de tener Node.js instalado y las dependencias cargadas:
 ```bash
 cd mobile
 npm install
 ```
 
-### 2. Run the Application
-You can run the app in various modes depending on your target platform:
+### 2. Ejecutar la aplicación
+Puedes ejecutar la app en distintos modos según la plataforma objetivo:
 
-| Platform | Command | Notes |
+| Plataforma | Comando | Notas |
 |:---|:---|:---|
-| **Development Menu** | `npm run start` | Opens the Expo Go start-up menu. |
-| **Android** | `npm run android` | Requires Android Studio / Emulator or a connected device. |
-| **iOS** | `npm run ios` | Requires macOS with Xcode / Simulator installed. |
-| **Web Browser** | `npm run web` | Launches the dashboard/app in your default browser. |
+| **Menú de desarrollo** | `npm run start` | Abre el menú de inicio de Expo Go. |
+| **Android** | `npm run android` | Requiere Android Studio/emulador o un dispositivo conectado. |
+| **iOS** | `npm run ios` | Requiere macOS con Xcode/Simulator instalado. |
+| **Navegador web** | `npm run web` | Abre el panel/app en el navegador predeterminado. |
 
-### 3. Testing
-To run frontend unit and component tests:
+### 3. Pruebas
+Para ejecutar las pruebas unitarias y de componentes del frontend:
 ```bash
 npm run test
 ```
 
 ---
 
-## Testing
+## Pruebas
 
-We maintain high system integrity via multi-level testing:
+Mantenemos la integridad del sistema con pruebas en varios niveles:
 
-| Command | Scope |
+| Comando | Alcance |
 |:---|:---|
-| `./gradlew test` | Full unit suite (all services) |
-| `./gradlew :services:<name>:test` | Single service unit tests |
-| `./gradlew :services:circleguard-gateway-service:integrationTest` | Gateway tests against an ephemeral Redis container |
-| `tests/e2e` (Playwright) | Browser flows against the deployed web client and gateway — see [`tests/TESTS.md`](tests/TESTS.md) |
-| `tests/security-zap/` | OWASP ZAP baseline — see [`SECURITY-ZAP.md`](tests/security-zap/SECURITY-ZAP.md) |
-| `tests/performance-locust/` | Load tests against the deployed environments |
+| `./gradlew test` | Suite unitaria completa (todos los servicios) |
+| `./gradlew :services:<name>:test` | Pruebas unitarias de un solo servicio |
+| `./gradlew :services:circleguard-gateway-service:integrationTest` | Pruebas del gateway contra un contenedor Redis efímero |
+| `tests/e2e` (Playwright) | Flujos de navegador contra el cliente web y el gateway desplegados — ver [`tests/TESTS.md`](tests/TESTS.md) |
+| `tests/security-zap/` | Línea base de OWASP ZAP — ver [`SECURITY-ZAP.md`](tests/security-zap/SECURITY-ZAP.md) |
+| `tests/performance-locust/` | Pruebas de carga contra los entornos desplegados |
 
-**Note**: Integration tests use **Testcontainers** to spawn ephemeral Neo4j, PostgreSQL, and Redis instances for zero-side-effect validation. The gateway integration suite requires Docker and is excluded from `test` so unit builds do not depend on it.
+**Nota**: Las pruebas de integración usan **Testcontainers** para crear instancias efímeras de Neo4j, PostgreSQL y Redis y validar sin efectos laterales. La suite de integración del gateway requiere Docker y se excluye de `test` para que las compilaciones unitarias no dependan de él.
 
-**WSL (repo on `/mnt/c`)**: the 9p mount makes the classpath too slow for the 3-minute task timeout. Move the build outputs to ext4 with the local init script:
+**WSL (repo en `/mnt/c`)**: el montaje 9p hace que el classpath sea demasiado lento para el límite de 3 minutos por tarea. Mueve las salidas de compilación a ext4 con el script de inicialización local:
 
 ```bash
 ./gradlew -I gradle/wsl-ext4.init.gradle.kts \
@@ -201,15 +201,15 @@ We maintain high system integrity via multi-level testing:
 
 ---
 
-## Privacy & Compliance
+## Privacidad y cumplimiento
 
-- **FERPA Compliance**: Student identities are never stored in the contact graph.
-- **Right to be Forgotten**: Users can trigger complete data purging via the Identity Vault.
-- **Temporal Privacy**: All contact edges are automatically purged after 14 days.
+- **Cumplimiento FERPA**: las identidades de los estudiantes nunca se almacenan en el grafo de contactos.
+- **Derecho al olvido**: los usuarios pueden solicitar la purga completa de sus datos mediante la Bóveda de Identidad.
+- **Privacidad temporal**: todas las aristas de contacto se purgan automáticamente después de 14 días.
 
 ---
 
-## Project Structure
+## Estructura del proyecto
 
 ```text
 circleguard/
@@ -218,7 +218,7 @@ circleguard/
 │   └── workflows/enforce-pr.yml      # Bloquea pushes directos a main
 ├── .githooks/                        # commit-msg (Conventional Commits) y pre-push
 ├── services/                         # 8 microservicios Spring Boot/Kotlin
-│   ├── circleguard-auth-service/     # Dockerfile multi-stage no-root
+│   ├── circleguard-auth-service/     # Dockerfile multinivel sin root
 │   ├── circleguard-identity-service/
 │   ├── circleguard-promotion-service/
 │   ├── circleguard-form-service/
@@ -227,10 +227,10 @@ circleguard/
 │   ├── circleguard-file-service/
 │   └── circleguard-dashboard-service/
 ├── mobile/                           # Cliente Expo (iOS/Android/web) + Dockerfile Nginx
-├── Jenkinsfile                       # Pipeline multibranch
+├── Jenkinsfile                       # Canalización multibranch
 ├── jenkins/
-│   ├── vars/                         # Shared Library: ci, ciServices, ciNotify, ciVersion
-│   ├── test/                         # Pruebas unitarias de la Shared Library
+│   ├── vars/                         # Biblioteca compartida: ci, ciServices, ciNotify, ciVersion
+│   ├── test/                         # Pruebas unitarias de la biblioteca compartida
 │   └── JENKINS.md
 ├── infra/
 │   ├── onpremise/                    # Bootstrap y verificación de cg-tools + k3d (Parte 2)
@@ -240,12 +240,12 @@ circleguard/
 │   └── INFRA.md
 ├── deploy/
 │   ├── compose/tools/                # cg-tools: Jenkins, SonarQube, Nexus, registro (on-prem)
-│   ├── compose/{dev,stage,prod}/     # Stacks Parte 1: referencia local, no destino de entrega
+│   ├── compose/{dev,stage,prod}/     # Conjuntos de la Parte 1: referencia local, no destino de entrega
 │   ├── k8s/                          # Kustomize: base, components, overlays, monitoring, form06-dev
 │   ├── finops/                       # OpenCost, KEDA y dashboard de costos (bonificación)
 │   ├── mesh/istio/                   # Service mesh (bonificación)
 │   ├── chaos/                        # Chaos Mesh (bonificación)
-│   ├── scripts/                      # deploy, rollback, smoke-test, seed (legacy Parte 1)
+│   ├── scripts/                      # despliegue, reversión, prueba rápida, siembra (Parte 1 histórica)
 │   └── DEPLOY.md
 ├── tests/
 │   ├── e2e/                          # Playwright: login, formulario, acceso, promociones
@@ -282,35 +282,35 @@ En este repositorio esas responsabilidades están en:
 | `observability/grafana/` | `deploy/k8s/monitoring/grafana.yml` y `deploy/finops/grafana-cost-dashboard.yml` |
 | `observability/alerts/` | `deploy/k8s/monitoring/alertmanager.yml`, `deploy/k8s/base/*-alerts.yml` y `deploy/k8s/components/form-observability/monitoring/form-alerts.yml` |
 
-## Repository conventions
+## Convenciones del repositorio
 
 - **Documentación:** todo archivo fuente, script, configuración y documento mantenido lleva un encabezado
-  inglés `CG-DOC:` con el propósito del archivo. Los registros históricos y entregables del curso están
+  `CG-DOC:` con el propósito del archivo. Los registros históricos y entregables del curso están
   exentos; la sintaxis y los casos están en [`docs/standards/documentation.md`](docs/standards/documentation.md).
 - **Control de cambios:** GitHub Flow estricto, `main` protegida, squash merge y al menos una aprobación.
   La especificación canónica está en [`BRANCHING-STRATEGY.md`](BRANCHING-STRATEGY.md).
 - **Trazabilidad:** cuando existe correspondencia con Jira, el título del PR incluye la clave `DCG-*`
   del tablero [DCG 67](https://bomastik-site.atlassian.net/jira/software/projects/DCG/boards/67).
   Los estados de los PR no se modifican como parte de tareas de documentación.
-- **Registros históricos:** actas Scrum, release notes, `CHANGELOG.md`, `IAG_REGISTRO.md`, evidencias
+- **Registros históricos:** actas Scrum, notas de versión, `CHANGELOG.md`, `IAG_REGISTRO.md`, evidencias
   y el informe final son documentos de corte: no se reescriben para normalizarlos.
 
 ---
 
-## CI/CD Platform
+## Plataforma CI/CD
 
 La plataforma corre on-premise en un único host (accesible por ZeroTier):
 
 - `cg-tools` (Docker Compose): Jenkins, SonarQube, Nexus, registro `circleguard-docker` y el relay smee.io del webhook.
 - Clúster k3d `cg`: namespaces `cg-dev`, `cg-stage` y `cg-prod` con PostgreSQL, Neo4j, Kafka, Redis, OpenLDAP, los cinco servicios núcleo, los tres reportes y el cliente web; Ingress de Traefik en `:30080` ruteado por `Host` (`<env>.circleguard.local`).
 
-**Por qué k3d y no Kubernetes instalado en el host.** No es una decisión entre «k3s y k8s»: k3d ejecuta k3s, una distribución de Kubernetes certificada por la CNCF, así que la API y los manifiestos son los mismos. La elección es de empaquetado y operación. El host es compartido con otros proyectos y el usuario `docker` no tiene `sudo`; instalar `kubelet`/`containerd` o un clúster `kubeadm` exigiría privilegios y puertos adicionales. k3d corre el `controlplane` y los `agents` como contenedores, expone solo el Ingress en `:30080` y reutiliza el mirror HTTP del registro (`10.147.20.67:5000`).
+**Por qué k3d y no Kubernetes instalado en el host.** No es una decisión entre «k3s y k8s»: k3d ejecuta k3s, una distribución de Kubernetes certificada por la CNCF, así que la API y los manifiestos son los mismos. La elección es de empaquetado y operación. El host es compartido con otros proyectos y el usuario `docker` no tiene `sudo`; instalar `kubelet`/`containerd` o un clúster `kubeadm` exigiría privilegios y puertos adicionales. k3d ejecuta el plano de control y los agentes como contenedores, expone solo el Ingress en `:30080` y reutiliza el espejo HTTP del registro (`10.147.20.67:5000`).
 
 | Alternativa | Resultado | Motivo |
 |:---|:---|:---|
 | **k3d (k3s en Docker)** | **Elegida** | Sin `sudo`, sin puertos de API expuestos, mirror de registro ya configurado. |
 | k3s nativo en el host | Descartada | Requiere `systemd`/root y puertos `6443`/`10250` en un host compartido. |
-| minikube / kind | Descartadas | Añaden una VM o un nodo Docker extra con su propio networking; no aportan sobre k3d aquí. |
+| minikube / kind | Descartadas | Añaden una VM o un nodo Docker extra con su propia red; no aportan sobre k3d aquí. |
 | kubeadm / clúster externo (EKS) | Descartadas | Requieren privilegios, automatización IaC adicional o salida a nube; la API es la misma. |
 
 Detalle completo: [`deploy/k8s/K8S.md`](deploy/k8s/K8S.md).
@@ -335,7 +335,7 @@ La infraestructura de la Parte 1 (cuatro instancias EC2, scripts `infra/bootstra
 Documentación:
 
 - [Guía on-premise](infra/onpremise/ONPREMISE.md)
-- [Layout de despliegue](deploy/DEPLOY.md)
+- [Diseño de despliegue](deploy/DEPLOY.md)
 - [Pruebas](tests/TESTS.md)
 - [Terraform](infra/terraform/TERRAFORM.md)
 - [Componentes de observabilidad](deploy/k8s/components/form-observability/FORM-OBSERVABILITY.md)
@@ -343,21 +343,21 @@ Documentación:
 - Bonificaciones: [FinOps](docs/bonificaciones/finops/README.md), [Service Mesh](docs/bonificaciones/mesh/README.md), [Chaos](docs/bonificaciones/chaos/README.md)
 - [Gestión ágil](docs/agil/AGIL.md)
 - [Arquitectura](docs/arquitectura/ARQUITECTURA.md)
-- [Pipeline](docs/arquitectura/pipeline.md)
-- [Pipeline on-prem (kubectl/Kustomize, sin SSH)](docs/infra/migracion-onpremise.md)
+- [Canalización](docs/arquitectura/pipeline.md)
+- [Canalización on-prem (kubectl/Kustomize, sin SSH)](docs/infra/migracion-onpremise.md)
 - [Entornos](docs/infra/environments.md)
-- [CI/CD setup](docs/infra/ci-cd-setup.md)
+- [Configuración de CI/CD](docs/infra/ci-cd-setup.md)
 - [Runbook](docs/infra/runbook.md)
-- [Change management](docs/change-management.md)
-- [Release notes](docs/release-notes/RELEASE-NOTES.md)
+- [Gestión de cambios](docs/change-management.md)
+- [Notas de versión](docs/release-notes/RELEASE-NOTES.md)
 - [Operaciones](docs/operaciones/OPERACIONES.md)
 - [Estándares de documentación](docs/standards/documentation.md)
-- Pipeline: [`Jenkinsfile`](Jenkinsfile) y [`jenkins/vars/ci.groovy`](jenkins/vars/ci.groovy)
+- Canalización: [`Jenkinsfile`](Jenkinsfile) y [`jenkins/vars/ci.groovy`](jenkins/vars/ci.groovy)
 
-### Final delivery artifacts
+### Artefactos finales de entrega
 
-- [Final report (DOCX)](docs/informe/CircleGuard_INFORME_FINAL.docx) and [PDF](docs/informe/CircleGuard_INFORME_FINAL.pdf) — consolidated Parte 1 + Parte 2, ordered and with raw body text justified.
-- [Final presentation (PPTX)](docs/informe/CircleGuard_PRESENTACION_FINAL.pptx) — 15 slides with speaker notes.
-- [IAG registry](IAG_REGISTRO.md) — individual AI-usage traceability, including the rewritten gateway/file-service section.
-- [Coverage index](docs/informe/evidencia/trazabilidad/coverage-reports.md) — JaCoCo artifacts for the core services, including `promotion`.
-- [On-prem cluster status](docs/infra/evidencia/estado-cluster-20261123.md) — read-only diagnosis of the degraded cluster and the external evidence still pending.
+- [Informe final (DOCX)](docs/informe/CircleGuard_INFORME_FINAL.docx) y [PDF](docs/informe/CircleGuard_INFORME_FINAL.pdf) — consolidación de la Parte 1 + Parte 2, ordenado y con el cuerpo justificado.
+- [Presentación final (PPTX)](docs/informe/CircleGuard_PRESENTACION_FINAL.pptx) — 20 diapositivas con notas del orador.
+- [Registro IAG](IAG_REGISTRO.md) — trazabilidad individual del uso de IA, incluida la sección reescrita del gateway/file-service.
+- [Índice de cobertura](docs/informe/evidencia/trazabilidad/coverage-reports.md) — artefactos JaCoCo de los servicios núcleo, incluido `promotion`.
+- [Estado del clúster on-prem](docs/infra/evidencia/estado-cluster-20261123.md) — diagnóstico histórico del clúster y [evidencia final consolidada](docs/informe/evidencia/validacion-final/) con `cg-dev`, `cg-stage` y `cg-prod` en 14/14, `monitoring` 6/6 y el build `main #68` en `SUCCESS`.
