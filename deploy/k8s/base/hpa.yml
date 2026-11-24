@@ -91,7 +91,7 @@ spec:
     kind: Deployment
     name: auth
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -115,7 +115,7 @@ spec:
     kind: Deployment
     name: promotion
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 2
   metrics:
     - type: Resource
       resource:
@@ -139,7 +139,7 @@ spec:
     kind: Deployment
     name: notification
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -171,6 +171,54 @@ spec:
         target:
           type: Utilization
           averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: identity
+  labels:
+    app: identity
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: identity
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: file
+  labels:
+    app: file
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: file
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 300
