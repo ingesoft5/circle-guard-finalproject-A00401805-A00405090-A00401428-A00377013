@@ -32,6 +32,7 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-retry:2.2.0")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("org.flywaydb:flyway-database-postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-security-test")
     testImplementation(project(":services:circleguard-promotion-service")) {  //SOLO para la prueba de integración FORM -> PROMOTION
