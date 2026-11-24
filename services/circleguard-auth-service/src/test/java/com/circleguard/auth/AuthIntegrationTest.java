@@ -148,7 +148,7 @@ public class AuthIntegrationTest {
         mockMvc.perform(get("/actuator/prometheus"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("circleguard_auth_login_attempts_total{result=\"success\",}")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("circleguard_auth_login_attempts_total{result=\"success\"}")));
     }
 
     @Test
