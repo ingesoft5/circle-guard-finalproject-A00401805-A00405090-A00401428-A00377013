@@ -414,7 +414,7 @@ kubectl -n monitoring get pods,svc
 | ConfigMaps y Secrets | Cumplido | `cg-config`, `postgres-init`, `cg-secrets` (`DCG-102`) |
 | Ingress | Cumplido | Traefik `:30080`, tres hosts |
 | Sondas liveness/readiness | Cumplido | `apps.yml`; HTTP Actuator en `auth`, TCP en `gateway`/`promotion` hasta republish la imagen con `permitAll` (`DCG-103`) |
-| Clúster ligero (k3s/k3d) | Cumplido | k3d v5.9.0 / k3s v1.31.1 (pin establecido en `infra/onpremise/k3d-cluster-create.sh`) |
+| Clúster ligero (k3s/k3d) | Cumplido | k3d v5.9.0 / k3s v1.35.5 (pin establecido en `infra/onpremise/k3d-cluster-create.sh`) |
 | HPA | Cumplido | `base/hpa.yml` + `metrics-server`; gateway 1-3 (70 %), web 1-2 (70 %), auth 1-5 (75 %), promotion 1-5 (75 %) (`DCG-102` / `DCG-339`) |
 | Observabilidad y alertas | Cumplido | `deploy/k8s/monitoring/` (Prometheus, Alertmanager, Grafana y `auth-alerts.yml`) (`DCG-103` / `DCG-105` / `E2.4`) |
 | TLS en servicios expuestos | Cumplido (autofirmado) | `components/tls` y overlays `*-tls` aplicados en los 3 entornos; `circleguard-tls` creado y HTTPS verificado con 200 en dev/stage/prod mediante `port-forward 30443:443`. El certificado de CA/DNS definitivo se gestiona en el entorno. |

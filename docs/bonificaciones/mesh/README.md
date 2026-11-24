@@ -2,7 +2,7 @@
 # Service Mesh bonus verification (enunciado L284)
 
 Bonificación de **service mesh (Istio con mTLS y canary)** del enunciado L284.
-Evidencia **real** obtenida en el clúster on-prem `k3d-cg` (k3s v1.31.1). No se
+Evidencia **real** obtenida en el clúster on-prem `k3d-cg` (k3s v1.35.5). No se
 inventan certificados ni distribuciones de tráfico: todos los valores provienen
 de `kubectl`, del endpoint `:15000/certs` y `:15000/stats` de Envoy, y de
 peticiones HTTP reales al ingress.

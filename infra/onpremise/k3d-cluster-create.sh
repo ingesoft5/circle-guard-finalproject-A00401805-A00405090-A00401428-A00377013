@@ -21,11 +21,11 @@ if k3d cluster list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx cg; then
 fi
 
 # Traefik ships with k3d; this publication is its host entrypoint.
-# v1.35.5-k3s1 starts containerd without the runtime.v1 API on this host, so
-# the agent becomes NotReady after any restart. Pinned to v1.31.1-k3s1, which already
-# starts correctly with the raised inotify limit in /etc/sysctl.d/99-cg.conf.
-K3S_IMAGE="${K3S_IMAGE:-rancher/k3s:v1.31.1-k3s1}"
-k3d cluster create cg -p "30080:80@loadbalancer" --image "$K3S_IMAGE" --agents 1
+# v1.35.5-k3s1 is the version validated on the on-prem host. The final cluster
+# runs a single server node (0 agents) with the raised inotify limit in
+# /etc/sysctl.d/99-cg.conf, matching the evidence captured for the delivery.
+K3S_IMAGE="${K3S_IMAGE:-rancher/k3s:v1.35.5-k3s1}"
+k3d cluster create cg -p "30080:80@loadbalancer" --image "$K3S_IMAGE" --agents 0
 
 echo "Clúster cg listo."
 echo "Falta metrics-server para los HPA (ver deploy/k8s/K8S.md)."

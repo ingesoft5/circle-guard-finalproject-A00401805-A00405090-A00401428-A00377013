@@ -3,7 +3,7 @@
 
 Bonificación de **FinOps** del enunciado L284: monitoreo de costos, spot y
 scale-to-zero. Evidencia **real** obtenida en el clúster on-prem `k3d-cg`
-(k3s v1.31.1, host `10.147.20.67`). No se inventan métricas ni ahorros: los
+(k3s v1.35.5, host `10.147.20.67`). No se inventan métricas ni ahorros: los
 valores provienen de `kubectl` sobre el clúster y de los manifiestos aplicados.
 
 ## Alcance y aislamiento
