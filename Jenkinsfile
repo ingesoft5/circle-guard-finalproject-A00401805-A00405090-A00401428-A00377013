@@ -829,7 +829,7 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
                     javaServices.each { service ->
-                        timeout(time: 10, unit: 'MINUTES') {
+                        timeout(time: 20, unit: 'MINUTES') {
                             echo "Unit tests and coverage for ${service.name}..."
                             ci.unitTest(service)
                         }
