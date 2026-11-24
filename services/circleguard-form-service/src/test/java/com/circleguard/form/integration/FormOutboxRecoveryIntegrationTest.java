@@ -55,7 +55,8 @@ import static org.mockito.Mockito.spy;
         "jwt.secret=test-only-secret-with-at-least-32-bytes"
 })
 class FormOutboxRecoveryIntegrationTest {
-    @Container static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
+    @Container static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withStartupTimeout(Duration.ofMinutes(3));
     @Container static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer(
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx512M -Xms256M")
