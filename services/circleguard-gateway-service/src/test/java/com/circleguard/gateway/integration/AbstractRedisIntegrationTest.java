@@ -11,7 +11,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 
@@ -30,8 +29,7 @@ public abstract class AbstractRedisIntegrationTest {
             new GenericContainer<>(DockerImageName.parse("redis:7.2-alpine"))
                     .withExposedPorts(6379)
                     .withCommand("redis-server", "--save", "", "--appendonly", "no")
-                    .withStartupTimeout(Duration.ofSeconds(60))
-                    .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*\\n", 1));
+                    .withStartupTimeout(Duration.ofMinutes(3));
 
     @DynamicPropertySource
     static void redisProperties(DynamicPropertyRegistry registry) {
