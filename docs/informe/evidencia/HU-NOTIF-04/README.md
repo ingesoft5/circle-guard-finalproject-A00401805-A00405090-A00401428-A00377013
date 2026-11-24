@@ -1,15 +1,15 @@
-<!-- CG-DOC: Evidence index for HU-NOTIF-04 (DCG-318): notification deployment and E2E. -->
+<!-- CG-DOC: Índice de evidencia de HU-NOTIF-04 (DCG-318): despliegue de notification y E2E. -->
 # HU-NOTIF-04 - Desplegar `notification-service` en dev, stage y prod
 
 Cubre `DCG-354`, `DCG-355`, `DCG-356` y `DCG-357` de `DCG-318`.
 
-## What ships
+## Qué se entrega
 
-| File | Purpose |
+| Archivo | Propósito |
 |---|---|
 | `deploy/compose/{dev,stage,prod}/docker-compose.yml` | `notification` con healthcheck de proceso, Kafka del stack y credenciales de canal por `${...}` |
 | `deploy/compose/{dev,stage,prod}/.env.example` | Claves SMTP, Twilio y Gotify que cada ambiente necesita; el `.env` real sigue ignorado por git |
-| `Jenkinsfile` | El catálogo local de `enrichServices` marca `notification` como desplegable sin esperar a la Shared Library |
+| `Jenkinsfile` | El catálogo local de `enrichServices` marca `notification` como desplegable sin esperar a la biblioteca compartida |
 | `tests/e2e/notification-flow.spec.ts` | Cuestionario, Kafka, cascada de promoción y despacho multicanal verificados contra dev |
 
 El despliegue en sí reutiliza lo que ya existe: `ciServices.groovy` ya declara
@@ -21,12 +21,12 @@ healthcheck de actuator. Esta historia agrega el compose y la ejecución E2E.
 
 Solo corre en `main`; un PR nunca despliega.
 
-| Orden | Stage | Condición | Qué hace |
+| Orden | Etapa | Condición | Qué hace |
 |---|---|---|---|
 | 1 | `Deploy dev` | `services` no vacío | `ci.deploy('dev', env.TAG)`: pull, `k3d image import`, `kustomize edit set image`, `apply -k`, `rollout status` por servicio |
 | 2 | `E2E` | `!SKIP_INTEGRATION` | Siembra visitantes en Neo4j y corre Playwright contra el Ingress de k3d (`:30080`) |
 | 3 | `Deploy stage` | `services` no vacío | Igual que dev contra el overlay `stage` |
-| 4 | `OWASP ZAP Security Gate` | `!SKIP_INTEGRATION` | Baseline contra `auth` en `cg-stage`, bloqueante con `FAIL-NEW` |
+| 4 | `OWASP ZAP Security Gate` | `!SKIP_INTEGRATION` | Línea base contra `auth` en `cg-stage`, bloqueante con `FAIL-NEW` |
 | 5 | `Approval prod` | `services` no vacío | `input message: 'Aprobar despliegue a producción'` — espera aprobación manual |
 | 6 | `Deploy prod` | `services` no vacío | Igual que dev contra el overlay `prod` |
 
@@ -37,10 +37,10 @@ sin cambios a dev, stage y prod.
 
 La marca de "desplegable" vive en dos sitios y esta historia solo toca el local:
 
-- `jenkins/vars/ciServices.groovy` (catálogo de la Shared Library, `deploy: true`)
+- `jenkins/vars/ciServices.groovy` (catálogo de la biblioteca compartida, `deploy: true`)
   es el estado final, pero un PR no ve sus propios cambios de library.
 - `Jenkinsfile` → `enrichServices().deployable` ya incluye `notification`, que es
-  lo que hace que el PR y `main` desplieguen sin esperar a la library.
+  lo que hace que el PR y `main` desplieguen sin esperar a la biblioteca compartida.
 
 ## Procedimiento de rollback (`DCG-357`)
 
@@ -67,7 +67,7 @@ construcción, pruebas, empaquetado, publicación y Docker se saltan por su
    # resuelve por nombre; ajustar si el host usa otro):
    curl -fsS "$NEXUS_URL/service/rest/v1/search?name=notification" \
      | jq -r '.items[] | [.repository, .version] | @tsv' | sort -k2 -Vr | head -10
-   # Alternativa: el image-digest.txt archivado del build anterior en Jenkins.
+   # Alternativa: el image-digest.txt archivado de la compilación anterior en Jenkins.
    ```
 
 2. Confirmar el tag que corre hoy en prod, para poder volver:
@@ -88,7 +88,7 @@ construcción, pruebas, empaquetado, publicación y Docker se saltan por su
 
    Consola esperada: `Rollback solicitado: <tag>` en `Resolve services` y, al final
    del stage `Rollback prod`, la salida de `kubectl rollout status` del último
-   servicio del bucle (`deployment "web" successfully rolled out`). El library no
+   servicio del bucle (`deployment "web" successfully rolled out`). La biblioteca compartida no
    imprime una línea de "despliegue OK": la prueba es el `rollout status` de los
    nueve servicios.
 
@@ -189,7 +189,7 @@ docker compose exec -T kafka /opt/kafka/bin/kafka-console-consumer.sh \
 ## Estado conocido de los canales
 
 - El compose pasa las credenciales por `${...}`; el `.env` real nunca se
-  versiona y `.env.example` solo lleva placeholders.
+  versiona y `.env.example` solo lleva marcadores de posición.
 - Sin `.env` que las sobrescriba, los tres ambientes arrancan en modo MOCK
   (`AC_MOCK_SID` / `MOCK_TOKEN`): el servicio no contacta Twilio ni Gotify y el
   audit es SUCCESS. Es deliberado: un despliegue no debe enviar tráfico real por

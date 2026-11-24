@@ -1,49 +1,49 @@
-<!-- CG-DOC: HU-FORM-06: isolated cg-dev validation assets. -->
-# HU-FORM-06: isolated cg-dev validation assets
+<!-- CG-DOC: HU-FORM-06: recursos de validación aislados en cg-dev. -->
+# HU-FORM-06: recursos de validación aislados en cg-dev
 
-This opt-in overlay reuses the monitoring stack from merged PRs #93 and #138. It has not been
-deployed. It is deliberately separate from the normal dev/stage/prod overlays
-and the shared Jenkinsfile.
+Este overlay opcional reutiliza la pila de monitorización de los PR #93 y #138 ya integrados. Se mantiene
+sin desplegar. Está deliberadamente separado de los overlays habituales de dev/stage/prod
+y del Jenkinsfile compartido.
 
-Use the official Jenkins pipeline for PR checks and image publication. The
-PR check does not publish images. For canary validation use the Form image
-and digest recorded by the official release build after its quality and image
-security gates pass. Canary resources are applied separately with approval.
+Use la canalización oficial de Jenkins para las comprobaciones de PR y la publicación de imágenes. La
+comprobación de PR no publica imágenes. Para la validación canaria use la imagen de Form
+y el digest registrados por la compilación de versión oficial tras superar sus compuertas de
+calidad y seguridad de imagen. Los recursos canarios se aplican por separado y con aprobación.
 
-## Isolation and impact
+## Aislamiento e impacto
 
-- `canary/` creates only `Service/cg-dev/form-hu6` and
-  `Deployment/cg-dev/form-hu6`. It has no Ingress. The existing `form` Service
-  selects `app=form`, whereas the canary selects `app=form-hu6`.
-- The canary uses only the dev PostgreSQL and Kafka Services. Flyway is disabled
-  and Hibernate uses `validate` during the trial. A manually approved
-  questionnaire submission would still write to the **dev** database and emit
-  events to the **dev** broker; do not send production data or real identities.
-- `monitoring/` renders the existing Prometheus, Grafana, Alertmanager, Auth,
-  Identity and Promotion rules, shared dashboards, Form assets, Loki, Alloy and
-  Jaeger. It does not create another Loki instance. It removes the inherited
-  Promtail DaemonSet and its global RBAC because that collector watches all
-  three environments. Prometheus RBAC is replaced with a Role in `cg-dev`.
-  Alloy has only a `cg-dev` Role and
-  selects `app=form-hu6`. The log pipeline drops all lines except bounded
-  `FormEventPublisher` outcomes and rewrites accepted lines from allowlisted
-  fields. No host log mounts, DaemonSet, public Ingress, prod or stage resources.
-- The overlay limits Prometheus discovery to the canary in `cg-dev` and keeps
-  the original Prometheus and Loki datasources, the shared rules and
-  dashboards unchanged. Their panels are provisioned but remain empty in this
-  isolated trial. Both configurations load Auth, Identity and Form rules
-  from the root directory and Promotion rules from its existing subdirectory.
-- The shared Loki from #138 uses a 2 GiB PVC. Jaeger is in-memory. Prometheus
-  retention is two hours and its `emptyDir` is capped at 512 MiB. The total
-  resource budget must be checked again before deployment. The shared Loki
-  PVC must never be deleted as part of a Form rollback.
-- The default Alertmanager receiver from #93 has no external destination.
-  Delivery is **not** complete until an approved receiver is configured through
-  a Secret and a real notification is observed.
+- `canary/` crea solo `Service/cg-dev/form-hu6` y
+  `Deployment/cg-dev/form-hu6`. No tiene Ingress. El Service `form` existente
+  selecciona `app=form`, mientras que el canario selecciona `app=form-hu6`.
+- El canario usa solo los Services de PostgreSQL y Kafka de dev. Flyway está desactivado
+  y Hibernate usa `validate` durante la prueba. Un envío de cuestionario aprobado
+  manualmente seguiría escribiendo en la base de datos **dev** y emitiendo
+  eventos al broker **dev**; no envíe datos de producción ni identidades reales.
+- `monitoring/` renderiza las reglas existentes de Prometheus, Grafana, Alertmanager, Auth,
+  Identity y Promotion, los dashboards compartidos, los recursos de Form, Loki, Alloy y
+  Jaeger. No crea otra instancia de Loki. Elimina el DaemonSet de Promtail heredado
+  y su RBAC global porque ese recolector observa los
+  tres entornos. El RBAC de Prometheus se sustituye por un Role en `cg-dev`.
+  Alloy solo tiene un Role en `cg-dev` y
+  selecciona `app=form-hu6`. La canalización de logs descarta todas las líneas salvo los
+  resultados acotados de `FormEventPublisher` y reescribe las líneas aceptadas a partir de
+  campos incluidos en la lista de permitidos. Sin montajes de logs del host, DaemonSet, Ingress público ni recursos de prod o stage.
+- El overlay limita el descubrimiento de Prometheus al canario en `cg-dev` y mantiene
+  sin cambios las datasources originales de Prometheus y Loki, las reglas compartidas y
+  los dashboards. Sus paneles están aprovisionados pero permanecen vacíos en esta
+  prueba aislada. Ambas configuraciones cargan las reglas de Auth, Identity y Form
+  desde el directorio raíz y las reglas de Promotion desde su subdirectorio existente.
+- El Loki compartido de #138 usa un PVC de 2 GiB. Jaeger está en memoria. La retención
+  de Prometheus es de dos horas y su `emptyDir` está limitado a 512 MiB. El presupuesto
+  total de recursos debe revisarse de nuevo antes del despliegue. El PVC compartido de Loki
+  nunca debe eliminarse como parte de una reversión de Form.
+- El receptor predeterminado de Alertmanager de #93 no tiene destino externo.
+  La entrega **no** se considera completa hasta que se configure un receptor aprobado
+  mediante un Secret y se observe una notificación real.
 
-## Offline verification
+## Verificación sin conexión
 
-From the repository root:
+Desde la raíz del repositorio:
 
 ```powershell
 python deploy/k8s/form06-dev/verify.py
@@ -57,36 +57,36 @@ python deploy/k8s/form06-dev/smoke_traces.py
 python deploy/k8s/form06-dev/smoke_alertmanager.py
 ```
 
-The Kustomize output contains configuration but no Secret values. Do not apply
-the canary manifest with its placeholder image tag. Use
+La salida de Kustomize contiene configuración pero ningún valor de Secret. No aplique
+el manifiesto canario con su tag de imagen de marcador de posición. Use
 `prepare_release.py --tag X.Y.Z --commit FULL_SHA --digest sha256:FULL_DIGEST
---jenkins-build-url URL` only after Jenkins has built and approved that exact
-commit. The script pins the canary image to the recorded digest, requires a clean checkout and writes an inventory, hashes
-and two JSON resource lists under `build/form06-release/`. Its input must be
-checked against the Jenkins image digest artifact. It never contacts the
-cluster.
+--jenkins-build-url URL` solo después de que Jenkins haya compilado y aprobado ese
+commit exacto. El script fija la imagen canaria al digest registrado, exige un checkout limpio y escribe un inventario, hashes
+y dos listas de recursos JSON en `build/form06-release/`. Su entrada debe cotejarse
+con el artefacto de digest de imagen de Jenkins. Nunca contacta con el
+clúster.
 
-## Deployment gate and recovery
+## Compuerta de despliegue y recuperación
 
-Before any write, obtain separate approval for the exact two rendered resource
-lists. Recheck that namespace `monitoring` and the new resource names are still
-absent, that dev/prod/stage replicas remain as expected, that the Jenkins run
-passed unit, coverage, Sonar, integration and image security checks, and that
-the monitoring owner has reserved a test window. Stop if any preflight differs.
-Do not run the normal `ci.deploy` here: it updates all services and promotes
-stage/prod on main.
+Antes de cualquier escritura, obtenga una aprobación separada para las dos listas de
+recursos renderizados exactas. Compruebe de nuevo que el namespace `monitoring` y los nuevos nombres
+de recursos siguen ausentes, que las réplicas de dev/prod/stage se mantienen según lo previsto, que la ejecución
+de Jenkins superó las comprobaciones unitarias, de cobertura, Sonar, integración y seguridad de imagen, y que
+el responsable de monitorización ha reservado una ventana de prueba. Detenga el proceso si alguna comprobación previa difiere.
+No ejecute aquí el `ci.deploy` habitual: actualiza todos los servicios y promueve
+stage/prod en main.
 
-Apply monitoring first, wait for its six Deployments, then apply the canary.
-For recovery, remove only `form-hu6` Service/Deployment after checking their
-ownership and image. Review whether the shared monitoring namespace has gained
-other users before reverting its deployments or configuration. Never delete
-the namespace, a shared resource or a persistent volume as an automatic
-rollback. The existing `form` Deployment remains untouched throughout.
+Aplique primero la monitorización, espere a sus seis Deployments y luego aplique el canario.
+Para la recuperación, elimine solo el Service/Deployment `form-hu6` tras comprobar su
+propiedad y su imagen. Revise si el namespace compartido de monitorización ha adquirido
+otros usuarios antes de revertir sus deployments o su configuración. Nunca elimine
+el namespace, un recurso compartido ni un volumen persistente como
+reversión automática. El Deployment `form` existente permanece intacto en todo momento.
 
-Runtime evidence required before marking the story Done: real Prometheus
-`up` and Form series; populated Grafana Form panels; an allowlisted Form log
-line in Loki with no synthetic sensitive marker; a Jaeger trace across Form,
-Promotion and Notification using the same trace ID; a real Alertmanager
-delivery and recovery; and absence of the synthetic marker in metrics, logs
-and spans. Promotion/Notification instrumentation and an approved notification
-receiver are separate, gated changes.
+Evidencia en ejecución requerida antes de marcar la historia como Done: series reales de Prometheus
+`up` y de Form; paneles de Form en Grafana con datos; una línea de log de Form incluida en la lista
+de permitidos en Loki sin marcador sintético sensible; un trace de Jaeger que abarque Form,
+Promotion y Notification con el mismo ID de trace; una entrega y recuperación reales de Alertmanager;
+y la ausencia del marcador sintético en métricas, logs
+y spans. La instrumentación de Promotion/Notification y un receptor de notificación aprobado
+son cambios separados y sujetos a compuerta.

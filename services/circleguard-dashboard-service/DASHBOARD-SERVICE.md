@@ -1,4 +1,4 @@
-<!-- CG-DOC: Architecture, dependencies, build evidence, and technical findings for dashboard-service. -->
+<!-- CG-DOC: Arquitectura, dependencias, evidencia de compilación y hallazgos técnicos de `dashboard-service`. -->
 # dashboard-service: funcionamiento y estructura
 
 Este documento registra el diagnóstico de `circleguard-dashboard-service` para HU-DASH-01. Describe el código existente y los requisitos conocidos para continuar con pruebas y empaquetado.
@@ -61,7 +61,7 @@ La base configurada es `circleguard_dashboard` en PostgreSQL. La única migraci�
 
 | Dependencia | Uso | Configuración actual |
 | --- | --- | --- |
-| PostgreSQL | Guarda los registros consultados para tendencias. | `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` (defaults locales en `application.yml`). En Kubernetes los dos primeros vienen de `dashboard-config` y la password de `cg-secrets`. |
+| PostgreSQL | Guarda los registros consultados para tendencias. | `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` (valores por defecto locales en `application.yml`). En Kubernetes los dos primeros vienen de `dashboard-config` y la contraseña de `cg-secrets`. |
 | `promotion-service` | Provee los conteos de salud globales y por departamento. | `circleguard.promotion-service.url` se resuelve desde `PROMOTION_SERVICE_URL` (en clúster: `http://promotion:8088`). |
 | Gradle y Java | Compilan el módulo con Spring Boot 3.2.4. | El wrapper solicita Gradle 8.14 y el proyecto requiere Java 21. |
 
@@ -92,7 +92,7 @@ Los tags son acotados (`operation`: `healthStats`/`departmentStats`; `outcome`: 
 
 En Kubernetes, `deploy/k8s/components/dashboard-observability/` añade las anotaciones de scrape, el ambiente desde el namespace y las sondas; su parte de monitoring genera las reglas `DashboardServiceDown` (critical) y `DashboardPromotionCallFailures` (warning), además del panel Grafana `circleguard-dashboard-overview` con siete fuentes (disponibilidad, RPS, 5xx, latencia HTTP, llamadas promotion, p95 y logs Loki). Los componentes ya están referenciados en los overlays `dev`, `stage` y `prod`.
 
-Verificación local: `./gradlew :services:circleguard-dashboard-service:check --no-daemon` (23 pruebas, JaCoCo 97,87 %), `promtool check/test rules`, los `verify.py` de los componentes y los escaneos Trivy listados en `docs/informe/evidencia/HU-DASH-05/README.md`. El scrape real, el panel con datos, Loki, la entrega de alertas y el build remoto siguen pendientes de despliegue autorizado. El escaneo de la imagen construida localmente reportó 9 `CRITICAL`, por lo que el gate actual bloquearía la entrega; no se bajó el umbral. Detalle completo en `docs/informe/HU-DASH-05.md`.
+Verificación local: `./gradlew :services:circleguard-dashboard-service:check --no-daemon` (23 pruebas, JaCoCo 97,87 %), `promtool check/test rules`, los `verify.py` de los componentes y los escaneos Trivy listados en `docs/informe/evidencia/HU-DASH-05/README.md`. El scrape real, el panel con datos, Loki, la entrega de alertas y la compilación remota siguen pendientes de despliegue autorizado. El escaneo de la imagen construida localmente reportó 9 `CRITICAL`, por lo que el gate actual bloquearía la entrega; no se bajó el umbral. Detalle completo en `docs/informe/HU-DASH-05.md`.
 
 ## Hallazgos para las siguientes HU
 

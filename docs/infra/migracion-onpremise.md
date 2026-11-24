@@ -264,7 +264,7 @@ bash infra/onpremise/rebuild-onpremise.sh 2>&1 | tee /tmp/rebuild-run-2.log
 ```
 
 El wrapper valida el token de SonarQube, ejecuta el bootstrap, recorre todos los
-`projectKey` del catálogo de la Shared Library —incluido `circleguard-file-service`, que
+`projectKey` del catálogo de la biblioteca compartida —incluido `circleguard-file-service`, que
 no está en la lista histórica de `bootstrap-tools.sh`— y termina con `docker compose
 config -q` + `up -d --remove-orphans`. La segunda corrida es la prueba de convergencia:
 no debe crear duplicados, pedir secretos nuevos ni cambiar credenciales.

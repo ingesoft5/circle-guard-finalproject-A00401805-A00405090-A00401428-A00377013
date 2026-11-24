@@ -1,4 +1,4 @@
-<!-- CG-DOC: Index of locally reproduced observability and security evidence for HU-DASH-05. -->
+<!-- CG-DOC: Índice de evidencia de observabilidad y seguridad reproducida localmente para HU-DASH-05. -->
 # HU-DASH-05 — Índice de evidencia local
 
 Fecha de ejecución: **23 de noviembre de 2026**. Todo lo que aparece como “pendiente” requiere clúster, Jenkins o credenciales y **no** se presenta como ejecutado.
@@ -104,6 +104,6 @@ Jenkins usa `aquasec/trivy:0.57.1` y la verificación local adicional usó `0.70
 
 ## 5. Pendiente
 
-- Repetir los escaneos desde Jenkins con `SERVICE=circleguard-dashboard-service` y adjuntar consola y artifacts reales; no hay digest publicado que reportar todavía.
+- Repetir los escaneos desde Jenkins con `SERVICE=circleguard-dashboard-service` y adjuntar la consola y los artefactos reales; no hay digest publicado que reportar todavía.
 - Verificar en el clúster: target de Prometheus, series `up` y promotion, panel Grafana, línea en Loki y disparo/recuperación de la alerta.
 - No publicar renders que contengan Secrets ni copiar datos reales de logs o métricas en Git/Jira.

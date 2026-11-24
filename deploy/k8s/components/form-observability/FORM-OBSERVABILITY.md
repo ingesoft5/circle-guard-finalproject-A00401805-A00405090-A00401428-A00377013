@@ -1,56 +1,56 @@
-<!-- CG-DOC: Form observability components. -->
-# Form observability components
+<!-- CG-DOC: Componentes de observabilidad de Form. -->
+# Componentes de observabilidad de Form
 
-These Kustomize components extend the shared stack merged in PR #93. They are selected by the application overlays and monitoring configuration in this branch. They do not create additional monitoring servers, a log collector, or a tracing backend.
+Estos componentes Kustomize amplían la pila compartida integrada en el PR #93. Los seleccionan los overlays de aplicación y la configuración de monitorización de esta rama. No crean servidores de monitorización adicionales, un recolector de logs ni un backend de trazas.
 
-## Integration and deployment
+## Integración y despliegue
 
-The components extend the monitoring configuration from PR #93. Offline verification against main, including HU-FORM-05, confirms that the component preserves Form replicas, HPA and storage.
+Los componentes amplían la configuración de monitorización del PR #93. La verificación sin conexión contra main, incluida HU-FORM-05, confirma que el componente conserva las réplicas de Form, el HPA y el almacenamiento.
 
-Each application overlay's `kustomization.yml` (dev, stage and prod) includes:
+El `kustomization.yml` de cada overlay de aplicación (dev, stage y prod) incluye:
 
 ```yaml
 components:
   - ../../components/form-observability/app
 ```
 
-`deploy/k8s/monitoring/kustomization.yml` includes:
+`deploy/k8s/monitoring/kustomization.yml` incluye:
 
 ```yaml
 components:
   - ../components/form-observability/monitoring
 ```
 
-The application component adds pod scrape annotations and derives `FORM_ENVIRONMENT` from the pod namespace. It does not change replicas, HPA, volumes or public ingress routes. Scraping uses the internal pod port 8086 and the shared Kubernetes service discovery; no public Actuator route is needed. It does not restrict access by other workloads inside the cluster.
+El componente de aplicación añade anotaciones de scraping en los pods y deriva `FORM_ENVIRONMENT` del namespace del pod. No cambia réplicas, HPA, volúmenes ni rutas de ingress público. El scraping usa el puerto interno 8086 del pod y el descubrimiento de servicios compartido de Kubernetes; no se necesita una ruta pública de Actuator. No restringe el acceso de otras cargas de trabajo dentro del clúster.
 
-The monitoring component projects hashed Form ConfigMaps alongside the existing rules and dashboards. Prometheus loads Auth, Identity and Form from `/etc/prometheus/rules/*.yml` and Promotion from `/etc/prometheus/rules/promotion/*.yml`. Grafana loads the dashboards from `/var/lib/grafana/dashboards`. The Form dashboard uses the shared `app` and `namespace` target labels and includes a namespace selector.
+El componente de monitorización proyecta ConfigMaps de Form con hash junto a las reglas y dashboards existentes. Prometheus carga Auth, Identity y Form desde `/etc/prometheus/rules/*.yml` y Promotion desde `/etc/prometheus/rules/promotion/*.yml`. Grafana carga los dashboards desde `/var/lib/grafana/dashboards`. El dashboard de Form usa las etiquetas de destino compartidas `app` y `namespace` e incluye un selector de namespace.
 
-Generated ConfigMap name changes update the projected-volume reference and pod template, so rule updates follow the normal authorized monitoring rollout. This component does not implement Prometheus hot reload. Validate Prometheus/Grafana health after deployment.
+Los cambios en el nombre de los ConfigMaps generados actualizan la referencia del volumen proyectado y la plantilla de pods, de modo que las actualizaciones de reglas siguen el despliegue progresivo habitual de monitorización autorizado. Este componente no implementa la recarga en caliente de Prometheus. Valide la salud de Prometheus/Grafana tras el despliegue.
 
-## Alert
+## Alerta
 
-`FormKafkaPublicationFailures` aggregates failed publication acknowledgements across both Form topics by namespace. It fires after at least three failures in five minutes remain above the threshold for one minute. It covers `cg-dev` and `cg-prod`; intentionally stopped stage is excluded. It detects publication failures while Form is running, not total service unavailability or missing scrape targets.
+`FormKafkaPublicationFailures` agrega las confirmaciones de publicación con error de ambos topics de Form por namespace. Se activa después de al menos tres errores en cinco minutos que permanezcan por encima del umbral durante un minuto. Cubre `cg-dev` y `cg-prod`; stage está excluido por estar detenido intencionalmente. Detecta errores de publicación mientras Form está en ejecución, no la indisponibilidad total del servicio ni objetivos de scraping ausentes.
 
-Rules use the existing Prometheus-to-Alertmanager connection. PR #93 currently defines a receiver with no external notification integration. A configured delivery destination and a received notification are prerequisites for claiming operational alert delivery.
+Las reglas usan la conexión existente de Prometheus con Alertmanager. PR #93 define actualmente un receptor sin integración de notificación externa. Un destino de entrega configurado y una notificación recibida son requisitos previos para afirmar que la entrega de alertas está operativa.
 
-## Local verification
+## Verificación local
 
-With `promtool` from Prometheus 2.51.2 available, run from `monitoring/`:
+Con `promtool` de Prometheus 2.51.2 disponible, ejecute desde `monitoring/`:
 
 ```powershell
 promtool check rules form-alerts.yml
 promtool test rules form-alerts.test.yml
 ```
 
-The rule test covers firing in dev, recovery, no failures in prod, and exclusion of stage. Run the offline verifier from the repository root (Python with PyYAML and kubectl required):
+La prueba de reglas cubre la activación en dev, la recuperación, la ausencia de errores en prod y la exclusión de stage. Ejecute el verificador sin conexión desde la raíz del repositorio (se requieren Python con PyYAML y kubectl):
 
 ```powershell
 python deploy/k8s/components/form-observability/verify.py
 ```
 
-The verifier creates temporary copies with dummy Secrets, renders all three environments and monitoring, checks generated ConfigMap references and preserved Auth files, and compares against the same configuration without the components. It never contacts the cluster or prints rendered Secrets.
+El verificador crea copias temporales con Secrets ficticios, renderiza los tres entornos y la monitorización, comprueba las referencias de ConfigMaps generadas y los archivos de Auth conservados, y compara con la misma configuración sin los componentes. Nunca contacta con el clúster ni imprime Secrets renderizados.
 
-For individual renders with your local configuration (do not apply as part of verification):
+Para renderizados individuales con su configuración local (no aplicar como parte de la verificación):
 
 ```powershell
 kubectl kustomize deploy/k8s/overlays/dev
@@ -59,6 +59,6 @@ kubectl kustomize deploy/k8s/overlays/prod
 kubectl kustomize deploy/k8s/monitoring
 ```
 
-Use placeholder secrets in an isolated copy for offline rendering. Do not save rendered Secrets as evidence. Once deployment is separately authorized, verify Prometheus targets/series, Grafana panel data, rule loading and Alertmanager delivery; local render and rule tests do not prove those runtime results.
+Use Secrets de marcador de posición en una copia aislada para el renderizado sin conexión. No guarde los Secrets renderizados como evidencia. Una vez autorizado el despliegue por separado, verifique los objetivos/series de Prometheus, los datos de los paneles de Grafana, la carga de reglas y la entrega de Alertmanager; el renderizado local y las pruebas de reglas no prueban esos resultados en ejecución.
 
-Centralized log collection and Jaeger/OTLP reception remain shared infrastructure dependencies. No log datasource or trace backend is provisioned here.
+La recolección centralizada de logs y la recepción de Jaeger/OTLP siguen siendo dependencias de la infraestructura compartida. Aquí no se aprovisiona ninguna datasource de logs ni backend de trazas.

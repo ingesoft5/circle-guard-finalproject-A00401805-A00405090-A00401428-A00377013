@@ -1,19 +1,19 @@
-<!-- CG-DOC: CircleGuard Shared Library. -->
-# CircleGuard Shared Library
+<!-- CG-DOC: Biblioteca compartida de CircleGuard. -->
+# Biblioteca compartida de CircleGuard
 
-The `circleguard` Jenkins Shared Library lives in this directory. JCasC loads it
-with `libraryPath: jenkins`, so the entry point is `jenkins/vars/`.
+La biblioteca compartida de Jenkins `circleguard` se encuentra en este directorio. JCasC la carga
+con `libraryPath: jenkins`, de modo que el punto de entrada es `jenkins/vars/`.
 
-## Global variables
+## Variables globales
 
-| File | Purpose |
+| Archivo | Propósito |
 |---|---|
-| `vars/ci.groovy` | Build, unit tests, JaCoCo, SonarQube, quality gate, integration, package, publish, Docker, archive, deploy, E2E. |
-| `vars/ciServices.groovy` | Service catalog and selective execution (`auto`, `all`, or one service). |
-| `vars/ciVersion.groovy` | Semantic version from Git tags and Conventional Commits; creates `vX.Y.Z` tags on `main`. |
-| `vars/ciNotify.groovy` | GitHub PR/commit comment and Slack notifications. |
+| `vars/ci.groovy` | Compilación, pruebas unitarias, JaCoCo, SonarQube, quality gate, integración, empaquetado, publicación, Docker, archivado, despliegue, E2E. |
+| `vars/ciServices.groovy` | Catálogo de servicios y ejecución selectiva (`auto`, `all` o un servicio). |
+| `vars/ciVersion.groovy` | Versión semántica a partir de etiquetas de Git y Conventional Commits; crea etiquetas `vX.Y.Z` en `main`. |
+| `vars/ciNotify.groovy` | Comentarios en PR/commit de GitHub y notificaciones de Slack. |
 
-## Pipeline usage
+## Uso de la canalización
 
 ```groovy
 @Library('circleguard') _
@@ -22,12 +22,12 @@ def services = ciServices.resolve(params.SERVICE ?: 'auto')
 services.each { ci.build(it) }
 ```
 
-The multibranch job discovers branches and pull requests; the Jenkinsfile at the
-repository root orchestrates the reusable steps.
+El job multibranch descubre ramas y pull requests; el Jenkinsfile en la raíz del
+repositorio orquesta los pasos reutilizables.
 
-## Semantic versioning
+## Versionado semántico
 
-`ciVersion.resolve()` uses the latest `vX.Y.Z` Git tag and the Conventional
-Commits since that tag. Breaking changes bump major, `feat` bumps minor, and any
-other commit bumps patch. On `main`, `ciVersion.createTag()` pushes the
-`vX.Y.Z` tag before Docker publication. The pipeline never publishes `latest`.
+`ciVersion.resolve()` usa la última etiqueta Git `vX.Y.Z` y los Conventional
+Commits posteriores a esa etiqueta. Los cambios incompatibles incrementan major, `feat` incrementa minor y
+cualquier otro commit incrementa patch. En `main`, `ciVersion.createTag()` envía la
+etiqueta `vX.Y.Z` antes de la publicación en Docker. La canalización nunca publica `latest`.

@@ -4,7 +4,7 @@
 Declara el registro de contenedores del ambiente: PVC persistente, Deployment
 de `registry:2` y Service `ClusterIP` en el puerto `5000`.
 
-| Variable | Descripción | Default |
+| Variable | Descripción | Valor por defecto |
 |---|---|---|
 | `env` | Identificador del ambiente | — |
 | `namespace` | Namespace donde se despliega | — |

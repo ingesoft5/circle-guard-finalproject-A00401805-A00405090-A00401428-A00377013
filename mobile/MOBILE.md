@@ -1,11 +1,11 @@
-<!-- CG-DOC: Expo mobile client structure, configuration, and test commands. -->
-# Mobile
+<!-- CG-DOC: Estructura, configuración y comandos de prueba del cliente móvil Expo. -->
+# Móvil
 
-## Purpose
+## Propósito
 
-`mobile/` contains the CircleGuard Expo client for students, visitors, gate staff, and administrators.
+`mobile/` contiene el cliente Expo de CircleGuard para estudiantes, visitantes, personal de control de acceso y administradores.
 
-## Structure
+## Estructura
 
 ```text
 mobile/
@@ -18,13 +18,13 @@ mobile/
 └── assets/       # Fonts and images
 ```
 
-## Requirements
+## Requisitos
 
-- Node.js 20 or newer.
-- Expo CLI through `npx expo`.
-- Backend services reachable from the device or emulator.
+- Node.js 20 o superior.
+- Expo CLI mediante `npx expo`.
+- Servicios backend accesibles desde el dispositivo o el emulador.
 
-## Commands
+## Comandos
 
 ```bash
 npm install
@@ -36,20 +36,20 @@ npm test
 npm run test:coverage
 ```
 
-`npm run test:coverage` generates `coverage/lcov.info`, HTML reports and
-`coverage/coverage-summary.json`, then runs `scripts/check-coverage.mjs`. The script
-fails if any global metric (`lines`, `statements`, `functions`, `branches`) is below
-**60 %**. The same rule is declared in `package.json` under `jest.coverageThreshold`.
+`npm run test:coverage` genera `coverage/lcov.info`, informes HTML y
+`coverage/coverage-summary.json`, y luego ejecuta `scripts/check-coverage.mjs`. El script
+termina con error si alguna métrica global (`lines`, `statements`, `functions`, `branches`) está por debajo
+del **60 %**. La misma regla se declara en `package.json` bajo `jest.coverageThreshold`.
 
-## Configuration
+## Configuración
 
-- `app.json` defines the Expo application metadata.
-- `constants/Config.ts` resolves backend service URLs.
-- `metro.config.js` and `babel.config.js` configure the bundler.
-- `tailwind.config.js` configures NativeWind styling.
+- `app.json` define los metadatos de la aplicación Expo.
+- `constants/Config.ts` resuelve las URLs de los servicios backend.
+- `metro.config.js` y `babel.config.js` configuran el empaquetador.
+- `tailwind.config.js` configura los estilos de NativeWind.
 
-## Documentation
+## Documentación
 
-- Exported hooks, components, contexts, and utilities use TSDoc in English.
-- Every source file includes a `CG-DOC` purpose header.
-- No secrets or production credentials are stored in the mobile project.
+- Los hooks, componentes, contextos y utilidades exportados usan TSDoc en inglés.
+- Cada archivo de código incluye una cabecera de propósito `CG-DOC`.
+- El proyecto móvil no almacena secretos ni credenciales de producción.

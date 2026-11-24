@@ -1,4 +1,4 @@
-<!-- CG-DOC: Continuous deployment, E2E validation, and rollback evidence for auth-service (HU-AUTH-04 / DCG-80). -->
+<!-- CG-DOC: Despliegue continuo, validación E2E y evidencia de reversión de auth-service (HU-AUTH-04 / DCG-80). -->
 # Despliegue Continuo, Validación E2E y Rollback de `circleguard-auth-service` (`HU-AUTH-04` / `DCG-80`)
 
 > **Parte 1 — histórico (EC2, SSH, IPs privadas).** La Parte 2 no usa este despliegue: el pipeline
@@ -23,8 +23,8 @@ flowchart LR
     subgraph Tools["cg-tools (172.31.20.46 / EIP 77.112.223.174)"]
         J["Jenkins Multibranch (:8080)"]
         S["SonarQube (:9000)"]
-        N["Nexus Registry (:8081 / :5000)"]
-        PW["Playwright E2E Suite"]
+        N["Registro Nexus (:8081 / :5000)"]
+        PW["Suite E2E de Playwright"]
     end
 
     subgraph Dev["cg-dev (172.31.19.75 / 3.140.191.217)"]
@@ -54,16 +54,16 @@ flowchart LR
         RP --> GP
     end
 
-    J -->|1. Build, JaCoCo, Sonar Gate| S
-    J -->|2. Publish JAR & Docker Image| N
-    N -->|3. Pull tag semver| AD & AS & AP
+    J -->|1. Compilación, JaCoCo, Quality Gate de Sonar| S
+    J -->|2. Publicar JAR e imagen Docker| N
+    N -->|3. Descargar tag semver| AD & AS & AP
     J -->|4. Deploy dev| AD
-    PW -->|5. E2E Auth + QR + Gate| AD & GD
-    J -->|6. Promote stage| AS
-    J -->|7. Manual Input + Deploy prod| AP
+    PW -->|5. E2E de auth + QR + gateway| AD & GD
+    J -->|6. Promover a stage| AS
+    J -->|7. Entrada manual + Deploy prod| AP
 ```
 
-### 1.1 Configuración Docker Compose y Healthchecks (`deploy/compose/{dev,stage,prod}/docker-compose.yml`)
+### 1.1 Configuración Docker Compose y comprobaciones de salud (`deploy/compose/{dev,stage,prod}/docker-compose.yml`)
 
 En cada ambiente (`dev`, `stage`, `prod`):
 - **`postgres-auth` (`postgres:15-alpine`):** volumen persistente dedicado (`postgres_auth_{dev|stage|prod}`), límite de memoria `192m` y `healthcheck` con `pg_isready -U admin -d circleguard_auth`.
@@ -77,17 +77,17 @@ En cada ambiente (`dev`, `stage`, `prod`):
 
 ## 2. Flujo de Promoción entre Ambientes (`DCG-99`)
 
-El pipeline declarativo (`Jenkinsfile` + Shared Library en `jenkins/vars/ci.groovy` y `jenkins/vars/ciServices.groovy`) ejecuta las siguientes etapas para `circleguard-auth-service`:
+El pipeline declarativo (`Jenkinsfile` + biblioteca compartida en `jenkins/vars/ci.groovy` y `jenkins/vars/ciServices.groovy`) ejecuta las siguientes etapas para `circleguard-auth-service`:
 
-1. **Build & Unit Tests + JaCoCo:** `./gradlew :services:circleguard-auth-service:test :services:circleguard-auth-service:jacocoTestReport :services:circleguard-auth-service:jacocoTestCoverageVerification` (`97.89%` de cobertura de líneas).
+1. **Compilación y pruebas unitarias + JaCoCo:** `./gradlew :services:circleguard-auth-service:test :services:circleguard-auth-service:jacocoTestReport :services:circleguard-auth-service:jacocoTestCoverageVerification` (`97.89%` de cobertura de líneas).
 2. **SonarQube + Quality Gate:** escaneo estático con `services/circleguard-auth-service/sonar-project.properties` y validación obligatoria del Quality Gate en `OK`.
-3. **Package, Publish & Docker:** publicación del artefacto Maven y construcción/push de la imagen `${NEXUS_REGISTRY}/circleguard-docker/auth:${TAG}` en `172.31.20.46:5000`.
+3. **Empaquetado, publicación y Docker:** publicación del artefacto Maven y construcción/push de la imagen `${NEXUS_REGISTRY}/circleguard-docker/auth:${TAG}` en `172.31.20.46:5000`.
 4. **Deploy `dev` (`cg-dev`):** sincronización de `docker-compose.yml` y `deploy/scripts/*.sh` por SSH y ejecución de `deploy.sh dev ${TAG}`, verificando `/actuator/health == UP` tanto en `:8087` (`gateway`) como en `:8180` (`auth`).
 5. **Pruebas E2E (`Playwright`):** ejecución automática de `tests/e2e/access-validation.spec.ts` contra `cg-dev`.
 6. **Promoción automática a `stage` (`cg-stage`):** si las pruebas E2E pasan al 100%, se despliega el mismo tag semántico inmutable en `cg-stage`.
 7. **Aprobación manual (`Approval prod`) y despliegue a `prod` (`cg-prod`):** tras la compuerta `input message: 'Aprobar despliegue a producción'`, se despliega el mismo artefacto en `cg-prod`.
 
-### 2.1 Evidencia de Versiones Publicadas en Nexus Docker Registry (`172.31.20.46:5000`)
+### 2.1 Evidencia de versiones publicadas en el registro Docker de Nexus (`172.31.20.46:5000`)
 
 ```json
 {"repositories":["circleguard-docker/auth","circleguard-docker/gateway"]}

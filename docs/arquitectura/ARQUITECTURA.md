@@ -1,7 +1,7 @@
 <!-- CG-DOC: Arquitectura CircleGuard — Parte 1. -->
 # Arquitectura CircleGuard — Parte 1
 
-> **Parte 2 (vigente).** La plataforma actual corre on-premise en un único host: Compose `cg-tools` + k3d `cg` con namespaces `cg-dev`/`cg-stage`/`cg-prod` y Traefik `:30080` por header `Host`. Ver [`deploy/k8s/K8S.md`](../../deploy/k8s/K8S.md) y [`infra/onpremise/ONPREMISE.md`](../../infra/onpremise/ONPREMISE.md); el despliegue pasa por `kubectl`/Kustomize desde el pipeline. Este documento describe la Parte 1 y se conserva como referencia histórica.
+> **Parte 2 (vigente).** La plataforma actual corre on-premise en un único host: Compose `cg-tools` + k3d `cg` con namespaces `cg-dev`/`cg-stage`/`cg-prod` y Traefik `:30080` por header `Host`. Ver [`deploy/k8s/K8S.md`](../../deploy/k8s/K8S.md) y [`infra/onpremise/ONPREMISE.md`](../../infra/onpremise/ONPREMISE.md); el despliegue pasa por `kubectl`/Kustomize desde la canalización. Este documento describe la Parte 1 y se conserva como referencia histórica.
 
 **Actualizado:** 9 de noviembre de 2026
 
@@ -47,7 +47,7 @@ flowchart LR
 | form | 8086 | PostgreSQL, Kafka | Desplegado |
 | gateway | 8087 | Redis | Desplegado |
 | notification | 8082 | Kafka, SMTP/SMS | Empaquetado |
-| file | 8085 | S3-compatible | Empaquetado |
+| file | 8085 | compatible con S3 | Empaquetado |
 | dashboard | 8084 | Neo4j/PostgreSQL | Empaquetado |
 | web | 8080 | gateway | Desplegado |
 
@@ -55,8 +55,8 @@ flowchart LR
 
 | Ambiente | Host | Stack | Promoción |
 |---|---|---|---|
-| tools | `cg-tools` | Jenkins, SonarQube, Nexus, registry, ingress | N/A |
-| dev | `cg-dev` | 5 núcleos + middleware + web | Automático tras publish |
+| tools | `cg-tools` | Jenkins, SonarQube, Nexus, registro, Ingress | N/A |
+| dev | `cg-dev` | 5 núcleos + middleware + web | Automático tras la publicación |
 | stage | `cg-stage` | 5 núcleos + middleware + web | Tras E2E de dev |
 | prod | `cg-prod` | 5 núcleos + middleware + web | Aprobación manual |
 
@@ -66,16 +66,16 @@ datos ni broker con otro ambiente.
 ## Decisiones relevantes
 
 - **Inmutabilidad:** cada imagen se publica con tag semver; nunca `latest`.
-- **No root:** todos los Dockerfiles crean un usuario sin privilegios.
-- **Healthchecks:** servicios y middleware exponen healthcheck para que Compose espere.
+- **Sin usuario root:** todos los Dockerfiles crean un usuario sin privilegios.
+- **Comprobaciones de salud:** servicios y middleware exponen comprobaciones para que Compose espere.
 - **Aislamiento:** dev/stage/prod usan puertos y redes independientes en hosts distintos.
 - **Promoción:** el mismo artefacto viaja de dev a stage y prod; no se reconstruye por ambiente.
 - **Privacidad:** identity guarda el mapeo cifrado; promotion solo maneja identificadores anónimos.
 
 ## Documentos relacionados
 
-- [Pipeline CI/CD](pipeline.md)
+- [Canalización CI/CD](pipeline.md)
 - [Entornos](../infra/environments.md)
 - [Runbook](../infra/runbook.md)
-- [Change management](../change-management.md)
+- [Gestión de cambios](../change-management.md)
 - [Backlog](../agil/backlog.md)

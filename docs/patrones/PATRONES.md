@@ -6,22 +6,22 @@
 | Patrón | Evidencia |
 | --- | --- |
 | API Gateway | `services/circleguard-gateway-service` es el punto de entrada del campus. |
-| Event-driven architecture | `notification-service`, `form-service` y `promotion-service` consumen/publican topics Kafka. |
-| Database per service | Cada microservicio declara su propio `application.yml` y esquema. |
+| Arquitectura orientada a eventos | `notification-service`, `form-service` y `promotion-service` consumen/publican temas de Kafka. |
+| Base de datos por servicio | Cada microservicio declara su propio `application.yml` y esquema. |
 | Cache-aside | `gateway-service` consulta Redis para el estado del QR y TTL corto. |
-| State machine | `promotion-service` implementa Sospechoso → Probable → Confirmado con TTL de 14 días. |
+| Máquina de estados | `promotion-service` implementa Sospechoso → Probable → Confirmado con TTL de 14 días. |
 
 ## Patrones implementados o mejorados
 
 1. **Circuit Breaker / Retry (resiliencia)** — Resilience4j en `gateway-service`
-   y `identity-service`, con pruebas de falla inyectada. *Trade-off*: latencia
-   adicional al abrir el circuito frente a protección del downstream.
+   y `identity-service`, con pruebas de falla inyectada. *Compromiso*: latencia
+   adicional al abrir el circuito frente a protección de los servicios aguas abajo.
 2. **External Configuration (configuración)** — perfiles Spring y ConfigMaps
-   por ambiente en `deploy/k8s/overlays/*`. *Trade-off*: centralización vs.
-   dependencia del cluster para arrancar.
-3. **Observer/Micrometer instrumentation (adicional)** — contadores y
-   histogramas en Actuator consumidos por Prometheus y Grafana. *Trade-off*:
-   overhead de medición frente a observabilidad de negocio.
+   por ambiente en `deploy/k8s/overlays/*`. *Compromiso*: centralización frente a
+   dependencia del clúster para arrancar.
+3. **Instrumentación Observer/Micrometer (adicional)** — contadores y
+   histogramas en Actuator consumidos por Prometheus y Grafana. *Compromiso*:
+   sobrecarga de medición frente a observabilidad de negocio.
 
 ## Diagramas de patrones
 
@@ -49,7 +49,7 @@ Ese mismo contenido, en texto e imágenes, se incorpora al `CircleGuard_INFORME_
 
 El documento [**`Patrones_Diseno_CircleGuard.docx`**](Patrones_Diseno_CircleGuard.docx)
 recoge los patrones existentes identificados en código y los tres patrones
-implementados o mejorados, con propósito, evidencia, *trade-offs*, prueba y
+implementados o mejorados, con propósito, evidencia, *compromisos*, prueba y
 trazabilidad con E2.4/P2.4. Incrusta las tres figuras de patrones; sus fuentes
 canónicas están en `../diagramas/`:
 

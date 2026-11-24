@@ -2,7 +2,7 @@
 # 18. Arquitectura y patrones de diseño — CircleGuard
 
 > **Propósito.** Documentar la arquitectura implementada en la Parte 2 y los patrones de
-> diseño verificados en el código, con su evidencia, propósito, *trade-offs* y prueba.
+> diseño verificados en el código, con su evidencia, propósito, *compromisos* y prueba.
 > Este informe es la fuente de texto e imágenes que se incorpora al
 > `CircleGuard_INFORME_FINAL.docx`. Todas las figuras se generaron desde su fuente
 > Mermaid `.mmd`, conservada junto a cada PNG en `docs/diagramas/`. Ningún nombre
@@ -13,7 +13,7 @@
 CircleGuard es un sistema de rastreo de contactos y cercos sanitarios construido como
 microservicios. El Cliente web Expo/Nginx (`:8080`) es el único punto de entrada de
 usuario; todas las peticiones pasan por un API Gateway (`:8087`) desplegado detrás de
-Traefik (`:30080`) con terminación TLS mediante el certificado wildcard
+Traefik (`:30080`) con terminación TLS mediante el certificado comodín
 `*.circleguard.local`. El clúster es un k3d único sobre el host on-prem
 `10.147.20.67`, con tres namespaces aislados `cg-dev`, `cg-stage` y `cg-prod`.
 
@@ -22,7 +22,7 @@ Promotion (`:8088`), Gateway (`:8087`), Notification (`:8082`), File (`:8085`) y
 Dashboard (`:8084`). El modelo de datos es híbrido: PostgreSQL para la bóveda de
 identidades y datos relacionales, OpenLDAP para autenticación dual, Kafka para eventos
 asíncronos, Redis para caché de estado de QR, Neo4j para el grafo temporal de 14 días y
-MinIO/S3-compatible para archivos y respaldos.
+compatible con MinIO/S3 para archivos y respaldos.
 
 **Figura 1. Arquitectura general de servicios (Parte 2).**
 
@@ -34,7 +34,7 @@ Coherente con `docs/arquitectura/ARQUITECTURA.md` y `deploy/k8s/base/apps.yml`.*
 La figura muestra el flujo completo: el usuario accede al cliente web, que se comunica
 con Traefik; este enruta por cabecera `Host` al Gateway, y el Gateway distribuye hacia
 los ocho servicios. Cada servicio consume únicamente el middleware que necesita
-(*database per service*): Auth usa PostgreSQL y LDAP, Identity usa PostgreSQL, Form
+(*base de datos por servicio*): Auth usa PostgreSQL y LDAP, Identity usa PostgreSQL, Form
 usa PostgreSQL y Kafka, Promotion usa PostgreSQL, Neo4j, Kafka y Redis, Notification
 consume Kafka, File usa MinIO y Dashboard lee Neo4j/PostgreSQL. Los eventos de Kafka
 alimentan a Notification y Promotion de forma asíncrona, y Neo4j/PostgreSQL alimentan
@@ -74,7 +74,7 @@ El flujo comienza en `.env.onpremise`, que aporta `TF_STATE_*` y
 `TF_GRAFANA_ADMIN_PASSWORD`. El módulo `state-backend` crea el bucket
 `circleguard-tfstate` en MinIO y la tabla `circleguard-tf-lock` en DynamoDB; sobre
 ese backend remoto se construye el `backend.hcl` de cada ambiente, con claves
-`platform/<env>/terraform.tfstate`. Los tres roots reutilizan los cinco módulos y
+`platform/<env>/terraform.tfstate`. Las tres configuraciones raíz reutilizan los cinco módulos y
 Jenkins ejecuta `init`, `validate`, `plan`, el gate de Trivy IaC y `apply`, con
 aprobación manual para producción.
 
@@ -97,10 +97,10 @@ namespace evita que un incidente en dev afecte a stage o prod.
 | Patrón | Evidencia en el código |
 | --- | --- |
 | API Gateway | `services/circleguard-gateway-service` es el punto de entrada del campus. |
-| Event-driven architecture | `notification-service`, `form-service` y `promotion-service` consumen/publican topics Kafka. |
-| Database per service | Cada microservicio declara su propio `application.yml` y esquema. |
+| Arquitectura orientada a eventos | `notification-service`, `form-service` y `promotion-service` consumen/publican temas de Kafka. |
+| Base de datos por servicio | Cada microservicio declara su propio `application.yml` y esquema. |
 | Cache-aside | `gateway-service` consulta Redis para el estado del QR con TTL corto. |
-| State machine | `promotion-service` implementa Sospechoso → Probable → Confirmado con TTL de 14 días. |
+| Máquina de estados | `promotion-service` implementa Sospechoso → Probable → Confirmado con TTL de 14 días. |
 
 ## 4. Patrones implementados o mejorados
 
@@ -119,7 +119,7 @@ y `@Retry(name = "identityClient")`. El `application.yml` (L64-81) configura
 `wait-duration: ${RETRY_IDENTITY_WAIT_DURATION:500ms}`. El patrón se repite en
 `FormOutboxDispatcher`, `IdentityAuditPublisher` y `PushServiceImpl`.
 
-**Trade-off.** El circuito añade latencia al abrirse y requiere un *fallback*
+**Compromiso.** El circuito añade latencia al abrirse y requiere un *fallback*
 significativo; a cambio evita saturar hilos y propagar la falla. El Bulkhead limita
 el pool de hilos para aislar la concurrencia.
 
@@ -152,7 +152,7 @@ overlays `deploy/k8s/overlays/*`; secretos inyectados desde fuera del repositori
 `NotificationTracingConfiguration` y `PromotionTracingConfiguration` leen la
 configuración externa vía `@ConfigurationProperties`.
 
-**Trade-off.** La centralización facilita el cambio sin rebuild, pero introduce
+**Compromiso.** La centralización facilita el cambio sin reconstruir la imagen, pero introduce
 dependencia del clúster para arrancar: si el ConfigMap no existe, el servicio no
 inicia, lo que se mitiga con los manifiestos declarados y validados por Kustomize.
 
@@ -186,9 +186,9 @@ pruebas `FormOutboxDispatcherTest`, `FormOutboxSchedulerTest` y
 `circleguard_form_event_publications_total` se expone en Actuator y alimenta la alerta
 `FormKafkaPublicationFailures`.
 
-**Trade-off.** La tabla outbox añade una escritura y requiere un proceso de reintento,
+**Compromiso.** La tabla outbox añade una escritura y requiere un proceso de reintento,
 pero elimina la inconsistencia entre base de datos y broker; la instrumentación
-Micrometer añade un overhead de medición pequeño frente a la observabilidad de negocio
+Micrometer añade una sobrecarga de medición pequeña frente a la observabilidad de negocio
 obtenida.
 
 **Prueba.** Los tests de recuperación del outbox y la alerta
@@ -213,7 +213,7 @@ eventos a Notification y Promotion. El bloque Observer/Micrometer recoge los con
 Este informe cubre el entregable **E2.4** (patrones de diseño) y el criterio **P2.4**
 del enunciado: patrones existentes identificados con evidencia en código, al menos tres
 patrones nuevos o mejorados —uno de resiliencia, uno de configuración y uno adicional—
-con propósito, *trade-offs*, evidencia y prueba. La arquitectura y la infraestructura
+con propósito, *compromisos*, evidencia y prueba. La arquitectura y la infraestructura
 documentadas aquí también sustentan **P2.2** (Terraform y diagramas coherentes con lo
 desplegado) y **P2.10** (documentación coherente con la solución).
 

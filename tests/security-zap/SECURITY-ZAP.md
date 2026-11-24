@@ -1,5 +1,5 @@
-<!-- CG-DOC: OWASP ZAP baseline (E2.7). -->
-# OWASP ZAP baseline (E2.7)
+<!-- CG-DOC: Línea base de OWASP ZAP (E2.7). -->
+# Línea base de OWASP ZAP (E2.7)
 
 Script reproducible para el escaneo de seguridad pasivo del cliente web y del
 gateway expuesto:

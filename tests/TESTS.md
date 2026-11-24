@@ -1,13 +1,13 @@
-<!-- CG-DOC: Test suites, end-to-end execution, and required environment variables. -->
-# Tests
+<!-- CG-DOC: Suites de pruebas, ejecución de extremo a extremo y variables de entorno requeridas. -->
+# Pruebas
 
-## Purpose
+## Propósito
 
-`tests/` contains execution-level verification for the CircleGuard platform.
+`tests/` contiene la verificación a nivel de ejecución de la plataforma CircleGuard.
 
-## End-to-end tests
+## Pruebas de extremo a extremo
 
-The `e2e/` suite uses Playwright against the deployed Expo web client and the
+La suite `e2e/` usa Playwright contra el cliente web de Expo desplegado y el
 gateway.
 
 ```bash
@@ -19,27 +19,27 @@ GATEWAY_URL=http://<ENVS_IP>:8087 \
 npx playwright test
 ```
 
-Covered checks:
+Comprobaciones cubiertas:
 
-- `login.spec.ts`: secure login screen and required credentials;
-- `health-form.spec.ts`: health questionnaire route and fallback;
-- `access-validation.spec.ts`: gateway health and rejected access without a staff JWT;
-- `promotion-flow.spec.ts` when the promotion stack is deployed.
+- `login.spec.ts`: pantalla de inicio de sesión segura y credenciales obligatorias;
+- `health-form.spec.ts`: ruta del cuestionario de salud y comportamiento alternativo;
+- `access-validation.spec.ts`: salud del gateway y acceso rechazado sin JWT de personal;
+- `promotion-flow.spec.ts` cuando el stack de Promotion está desplegado.
 
-## Jenkins integration
+## Integración con Jenkins
 
-The pipeline runs the suite after the `dev` deployment:
+La canalización ejecuta la suite tras el despliegue en `dev`:
 
 ```text
 E2E → WEB_URL=http://<ENVS_IP>:8081, GATEWAY_URL=http://<ENVS_IP>:8087
 ```
 
-## Requirements
+## Requisitos
 
-- Deployed `dev` web client and gateway.
-- Network access from the Jenkins host to ports 8081 and 8087.
-- Playwright Chromium dependencies.
+- Cliente web y gateway de `dev` desplegados.
+- Acceso de red desde el host de Jenkins a los puertos 8081 y 8087.
+- Dependencias de Chromium de Playwright.
 
-## Documentation
+## Documentación
 
-Every test file includes a `CG-DOC` purpose header and documents the behavior under test.
+Cada archivo de prueba incluye una cabecera de propósito `CG-DOC` y documenta el comportamiento bajo prueba.

@@ -1,4 +1,4 @@
-<!-- CG-DOC: Sprint 2 review and evidence mapping for Parte 2 deliverables. -->
+<!-- CG-DOC: Revisión del Sprint 2 y correspondencia de la evidencia con los entregables de la Parte 2. -->
 # Sprint 2 — Revisión
 
 **Periodo revisado:** 16–22 de noviembre de 2026

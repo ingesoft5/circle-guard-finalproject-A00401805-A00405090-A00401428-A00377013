@@ -1,10 +1,10 @@
-<!-- CG-DOC: Infrastructure diagrams (Parte 2, E2.1). -->
-# Infrastructure diagrams (Parte 2, E2.1)
+<!-- CG-DOC: Diagramas de infraestructura (Parte 2, E2.1). -->
+# Diagramas de infraestructura (Parte 2, E2.1)
 
 Los diagramas describen la infraestructura declarada con Terraform: módulos
 reutilizables, tres ambientes parametrizados y el backend remoto del estado.
 
-## 01 On-prem architecture
+## 01 Arquitectura on-prem
 
 ```mermaid
 flowchart TB
@@ -27,7 +27,7 @@ flowchart TB
 
 Fuente: [`01-arquitectura-onprem.mmd`](01-arquitectura-onprem.mmd).
 
-## 02 Terraform flow
+## 02 Flujo de Terraform
 
 ```mermaid
 flowchart LR
@@ -73,7 +73,7 @@ Fuente: [`04-arquitectura-servicios.mmd`](04-arquitectura-servicios.mmd).
 ## 05 Circuit Breaker / Retry / Bulkhead — resiliencia (E2.4)
 
 Circuit Breaker, Retry y Bulkhead con Resilience4j en gateway/identity, con
-fallback y alerta crítica asociada. Evidencia y *trade-offs* en
+fallback y alerta crítica asociada. Evidencia y *compromisos* en
 [`docs/patrones/PATRONES.md`](../patrones/PATRONES.md).
 
 ![Circuit Breaker / Retry / Bulkhead](05-circuit-breaker-retry-bulkhead.png)

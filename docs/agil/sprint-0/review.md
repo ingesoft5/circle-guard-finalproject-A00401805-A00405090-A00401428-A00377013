@@ -1,5 +1,5 @@
-<!-- CG-DOC: Sprint 0 Review — CircleGuard. -->
-# Sprint 0 Review — CircleGuard
+<!-- CG-DOC: Revisión de Sprint 0 — CircleGuard. -->
+# Revisión de Sprint 0 — CircleGuard
 
 **Fecha:** 1–2 de noviembre de 2026  
 **Equipo:** Daniela Castaño, Santiago Estrada, Faiber Piedrahita, Alejandro Quiñones  

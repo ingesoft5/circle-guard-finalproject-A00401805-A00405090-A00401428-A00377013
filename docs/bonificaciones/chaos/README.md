@@ -1,5 +1,5 @@
-<!-- CG-DOC: Chaos engineering bonus verification (enunciado L284). -->
-# Chaos engineering bonus verification (enunciado L284)
+<!-- CG-DOC: Verificación de la bonificación de chaos engineering (enunciado L284). -->
+# Verificación de la bonificación de chaos engineering (enunciado L284)
 
 Bonificación de **chaos engineering** del enunciado L284.
 
@@ -17,11 +17,11 @@ Evidencia **real** obtenida en el clúster on-prem `k3d-cg` (host `10.147.20.67`
   exige evidencia real: desaparición de un UID de pod, recuperación efectiva y
   limpieza tras el rollback.
 
-## Hipótesis y steady state
+## Hipótesis y estado estable
 
 - **Hipótesis**: el sistema mantiene disponibilidad y tolerancia a fallos
   durante perturbaciones transitarias.
-- **Steady state observado**: `gateway` con 2 réplicas listas antes y después del
+- **Estado estable observado**: `gateway` con 2 réplicas listas antes y después del
   experimento; sin recurso de chaos residual tras el rollback.
 
 ## Ejecución real
@@ -70,6 +70,6 @@ CHAOS_VERIFICATION_PASS
 E2.5, E2.7 y E2.10, tal como aplica a todas las bonificaciones L284).
 
 La evidencia es real y reproducible: el PodChaos se creó, eliminó efectivamente
-un pod (cambió el conjunto de UIDs), el servicio recuperó su steady state y el
+un pod (cambió el conjunto de UIDs), el servicio recuperó su estado estable y el
 rollback dejó el clúster sin recursos de chaos. No se reporta NetworkChaos como
 evidencia de esta bonificación.

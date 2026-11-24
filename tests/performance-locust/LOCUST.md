@@ -1,4 +1,4 @@
-<!-- CG-DOC: E2.6 load test suite: objectives, scenarios and reproduction. -->
+<!-- CG-DOC: Suite de pruebas de carga E2.6: objetivos, escenarios y reproducción. -->
 # Locust — pruebas de carga de CircleGuard
 
 Escenarios sobre `cg-stage` que reproducen los dos flujos exigidos en E2.6:
@@ -16,7 +16,7 @@ Escenarios sobre `cg-stage` que reproducen los dos flujos exigidos en E2.6:
 | p95 de `POST /api/v1/gate/validate` | ≤ 500 ms |
 | p95 de `POST /api/v1/auth/login` | ≤ 800 ms |
 | Tasa de errores global | < 1 % (excluyendo el control negativo, que espera 4xx) |
-| Throughput sostenido | ≥ 50 req/s con 50 usuarios concurrentes |
+| Rendimiento sostenido | ≥ 50 req/s con 50 usuarios concurrentes |
 | Estabilidad | 5 minutos sin `ConnectionError` ni 5xx |
 
 ## Ejecución contra `cg-stage`

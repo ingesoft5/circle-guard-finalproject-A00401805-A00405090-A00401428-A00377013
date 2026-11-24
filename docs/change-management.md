@@ -1,9 +1,9 @@
-<!-- CG-DOC: Change Management y Release Notes — CircleGuard. -->
-# Change Management y Release Notes — CircleGuard
+<!-- CG-DOC: Gestión de cambios y notas de versión — CircleGuard. -->
+# Gestión de cambios y notas de versión — CircleGuard
 
 **Alcance:** cambios de código, infraestructura, configuración y despliegue de la Parte 1.
 **Objetivo:** que todo cambio tenga solicitud, revisión, aprobación, trazabilidad y una
-nota de release verificable.
+nota de versión verificable.
 
 ## 1. Flujo de cambio
 
@@ -15,7 +15,7 @@ Issue Jira -> rama feat/fix -> PR -> checks Jenkins -> aprobación -> squash mer
 1. La solicitud se registra en Jira con historia, criterios de aceptación y riesgo.
 2. La rama se crea desde `main` con el nombre `feat/HU-...`, `fix/...` o `ci/...`.
 3. El PR usa la plantilla de `.github/pull_request_template.md` y enlaza la issue.
-4. Jenkins ejecuta build, pruebas, Sonar/quality gate, integración y empaquetamiento.
+4. Jenkins ejecuta la compilación, pruebas, Sonar/quality gate, integración y empaquetamiento.
 5. Un integrante distinto del autor aprueba; el merge es squash.
 6. `main` calcula la versión semver y publica el tag `vX.Y.Z`.
 7. El pipeline genera `docs/release-notes/vX.Y.Z.md` desde Conventional Commits.
@@ -44,11 +44,11 @@ Issue Jira -> rama feat/fix -> PR -> checks Jenkins -> aprobación -> squash mer
 | Tipo de cambio | Aprobación mínima | Checks obligatorios | Despliegue |
 |---|---|---|---|
 | Documentación (`docs/`) | 1 integrante | Markdown/lint si aplica | No |
-| Feature o fix de servicio | 1 integrante distinto del autor | Build, unitarias, Sonar, quality gate | dev → stage → prod con aprobación |
-| Infraestructura (`infra/`, `deploy/`) | 1 integrante + revisión de DC | Build, compose config, smoke test | dev → stage → prod con aprobación |
-| CI/CD (`Jenkinsfile`, `jenkins/`) | 1 integrante + revisión de DC | Pipeline completo en rama | Igual que feature |
+| Funcionalidad o corrección de servicio | 1 integrante distinto del autor | Compilación, unitarias, Sonar, quality gate | dev → stage → prod con aprobación |
+| Infraestructura (`infra/`, `deploy/`) | 1 integrante + revisión de DC | Compilación, compose config, prueba de humo | dev → stage → prod con aprobación |
+| CI/CD (`Jenkinsfile`, `jenkins/`) | 1 integrante + revisión de DC | Canalización completa en rama | Igual que para una funcionalidad |
 | Seguridad o credenciales | 1 integrante + DC | Sin secretos en diff, escaneo | Aprobación explícita |
-| Hotfix de producción | 1 integrante + DC | Build, pruebas y smoke test | prod con `ROLLBACK_TAG` listo |
+| Hotfix de producción | 1 integrante + DC | Compilación, pruebas y prueba de humo | prod con `ROLLBACK_TAG` listo |
 
 Reglas adicionales:
 
@@ -69,7 +69,7 @@ Reglas adicionales:
 El tag se crea sobre el commit de `main` que pasó el pipeline. Nunca se publica `latest`;
 las imágenes usan `${NEXUS_REGISTRY}/circleguard-docker/<servicio>:<semver>`.
 
-## 5. Release notes
+## 5. Notas de versión
 
 El stage `Release notes` del `Jenkinsfile` genera un archivo por versión:
 
@@ -87,9 +87,9 @@ Contenido mínimo:
 - Enlace al pipeline y al tag.
 
 La plantilla base está en `docs/release-notes/RELEASE-NOTES.md`. El archivo generado se archiva
-como artefacto del build y se conserva en el repositorio cuando el PR lo incluya. El
-stage `GitHub Release` publica esa misma nota en la release del tag `vX.Y.Z`; si la
-release ya existe, actualiza el cuerpo en lugar de duplicarla.
+como artefacto de la compilación y se conserva en el repositorio cuando el PR lo incluya. El
+stage `GitHub Release` publica esa misma nota en la publicación del tag `vX.Y.Z`; si la
+publicación ya existe, actualiza el cuerpo en lugar de duplicarla.
 
 ## 6. Rollback
 

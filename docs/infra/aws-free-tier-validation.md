@@ -1,35 +1,36 @@
-<!-- CG-DOC: AWS four-host sizing, exposure, and one-week cost validation. -->
-# AWS Resource Validation - CircleGuard
+<!-- CG-DOC: Dimensionamiento, exposición y validación de costos de una semana de los cuatro hosts de AWS. -->
+# Validación de recursos de AWS - CircleGuard
 
-## Topology
+## Topología
 
-| Host | Type | RAM | Disk | Public IP |
+| Host | Tipo | RAM | Disco | IP pública |
 |---|---|---:|---:|---|
 | `cg-tools` | `m7i-flex.large` | 8 GB | 40 GB | Elastic IP |
-| `cg-dev` | `m7i-flex.large` | 8 GB | 30 GB | ephemeral |
-| `cg-stage` | `m7i-flex.large` | 8 GB | 30 GB | ephemeral |
-| `cg-prod` | `m7i-flex.large` | 8 GB | 30 GB | ephemeral |
+| `cg-dev` | `m7i-flex.large` | 8 GB | 30 GB | efímera |
+| `cg-stage` | `m7i-flex.large` | 8 GB | 30 GB | efímera |
+| `cg-prod` | `m7i-flex.large` | 8 GB | 30 GB | efímera |
 
-Region: `us-east-2`. Ubuntu 24.04. Architecture: x86_64.
+Región: `us-east-2`. Ubuntu 24.04. Arquitectura: x86_64.
 
-## Exposure
+## Exposición
 
-| Port | Source | Service |
+| Puerto | Origen | Servicio |
 |---:|---|---|
-| 22 | `ADMIN_CIDR` and `SG-tools` | SSH |
-| 8080 | Internet | Jenkins, authenticated |
-| 9000 | `TEACHER_CIDR` and admin | SonarQube |
-| 8081 | `TEACHER_CIDR` and admin | Nexus UI |
-| 80/443 | Internet | Application ingress |
-| 5000 | `SG-envs` | Private Docker registry |
+| 22 | `ADMIN_CIDR` y `SG-tools` | SSH |
+| 8080 | Internet | Jenkins, autenticado |
+| 9000 | `TEACHER_CIDR` y administrador | SonarQube |
+| 8081 | `TEACHER_CIDR` y administrador | Interfaz de Nexus |
+| 80/443 | Internet | Ingreso de la aplicación |
+| 5000 | `SG-envs` | Registro Docker privado |
 | 8087 | `SG-tools` | Gateway |
-| Middleware | `SG-tools` and admin | PostgreSQL, Neo4j, Kafka, Redis, LDAP |
+| Middleware | `SG-tools` y administrador | PostgreSQL, Neo4j, Kafka, Redis, LDAP |
 
 ## Free Tier
 
-Free Tier covers `t3.micro` and `t2.micro`, which cannot run Jenkins, SonarQube, and Nexus together. The USD 120 credit is the real budget.
+Free Tier cubre `t3.micro` y `t2.micro`, que no pueden ejecutar Jenkins, SonarQube y Nexus
+juntos. El crédito de USD 120 es el presupuesto real.
 
-## Cost
+## Costo
 
 ```text
 4 × m7i-flex.large × 0.096 × 180 h = 69.12
@@ -39,10 +40,10 @@ EBS 130 GB gp3 proportional         =  2.56
 Total 180 h                          = 75.28 USD
 ```
 
-Monthly 24/7 estimate: ~305.32 USD.
-USD 120 covers ~16 days 24/7 or more than one month at 8 h/day.
+Estimación mensual 24/7: ~305.32 USD.
+USD 120 cubre ~16 días 24/7 o más de un mes a 8 h/día.
 
-## Verification
+## Verificación
 
 ```bash
 export AWS_REGION=us-east-2
@@ -51,7 +52,7 @@ export TEACHER_CIDR=...
 ./infra/bootstrap/bootstrap-check.sh
 ```
 
-## Cost controls
+## Controles de costos
 
 ```bash
 ./infra/bootstrap/bootstrap-stop.sh
@@ -59,4 +60,5 @@ export TEACHER_CIDR=...
 ./infra/bootstrap/bootstrap-ips.sh
 ```
 
-Stopping removes compute charges. EBS and the tools Elastic IP remain billable.
+Detener las instancias elimina los cargos por cómputo. EBS y la Elastic IP de tools siguen
+siendo facturables.

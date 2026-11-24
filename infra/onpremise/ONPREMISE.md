@@ -1,4 +1,4 @@
-<!-- CG-DOC: On-premise platform guide (host → compose cg-tools → k3d `cg` → verify). -->
+<!-- CG-DOC: Guía de la plataforma on-premise (host → Compose `cg-tools` → k3d `cg` → verificación). -->
 # Infraestructura on-premise de CircleGuard
 
 Esta carpeta es la **fuente operativa** del proyecto. Describe cómo levantar la plataforma completa
@@ -58,14 +58,14 @@ docker compose --env-file deploy/compose/tools/.env.onpremise \
 kubectl apply -k deploy/k8s/overlays/dev
 #    o stage / prod
 
-# 5) Verificación (read-only)
+# 5) Verificación (solo lectura)
 ./infra/onpremise/verify-onpremise.sh
 ```
 
 Notas:
 
 - `k3d kubeconfig merge cg --kubeconfig-override cg --kubeconfig-switch-context` si tu
-  `~/.kube/config` no apunta al clúster `cg`; Jenkins lo monta read-only para desplegar y hacer `rollout`.
+  `~/.kube/config` no apunta al clúster `cg`; Jenkins lo monta en solo lectura para desplegar y hacer `rollout`.
 - Imágenes: Jenkins publica el build en Nexus (`10.147.20.67:5000/circleguard-docker/<svc>:<TAG>`)
   y el pipeline hace `k3d image import -c cg` antes del deploy con Kustomize (ver
   `docs/infra/migracion-onpremise.md`). Mientras tanto, la importación manual funciona:
@@ -80,13 +80,13 @@ Notas:
 
 ## Imágenes base desde Nexus (sin Docker Hub)
 
-El build de `main` ya no descarga `gradle`, `eclipse-temurin`, `node` ni `nginx` de Docker Hub: el host compartido no tiene ruta IPv6 hacia el CDN de Docker. Las imágenes base se siembran una vez en `circleguard-base/` y los Dockerfiles reciben `ARG` desde el pipeline:
+La compilación de `main` ya no descarga `gradle`, `eclipse-temurin`, `node` ni `nginx` de Docker Hub: el host compartido no tiene ruta IPv6 hacia el CDN de Docker. Las imágenes base se siembran una vez en `circleguard-base/` y los Dockerfiles reciben `ARG` desde la canalización:
 
 ```bash
 ./infra/onpremise/seed-base-images.sh
 ```
 
-El script lee `NEXUS_REGISTRY`, `NEXUS_USER` y `NEXUS_PASSWORD` de `deploy/compose/tools/.env.onpremise`, hace pull por IPv4, etiqueta como `$NEXUS_REGISTRY/circleguard-base/<nombre>:<tag>` y hace push. Verificar con:
+El script lee `NEXUS_REGISTRY`, `NEXUS_USER` y `NEXUS_PASSWORD` de `deploy/compose/tools/.env.onpremise`, descarga por IPv4, etiqueta como `$NEXUS_REGISTRY/circleguard-base/<nombre>:<tag>` y publica. Verificar con:
 
 ```bash
 curl -sS "http://$NEXUS_REGISTRY/v2/_catalog" | jq -r '.repositories[]' | grep circleguard-base
@@ -104,7 +104,7 @@ Si la etapa `Docker` falla con `network is unreachable` hacia `production.cloudf
 4. Clúster: `k3d cluster list` con `cg`, `kubectl get ns` con `cg-dev|cg-stage|cg-prod`.
 5. Pods `Ready` en los namespaces activos (`kubectl get pods -n <ns>`).
 6. Ingress: `curl -H "Host: <env>.circleguard.local" http://localhost:30080/` devuelve 200.
-7. Login JWT de demostración, solo si `DEMO_USER`/`DEMO_PASSWORD` están definidos
+7. Inicio de sesión JWT de demostración, solo si `DEMO_USER`/`DEMO_PASSWORD` están definidos
    (el script los lee de `${SEED_ENV:-.env.onpremise}`; no crea ni borra nada).
 
 ## Reglas del host compartido

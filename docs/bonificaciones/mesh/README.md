@@ -1,5 +1,5 @@
-<!-- CG-DOC: Service Mesh bonus verification (enunciado L284). -->
-# Service Mesh bonus verification (enunciado L284)
+<!-- CG-DOC: Verificación de la bonificación de Service Mesh (enunciado L284). -->
+# Verificación de la bonificación de Service Mesh (enunciado L284)
 
 Bonificación de **service mesh (Istio con mTLS y canary)** del enunciado L284.
 Evidencia **real** obtenida en el clúster on-prem `k3d-cg` (k3s v1.35.5). No se
@@ -9,7 +9,7 @@ peticiones HTTP reales al ingress.
 
 ## Alcance y aislamiento
 
-- El control plane de Istio 1.27.1 se instaló con Helm: `istio-base`, `istiod`,
+- El plano de control de Istio 1.27.1 se instaló con Helm: `istio-base`, `istiod`,
   `istio-ingress` (todos `STATUS=deployed`).
 - La malla se aplicó **solo** en el namespace aislado `cg-mesh-canary`
   (`istio-injection=enabled`). `cg-dev` **no** fue inyectado, para no reiniciar
@@ -36,7 +36,7 @@ peticiones HTTP reales al ingress.
 - `deploy/mesh/istio/mtls.yml` — `PeerAuthentication` STRICT y `DestinationRules`.
 - `deploy/mesh/istio/canary.yml` — `Gateway`, `VirtualService` y los dos deployments (1.4.0 / 1.8.0).
 - `scripts/import-mesh-images.sh` — importación idempotente de imágenes a los nodos.
-- `scripts/verify-mesh.sh` — verificador de los 6 checks.
+- `scripts/verify-mesh.sh` — verificador de las 6 comprobaciones.
 
 ## Verificación ejecutada
 
@@ -44,7 +44,7 @@ Reproducible con:
 
 ```bash
 bash deploy/mesh/istio/istio-install.sh   # instalar / aplicar (idempotente)
-bash scripts/verify-mesh.sh               # verificar (solo lectura + requests)
+bash scripts/verify-mesh.sh               # verificar (solo lectura + peticiones)
 ```
 
 Salida real del verificador (`MESH_VERIFICATION_PASS`, exit 0):

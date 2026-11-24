@@ -1,4 +1,4 @@
-<!-- CG-DOC: Documentation file: diagnostico-auth-service. -->
+<!-- CG-DOC: Archivo de documentación: diagnostico-auth-service. -->
 # Diagnóstico Técnico y Arquitectónico: `circleguard-auth-service`
 
 **Historia de Usuario:** `HU-AUTH-01 (DCG-77)` — Diagnosticar la estructura y dependencias de `auth-service`  
@@ -18,8 +18,8 @@ El microservicio **`circleguard-auth-service`** es el componente encargado de la
 | :--- | :--- | :--- |
 | **Nombre de la aplicación** | `circleguard-auth-service` | `src/main/resources/application.yml` |
 | **Grupo / Versión** | `com.circleguard` / `1.0.0-SNAPSHOT` | `build.gradle.kts` (raíz) |
-| **Lenguaje y Toolchain** | Java 21 (`JavaLanguageVersion.of(21)`) + plugins Kotlin JVM/Spring/JPA `1.9.24` | `build.gradle.kts` (raíz y módulo) |
-| **Framework Principal** | Spring Boot `3.2.4` (`spring-boot-starter-web`, `data-jpa`, `security`, `data-ldap`) | `services/circleguard-auth-service/build.gradle.kts` |
+| **Lenguaje y cadena de herramientas** | Java 21 (`JavaLanguageVersion.of(21)`) + plugins Kotlin JVM/Spring/JPA `1.9.24` | `build.gradle.kts` (raíz y módulo) |
+| **Marco principal** | Spring Boot `3.2.4` (`spring-boot-starter-web`, `data-jpa`, `security`, `data-ldap`) | `services/circleguard-auth-service/build.gradle.kts` |
 | **Puerto HTTP** | `8180` | `src/main/resources/application.yml` (`server.port: 8180`) |
 | **Librería de Tokens** | `io.jsonwebtoken:jjwt-api / jjwt-impl / jjwt-jackson:0.11.5` (algoritmo `HS256`) | `build.gradle.kts`, `JwtTokenService.java`, `QrTokenService.java` |
 | **Migraciones de Esquema** | Flyway (`org.flywaydb:flyway-core`) con 5 scripts (`V1` a `V5`) | `src/main/resources/db/migration/` |
@@ -96,19 +96,19 @@ sequenceDiagram
         Note over DC,LDAP: Cadena 1: Directorio Institucional
         DC->>LDAP: authenticate(authentication)<br/>Bind uid={0},ou=people / ou=groups
         alt Autenticación exitosa en OpenLDAP
-            LDAP-->>DC: Authentication (authorities LDAP)
+            LDAP-->>DC: Autenticación (autoridades LDAP)
         else Fallo en LDAP (AuthenticationException)
             Note over DC,PG: Cadena 2: Fallback a Base de Datos Local
             DC->>DAO: authenticate(authentication)
             DAO->>PG: findByUsername(username)
             PG-->>DAO: LocalUser + Roles + Permissions (EAGER)
             DAO->>DAO: Verifica isActive == true y BCryptPasswordEncoder
-            DAO-->>DC: Authentication (ROLE_* + permisos granulares)
+            DAO-->>DC: Autenticación (ROLE_* + permisos granulares)
         end
     end
 
-    DC-->>AM: Authentication validado
-    AM-->>LC: Authentication auth
+    DC-->>AM: Autenticación validada
+    AM-->>LC: Autenticación auth
     
     rect rgb(240, 255, 240)
         Note over LC,IDS: Anonimización de Identidad
@@ -127,12 +127,12 @@ sequenceDiagram
 
 ## 2. Catálogo Completo de Endpoints HTTP (`DCG-87`)
 
-| Método | Ruta Completa | Controlador y Método | Entrada (Request) | Salida (Response) | Regla de Seguridad (`SecurityConfig`) |
+| Método | Ruta completa | Controlador y método | Entrada (solicitud) | Salida (respuesta) | Regla de seguridad (`SecurityConfig`) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`POST`** | `/api/v1/auth/login` | `LoginController#login` | **Body JSON:** `{"username": "<str>", "password": "<str>"}` | **200 OK:** `{"token": "<jwt>", "type": "Bearer", "anonymousId": "<uuid>"}`<br/>**401 Unauthorized:** `{"message": "Invalid username or password"}`<br/>**500 Internal Error:** `{"message": "Internal server error: ..."}` | Público (`.requestMatchers("/api/v1/auth/login", ...).permitAll()`) |
-| **`POST`** | `/api/v1/auth/visitor/handoff` | `LoginController#generateVisitorHandoff` | **Body JSON:** `{"anonymousId": "<uuid-str>"}` | **200 OK:** `{"token": "<jwt>", "handoffPayload": "HANDOFF_TOKEN:<uuid>:<jwt>"}` (con autoridad `"VISITOR"`)<br/>**400 Bad Request:** cuerpo vacío si falta `anonymousId` | Público por `.anyRequest().permitAll()` |
-| **`GET`** | `/api/v1/auth/qr/generate` | `QrTokenController#generateToken` | **Header:** `Authorization: Bearer <jwt>` (extrae `auth.getName()` que corresponde al `anonymousId` en `sub`) | **200 OK:** `{"qrToken": "<jwt-qr>", "expiresIn": "60"}`<br/>**403 Forbidden:** si no envía un JWT válido | Autenticado (`.requestMatchers("/api/v1/auth/qr/generate").authenticated()`) + `JwtAuthenticationFilter` |
-| **`GET`** | `/api/v1/users/permissions/{permissionName}` | `UserController#getUsersByPermission` | **Path Variable:** `permissionName` (ej. `alert:receive_priority`) | **200 OK:** `[{"username": "<str>", "email": "<str>"}]` | Público por `.anyRequest().permitAll()` (pensado para consumo interno entre microservicios, ej. `notification-service`) |
+| **`POST`** | `/api/v1/auth/login` | `LoginController#login` | **Cuerpo JSON:** `{"username": "<str>", "password": "<str>"}` | **200 OK:** `{"token": "<jwt>", "type": "Bearer", "anonymousId": "<uuid>"}`<br/>**401 Unauthorized:** `{"message": "Invalid username or password"}`<br/>**500 Internal Error:** `{"message": "Internal server error: ..."}` | Público (`.requestMatchers("/api/v1/auth/login", ...).permitAll()`) |
+| **`POST`** | `/api/v1/auth/visitor/handoff` | `LoginController#generateVisitorHandoff` | **Cuerpo JSON:** `{"anonymousId": "<uuid-str>"}` | **200 OK:** `{"token": "<jwt>", "handoffPayload": "HANDOFF_TOKEN:<uuid>:<jwt>"}` (con autoridad `"VISITOR"`)<br/>**400 Bad Request:** cuerpo vacío si falta `anonymousId` | Público por `.anyRequest().permitAll()` |
+| **`GET`** | `/api/v1/auth/qr/generate` | `QrTokenController#generateToken` | **Cabecera:** `Authorization: Bearer <jwt>` (extrae `auth.getName()` que corresponde al `anonymousId` en `sub`) | **200 OK:** `{"qrToken": "<jwt-qr>", "expiresIn": "60"}`<br/>**403 Forbidden:** si no envía un JWT válido | Autenticado (`.requestMatchers("/api/v1/auth/qr/generate").authenticated()`) + `JwtAuthenticationFilter` |
+| **`GET`** | `/api/v1/users/permissions/{permissionName}` | `UserController#getUsersByPermission` | **Variable de ruta:** `permissionName` (ej. `alert:receive_priority`) | **200 OK:** `[{"username": "<str>", "email": "<str>"}]` | Público por `.anyRequest().permitAll()` (pensado para consumo interno entre microservicios, ej. `notification-service`) |
 
 > [!NOTE]
 > **Hallazgos de contraste en `SecurityConfig.java` y `JwtAuthenticationFilter.java` (`DCG-89`):**
@@ -237,7 +237,7 @@ erDiagram
 
 ### 4.3 Tabla de Variables de Entorno a Parametrizar (`application.yml`, `IdentityClient.java`, `SecurityConfig.java`)
 
-| Variable de Entorno Propuesta | Propiedad en Spring (`application.yml`) | Archivos Afectados | Valor por Defecto (Local Dev) | Sensibilidad |
+| Variable de entorno propuesta | Propiedad en Spring (`application.yml`) | Archivos afectados | Valor por defecto (desarrollo local) | Sensibilidad |
 | :--- | :--- | :--- | :--- | :--- |
 | `SERVER_PORT` | `server.port` | `application.yml` | `8180` | Pública |
 | `SPRING_DATASOURCE_URL` | `spring.datasource.url` | `application.yml` | `jdbc:postgresql://localhost:5432/circleguard_auth` | Configuración |
@@ -263,7 +263,7 @@ erDiagram
 Durante la verificación en consola se identificaron dos condiciones clave del repositorio base que deben tenerse en cuenta para el agente de Jenkins y los entornos locales:
 
 1. **Ausencia de `gradle/wrapper/gradle-wrapper.jar` en Git:** El archivo `.gitignore` en la raíz contiene la regla `*.jar` (línea 9) sin excluir `!gradle/wrapper/gradle-wrapper.jar`. Como consecuencia, al clonar el repositorio solo existe `gradle/wrapper/gradle-wrapper.properties` y la invocación directa de `./gradlew` arroja `Error: clase org.gradle.wrapper.GradleWrapperMain no disponible en el classpath` hasta que se restaure `gradle-wrapper.jar` y se agregue `!gradle/wrapper/gradle-wrapper.jar` en `.gitignore`.
-2. **Requisito estricto de Java 21 Toolchain:** El `build.gradle.kts` raíz declara `languageVersion.set(JavaLanguageVersion.of(21))` y `jvmTarget = "21"`. Es indispensable ejecutar Gradle con `JAVA_HOME=/usr/lib/jvm/java-21-openjdk` (OpenJDK 21).
+2. **Requisito estricto de la cadena de herramientas Java 21:** El `build.gradle.kts` raíz declara `languageVersion.set(JavaLanguageVersion.of(21))` y `jvmTarget = "21"`. Es indispensable ejecutar Gradle con `JAVA_HOME=/usr/lib/jvm/java-21-openjdk` (OpenJDK 21).
 
 ### 5.2 Evidencia Real de Compilación y Ejecución de Pruebas
 
@@ -297,11 +297,11 @@ BUILD SUCCESSFUL in 23s
 ```
 
 **Artefactos generados y verificados en `services/circleguard-auth-service/build/`:**
-- **Fat JAR ejecutable (Spring Boot):** `build/libs/circleguard-auth-service-1.0.0-SNAPSHOT.jar` (`54 MB`)
-- **Plain JAR:** `build/libs/circleguard-auth-service-1.0.0-SNAPSHOT-plain.jar` (`33 KB`)
+- **JAR ejecutable de Spring Boot:** `build/libs/circleguard-auth-service-1.0.0-SNAPSHOT.jar` (`54 MB`)
+- **JAR simple:** `build/libs/circleguard-auth-service-1.0.0-SNAPSHOT-plain.jar` (`33 KB`)
 - **Reporte JUnit XML (`build/test-results/test/TEST-com.circleguard.auth.controller.LoginControllerTest.xml`):**
   - Suite: `com.circleguard.auth.controller.LoginControllerTest`
-  - Tests ejecutados: `1` (`shouldLoginSuccessfullyAndReturnAnonymizedToken()`)
+  - Pruebas ejecutadas: `1` (`shouldLoginSuccessfullyAndReturnAnonymizedToken()`)
   - Fallos: `0` | Errores: `0` | Ignorados: `0` | Tiempo: `0.194s`
 
 ---

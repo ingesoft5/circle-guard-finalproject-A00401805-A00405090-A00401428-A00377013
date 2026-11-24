@@ -1,17 +1,17 @@
-<!-- CG-DOC: Step-by-step tutorial to clean, provision, verify, and operate the four-host gateway platform. -->
-# Tutorial E1.2 - Create and Operate the Gateway Platform
+<!-- CG-DOC: Tutorial paso a paso para limpiar, aprovisionar, verificar y operar la plataforma del gateway de cuatro hosts. -->
+# Tutorial E1.2 - Crear y operar la plataforma del gateway
 
 > **Parte 1 — histórico (AWS EC2, cuatro hosts).** Ya no es operativo: la cuenta de AWS quedó
 > inaccesible y la plataforma corre on-prem. Ver `infra/onpremise/ONPREMISE.md` para el camino vigente
 > y `docs/infra/migracion-onpremise.md` para el anexo de migración. Este tutorial se conserva como
 > evidencia de la Parte 1.
 
-## 1. Prerequisites
+## 1. Requisitos previos
 
-- AWS CLI with valid credentials.
-- Region `us-east-2`.
-- `jq`, `ssh`, `curl`, `openssl`.
-- GitHub token with `repo` and `admin:repo_hook`.
+- AWS CLI con credenciales válidas.
+- Región `us-east-2`.
+- `jq`, `ssh`, `curl` y `openssl`.
+- Token de GitHub con `repo` y `admin:repo_hook`.
 
 ## 2. Variables
 
@@ -26,11 +26,13 @@ export GITHUB_REPO=circle-guard-finalproject-A00401805-A00405090-A00401428-A0037
 export LIBRARY_BRANCH=main
 ```
 
-Do not print the token.
+No imprimas el token.
 
-`ADMIN_CIDR` and `TEACHER_CIDR` restrict SSH, Jenkins, SonarQube, and Nexus. For now `TEACHER_CIDR` uses the administrator IP; replace it with the teacher CIDR when available. The bootstrap rejects `0.0.0.0/0` for both values.
+`ADMIN_CIDR` y `TEACHER_CIDR` restringen SSH, Jenkins, SonarQube y Nexus. Por ahora
+`TEACHER_CIDR` usa la IP del administrador; sustitúyela por el CIDR del profesor cuando esté
+disponible. El bootstrap rechaza `0.0.0.0/0` para ambos valores.
 
-## 3. Clean Old Resources
+## 3. Limpiar recursos antiguos
 
 ```bash
 aws ec2 describe-instances --region us-east-2 \
@@ -49,23 +51,24 @@ aws ec2 delete-security-group --region us-east-2 \
 aws ec2 delete-key-pair --region us-east-2 --key-name circleguard-key
 ```
 
-## 4. Provision
+## 4. Aprovisionar
 
 ```bash
 ./infra/bootstrap/bootstrap-check.sh
 ./infra/bootstrap/bootstrap-all.sh
 ```
 
-This creates four `m7i-flex.large` hosts, one Elastic IP, two security groups, the key pair, Jenkins, SonarQube, Nexus, the private registry on `5000`, and the ingress on `80`.
+Esto crea cuatro hosts `m7i-flex.large`, una Elastic IP, dos grupos de seguridad, el par de
+claves, Jenkins, SonarQube, Nexus, el registro privado en `5000` y el ingreso en `80`.
 
-## 5. Verify
+## 5. Verificar
 
 ```bash
 source infra/state/aws.env
 ./infra/bootstrap/bootstrap-ips.sh
 ```
 
-Test:
+Pruebas:
 
 ```bash
 curl -f "http://${TOOLS_IP}:8080/login"
@@ -73,7 +76,7 @@ curl -f "http://${TOOLS_IP}:9000/api/system/status"
 curl -f "http://${TOOLS_IP}:8081/service/rest/v1/status"
 ```
 
-Credentials:
+Credenciales:
 
 ```bash
 grep -E 'JENKINS_ADMIN_PASSWORD|PROFESSOR_PASSWORD|SONAR_ADMIN_PASSWORD|NEXUS_PASSWORD' \
@@ -82,13 +85,13 @@ grep -E 'JENKINS_ADMIN_PASSWORD|PROFESSOR_PASSWORD|SONAR_ADMIN_PASSWORD|NEXUS_PA
 
 ## 6. Pipeline
 
-- Open `http://<TOOLS_IP>:8080`.
+- Abre `http://<TOOLS_IP>:8080`.
 - Job: `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`.
-- Run `Scan Multibranch Pipeline Now` if no branch appears.
-- Trigger with a push or `Build with Parameters`.
-- Approve production manually when requested.
+- Ejecuta `Scan Multibranch Pipeline Now` si no aparece ninguna rama.
+- Activa con un push o `Build with Parameters`.
+- Aprueba la producción manualmente cuando se solicite.
 
-## 7. Gateway Tests
+## 7. Pruebas del gateway
 
 ```bash
 ./gradlew :services:circleguard-gateway-service:clean \
@@ -106,7 +109,7 @@ npx playwright install --with-deps chromium
 GATEWAY_URL=http://<DEV_PUBLIC_IP>:8087 npx playwright test
 ```
 
-## 9. Idempotency
+## 9. Idempotencia
 
 ```bash
 sha256sum infra/state/aws.env deploy/compose/tools/.env > /tmp/before.sha
@@ -115,7 +118,7 @@ sha256sum infra/state/aws.env deploy/compose/tools/.env > /tmp/after.sha
 diff -u /tmp/before.sha /tmp/after.sha
 ```
 
-## 10. Stop, Start, Destroy
+## 10. Detener, iniciar y destruir
 
 ```bash
 ./infra/bootstrap/bootstrap-stop.sh
@@ -123,20 +126,21 @@ diff -u /tmp/before.sha /tmp/after.sha
 CONFIRM=yes ./infra/bootstrap/bootstrap-destroy.sh
 ```
 
-Private IPs remain stable. Environment public IPs change after a restart.
+Las IPs privadas permanecen estables. Las IPs públicas de los entornos cambian tras un
+reinicio.
 
-## 11. Evidence
+## 11. Evidencia
 
-Capture:
+Captura:
 
-- Four EC2 instances.
-- Security groups.
-- Jenkins pipeline.
-- SonarQube quality gate.
-- Nexus artifacts.
-- Gateway coverage.
-- Playwright results.
-- Application ingress.
-- Idempotency comparison.
+- Cuatro instancias EC2.
+- Grupos de seguridad.
+- Pipeline de Jenkins.
+- Compuerta de calidad de SonarQube.
+- Artefactos de Nexus.
+- Cobertura del gateway.
+- Resultados de Playwright.
+- Ingreso de la aplicación.
+- Comparación de idempotencia.
 
-Store screenshots in `docs/informe/evidencia/`.
+Guarda las capturas en `docs/informe/evidencia/`.

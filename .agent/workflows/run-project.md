@@ -1,51 +1,51 @@
-<!-- CG-DOC: Markdown documentation: run-project. -->
+<!-- CG-DOC: Documentación Markdown: run-project. -->
 ---
-description: How to run the CircleGuard project locally
+description: Cómo ejecutar el proyecto CircleGuard localmente
 ---
 
-This workflow guides you through launching the full CircleGuard ecosystem, including infrastructure, microservices, and the mobile frontend.
+Este flujo de trabajo te guía para lanzar el ecosistema completo de CircleGuard, incluida la infraestructura, los microservicios y el frontend móvil.
 
-### 1. Infrastructure Setup (Docker)
-Ensure Docker Desktop is running on Windows and integrated with WSL.
+### 1. Configuración de la infraestructura (Docker)
+Asegúrate de que Docker Desktop esté ejecutándose en Windows y integrado con WSL.
 
 // turbo
-1. Navigate to the monorepo root:
+1. Navega hasta la raíz del monorepo:
    `cd <repo-root>`
 
 // turbo
-2. Start the infrastructure (PostgreSQL, Neo4j, Kafka, Redis, LDAP, MinIO):
+2. Inicia la infraestructura (PostgreSQL, Neo4j, Kafka, Redis, LDAP, MinIO):
    `docker compose --env-file deploy/compose/dev/.env -f deploy/compose/dev/docker-compose.yml up -d`
 
-### 2. Backend Services (Spring Boot)
-Ensure the Gradle wrapper has executable permissions:
+### 2. Servicios del backend (Spring Boot)
+Asegúrate de que el wrapper de Gradle tenga permisos de ejecución:
 `chmod +x gradlew`
 
-In a monorepo, you must specify which service to run. Launch these in separate terminals:
+En un monorepo debes especificar qué servicio se va a ejecutar. Lánzalos en terminales separadas:
 
 // turbo
-- **Auth Service:** `./gradlew :services:circleguard-auth-service:bootRun`
-- **Identity Service:** `./gradlew :services:circleguard-identity-service:bootRun`
-- **Promotion Service:** `./gradlew :services:circleguard-promotion-service:bootRun`
-- **Form Service:** `./gradlew :services:circleguard-form-service:bootRun`
-- **Notification Service:** `./gradlew :services:circleguard-notification-service:bootRun`
-- **Gateway Service:** `./gradlew :services:circleguard-gateway-service:bootRun`
-- **Dashboard Service:** `./gradlew :services:circleguard-dashboard-service:bootRun`
-- **File Service:** `./gradlew :services:circleguard-file-service:bootRun`
+- **Servicio de autenticación:** `./gradlew :services:circleguard-auth-service:bootRun`
+- **Servicio de identidad:** `./gradlew :services:circleguard-identity-service:bootRun`
+- **Servicio de promociones:** `./gradlew :services:circleguard-promotion-service:bootRun`
+- **Servicio de formularios:** `./gradlew :services:circleguard-form-service:bootRun`
+- **Servicio de notificaciones:** `./gradlew :services:circleguard-notification-service:bootRun`
+- **Servicio gateway:** `./gradlew :services:circleguard-gateway-service:bootRun`
+- **Servicio del panel:** `./gradlew :services:circleguard-dashboard-service:bootRun`
+- **Servicio de archivos:** `./gradlew :services:circleguard-file-service:bootRun`
 
-### 3. Mobile Frontend (Expo)
-Prepare and launch the React Native application.
+### 3. Frontend móvil (Expo)
+Prepara y lanza la aplicación React Native.
 
-1. Navigate to the mobile directory:
+1. Navega hasta el directorio móvil:
    `cd mobile`
 
-2. Install dependencies:
+2. Instala las dependencias:
    `npm install`
 
-3. Start the Expo development server:
+3. Inicia el servidor de desarrollo de Expo:
    `npx expo start`
-   *Press `w` to open in web browser or `a`/`i` for Android/iOS simulators.*
+   *Pulsa `w` para abrirlo en el navegador web o `a`/`i` para los simuladores de Android/iOS.*
 
-### 4. Verification
-- **API Gateway:** [http://localhost:8080](http://localhost:8080)
-- **Neo4j Browser:** [http://localhost:7474](http://localhost:7474) (Login: `neo4j/password`)
-- **Dashboard API:** [http://localhost:8085/api/v1/analytics/trends/{id}](http://localhost:8085/api/v1/analytics/trends/{id})
+### 4. Verificación
+- **Gateway de API:** [http://localhost:8080](http://localhost:8080)
+- **Navegador de Neo4j:** [http://localhost:7474](http://localhost:7474) (Inicio de sesión: `neo4j/password`)
+- **API del panel:** [http://localhost:8085/api/v1/analytics/trends/{id}](http://localhost:8085/api/v1/analytics/trends/{id})

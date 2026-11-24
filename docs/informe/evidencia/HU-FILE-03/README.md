@@ -4,7 +4,7 @@
 
 | Archivo | Qué demuestra | Estado |
 |---|---|---|
-| `01-p1p4-evidence-table.md` | Validación de multibranch, webhook, Shared Library, JaCoCo, gate y selectivo | Versionado en `docs/informe/HU-FILE-03.md` §1 |
+| `01-p1p4-evidence-table.md` | Validación de multibranch, webhook, biblioteca compartida, JaCoCo, gate y selectivo | Versionado en `docs/informe/HU-FILE-03.md` §1 |
 | `11-pr134-idempotent-skip.png` | Consola de Jenkins con `Publicación omitida... ya existe en Nexus` | Pendiente de captura en Jenkins on-prem |
 | `12-selective-build-file.png` | Build con `SERVICE=circleguard-file-service` | Pendiente de captura en Jenkins on-prem |
 | `13-quality-gate-blocking.png` | Gate negativo con cobertura < umbral y build en FAILURE | Pendiente de captura en Jenkins on-prem |

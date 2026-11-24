@@ -7,13 +7,13 @@ namespaces declarados en `ingress_namespaces` (Traefik vive en `kube-system`),
 y tráfico saliente hacia el mismo namespace y los CIDR de `egress_cidrs`
 (registro HTTP del host y DNS del clúster).
 
-| Variable | Descripción | Default |
+| Variable | Descripción | Valor por defecto |
 |---|---|---|
 | `env` | Identificador del ambiente | — |
 | `namespace` | Namespace Kubernetes del ambiente | — |
 | `max_pods` | Límite de pods | `100` |
-| `cpu_request` | Cupo de CPU requests | `4` |
-| `memory_request` | Cupo de memoria requests | `8Gi` |
+| `cpu_request` | Cupo de solicitudes de CPU | `4` |
+| `memory_request` | Cupo de solicitudes de memoria | `8Gi` |
 | `ingress_namespaces` | Namespaces autorizados a hacer ingress | `["kube-system"]` |
 | `egress_cidrs` | CIDR autorizados para egress | `10.0.0.0/8`, `10.147.20.67/32` |
 

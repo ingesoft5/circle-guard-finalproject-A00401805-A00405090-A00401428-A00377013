@@ -1,5 +1,5 @@
-<!-- CG-DOC: Sprint 1 — Planning. -->
-# Sprint 1 — Planning
+<!-- CG-DOC: Sprint 1 — Planeación. -->
+# Sprint 1 — Planeación
 
 **Proyecto:** CircleGuard
 **Sprint:** DCG Sprint 1

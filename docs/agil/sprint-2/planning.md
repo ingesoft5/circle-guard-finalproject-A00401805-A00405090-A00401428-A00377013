@@ -1,4 +1,4 @@
-<!-- CG-DOC: Sprint 2 planning for Parte 2 (on-premise infrastructure, delivery and rollback). -->
+<!-- CG-DOC: Planeación del Sprint 2 para la Parte 2 (infraestructura on-premise, entrega y reversión). -->
 # Sprint 2 — Planeación
 
 **Periodo:** 16–22 de noviembre de 2026 (cierre documental: 23 de noviembre)

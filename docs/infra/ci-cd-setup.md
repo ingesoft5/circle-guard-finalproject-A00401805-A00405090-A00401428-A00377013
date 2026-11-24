@@ -1,18 +1,18 @@
-<!-- CG-DOC: PART 1 (historical) — Four-host AWS CI/CD setup. Not operational; kept as grade evidence.
-     Current platform: infra/onpremise/ONPREMISE.md and docs/infra/migracion-onpremise.md -->
-# CI/CD Platform (Parte 1 — histórico, no operativo)
+<!-- CG-DOC: Configuración de CI/CD de cuatro hosts en AWS de la Parte 1 (histórica). No operativa; se conserva como evidencia para la evaluación.
+     Plataforma actual: infra/onpremise/ONPREMISE.md y docs/infra/migracion-onpremise.md -->
+# Plataforma de CI/CD (Parte 1 — histórica, no operativa)
 
 > **Estado: histórico.** Este documento describe el montaje sobre AWS de la Parte 1 (cuatro
 > instancias EC2, `bootstrap-tools.sh`, secretos en `infra/state/*`). La plataforma se reprodujo on-premise; el flujo vigente es el de
 > [`infra/onpremise/ONPREMISE.md`](../../infra/onpremise/ONPREMISE.md) y
 > [`docs/infra/migracion-onpremise.md`](./migracion-onpremise.md). Se conserva para trazabilidad.
 
-## Requirements
+## Requisitos
 
-- AWS CLI v2 with EC2 and SSM permissions.
-- `jq`, `ssh`, `curl`, and `openssl`.
-- `ADMIN_CIDR` and `TEACHER_CIDR`.
-- GitHub token with repository, workflow, and webhook permissions.
+- AWS CLI v2 con permisos de EC2 y SSM.
+- `jq`, `ssh`, `curl` y `openssl`.
+- `ADMIN_CIDR` y `TEACHER_CIDR`.
+- Token de GitHub con permisos de repositorio, workflow y webhook.
 
 ## Variables
 
@@ -24,14 +24,16 @@ export GITHUB_USER=...
 export GITHUB_TOKEN=...
 ```
 
-## Exposure
+## Exposición
 
-- `80`: public ingress. It serves the dev gateway at `/` and the GitHub webhook at `/github-webhook/`.
-- `8080`: Jenkins UI, restricted to `ADMIN_CIDR` and `TEACHER_CIDR`.
-- `9000` and `8081`: SonarQube and Nexus, restricted to `ADMIN_CIDR` and `TEACHER_CIDR`.
-- `443`: closed; there is no TLS listener.
-- The bootstrap rejects `0.0.0.0/0` for `ADMIN_CIDR` and `TEACHER_CIDR`.
-- Jenkins is triggered by the GitHub webhook, not by a timer. The webhook is reachable at `http://<TOOLS_EIP>/github-webhook/`; nginx forwards only that path to `jenkins:8080`, so port `8080` stays private.
+- `80`: ingreso público. Sirve el gateway de dev en `/` y el webhook de GitHub en `/github-webhook/`.
+- `8080`: interfaz de Jenkins, restringida a `ADMIN_CIDR` y `TEACHER_CIDR`.
+- `9000` y `8081`: SonarQube y Nexus, restringidos a `ADMIN_CIDR` y `TEACHER_CIDR`.
+- `443`: cerrado; no hay un servicio de escucha TLS.
+- El bootstrap rechaza `0.0.0.0/0` para `ADMIN_CIDR` y `TEACHER_CIDR`.
+- Jenkins se activa mediante el webhook de GitHub, no por un temporizador. El webhook está
+  disponible en `http://<TOOLS_EIP>/github-webhook/`; nginx reenvía solo esa ruta a
+  `jenkins:8080`, por lo que el puerto `8080` permanece privado.
 
 ## Bootstrap
 
@@ -40,23 +42,23 @@ export GITHUB_TOKEN=...
 ./infra/bootstrap/bootstrap-all.sh
 ```
 
-Tools only:
+Solo tools:
 
 ```bash
 ./infra/bootstrap/bootstrap-tools.sh
 ```
 
-Rotate GitHub/AWS credentials and synchronize the local state files:
+Rota las credenciales de GitHub/AWS y sincroniza los archivos de estado locales:
 
 ```bash
 ./infra/bootstrap/update-credentials.sh --apply
 ```
 
-`update-credentials.sh` writes `GITHUB_USER` and `GITHUB_TOKEN` to
-`infra/state/tools.env` and `deploy/compose/tools/.env`, then recreates Jenkins when
-`--apply` is used. The files are mode `600` and are not versioned.
+`update-credentials.sh` escribe `GITHUB_USER` y `GITHUB_TOKEN` en `infra/state/tools.env` y
+`deploy/compose/tools/.env`, y luego recrea Jenkins cuando se usa `--apply`. Los archivos
+tienen modo `600` y no están versionados.
 
-Each environment host:
+Cada host de entorno:
 
 ```bash
 REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
@@ -64,86 +66,101 @@ REGISTRY_HOST=<TOOLS_PRIVATE_IP>:5000 ./infra/bootstrap/bootstrap-envs.sh dev
 
 ## Jenkins
 
-- URL: `http://<TOOLS_EIP>:8080` (admin/teacher networks only).
-- Admin credentials: `infra/state/tools.env`.
+- URL: `http://<TOOLS_EIP>:8080` (redes de administrador/profesor únicamente).
+- Credenciales de administrador: `infra/state/tools.env`.
 - JCasC: `deploy/compose/tools/jenkins/cac/jenkins.yml`.
-- Multibranch job: `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`, with GitHub Branch Source for branches and pull requests of all services (`SERVICE=auto`, `all`, or one service).
-- Webhook: `http://<TOOLS_EIP>/github-webhook/`, events `push` and `pull_request`.
-- Secret: `GITHUB_WEBHOOK_SECRET` in `infra/state/tools.env`; JCasC exposes it as `github-webhook-secret`.
-- Shared Library: `circleguard`, loaded from `jenkins/vars/` (`libraryPath: jenkins`) and pinned to `main`.
-- `professor` user: read-only.
+- Job multibranch: `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`, con GitHub Branch Source para ramas y pull requests de todos los servicios (`SERVICE=auto`, `all` o un servicio).
+- Webhook: `http://<TOOLS_EIP>/github-webhook/`, eventos `push` y `pull_request`.
+- Secreto: `GITHUB_WEBHOOK_SECRET` en `infra/state/tools.env`; JCasC lo expone como `github-webhook-secret`.
+- Biblioteca compartida: `circleguard`, cargada desde `jenkins/vars/` (`libraryPath: jenkins`) y fijada a `main`.
+- Usuario `professor`: solo lectura.
 - ~~`cg-envs-ssh`~~: **eliminada** (on-prem); JCasC ya no contiene credencial SSH. Ver `docs/infra/migracion-onpremise.md` §3.4.
-- The webhook is created by `infra/bootstrap/bootstrap-github.sh` when the token has `admin:repo_hook`. Otherwise create it manually in **Settings → Webhooks** with content type `application/json`.
+- El webhook lo crea `infra/bootstrap/bootstrap-github.sh` cuando el token tiene
+  `admin:repo_hook`. De lo contrario, créalo manualmente en **Settings → Webhooks** con tipo
+  de contenido `application/json`.
 
-## Branch protection
+## Protección de ramas
 
-`infra/bootstrap/bootstrap-github.sh` protects the default branch (`main`) with:
+`infra/bootstrap/bootstrap-github.sh` protege la rama predeterminada (`main`) con:
 
-- Pull request required before merging.
-- Two approving reviews.
-- Required status check: `continuous-integration/jenkins/pr-merge`.
-- Conversation resolution required.
-- Force pushes and branch deletion disabled.
+- Pull request obligatoria antes de fusionar.
+- Dos revisiones aprobatorias.
+- Comprobación de estado obligatoria: `continuous-integration/jenkins/pr-merge`.
+- Resolución de conversaciones obligatoria.
+- Push forzados y eliminación de ramas deshabilitados.
 
-If the token cannot manage branch protection, the script prints a warning and the settings must be applied manually.
+Si el token no puede gestionar la protección de ramas, el script imprime una advertencia y la
+configuración debe aplicarse manualmente.
 
-## SonarQube and Nexus
+## SonarQube y Nexus
 
-- SonarQube: `http://<TOOLS_EIP>:9000`, teacher/admin only.
-- Nexus UI: `http://<TOOLS_EIP>:8081`, teacher/admin only.
-- Registry: `<TOOLS_PRIVATE_IP>:5000`, private.
-- Repository: `circleguard-docker`.
-- Quality gates: `CircleGuard Gateway`, `CircleGuard Services` and `CircleGuard Promotion`; line coverage ≥ 60 % except promotion, which uses the project's 70 % rule.
-- Projects: `circleguard-gateway-service`, `circleguard-auth-service`, `circleguard-form-service`, `circleguard-identity-service`, `circleguard-promotion-service`.
+- SonarQube: `http://<TOOLS_EIP>:9000`, solo profesor/administrador.
+- Interfaz de Nexus: `http://<TOOLS_EIP>:8081`, solo profesor/administrador.
+- Registro: `<TOOLS_PRIVATE_IP>:5000`, privado.
+- Repositorio: `circleguard-docker`.
+- Compuertas de calidad: `CircleGuard Gateway`, `CircleGuard Services` y `CircleGuard Promotion`;
+  cobertura de líneas ≥ 60 % excepto promotion, que aplica la regla del 70 % del proyecto.
+- Proyectos: `circleguard-gateway-service`, `circleguard-auth-service`, `circleguard-form-service`, `circleguard-identity-service`, `circleguard-promotion-service`.
 
-## Application ingress
+## Ingreso de la aplicación
 
 - URL: `http://<TOOLS_EIP>/`
-- Nginx proxies to the dev gateway private IP on `8087`.
-- Port `80` is public; `443` is reserved for a future domain/TLS.
+- Nginx actúa como proxy hacia la IP privada del gateway de dev en `8087`.
+- El puerto `80` es público; `443` está reservado para un futuro dominio/TLS.
 
 ## Pipeline
 
-The `Jenkinsfile` is branch-aware: the multibranch job discovers `main`, feature branches, and pull requests. Each child build runs the same stages with the code of its branch or PR.
+El `Jenkinsfile` es consciente de la rama: el job multibranch descubre `main`, las ramas de
+funcionalidad y las pull requests. Cada compilación hija ejecuta las mismas etapas con el
+código de su rama o PR.
 
-1. **Checkout**: `checkout scm` and commit metadata.
-2. **Resolve services and version**: `SERVICE=auto` detects changed services from the diff; `SERVICE=all` builds every service; `ciVersion` calculates the semantic version from Git tags and Conventional Commits.
-3. **Build**: Gradle compilation per service.
-4. **Unit tests + JaCoCo**: tests and coverage; auth, identity, gateway and form enforce **line coverage ≥ 60 %**; promotion enforces ≥ 70 %.
-5. **SonarQube + Quality Gate**: scanner and mandatory `waitForQualityGate`; the pipeline stops if the gate is red.
-6. **Integration tests**: Testcontainers tests, separate from unit tests.
+1. **Checkout**: `checkout scm` y metadatos del commit.
+2. **Resolve services and version**: `SERVICE=auto` detecta los servicios modificados a partir del diff; `SERVICE=all` compila todos los servicios; `ciVersion` calcula la versión semántica a partir de las etiquetas de Git y Conventional Commits.
+3. **Build**: compilación con Gradle por servicio.
+4. **Unit tests + JaCoCo**: pruebas y cobertura; auth, identity, gateway y form exigen **cobertura de líneas ≥ 60 %**; promotion exige ≥ 70 %.
+5. **SonarQube + Quality Gate**: escáner y `waitForQualityGate` obligatorio; el pipeline se detiene si la compuerta está en rojo.
+6. **Integration tests**: pruebas con Testcontainers, separadas de las pruebas unitarias.
 7. **Package**: `bootJar`.
-8. **Git tag** (on `main`): creates and pushes `vX.Y.Z` for publishable services.
-9. **Release notes** (on `main`): generates `docs/release-notes/vX.Y.Z.md` from Conventional Commits.
-10. **GitHub Release** (on `main`): publishes or updates the release for tag `vX.Y.Z` with those notes; retries are idempotent.
-11. **Publish** (on `main`): Nexus artifact for publishable Maven services.
-12. **Docker** (on `main`): builds and pushes every service with a Dockerfile using only the semver tag, never `latest`; verifies non-root user and HEALTHCHECK.
-13. **Docker web** (on `main`): builds the Expo client with `mobile/Dockerfile` and publishes `web:<tag>`.
-14. **Deploy** (optional): dev, E2E, stage, production approval, production, rollback. Only when `DEPLOY=true` on `main`.
-15. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt` and release notes.
+8. **Git tag** (en `main`): crea y hace push de `vX.Y.Z` para los servicios publicables.
+9. **Release notes** (en `main`): genera `docs/release-notes/vX.Y.Z.md` a partir de Conventional Commits.
+10. **GitHub Release** (en `main`): publica o actualiza el release de la etiqueta `vX.Y.Z` con esas notas; los reintentos son idempotentes.
+11. **Publish** (en `main`): artefacto Nexus para los servicios Maven publicables.
+12. **Docker** (en `main`): compila y hace push de cada servicio con Dockerfile usando solo la etiqueta semver, nunca `latest`; verifica usuario no root y HEALTHCHECK.
+13. **Docker web** (en `main`): compila el cliente Expo con `mobile/Dockerfile` y publica `web:<tag>`.
+14. **Deploy** (opcional): dev, E2E, stage, aprobación de producción, producción, rollback. Solo cuando `DEPLOY=true` en `main`.
+15. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt` y notas de versión.
 
-### Security gates
+### Compuertas de seguridad
 
-The `Jenkinsfile` runs three additional stages; a failure in any of them stops the build before `Approval prod`.
+El `Jenkinsfile` ejecuta tres etapas adicionales; un error en cualquiera de ellas detiene la
+compilación antes de `Approval prod`.
 
-- `Trivy IaC Security Gate`: `trivy config` over `deploy/k8s/`, failing on `CRITICAL`.
-- `Trivy Image Security Gate`: `trivy image --severity CRITICAL --ignore-unfixed --exit-code 1` over every image built in the run (`service.docker`), including `promotion`.
-- `OWASP ZAP Security Gate`: `zap-baseline.py` inside `cg-stage`, one pod per target — `http://auth:8180/actuator/health` and `http://promotion:8088/actuator/health`. The per-target logs are appended to `build/reports/security/zap-stage.txt`, and the build fails when the aggregate report contains a `FAIL-NEW` line.
+- `Trivy IaC Security Gate`: `trivy config` sobre `deploy/k8s/`, con error ante `CRITICAL`.
+- `Trivy Image Security Gate`: `trivy image --severity CRITICAL --ignore-unfixed --exit-code 1` sobre cada imagen compilada en la ejecución (`service.docker`), incluida `promotion`.
+- `OWASP ZAP Security Gate`: `zap-baseline.py` dentro de `cg-stage`, un pod por destino — `http://auth:8180/actuator/health` y `http://promotion:8088/actuator/health`. Los registros por destino se añaden a `build/reports/security/zap-stage.txt`, y la compilación produce un error cuando el informe agregado contiene una línea `FAIL-NEW`.
 
-### Selective execution
+### Ejecución selectiva
 
-- `SERVICE=auto`: services touched under `services/<service>/` or in `deploy/**/<service>-*.yml`. Only build-wide paths (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `sonar-project.properties`, `gradlew`, `gradlew.bat`, `gradle/`) and shared `deploy/` manifests select every service.
-- `Jenkinsfile` and `jenkins/` changes select **no** Java service: they change the pipeline definition, not the microservices. `ciServices.verifySelection()` still validates the Shared Library on every build.
-- `mobile/`, `docs/`, `tests/` and `infra/` do **not** select Java services either.
-- `SERVICE=all`: the eight services. A build on `main` also selects all eight.
-- `SERVICE=<name>`: one service; for example `identity`.
-- With no changed services the build is green and skips compilation.
-- `ciServices.verifySelection()` runs the selection invariants on every build, implementing the "modified or all" execution required by E1.4 and the selective-execution criterion P1.4 of the assignment. The standalone runner `jenkins/test/TestCiServices.groovy` reproduces the same cases without Jenkins.
+- `SERVICE=auto`: servicios tocados en `services/<service>/` o en `deploy/**/<service>-*.yml`. Solo las rutas de alcance global (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `sonar-project.properties`, `gradlew`, `gradlew.bat`, `gradle/`) y los manifiestos compartidos de `deploy/` seleccionan todos los servicios.
+- Los cambios en `Jenkinsfile` y `jenkins/` seleccionan **ningún** servicio Java: cambian la
+  definición del pipeline, no los microservicios. `ciServices.verifySelection()` sigue
+  validando la biblioteca compartida en cada compilación.
+- `mobile/`, `docs/`, `tests/` e `infra/` tampoco seleccionan servicios Java.
+- `SERVICE=all`: los ocho servicios. Una compilación en `main` también selecciona los ocho.
+- `SERVICE=<name>`: un servicio; por ejemplo `identity`.
+- Sin servicios modificados, la ejecución se mantiene en verde y omite la compilación.
+- `ciServices.verifySelection()` ejecuta los invariantes de selección en cada compilación,
+  implementando la ejecución "modificado o todos" exigida por E1.4 y el criterio de ejecución
+  selectiva P1.4 del enunciado. El ejecutor independiente
+  `jenkins/test/TestCiServices.groovy` reproduce los mismos casos sin Jenkins.
 
-### Artifacts
+### Artefactos
 
-Every build archives JUnit XML, JaCoCo HTML/XML, the Sonar dashboard links, the published image digests and the generated release notes. The links are also printed in the build log.
+Cada compilación archiva JUnit XML, JaCoCo HTML/XML, los enlaces del panel de Sonar, los
+digests de las imágenes publicadas y las notas de versión generadas. Los enlaces también se
+imprimen en el registro de compilación.
 
-## Evidence
+## Evidencia
 
-Store screenshots in `docs/informe/evidencia/`, with the Markdown reports in `docs/informe/`. Never include passwords, tokens, or private keys.
+Guarda las capturas en `docs/informe/evidencia/` y los informes Markdown en `docs/informe/`.
+Nunca incluyas contraseñas, tokens ni claves privadas.

@@ -38,9 +38,9 @@ métricas `opencost_*` a Prometheus. Un dashboard de Grafana muestra el costo
 por namespace y por workload, permitiendo identificar el gasto de cada
 servicio y validar el ahorro del scale-to-zero.
 
-## Trade-offs
-- Scale-to-zero añade latencia de arranque en frío (~10–20s) al primer
-  request tras un periodo inactivo.
+## Compromisos
+- Scale-to-zero añade latencia de arranque en frío (~10–20s) a la primera
+  petición tras un periodo inactivo.
 - Las instancias Spot pueden ser evacuadas con ~30s de aviso; se mitiga con
   réplicas y reintentos.
 

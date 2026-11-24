@@ -1,4 +1,4 @@
-<!-- CG-DOC: Service documentation for form. -->
+<!-- CG-DOC: Documentación del servicio `form`. -->
 # form-service: funcionamiento y estructura
 
 Este documento explica el funcionamiento, la estructura y las dependencias actuales de `circleguard-form-service` para el diagnóstico de HU-FORM-01.

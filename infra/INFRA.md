@@ -1,5 +1,5 @@
-<!-- CG-DOC: On-premise infrastructure as the operational source (`infra/onpremise/`). -->
-# Infrastructure — On-premise (operativa)
+<!-- CG-DOC: Infraestructura on-premise como fuente operativa (`infra/onpremise/`). -->
+# Infraestructura — On-premise (operativa)
 
 ## Plataforma actual
 
@@ -10,7 +10,7 @@ La infraestructura vigente de CircleGuard es **on-premise** y vive en `infra/onp
 | Herramientas | Docker Compose proyecto `cg-tools` | `deploy/compose/tools/docker-compose.onpremise.yml` |
 | Plataforma | Clúster k3d `cg` (namespaces `cg-dev`, `cg-stage`, `cg-prod`) | `deploy/k8s/` (Kustomize) |
 | IaC (E2.1) | Terraform: módulos + 3 ambientes + backend remoto | `infra/terraform/` |
-| Hosts | Un servidor Ubuntu 24.04, ZeroTier `10.147.20.67`, usuario `docker` sin `sudo` | `docs/infra/migracion-onpremise.md` |
+| Servidores | Un servidor Ubuntu 24.04, ZeroTier `10.147.20.67`, usuario `docker` sin `sudo` | `docs/infra/migracion-onpremise.md` |
 
 Herramientas en el host: Jenkins (`:8080`), SonarQube (`:9000`), Nexus (`:8081`), registro Docker (`:5000`) y el relay smee.io del webhook (GitHub → `https://smee.io/nk4nvlnyB0u6Fqnn` → Jenkins).
 
@@ -22,7 +22,7 @@ Herramientas en el host: Jenkins (`:8080`), SonarQube (`:9000`), Nexus (`:8081`)
 | `bootstrap-onpremise.sh` | Crea `deploy/compose/tools/.env.onpremise` desde la plantilla, genera los secretos, pregunta GitHub y el webhook (el secreto no se genera aleatoriamente). |
 | `k3d-cluster-create.sh` | Crea el clúster `cg` con la plantilla `registries.yaml` (registro HTTP del host declarado al clúster). |
 | `registries.yaml` | Espejo HTTP `10.147.20.67:5000` para el clúster k3d. |
-| `verify-onpremise.sh` | Chequeo **read-only** de salud de herramientas, clúster y aplicaciones (códigos HTTP, namespaces, Ingress). |
+| `verify-onpremise.sh` | Comprobación **de solo lectura** de la salud de herramientas, clúster y aplicaciones (códigos HTTP, namespaces, Ingress). |
 
 ## Flujo
 

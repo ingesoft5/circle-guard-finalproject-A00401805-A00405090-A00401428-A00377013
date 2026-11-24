@@ -1,40 +1,40 @@
-<!-- CG-DOC: Chaos Engineering Bonus - Verification Record. -->
-# Chaos Engineering Bonus - Verification Record
-# Enunciado L284: Chaos Engineering with Chaos Mesh/Litmus
+<!-- CG-DOC: Bonificación de ingeniería del caos - Registro de verificación. -->
+# Bonificación de ingeniería del caos - Registro de verificación
+# Enunciado L284: ingeniería del caos con Chaos Mesh/Litmus
 
-## Hypothesis
-The CircleGuard system maintains acceptable availability and response times
-during transient infrastructure failures (pod deletions, network latency).
+## Hipótesis
+El sistema CircleGuard mantiene una disponibilidad y unos tiempos de respuesta aceptables
+durante fallas transitorias de la infraestructura (eliminación de pods, latencia de red).
 
-## Steady State Definition
-- All core services (gateway, form, auth, identity) respond to health checks
-  within 500ms at P99 latency
-- Zero 5xx errors during chaos injection
-- Service recovery time < 30 seconds after fault injection stops
+## Definición del estado estable
+- Todos los servicios núcleo (gateway, form, auth, identity) responden a las comprobaciones de salud
+  con una latencia P99 dentro de 500ms
+- Cero errores 5xx durante la inyección de caos
+- El tiempo de recuperación del servicio es < 30 segundos después de que se detenga la inyección de fallas
 
-## Experiment Plan
+## Plan de experimentos
 
-### Experiment 1: Gateway Pod Delete
-- **Target**: gateway deployment (app=gateway) in cg-dev
-- **Action**: Delete 100% of pods for 30 seconds
-- **Expected Impact**: Brief 503 errors during pod restart
-- **Recovery Criteria**: All pods return to Running within 30s, health checks pass
-- **Rollback**: `kubectl rollout restart deployment/gateway -n cg-dev`
+### Experimento 1: eliminación de pods del gateway
+- **Objetivo**: despliegue de gateway (app=gateway) en cg-dev
+- **Acción**: eliminar el 100 % de los pods durante 30 segundos
+- **Impacto esperado**: errores 503 breves durante el reinicio de los pods
+- **Criterios de recuperación**: todos los pods vuelven a Running en 30 s y pasan las comprobaciones de salud
+- **Reversión**: `kubectl rollout restart deployment/gateway -n cg-dev`
 
-### Experiment 2: Redis Network Latency
-- **Target**: redis deployment in cg-dev
-- **Action**: Inject 2000ms ± 500ms network latency for 60 seconds
-- **Expected Impact**: Degraded response times for cached operations
-- **Recovery Criteria**: Latency returns to <100ms after experiment ends
-- **Rollback**: `kubectl rollout restart deployment/redis -n cg-dev`
+### Experimento 2: latencia de red de Redis
+- **Objetivo**: despliegue de redis en cg-dev
+- **Acción**: inyectar una latencia de red de 2000ms ± 500ms durante 60 segundos
+- **Impacto esperado**: tiempos de respuesta degradados en las operaciones en caché
+- **Criterios de recuperación**: la latencia vuelve a <100ms después de que finalice el experimento
+- **Reversión**: `kubectl rollout restart deployment/redis -n cg-dev`
 
-## Success Criteria
-1. System remains available (no complete outage)
-2. Health checks recover to UP within 60s of fault removal
-3. No data corruption observed
-4. Monitoring alerts fire appropriately
+## Criterios de éxito
+1. El sistema permanece disponible (sin interrupción total)
+2. Las comprobaciones de salud vuelven a UP en un plazo de 60 s tras eliminar la falla
+3. No se observa corrupción de datos
+4. Las alertas de monitoreo se activan correctamente
 
-## Rollback Procedure
-1. Stop chaos experiment: `kubectl delete chaosengine <name> -n cg-chaos`
-2. Force restart affected deployment if needed
-3. Verify service health: `kubectl get pods -n cg-dev`
+## Procedimiento de reversión
+1. Detener el experimento de caos: `kubectl delete chaosengine <name> -n cg-chaos`
+2. Reiniciar forzosamente el despliegue afectado si es necesario
+3. Verificar la salud del servicio: `kubectl get pods -n cg-dev`

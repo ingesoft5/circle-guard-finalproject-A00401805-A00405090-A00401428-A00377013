@@ -1,5 +1,5 @@
-<!-- CG-DOC: Sprint 1 — Review. -->
-# Sprint 1 — Review
+<!-- CG-DOC: Revisión de Sprint 1 — CircleGuard. -->
+# Sprint 1 — Revisión
 
 **Sprint:** DCG Sprint 1
 **Periodo:** 3–8 de noviembre de 2026

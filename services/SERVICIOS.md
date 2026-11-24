@@ -1,9 +1,9 @@
-<!-- CG-DOC: Overview of CircleGuard microservices, build commands, and documentation conventions. -->
-# Services
+<!-- CG-DOC: Resumen de los microservicios de CircleGuard, comandos de compilación y convenciones de documentación. -->
+# Servicios
 
-## Purpose
+## Propósito
 
-`services/` contains the Spring Boot microservices of CircleGuard:
+`services/` contiene los microservicios Spring Boot de CircleGuard:
 
 - `circleguard-auth-service`
 - `circleguard-dashboard-service`
@@ -14,12 +14,12 @@
 - `circleguard-notification-service`
 - `circleguard-promotion-service`
 
-The CI/CD platform builds and tests all services. The core services
-(`auth`, `identity`, `promotion`, `form`, `gateway`) and the web client are
-packaged, published and deployed; `notification`, `file` and `dashboard` are
-built, tested, packaged and published for Part 2.
+La plataforma CI/CD compila y prueba todos los servicios. Los servicios núcleo
+(`auth`, `identity`, `promotion`, `form`, `gateway`) y el cliente web se
+empaquetan, publican y despliegan; `notification`, `file` y `dashboard` se
+compilan, prueban, empaquetan y publican para la Parte 2.
 
-## Standard layout
+## Estructura estándar
 
 ```text
 services/<service>/
@@ -32,7 +32,7 @@ services/<service>/
     └── test/java
 ```
 
-## Build and test
+## Compilación y pruebas
 
 ```bash
 ./gradlew :services:circleguard-gateway-service:clean \
@@ -41,7 +41,7 @@ services/<service>/
   :services:circleguard-gateway-service:jacocoTestCoverageVerification
 ```
 
-Identity service build, tests, and coverage:
+Compilación, pruebas y cobertura del servicio de identidad:
 
 ```bash
 ./gradlew :services:circleguard-identity-service:test \
@@ -49,7 +49,7 @@ Identity service build, tests, and coverage:
   :services:circleguard-identity-service:jacocoTestCoverageVerification
 ```
 
-File service build, tests, and coverage:
+Compilación, pruebas y cobertura del servicio de archivos:
 
 ```bash
 ./gradlew :services:circleguard-file-service:test \
@@ -57,7 +57,7 @@ File service build, tests, and coverage:
   :services:circleguard-file-service:jacocoTestCoverageVerification
 ```
 
-Identity image:
+Imagen de identidad:
 
 ```bash
 docker build -f services/circleguard-identity-service/Dockerfile \
@@ -66,17 +66,17 @@ docker build -f services/circleguard-identity-service/Dockerfile \
   -t circleguard/identity:1.0.0 .
 ```
 
-The identity container requires `SPRING_DATASOURCE_*`,
+El contenedor de identidad requiere `SPRING_DATASOURCE_*`,
 `SPRING_KAFKA_BOOTSTRAP_SERVERS`, `VAULT_SECRET`, `VAULT_SALT`,
-`VAULT_HASH_SALT`, and `JWT_SECRET`. See `docs/informe/HU-ID-03.md`.
+`VAULT_HASH_SALT` y `JWT_SECRET`. Consulte `docs/informe/HU-ID-03.md`.
 
-Package:
+Empaquetado:
 
 ```bash
 ./gradlew :services:circleguard-identity-service:bootJar
 ```
 
-Publish to Nexus:
+Publicación en Nexus:
 
 ```bash
 NEXUS_URL=http://nexus:8081 \
@@ -85,11 +85,11 @@ NEXUS_PASSWORD=... \
 ./gradlew :services:circleguard-gateway-service:publish
 ```
 
-## Documentation
+## Documentación
 
-- Public classes and methods use Javadoc in English.
-- Package-level responsibilities are documented with `package-info.java` where needed.
-- Business rules, security decisions, and Redis failure handling are documented where the behavior is not obvious.
-- Every file includes a `CG-DOC` purpose header.
+- Las clases y métodos públicos usan Javadoc en inglés.
+- Las responsabilidades a nivel de paquete se documentan con `package-info.java` cuando es necesario.
+- Las reglas de negocio, las decisiones de seguridad y el manejo de errores de Redis se documentan cuando el comportamiento no es evidente.
+- Cada archivo incluye una cabecera de propósito `CG-DOC`.
 
-See `docs/standards/documentation.md`.
+Consulte `docs/standards/documentation.md`.

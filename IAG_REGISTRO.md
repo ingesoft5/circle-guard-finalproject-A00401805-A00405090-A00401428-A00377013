@@ -1,4 +1,4 @@
-<!-- CG-DOC: Registry of generative AI usage and human verification. -->
+<!-- CG-DOC: Registro de uso de inteligencia artificial generativa y verificación humana. -->
 # Registro de Uso de Inteligencia Artificial Generativa (IAG) — CircleGuard
 
 **Curso:** Ingeniería de Software V (09776 - TIC)  
@@ -566,7 +566,7 @@ Con base en este diseño previo:
 
 #### D. Reflexión crítica
 
-Combinar **Retry** (`max-attempts: 3`, `wait-duration: 500ms`) y **Circuit Breaker** (`failure-rate-threshold: 50%`, `wait-duration-in-open-state: 10s`) en la llamada síncrona de `auth-service` hacia `identity-service` implica un trade-off arquitectónico importante entre disponibilidad y latencia de cola (*tail latency*): mientras el circuito permanece `CLOSED`, un fallo transitorio de red puede añadir hasta `1.0s` de espera por los reintentos antes de resolver el login; sin embargo, si `identity-service` cae por completo, el `CircuitBreaker` pasa a estado `OPEN` tras alcanzar el umbral de la ventana deslizante y corta de inmediato las llamadas remotas (*fail-fast*), evitando el agotamiento del pool de hilos de Tomcat en `auth-service` y activando el fallback o la alerta crítica `AuthIdentityCircuitBreakerOpen` en Prometheus en menos de 30 segundos. Asimismo, reemplazar las impresiones crudas en consola (`System.out.println` que exponían la longitud de la contraseña) por logs estructurados SLF4J y contadores Micrometer elimina una vulnerabilidad de fuga de información en logs centralizados (Loki) y permite detectar ataques de fuerza bruta mediante la alerta `AuthHighUnauthorizedRate`.
+Combinar **Retry** (`max-attempts: 3`, `wait-duration: 500ms`) y **Circuit Breaker** (`failure-rate-threshold: 50%`, `wait-duration-in-open-state: 10s`) en la llamada síncrona de `auth-service` hacia `identity-service` implica un compromiso arquitectónico importante entre disponibilidad y latencia de cola (*tail latency*): mientras el circuito permanece `CLOSED`, un fallo transitorio de red puede añadir hasta `1.0s` de espera por los reintentos antes de resolver el login; sin embargo, si `identity-service` cae por completo, el `CircuitBreaker` pasa a estado `OPEN` tras alcanzar el umbral de la ventana deslizante y corta de inmediato las llamadas remotas (*fail-fast*), evitando el agotamiento del pool de hilos de Tomcat en `auth-service` y activando el fallback o la alerta crítica `AuthIdentityCircuitBreakerOpen` en Prometheus en menos de 30 segundos. Asimismo, reemplazar las impresiones crudas en consola (`System.out.println` que exponían la longitud de la contraseña) por logs estructurados SLF4J y contadores Micrometer elimina una vulnerabilidad de fuga de información en logs centralizados (Loki) y permite detectar ataques de fuerza bruta mediante la alerta `AuthHighUnauthorizedRate`.
 
 ---
 
@@ -742,7 +742,7 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 
 **A. Insumo propio.** Análisis de la estructura del servicio, lectura de los requisitos del enunciado para E1.4 y E1.6, y decisión de topología: dos instancias de gateway, ambientes `dev`/`stage`/`prod`, registro privado y SonarQube on-premise. Se definió que el job debía ser multibranch y que el disparador sería el webhook `/github-webhook/`, no un `cron`.
 
-**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Analiza la estructura del microservicio Gateway, valida el plan de la historia contra los entregables E1.4 y E1.6 del enunciado, y propón la configuración del job multibranch, el webhook y el pipeline con etapas reutilizables en la Shared Library». La sesión de trabajo original se conserva como referencia histórica: `https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6`.
+**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Analiza la estructura del microservicio Gateway, valida el plan de la historia contra los entregables E1.4 y E1.6 del enunciado, y propón la configuración del job multibranch, el webhook y el pipeline con etapas reutilizables en la biblioteca compartida». La sesión de trabajo original se conserva como referencia histórica: `https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6`.
 
 **C. Validación y apreciación humana.** Se revisaron y ejecutaron los scripts `infra/bootstrap-*.sh`, se verificaron credenciales y se ajustó la configuración del webhook y de la protección de `main`. La salida quedó versionada en `Jenkinsfile`, `jenkins/vars/`, `deploy/compose/tools/jenkins/cac/jenkins.yml` y `docs/informe/HU-GATEWAY-04.md`. Las capturas de Jenkins, SonarQube y GitHub se conservan en `docs/informe/evidencia/HU-GATEWAY-04/`, incluidas la notificación de fallo (`09-failure-notification-github.png`) y la Reproducción del quality gate en rojo (`11-quality-gate-red.png`).
 
@@ -1160,7 +1160,7 @@ La IAG aceleró la redacción y el inventario, pero también produjo afirmacione
 ### A. Contenido propio entregado a la IAG
 
 1. **Insumo previo:** se revisaron `Proyecto_Final_CircleGuard.tex` (E1.3-E1.7 y la nota de alcance de la Parte 1, que excluye a dashboard del despliegue), el diagnóstico previo de `dashboard-service` y el registro histórico de 19 pruebas con 97,3 % de cobertura (commits `bdf2a14` y predecesores; documentos no versionados en HEAD), `Jenkinsfile`, `jenkins/vars/*.groovy`, `gradle/jacoco-convention.gradle` y los Dockerfile de los otros servicios.
-2. **Contraste con el código:** se determinó que multi-stage, usuario no root, catálogo del Shared Library, quality gate, semver y archivado de reportes ya existían; las brechas reales eran los metadatos OCI no usados, el healthcheck no verificado para dashboard y la falta de evidencia documental del empaquetado.
+2. **Contraste con el código:** se determinó que multi-stage, usuario no root, catálogo del biblioteca compartida, quality gate, semver y archivado de reportes ya existían; las brechas reales eran los metadatos OCI no usados, el healthcheck no verificado para dashboard y la falta de evidencia documental del empaquetado.
 3. **Decisión de diseño:** alinear el Dockerfile con el patrón de `file-service` (UID/GID fijo 10001, `COPY --chown`, cachés BuildKit y labels), mantener `deploy: false` en Parte 1 y añadir `dashboard` a la verificación de healthcheck tanto en el catálogo como en el override local del Jenkinsfile.
 4. **Restricción respetada:** no se inventaron evidencias de Jenkins/SonarQube remotas; el informe distingue la verificación local ejecutada de la corrida que debe hacerse en el servidor con `SERVICE=dashboard`.
 
@@ -1179,7 +1179,7 @@ Subtareas previstas
 
 Crear un Dockerfile multi-stage que compile el microservicio utilizando Gradle y genere una imagen de ejecución.
 Configurar la imagen para que el servicio se ejecute mediante un usuario no root.
-Integrar dashboard-service al Jenkinsfile y a las etapas reutilizables de la Shared Library del proyecto.
+Integrar dashboard-service al Jenkinsfile y a las etapas reutilizables de la biblioteca compartida del proyecto.
 Configurar la ejecución automática de compilación, pruebas unitarias, cobertura con JaCoCo y análisis estático con SonarQube.
 Verificar que el quality gate de SonarQube y las pruebas sean obligatorias.
 Integrar la publicación de la imagen en el registro de artefactos compartido, utilizando versionado semántico automático basado en tags Git y Conventional Commits.
@@ -1197,7 +1197,7 @@ La imagen publicada queda disponible para su posterior despliegue en la Parte 2.
 Subtareas:
 Crear Dockerfile multi-stage con compilación Gradle.
 Configurar ejecución del contenedor con usuario no root.
-Integrar dashboard-service al Jenkinsfile y Shared Library compartida.
+Integrar dashboard-service al Jenkinsfile y biblioteca compartida.
 Integrar compilación, pruebas, JaCoCo y SonarQube en CI.
 Configurar pruebas y quality gate obligatorios.
 Publicar imagen Docker versionada con semver, Git tags y Conventional Commits.

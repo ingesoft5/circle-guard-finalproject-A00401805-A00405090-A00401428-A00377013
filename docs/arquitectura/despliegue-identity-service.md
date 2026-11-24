@@ -1,4 +1,4 @@
-<!-- CG-DOC: Continuous deployment, E2E anonymization validation, and rollback evidence for identity-service (HU-ID-04 / DCG-85). -->
+<!-- CG-DOC: Despliegue continuo, validación E2E de anonimización y evidencia de reversión de identity-service (HU-ID-04 / DCG-85). -->
 # Despliegue Continuo, Validación E2E de Anonimización y Rollback de `circleguard-identity-service` (`HU-ID-04` / `DCG-85`)
 
 > **Parte 1 — histórico (EC2, SSH, IPs privadas).** La Parte 2 no usa este despliegue: el pipeline
@@ -24,8 +24,8 @@ flowchart LR
     subgraph Tools["cg-tools (172.31.20.46 / EIP 77.112.223.174)"]
         J["Jenkins Multibranch (:8080)"]
         S["SonarQube (:9000)"]
-        N["Nexus Docker Registry (:5000)"]
-        PW["Playwright E2E Suite (9 tests)"]
+        N["Registro Docker de Nexus (:5000)"]
+        PW["Suite E2E de Playwright (9 pruebas)"]
     end
 
     subgraph Dev["cg-dev (172.31.19.75 / 3.140.191.217)"]
@@ -61,13 +61,13 @@ flowchart LR
         IDP -->|service_healthy + POST /api/v1/identities/map| AP
     end
 
-    J -->|1. Build, JaCoCo, Sonar Gate| S
-    J -->|2. Push Docker Image| N
-    N -->|3. Pull tag semver| IDD & IDS & IDP
-    PW -->|4. Validate E2E Anonymization| IDD & AD & GD
+    J -->|1. Compilación, JaCoCo, Quality Gate de Sonar| S
+    J -->|2. Publicar imagen Docker| N
+    N -->|3. Descargar tag semver| IDD & IDS & IDP
+    PW -->|4. Validar anonimización E2E| IDD & AD & GD
 ```
 
-### 1.1 Configuración Docker Compose y Healthchecks (`deploy/compose/{dev,stage,prod}/docker-compose.yml`)
+### 1.1 Configuración Docker Compose y comprobaciones de salud (`deploy/compose/{dev,stage,prod}/docker-compose.yml`)
 
 En cada ambiente (`dev`, `stage`, `prod`):
 - **`postgres-identity` (`postgres:15-alpine`):**

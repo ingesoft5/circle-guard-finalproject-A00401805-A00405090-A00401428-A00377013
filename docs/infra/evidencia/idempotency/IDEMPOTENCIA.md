@@ -1,42 +1,43 @@
-<!-- CG-DOC: Evidence that the CircleGuard bootstrap converges on repeated execution. -->
-# Idempotency Evidence
+<!-- CG-DOC: Evidencia de que el bootstrap de CircleGuard converge en ejecuciones repetidas. -->
+# Evidencia de idempotencia
 
-## Result
+## Resultado
 
 `diff_lines=0`
 
-A second full execution of `./infra/bootstrap/bootstrap-all.sh` produced no changes in:
+Una segunda ejecución completa de `./infra/bootstrap/bootstrap-all.sh` no produjo cambios en:
 
-- EC2 instance IDs, states, private IPs, public IPs, and types.
+- IDs, estados, IPs privadas, IPs públicas y tipos de las instancias EC2.
 - Elastic IPs.
-- Security Groups and rules.
-- Key pairs.
-- Local and remote `.env` hashes.
-- Container IDs and images.
-- Nexus repositories and users.
-- SonarQube projects and users.
+- Grupos de seguridad y reglas.
+- Pares de claves.
+- Hashes locales y remotos de `.env`.
+- IDs de contenedores e imágenes.
+- Repositorios y usuarios de Nexus.
+- Proyectos y usuarios de SonarQube.
 
-## Run
+## Ejecución
 
-- Branch: `test/HU-INFRA-01-idempotencia`
-- Region: `us-east-2`
-- Bootstrap exit code: `0`
-- Evidence date: 8 November 2026
+- Rama: `test/HU-INFRA-01-idempotencia`
+- Región: `us-east-2`
+- Código de salida del bootstrap: `0`
+- Fecha de la evidencia: 8 de noviembre de 2026
 
-## Files
+## Archivos
 
-- `files.before` / `files.after`: hashes of safe local state files.
-- `remote-env.before` / `remote-env.after`: hashes of remote `.env` files.
-- `instances.*.json`: normalized EC2 state.
-- `eips.*.json`: normalized Elastic IP state.
-- `sgs.*.json`: normalized Security Group state.
-- `keys.*.json`: key pair names.
-- `*.containers.*.txt`: container IDs and images per host.
-- `nexus-*.json`: repositories and users.
-- `sonar-*.json`: projects and users.
-- `diffs.txt`: empty if idempotency passed.
-- `bootstrap-final-run.log`: second execution log.
+- `files.before` / `files.after`: hashes de archivos locales de estado sin datos sensibles.
+- `remote-env.before` / `remote-env.after`: hashes de los archivos `.env` remotos.
+- `instances.*.json`: estado EC2 normalizado.
+- `eips.*.json`: estado de Elastic IP normalizado.
+- `sgs.*.json`: estado de los grupos de seguridad normalizado.
+- `keys.*.json`: nombres de los pares de claves.
+- `*.containers.*.txt`: IDs de contenedores e imágenes por host.
+- `nexus-*.json`: repositorios y usuarios.
+- `sonar-*.json`: proyectos y usuarios.
+- `diffs.txt`: vacío cuando la comprobación de idempotencia es satisfactoria.
+- `bootstrap-final-run.log`: registro de la segunda ejecución.
 
-## Notes
+## Notas
 
-No passwords, tokens, or private keys are included. `files.*` and `remote-env.*` contain SHA-256 hashes only.
+No se incluyen contraseñas, tokens ni claves privadas. `files.*` y `remote-env.*` contienen
+solo hashes SHA-256.

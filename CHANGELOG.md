@@ -1,13 +1,13 @@
-<!-- CG-DOC: Changelog. -->
-# Changelog
+<!-- CG-DOC: Registro de cambios. -->
+# Registro de cambios
 
-All notable changes to CircleGuard are documented here. The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
-Semantic Versioning.
+Todos los cambios relevantes de CircleGuard se documentan aquí. El formato sigue
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) y el proyecto usa
+Versionado Semántico.
 
-## [Unreleased]
+## [Sin publicar]
 
-### Final delivery (2026-11-23)
+### Entrega final (2026-11-23)
 
 - **Reporte final**: `CircleGuard_INFORME_FINAL.docx`/`.pdf` ordenados (sección 14 antes de 15), texto crudo justificado, TOC completo, rutas canónicas y contradicciones E2.5/E2.7/E2.10 corregidas; se regeneró el PDF.
 - **IAG**: sección de Daniela reescrita con 9 entradas profesionales para gateway, file-service e infraestructura CI/CD, dejando explícito el criterio humano y el uso de IAG como apoyo; se restauraron registros históricos reales de HU-FILE/HU-GATEWAY/HU-DASH/HU-NOTIF.
@@ -17,7 +17,7 @@ Semantic Versioning.
 - **Sustentación**: añadida `docs/informe/CircleGuard_PRESENTACION_FINAL.pptx` (15 diapositivas con notas del orador).
 - **Evidencia externa**: documentado el estado degradado del clúster on-prem en `docs/infra/evidencia/estado-cluster-20261123.md`; Locust, ZAP, Jaeger y Alertmanager siguen pendientes de ejecución real, sin reportes fabricados.
 
-### Changed
+### Cambiado
 
 - **E2.2/E2.3 (HU-DASH-04)**: `dashboard-service` pasa a `deploy: true` en el catálogo compartido y en el `Jenkinsfile`, por lo que la misma imagen versionada se promociona a `cg-dev`, `cg-stage` y `cg-prod` con aprobación manual en producción.
 - **E2.1 (Terraform)**: restaurados los módulos reutilizables `network`, `compute`, `registry`, `storage` y `observability` y los tres ambientes, ahora en `infra/terraform/envs/{dev,stage,prod}`. Terraform vuelve a declarar la plataforma completa conforme al enunciado; `state-backend/` queda como bootstrap del backend remoto.
@@ -31,128 +31,129 @@ Semantic Versioning.
 - **Jenkins multibranch**: eliminado el filtro de ramas por convención de nombre. GitHub es la fuente de verdad: se indexan todas las ramas vivas y las borradas tras merge en `main` se limpian de inmediato con el evento `delete` del webhook y `orphanedItemStrategy` 0/0. Documentado en `docs/infra/migracion-onpremise.md` §3.8.
 - **On-premise rebuild wrapper**: `bootstrap-github.sh` acepta `deploy/compose/tools/.env.onpremise` como origen de entorno y es invocado por `rebuild-onpremise.sh`, de modo que un solo comando reconstruye el stack, asegura los proyectos SonarQube y re-registra webhook/branch protection. Documentado en `docs/infra/migracion-onpremise.md` §3.7 y `docs/informe/HU-FILE-03.md` §4.
 
-### Added
+### Añadido
 
 - **E2.2/E2.4/E2.5 (HU-DASH-04)**: ConfigMap `dashboard-config` para URL JDBC, usuario y URL de `promotion-service`; sondas `/actuator/health/{readiness,liveness}`, anotaciones de scrape Prometheus, HPA 1–3 @70 % CPU y ruta `/api/v1/analytics` en el Ingress. `docs/informe/HU-DASH-04.md` y su evidencia documentan el despliegue y el rollback ejecutado en `cg-prod`.
 - **E2.1 (Terraform)**: `infra/terraform/state-backend/` crea el bucket de MinIO con versioning y la tabla de DynamoDB Local con `LockID`; los tres ambientes usan `backend "s3" {}` con `backend.hcl` que incluye ambos endpoints y claves `platform/<env>/terraform.tfstate`. Runbook, diagramas y evidencia en `docs/infra/runbook.md`, `docs/diagramas/` y `docs/infra/evidencia/E2.1-terraform.md`.
 - **E2.3 (pipeline)**: el `Jenkinsfile` ejecuta `terraform init/validate/plan/apply` por ambiente con aprobación en prod y `Trivy` obligatorio sobre IaC; la imagen de Jenkins incluye Terraform 1.9.8 y Trivy 0.70.0.
 - **File service (HU-FILE-05)**: sondas nativas de Kubernetes (`/actuator/health/readiness` y `/actuator/health/liveness`), anotaciones de scrape Prometheus en el Service, dependencias Micrometer/OTel/OTLP, contador `circleguard_file_uploads_total` con tag `result` y configuración de management sin secretos. Evidencia en `docs/informe/HU-FILE-05.md` (issue #149).
-- `infra/onpremise/rebuild-onpremise.sh`: wrapper idempotente de un comando que valida el token de SonarQube, ejecuta el bootstrap on-premise, asegura todos los proyectos del catálogo de la Shared Library (incluido `circleguard-file-service`) y converge el stack `cg-tools`.
+- `infra/onpremise/rebuild-onpremise.sh`: wrapper idempotente de un comando que valida el token de SonarQube, ejecuta el bootstrap on-premise, asegura todos los proyectos del catálogo de la biblioteca compartida (incluido `circleguard-file-service`) y converge el stack `cg-tools`.
 - `docs/informe/HU-FILE-03.md` y `docs/informe/evidencia/HU-FILE-03/README.md`: cierre P1.4, decisión de idempotencia/semver e índice de evidencia de la HU-FILE-03 (issue #135).
-- Jenkins image now ships `kubectl` v1.31.2, `kustomize` v5.4.3 and `k3d` v5.9.0 so the pipeline drives the on-premise cluster directly.
-- On-premise playbook `infra/onpremise/ONPREMISE.md` (host → cg-tools Compose → k3d `cg` → verify) plus `infra/onpremise/verify-onpremise.sh`, a read-only health check for the on-premise platform.
-- Traefik Ingress now routes `/api/v1/gate` → gateway (`8087`).
-- Full core stack for `dev`, `stage`, and `prod`: auth, identity, promotion, form,
-  gateway, Expo web client, PostgreSQL, Neo4j, Kafka, Redis, and OpenLDAP.
-- Multi-stage, non-root Docker images for all eight services and the web client.
-- Jenkins stages for core image publication, web client publication, dev/stage/prod
-  promotion, manual production approval, rollback, release note generation, and
-  idempotent GitHub Release publication.
-- Sprint 0 and Sprint 1 artifacts, product backlog, change management policy,
-  architecture diagrams, and release note template.
-- Credential rotation helper that synchronizes GitHub credentials into both
-  `infra/state/tools.env` and `deploy/compose/tools/.env`.
-- Expanded auth and identity Playwright E2E coverage (login, RBAC, QR validation,
-  anonymization, JWT PII checks) and smoke tests for both services.
-- Full IAG log entries for auth/identity packaging, deployment, E2E validation,
-  and rollback, plus deployment runbooks for both services.
-- Kustomize overlays for `dev`, `stage`, and `prod` on the on-premise k3d cluster, sharing
-  one base and differing only in namespace, Ingress host, and image tag.
-- `HorizontalPodAutoscaler` manifests for gateway, web, and auth, backed by `metrics-server`.
-- Namespace manifests per overlay so `kubectl apply -k` is self-sufficient.
-- Verified token issuance in the `dev`, `stage`, and `prod` namespaces.
+- La imagen de Jenkins ahora incluye `kubectl` v1.31.2, `kustomize` v5.4.3 y `k3d` v5.9.0, de modo que la canalización gestiona el clúster on-premise directamente.
+- Guía operativa on-premise `infra/onpremise/ONPREMISE.md` (host → Compose `cg-tools` → k3d `cg` → verificación) y `infra/onpremise/verify-onpremise.sh`, una comprobación de salud de solo lectura de la plataforma on-premise.
+- El Ingress de Traefik ahora enruta `/api/v1/gate` → gateway (`8087`).
+- Stack completo de `dev`, `stage` y `prod`: auth, identity, promotion, form,
+  gateway, cliente web Expo, PostgreSQL, Neo4j, Kafka, Redis y OpenLDAP.
+- Imágenes Docker multinivel y sin usuario root para los ocho servicios y el cliente web.
+- Etapas de Jenkins para la publicación de imágenes núcleo, publicación del cliente web,
+  promoción a dev/stage/prod, aprobación manual en producción, reversión, generación de
+  notas de versión y publicación idempotente de GitHub Release.
+- Artefactos de Sprint 0 y Sprint 1, backlog del producto, política de gestión de cambios,
+  diagramas de arquitectura y plantilla de notas de versión.
+- Utilidad de rotación de credenciales que sincroniza las credenciales de GitHub en
+  `infra/state/tools.env` y `deploy/compose/tools/.env`.
+- Cobertura E2E ampliada con Playwright para auth e identity (inicio de sesión, RBAC,
+  validación de QR, anonimización, comprobaciones de PII en JWT) y pruebas de humo para
+  ambos servicios.
+- Entradas completas del registro IAG para el empaquetado, despliegue, validación E2E
+  y reversión de auth/identity, además de runbooks de despliegue para ambos servicios.
+- Overlays de Kustomize para `dev`, `stage` y `prod` en el clúster k3d on-premise, con
+  una base compartida que solo difiere en namespace, host de Ingress y tag de imagen.
+- Manifiestos `HorizontalPodAutoscaler` para gateway, web y auth, respaldados por `metrics-server`.
+- Manifiestos de namespace por overlay para que `kubectl apply -k` sea autosuficiente.
+- Emisión de tokens verificada en los namespaces `dev`, `stage` y `prod`.
 
-### Changed
+### Cambiado
 
-- On-prem deploy & rollback are `kustomize edit set image` (workspace-only tag) + `kubectl apply -k` + `k3d image import -c cg` + `rollout status`; the previous SSH-to-AWS path is gone from `ci.deploy`/`ci.e2e`.
-- E2E (Playwright) runs against the k3d Traefik Ingress (`http://dev.circleguard.local:30080`, `E2E_HOST_RESOLVER=--host-resolver-rules=MAP ...`); Neo4j seeding uses `kubectl exec` `cypher-shell`, Kafka `survey.submitted` publish uses `kubectl exec` `kafka-console-producer.sh`, and `kafkajs` is no longer a dependency.
-- Documentation moved to the on-premise platform as primary source; the AWS four-host topology (console, scripts, topology docs) is explicitly frozen as Parte 1 historical evidence.
-- `Jenkinsfile` no longer expects `DEV/STAGE/PROD_PRIVATE_IP`; `tests/e2e` defaults to the ingress.
-- Documentation audit: `docs/infra/tutorial-e1.2.md`, `docs/arquitectura/despliegue-auth-service.md` and `despliegue-identity-service.md` are now marked Parte 1 históricos; `aws-free-tier-validation.md`, `ci-cd-setup.md`, `environments.md`, `evidence/EVIDENCIA-INFRA.md` and `evidence/idempotency/IDEMPOTENCIA.md` are tagged in place as Parte 1 históricos (the former `docs/FILE_INDEX.md` index was removed).
-- `docs/agil/plan-circle-guard-5.0.md` marks the webhook and SSH risks as mitigated (live verification 2026-11-18) and adds annex §6 with the P1.4 multibranch status; the `main` build (item 8) is documented with the green pipeline evidence.
-- PR approval policy changed from 2 to 1 required approving review on `main` (ruleset `github-actions`), effective for Sprint 2, to cut approval latency — waiting for two reviewers was too slow and delayed PRs. The status check `continuous-integration/jenkins/pr-merge` remains mandatory, pushes dismiss stale approvals, and the approver must approve the latest revision. `BRANCHING-STRATEGY.md`, `docs/agil/AGIL.md` and `docs/agil/backlog.md` updated; historical Parte 1 records (`docs/informe/HU-GATEWAY-04.md`, `IAG_REGISTRO.md`) consolidated with the current policy; the superseded `docs/informe/P1.1-Branching-GitHub-Flow.*` report was removed and the GitHub Flow specification now lives in `BRANCHING-STRATEGY.md` §1. `infra/bootstrap/bootstrap-github.sh` now versions the same 1-review value and `docs/infra/migracion-onpremise.md` §3.7 documents it per E1.2.
-- SonarQube now covers promotion and identity in addition to gateway, auth, and form.
-- Kafka exposes an external listener on `29092` for end-to-end tests.
-- Nginx web client runs as a non-root user on port `8080`.
-- `deploy/k8s/base` is now self-sufficient: Neo4j and Kafka run with
-  `enableServiceLinks: false`, Kafka's controller quorum points to `localhost`, and the
-  shared ConfigMap exposes `SPRING_NEO4J_URI`.
-- Kubernetes manifests use the `.yml` extension and the JCasC directory is
+- El despliegue y la reversión on-premise usan `kustomize edit set image` (tag solo en el espacio de trabajo) + `kubectl apply -k` + `k3d image import -c cg` + `rollout status`; la ruta anterior de SSH a AWS desapareció de `ci.deploy`/`ci.e2e`.
+- E2E (Playwright) se ejecuta contra el Ingress de Traefik en k3d (`http://dev.circleguard.local:30080`, `E2E_HOST_RESOLVER=--host-resolver-rules=MAP ...`); la siembra de Neo4j usa `kubectl exec` `cypher-shell`, la publicación de `survey.submitted` en Kafka usa `kubectl exec` `kafka-console-producer.sh` y `kafkajs` ya no es dependencia.
+- La documentación se trasladó a la plataforma on-premise como fuente principal; la topología AWS de cuatro hosts (consola, scripts y documentación de topología) queda explícitamente congelada como evidencia histórica de la Parte 1.
+- `Jenkinsfile` ya no espera `DEV/STAGE/PROD_PRIVATE_IP`; `tests/e2e` usa el Ingress por defecto.
+- Auditoría de documentación: `docs/infra/tutorial-e1.2.md`, `docs/arquitectura/despliegue-auth-service.md` y `despliegue-identity-service.md` ahora están marcados como históricos de la Parte 1; `aws-free-tier-validation.md`, `ci-cd-setup.md`, `environments.md`, `evidence/EVIDENCIA-INFRA.md` y `evidence/idempotency/IDEMPOTENCIA.md` están etiquetados in situ como históricos de la Parte 1 (se eliminó el índice `docs/FILE_INDEX.md`).
+- `docs/agil/plan-circle-guard-5.0.md` marca los riesgos de webhook y SSH como mitigados (verificación en vivo del 2026-11-18) y añade el anexo §6 con el estado multibranch de P1.4; la compilación de `main` (ítem 8) se documenta con la evidencia de la canalización en verde.
+- La política de aprobación de PR cambió de 2 a 1 revisión aprobatoria requerida en `main` (ruleset `github-actions`), con vigencia para Sprint 2, para reducir la latencia de aprobación: esperar a dos revisores era demasiado lento y retrasaba los PR. La comprobación de estado `continuous-integration/jenkins/pr-merge` sigue siendo obligatoria, los pushes invalidan las aprobaciones anteriores y el aprobador debe aprobar la revisión más reciente. Se actualizaron `BRANCHING-STRATEGY.md`, `docs/agil/AGIL.md` y `docs/agil/backlog.md`; los registros históricos de la Parte 1 (`docs/informe/HU-GATEWAY-04.md`, `IAG_REGISTRO.md`) se consolidaron con la política vigente; se eliminó el informe obsoleto `docs/informe/P1.1-Branching-GitHub-Flow.*` y la especificación de GitHub Flow ahora está en `BRANCHING-STRATEGY.md` §1. `infra/bootstrap/bootstrap-github.sh` ahora versiona el mismo valor de 1 revisión y `docs/infra/migracion-onpremise.md` §3.7 lo documenta según E1.2.
+- SonarQube ahora cubre promotion e identity además de gateway, auth y form.
+- Kafka expone un listener externo en `29092` para pruebas de extremo a extremo.
+- El cliente web Nginx se ejecuta como usuario no root en el puerto `8080`.
+- `deploy/k8s/base` ahora es autosuficiente: Neo4j y Kafka se ejecutan con
+  `enableServiceLinks: false`, el quorum del controlador de Kafka apunta a `localhost` y
+  el ConfigMap compartido expone `SPRING_NEO4J_URI`.
+- Los manifiestos de Kubernetes usan la extensión `.yml` y el directorio JCasC es
   `deploy/compose/tools/jenkins/cac/jenkins.yml`.
-- On-premise operations use `kubectl` against the local cluster; the AWS four-host compose
-  topology stays as Part 1 evidence.
+- Las operaciones on-premise usan `kubectl` contra el clúster local; la topología Compose
+  de cuatro hosts de AWS permanece como evidencia de la Parte 1.
 
-### Fixed
+### Corregido
 
 - **E2.1 (observability)**: Grafana entraba en `CrashLoopBackOff` en stage porque Loki y Prometheus registraban dos datasources `default` (`Only one datasource per organization can be marked as default`); `loki.isDefault=false` deja a Prometheus como único default.
 - **E2.1 (observability)**: el `node-exporter` no podía programarse en el clúster compartido por el `hostPort 9100` duplicado (`0/2 nodes ... didn't have free ports`); se desactivó en stage y prod mediante `node_exporter_enabled`.
 - **E2.1 (observability)**: en prod la liveness probe por defecto mataba a Grafana durante las migraciones SQLite del PVC; `grafana_slow_start=true` aumenta `initialDelaySeconds` a 600 y los umbrales de fallo, evitando el ciclo de reinicios.
-- JCasC `NoSuchFileException: /var/jenkins_home/.ssh/cg-envs-key` on boot: the dead AWS-era `cg-envs-ssh` credential was removed from JCasC.
-- Notification health endpoint no longer fails when the external SMTP server is not
-  configured.
-- `LIBRARY_BRANCH` defaults to `main` in the tools stack.
-- `auth` no longer crash-loops when `QR_SECRET` is shorter than 32 bytes.
-- `identity` no longer rejects a non-hex `VAULT_SALT`.
-- `promotion` reaches Neo4j through the shared ConfigMap instead of an imperative
-  `kubectl set env`.
-- `postgres` survives its first `initdb`: a `startupProbe` stops the liveness probe from
-  killing it before it creates the five databases and enables remote access.
-- `neo4j` and `kafka` start on the first attempt in a fresh namespace.
+- JCasC `NoSuchFileException: /var/jenkins_home/.ssh/cg-envs-key` al iniciar: se eliminó de JCasC la credencial `cg-envs-ssh` obsoleta de la época de AWS.
+- El endpoint de salud de notification ya no falla cuando el servidor SMTP externo no está
+  configurado.
+- `LIBRARY_BRANCH` usa `main` como valor por defecto en el stack de tools.
+- `auth` ya no sufre ciclos de reinicio cuando `QR_SECRET` tiene menos de 32 bytes.
+- `identity` ya no rechaza un `VAULT_SALT` que no sea hexadecimal.
+- `promotion` llega a Neo4j mediante el ConfigMap compartido en lugar de un `kubectl set env`
+  imperativo.
+- `postgres` sobrevive a su primer `initdb`: un `startupProbe` evita que la sonda de liveness
+  lo termine antes de crear las cinco bases de datos y habilitar el acceso remoto.
+- `neo4j` y `kafka` arrancan a la primera en un namespace nuevo.
 
 ## [1.2.5] - 2026-11-10
 
-### Added
+### Añadido
 
 - Despliegue automático a dev desde `main` y aprobación manual para prod (#39).
 - `HEALTHCHECK` del gateway y validación de salud en los tres ambientes.
 
-### Changed
+### Cambiado
 
 - Healthcheck de OpenLDAP con bind autenticado (#40).
 - Pruebas E2E alineadas con `AUTH_URL`, `IDENTITY_URL` y `GATEWAY_URL` de dev (#41).
 
-### Fixed
+### Corregido
 
 - Publicación estable a Nexus tras ampliar el volumen de tools y limpiar el blob store.
 - Rollback de prod a `1.2.0` verificado y restauración a `1.2.5`.
 
 ## [1.2.0] - 2026-11-09
 
-### Added
+### Añadido
 
 - Stack completo de la Parte 1: gateway, auth, identity, promotion, form y web.
 - Middleware PostgreSQL, Neo4j, Kafka, Redis y OpenLDAP.
 - Pipeline multibranch con ejecución selectiva, JaCoCo y quality gate de SonarQube.
 
-### Changed
+### Cambiado
 
 - Job multibranch renombrado y publicación de las imágenes del núcleo (#34).
 
-### Documentation
+### Documentación
 
 - Informe de entrega, diagramas de arquitectura y pipeline, y guías operativas (#38).
 
 ## [1.1.1] - 2026-11-09
 
-### Changed
+### Cambiado
 
 - Actualización del informe de entrega y evidencias de la Parte 1 (#37).
 
 ## [1.1.0] - 2026-11-08
 
-### Added
+### Añadido
 
-- Identity service packaging, Sonar configuration, and deployment.
-- Promotion service deployment with PostgreSQL, Neo4j, Kafka, and Redis.
-- Gateway CI follow-up, semver tags, and rollback support.
+- Empaquetado del servicio identity, configuración de Sonar y despliegue.
+- Despliegue del servicio promotion con PostgreSQL, Neo4j, Kafka y Redis.
+- Seguimiento de CI del gateway, tags semver y soporte de reversión.
 
 ## [1.0.0] - 2026-11-08
 
-### Added
+### Añadido
 
-- Initial [GitHub Flow](BRANCHING-STRATEGY.md), Jenkins pipeline, gateway packaging, and infrastructure scripts.
+- Flujo [GitHub Flow](BRANCHING-STRATEGY.md) inicial, canalización de Jenkins, empaquetado del gateway y scripts de infraestructura.
 
-[Unreleased]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.2.5...HEAD
+[Sin publicar]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.2.5...HEAD
 [1.2.5]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.2.0...v1.2.5
 [1.2.0]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.1.0...v1.1.1

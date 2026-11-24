@@ -1,11 +1,11 @@
-<!-- CG-DOC: Usage notes for the dashboard-service observability Kustomize components. -->
-# Dashboard observability components
+<!-- CG-DOC: Notas de uso de los componentes Kustomize de observabilidad de dashboard-service. -->
+# Componentes de observabilidad de Dashboard
 
-These Kustomize components extend the shared Prometheus, Alertmanager, Grafana and Loki stack already present in `deploy/k8s/monitoring`. They do not create another monitoring server, log collector or tracing backend. They follow the same pattern as `components/form-observability`.
+Estos componentes Kustomize amplían la pila compartida de Prometheus, Alertmanager, Grafana y Loki ya presente en `deploy/k8s/monitoring`. No crean otro servidor de monitorización, recolector de logs ni backend de trazas. Siguen el mismo patrón que `components/form-observability`.
 
-## Integration
+## Integración
 
-Each application overlay (`dev`, `stage`, `prod`) includes:
+Cada overlay de aplicación (`dev`, `stage`, `prod`) incluye:
 
 ```yaml
 components:
@@ -13,7 +13,7 @@ components:
   - ../../components/dashboard-observability/app
 ```
 
-`deploy/k8s/monitoring/kustomization.yml` includes:
+`deploy/k8s/monitoring/kustomization.yml` incluye:
 
 ```yaml
 components:
@@ -21,44 +21,44 @@ components:
   - ../components/dashboard-observability/monitoring
 ```
 
-The application component adds pod scrape annotations for internal port `8084`, derives `DASHBOARD_ENVIRONMENT` from the namespace, and switches readiness/liveness probes to the Actuator groups. It does not change replicas, HPA, volumes or ingress routes.
+El componente de aplicación añade anotaciones de scraping en los pods para el puerto interno `8084`, deriva `DASHBOARD_ENVIRONMENT` del namespace y cambia las sondas de preparidad/vividad a los grupos de Actuator. No cambia réplicas, HPA, volúmenes ni rutas de ingress.
 
-The monitoring component projects two hashed ConfigMaps: alert rules for Prometheus and a Grafana dashboard. Its patch intentionally lists Auth, Form and dashboard sources so that adding this component after `form-observability` does not remove the Form assets.
+El componente de monitorización proyecta dos ConfigMaps con hash: reglas de alerta para Prometheus y un dashboard de Grafana. Su parche enumera intencionalmente las fuentes de Auth, Form y dashboard para que añadir este componente después de `form-observability` no elimine los recursos de Form.
 
-## Dashboard panels
+## Paneles del dashboard
 
-`monitoring/dashboard-overview.json` provides seven panels with a namespace selector:
+`monitoring/dashboard-overview.json` ofrece siete paneles con un selector de namespace:
 
-1. Scrape availability (`up`).
-2. HTTP requests per second.
-3. HTTP 5xx per second.
-4. Mean HTTP latency.
-5. Promotion calls per second by outcome.
-6. Promotion call p95 latency.
-7. Centralized logs from the Loki datasource.
+1. Disponibilidad de scraping (`up`).
+2. Solicitudes HTTP por segundo.
+3. HTTP 5xx por segundo.
+4. Latencia HTTP media.
+5. Llamadas a Promotion por segundo según el resultado.
+6. Latencia p95 de las llamadas a Promotion.
+7. Logs centralizados de la datasource de Loki.
 
-## Alerts
+## Alertas
 
-- `DashboardServiceDown` (critical): the dashboard scrape target is down for two minutes in dev or prod.
-- `DashboardPromotionCallFailures` (warning): at least 0.2 failed promotion calls per second over five minutes, sustained for two minutes.
+- `DashboardServiceDown` (crítica): el objetivo de scraping del dashboard está caído durante dos minutos en dev o prod.
+- `DashboardPromotionCallFailures` (advertencia): al menos 0.2 llamadas a Promotion con error por segundo durante cinco minutos, sostenido durante dos minutos.
 
-Stage is intentionally excluded from both expressions because, as with Form, it is stopped between validations. Alerts use the existing Prometheus-to-Alertmanager route; external delivery requires a configured receiver and must be verified separately.
+Stage se excluye intencionalmente de ambas expresiones porque, como en Form, está detenido entre validaciones. Las alertas usan la ruta existente de Prometheus a Alertmanager; la entrega externa requiere un receptor configurado y debe verificarse por separado.
 
-## Verification
+## Verificación
 
-From `deploy/k8s/components/dashboard-observability/monitoring`:
+Desde `deploy/k8s/components/dashboard-observability/monitoring`:
 
 ```bash
 promtool check rules dashboard-alerts.yml
 promtool test rules dashboard-alerts.test.yml
 ```
 
-From the repository root (Python with PyYAML and kubectl required):
+Desde la raíz del repositorio (se requieren Python con PyYAML y kubectl):
 
 ```bash
 python deploy/k8s/components/dashboard-observability/verify.py
 ```
 
-The verifier renders all overlays and the monitoring stack with dummy Secrets and compares against the same configuration without this component. It never contacts the cluster or prints Secrets. For individual renders, use `kubectl kustomize deploy/k8s/overlays/<env>` and `kubectl kustomize deploy/k8s/monitoring`.
+El verificador renderiza todos los overlays y la pila de monitorización con Secrets ficticios y compara con la misma configuración sin este componente. Nunca contacta con el clúster ni imprime Secrets. Para renderizados individuales, use `kubectl kustomize deploy/k8s/overlays/<env>` y `kubectl kustomize deploy/k8s/monitoring`.
 
-Local render and rule tests do not prove runtime scrape, panel data or notification delivery. Those require authorized deployment and cluster/Jenkins access.
+El renderizado local y las pruebas de reglas no prueban el scraping en ejecución, los datos de los paneles ni la entrega de notificaciones. Estos requieren un despliegue autorizado y acceso al clúster/Jenkins.

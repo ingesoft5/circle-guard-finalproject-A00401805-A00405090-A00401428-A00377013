@@ -11,7 +11,7 @@ con el puerto `30080` y agotaría `fs.inotify.max_user_instances` en este host.
 Los tres ambientes (`dev`, `stage`, `prod`) usan el mismo clúster y se separan
 por namespaces, cumpliendo E2.2.
 
-| Variable | Descripción | Default |
+| Variable | Descripción | Valor por defecto |
 |---|---|---|
 | `cluster_name` | Nombre del clúster k3d compartido | — |
 | `agents` | Agentes documentados del clúster (no aplicados) | `1` |

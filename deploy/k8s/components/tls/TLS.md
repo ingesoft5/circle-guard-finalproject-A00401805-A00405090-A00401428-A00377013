@@ -1,4 +1,4 @@
-<!-- CG-DOC: Optional TLS component for the shared ingress and its verification steps. -->
+<!-- CG-DOC: Componente TLS opcional para el Ingress compartido y sus pasos de verificación. -->
 # TLS opcional para el Ingress de CircleGuard
 
 El despliegue base sirve HTTP en `:30080` porque el dominio definitivo todavía no

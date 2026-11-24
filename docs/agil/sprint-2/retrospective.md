@@ -1,4 +1,4 @@
-<!-- CG-DOC: Sprint 2 retrospective with owners and follow-up dates. -->
+<!-- CG-DOC: Retrospectiva del Sprint 2 con responsables y fechas de seguimiento. -->
 # Sprint 2 — Retrospectiva
 
 **Fecha:** 23 de noviembre de 2026

@@ -250,7 +250,7 @@ circleguard/
 ├── tests/
 │   ├── e2e/                          # Playwright: login, formulario, acceso, promociones
 │   ├── performance-locust/           # Pruebas de carga
-│   ├── security-zap/                 # OWASP ZAP baseline
+│   ├── security-zap/                 # Línea base de OWASP ZAP
 │   └── TESTS.md
 ├── docs/
 │   ├── agil/                         # Sprint 0-2, backlog, métricas y trazabilidad Jira
@@ -325,7 +325,7 @@ cd circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013
 docker compose --env-file deploy/compose/tools/.env.onpremise \
   -f deploy/compose/tools/docker-compose.onpremise.yml -p cg-tools up -d
 kubectl apply -k deploy/k8s/overlays/dev   # y stage/prod según el entorno
-./infra/onpremise/verify-onpremise.sh      # chequeo read-only de salud
+./infra/onpremise/verify-onpremise.sh      # comprobación de salud de solo lectura
 ```
 
 El registro HTTP del host (`10.147.20.67:5000`) lo usa el clúster para jalar imágenes; `k3d image import -c cg` importa las que Jenkins publica.

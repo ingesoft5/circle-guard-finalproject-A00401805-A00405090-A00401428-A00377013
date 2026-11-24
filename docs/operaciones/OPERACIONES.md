@@ -41,7 +41,7 @@ kubectl -n cg-prod rollout status deployment/<servicio>
 
 No es el mecanismo del despliegue K8s actual, que ejecuta `ci.deploy()` desde `jenkins/vars/ci.groovy`.
 
-## Troubleshooting
+## Solución de problemas
 
 - Verificar `/actuator/health` antes de escalar.
 - Consultar `docs/infra/runbook.md` y `docs/infra/environments.md`.

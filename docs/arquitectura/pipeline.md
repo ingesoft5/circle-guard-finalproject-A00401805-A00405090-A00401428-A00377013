@@ -1,11 +1,11 @@
-<!-- CG-DOC: CI/CD Pipeline — CircleGuard. -->
-# CI/CD Pipeline — CircleGuard
+<!-- CG-DOC: Pipeline de CI/CD — CircleGuard. -->
+# Pipeline de CI/CD — CircleGuard
 
-**Jenkins:** multibranch job `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`
-**Shared Library:** `circleguard@main`
-**File:** `Jenkinsfile`
+**Jenkins:** job multibranch `circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013`
+**Biblioteca compartida:** `circleguard@main`
+**Archivo:** `Jenkinsfile`
 
-## Stages
+## Etapas
 
 ```mermaid
 flowchart LR
@@ -30,155 +30,165 @@ flowchart LR
     PR --> OK[Optional rollback]
 ```
 
-## Service selection
+## Selección de servicios
 
-The `SERVICE` parameter accepts:
+El parámetro `SERVICE` acepta:
 
-- `auto`: **only the modified services**. Rules of `ciServices.selectFromFiles()`:
-  - `services/<service>/...` → that service (one, two, or as many as were touched).
-  - `deploy/**` with the service name in a path segment → that service (for example
+- `auto`: **solo los servicios modificados**. Reglas de `ciServices.selectFromFiles()`:
+  - `services/<service>/...` → ese servicio (uno, dos o tantos como se hayan tocado).
+  - `deploy/**` con el nombre del servicio en un segmento de la ruta → ese servicio (por ejemplo
     `promotion-alerts.yml`, `form-storage.yml`, `components/form-observability/`,
-    `form06-dev/canary/`). A suffix `-`, `_`, `.` or a digit is required, so
-    `form06-dev` maps to `form` but `platform` does not map to `promotion`.
-  - `mobile/...` → the mobile component (Node/Jest coverage and its Sonar project).
-  - Changes that affect the compilation of every module (`build.gradle.kts`,
+    `form06-dev/canary/`). Se requiere un sufijo `-`, `_`, `.` o un dígito, de modo que
+    `form06-dev` se asigna a `form`, pero `platform` no se asigna a `promotion`.
+  - `mobile/...` → el componente móvil (cobertura Node/Jest y su proyecto de Sonar).
+  - Los cambios que afectan a la compilación de todos los módulos (`build.gradle.kts`,
     `settings.gradle.kts`, `gradle.properties`, `gradlew`, `gradlew.bat`, `gradle/`,
-    `sonar-project.properties`) → all nine components.
-  - Shared `deploy/**` configuration (overlays, monitoring, base manifests without a
-    service name) → **no Java service**; it is validated by the Trivy IaC gate instead
-    of recompiling all eight modules.
-  - `Jenkinsfile`, `jenkins/` → no Java service: they change the pipeline definition,
-    not microservice code. `ciServices.verifySelection()` still validates the library.
-  - `docs/`, `tests/`, `infra/` → no component; the build stays green and skips
-    compilation, tests, Sonar and integration.
-- `all`: all eight Java services plus the mobile component.
-- A short name: `gateway`, `auth`, `identity`, `promotion`, `form`, `notification`,
-  `file`, `dashboard` or `mobile`.
+    `sonar-project.properties`) → los nueve componentes.
+  - La configuración compartida de `deploy/**` (overlays, monitoreo, manifiestos base sin
+    nombre de servicio) → **ningún servicio Java**; se valida mediante la compuerta Trivy IaC
+    en lugar de recompilar los ocho módulos.
+  - `Jenkinsfile`, `jenkins/` → ningún servicio Java: cambian la definición del pipeline,
+    no el código de los microservicios. `ciServices.verifySelection()` sigue validando la
+    biblioteca.
+  - `docs/`, `tests/`, `infra/` → ningún componente; la ejecución se mantiene en verde y
+    omite la compilación, las pruebas, Sonar y la integración.
+- `all`: los ocho servicios Java más el componente móvil.
+- Un nombre corto: `gateway`, `auth`, `identity`, `promotion`, `form`, `notification`,
+  `file`, `dashboard` o `mobile`.
 
-The catalog lives in `jenkins/vars/ciServices.groovy` and declares the `type`, `docker`,
-`deploy`, `jacoco`, `integration`, `publish` and `healthcheck` flags per component.
-The `mobile` entry uses `type: 'node'` so Gradle-only stages skip it safely.
-`ciServices.verifySelection()` runs the critical cases on every build (one service,
-two services, a service-specific deploy manifest, a global change, a CI-only change,
-a client-only change, and shared deploy paths) and fails the pipeline if selection
-regresses to "all services". The standalone runner
-`jenkins/test/TestCiServices.groovy` reproduces those cases without Jenkins and serves
-as local regression evidence.
+El catálogo está en `jenkins/vars/ciServices.groovy` y declara los indicadores `type`,
+`docker`, `deploy`, `jacoco`, `integration`, `publish` y `healthcheck` por componente.
+La entrada `mobile` usa `type: 'node'` para que las etapas exclusivas de Gradle la omitan
+de forma segura. `ciServices.verifySelection()` ejecuta los casos críticos en cada
+compilación (un servicio, dos servicios, un manifiesto de despliegue específico de un
+servicio, un cambio global, un cambio solo de CI, un cambio solo de cliente y rutas
+compartidas de despliegue) y provoca un error en el pipeline si la selección retrocede a
+"todos los servicios". El ejecutor independiente
+`jenkins/test/TestCiServices.groovy` reproduce esos casos sin Jenkins y sirve como
+evidencia local de regresión.
 
-> The library is pinned to `@main`, so a PR cannot see library changes it introduces
-> itself. Until the selective-execution fix is merged into `main`, `Jenkinsfile`
-> carries a temporary local copy of the selection logic (marked
-> `REMOVE after merging to main`) and of the `mobile` catalog entry. Delete both once
-> the library changes reach `main`.
+> La biblioteca está fijada a `@main`, por lo que una PR no puede ver los cambios en la
+> biblioteca que ella misma introduce. Hasta que la corrección de la ejecución selectiva se
+> integre en `main`, `Jenkinsfile` incluye una copia local temporal de la lógica de selección
+> (marcada como `REMOVE after merging to main`) y de la entrada del catálogo `mobile`.
+> Elimina ambas cuando los cambios de la biblioteca lleguen a `main`.
 
-**Traceability to the assignment:** E1.4 requires *"execution per service (modified or
-all)"* and criterion P1.4 grades *"selective execution per service"* versus a
-*"monolithic Jenkinsfile"*. This selection is therefore an evaluated requirement, not
-an optional optimization.
+**Trazabilidad con el enunciado:** E1.4 exige *"ejecución por servicio (modificado o
+todos)"* y el criterio P1.4 evalúa *"ejecución selectiva por servicio"* frente a un
+*"Jenkinsfile monolítico"*. Por tanto, esta selección es un requisito evaluado, no una
+optimización opcional.
 
-## Promotion
+## Promoción
 
-| Stage | Condition | Action |
+| Etapa | Condición | Acción |
 |---|---|---|
-| Deploy dev | `main` + `DEPLOY=true` | Deploys the tag to dev |
-| E2E | `main` + `DEPLOY=true` + integration enabled | Login, questionnaire, access |
-| Deploy stage | `main` + `DEPLOY=true` | Promotes the same tag |
-| Approval prod | `main` + `DEPLOY=true` | Manual `input` |
-| Deploy prod | Approval | Deploys the tag |
-| Rollback prod | `ROLLBACK_TAG` | Deploys an earlier tag without rebuilding |
+| Deploy dev | `main` + `DEPLOY=true` | Despliega la etiqueta en dev |
+| E2E | `main` + `DEPLOY=true` + integración habilitada | Inicio de sesión, cuestionario, acceso |
+| Deploy stage | `main` + `DEPLOY=true` | Promueve la misma etiqueta |
+| Approval prod | `main` + `DEPLOY=true` | `input` manual |
+| Deploy prod | Aprobación | Despliega la etiqueta |
+| Rollback prod | `ROLLBACK_TAG` | Despliega una etiqueta anterior sin recompilar |
 
-## Versioning
+## Versionado
 
-- `resolveSemver` reads the latest `vX.Y.Z` tag and conventional commits.
-- `feat` bumps minor; `fix`/`docs`/`ci` bump patch; `!` or
-  `BREAKING CHANGE` bumps major.
-- `Git tag` publishes the tag on `main`.
-- `Release notes` generates `docs/release-notes/vX.Y.Z.md`.
+- `resolveSemver` lee la última etiqueta `vX.Y.Z` y los commits convencionales.
+- `feat` incrementa la versión menor; `fix`/`docs`/`ci` incrementa la de parche; `!` o
+  `BREAKING CHANGE` incrementa la mayor.
+- `Git tag` publica la etiqueta en `main`.
+- `Release notes` genera `docs/release-notes/vX.Y.Z.md`.
 
-## Quality and coverage matrix
+## Matriz de calidad y cobertura
 
-Every component has a mandatory coverage gate of **≥ 60 %**. Thresholds are never
-lowered to make a build pass: when coverage falls below the gate, real tests are added.
+Cada componente tiene una compuerta de cobertura obligatoria de **≥ 60 %**. Los umbrales
+nunca se reducen para que una compilación pase: cuando la cobertura queda por debajo del
+umbral, se añaden pruebas reales.
 
-| Component | Runner | Gate | Report |
+| Componente | Ejecutor | Umbral | Informe |
 |---|---|---|---|
-| gateway, auth, identity, promotion, form, notification, file, dashboard | `./gradlew :services:<name>:check` via `ci.unitTest` | JaCoCo `LINE COVEREDRATIO >= 0.60` | `<service>/build/reports/jacoco/test/jacocoTestReport.xml` |
-| mobile | `npm run test:coverage` via `Mobile tests + coverage` | Jest `coverageThreshold.global` ≥ 60 % for lines/statements/functions/branches | `mobile/coverage/lcov.info` |
+| gateway, auth, identity, promotion, form, notification, file, dashboard | `./gradlew :services:<name>:check` mediante `ci.unitTest` | JaCoCo `LINE COVEREDRATIO >= 0.60` | `<service>/build/reports/jacoco/test/jacocoTestReport.xml` |
+| mobile | `npm run test:coverage` mediante `Mobile tests + coverage` | Jest `coverageThreshold.global` ≥ 60 % para líneas/sentencias/funciones/ramas | `mobile/coverage/lcov.info` |
 
-- The eight Java services share one configuration shape. Seven apply the convention
-  plugin `gradle/jacoco-convention.gradle` (JaCoCo 0.8.12, XML+HTML, `finalizedBy`,
-  `verifyUnitTestsRan`, `check.dependsOn`); promotion keeps the equivalent canonical
-  inline setup and is intentionally left untouched as the reference.
-- `verifyUnitTestsRan` fails when no `TEST-*.xml` exists or any suite was skipped, so a
-  cached/empty run cannot satisfy the coverage number.
-- SonarQube: mandatory quality gate per project, including `circleguard-mobile`, which
-  reads the LCOV report through `mobile/sonar-project.properties`.
-- Integration: Testcontainers in auth, form, gateway, identity, notification and promotion.
-- E2E: Playwright against the web client and the gateway.
-- Image security: verifies the image does not run as root; services with
-  `healthcheck: true` must declare `HEALTHCHECK`. The flagged services are gateway,
-  identity, promotion, notification and dashboard (HU-DASH-03). Dashboard was packaged
-  and published in Parte 1; HU-DASH-04 enables `deploy: true` so the same tagged image
-  is promoted to `cg-dev`, `cg-stage` and `cg-prod` in Parte 2. Since HU-DASH-05
-  it also exposes `/actuator/prometheus` and is covered by the global Trivy image gate
-  when built on `main`. Its first build reported CRITICAL findings and was blocked;
-  the remediation upgraded the shared Spring Boot platform to `4.0.10` without changing
-  the gate, and the rebuilt image scored 0 HIGH / 0 CRITICAL with Trivy `0.57.1` and
-  `0.70.0` as recorded in `docs/informe/evidencia/HU-DASH-05/`.
-- Logs, JaCoCo XML, LCOV, JUnit results, Sonar links and image digests are archived on
-  every build.
+- Los ocho servicios Java comparten una misma forma de configuración. Siete aplican el
+  plugin de convención `gradle/jacoco-convention.gradle` (JaCoCo 0.8.12, XML+HTML,
+  `finalizedBy`, `verifyUnitTestsRan`, `check.dependsOn`); promotion conserva la
+  configuración canónica equivalente en línea y se deja intacta intencionalmente como
+  referencia.
+- `verifyUnitTestsRan` produce un error cuando no existe `TEST-*.xml` o se omitió alguna
+  suite, de modo que una ejecución en caché o vacía no puede cumplir el porcentaje de
+  cobertura.
+- SonarQube: compuerta de calidad obligatoria por proyecto, incluido `circleguard-mobile`,
+  que lee el informe LCOV mediante `mobile/sonar-project.properties`.
+- Integración: Testcontainers en auth, form, gateway, identity, notification y promotion.
+- E2E: Playwright contra el cliente web y el gateway.
+- Seguridad de imágenes: verifica que la imagen no se ejecute como root; los servicios con
+  `healthcheck: true` deben declarar `HEALTHCHECK`. Los servicios señalados son gateway,
+  identity, promotion, notification y dashboard (HU-DASH-03). Dashboard se empaquetó y
+  publicó en Parte 1; HU-DASH-04 habilita `deploy: true` para que la misma imagen etiquetada
+  se promueva a `cg-dev`, `cg-stage` y `cg-prod` en Parte 2. Desde HU-DASH-05 también
+  expone `/actuator/prometheus` y queda cubierta por la compuerta global de imágenes de Trivy
+  cuando se compila en `main`. Su primera compilación informó hallazgos CRITICAL y quedó
+  bloqueada; la corrección actualizó la plataforma compartida de Spring Boot a `4.0.10` sin
+  modificar la compuerta, y la imagen recompilada obtuvo 0 HIGH / 0 CRITICAL con Trivy
+  `0.57.1` y `0.70.0`, según lo registrado en `docs/informe/evidencia/HU-DASH-05/`.
+- Los registros, XML de JaCoCo, LCOV, resultados de JUnit, enlaces de Sonar y digests de
+  imágenes se archivan en cada compilación.
 
-## Docker registry
+## Registro Docker
 
-`NEXUS_REGISTRY` is the address used by Kubernetes manifests and build evidence (for
-example `10.147.20.67:5000`, or the private tools IP configured in `.env`). The registry
-serves plain HTTP, but the Docker daemon only trusts loopback names by default; logging
-in with the host IP fails with `http: server gave HTTP response to HTTPS client`.
+`NEXUS_REGISTRY` es la dirección que usan los manifiestos de Kubernetes y la evidencia de
+compilación (por ejemplo `10.147.20.67:5000` o la IP privada de tools configurada en
+`.env`). El registro sirve HTTP simple, pero el daemon de Docker solo confía en nombres
+loopback por defecto; iniciar sesión con la IP del host produce el error
+`http: server gave HTTP response to HTTPS client`.
 
-`dockerRegistryForDaemon()` maps the local host aliases (`TOOLS_PRIVATE_IP` /
-`TOOLS_IP`) to `127.0.0.1:<port>` **only** for `docker login`, base-image arguments,
-build, push, pull, Trivy scans and deploys. External registries are left untouched.
-The images are still recorded in `image-digest.txt` with their advertised
-`NEXUS_REGISTRY` name, so evidence and k3d overlays keep using the stable address.
+`dockerRegistryForDaemon()` asocia los alias locales del host (`TOOLS_PRIVATE_IP` /
+`TOOLS_IP`) con `127.0.0.1:<port>` **solo** para `docker login`, los argumentos de imagen
+base, la compilación, el push, el pull, los escaneos de Trivy y los despliegues. Los registros
+externos se dejan intactos. Las imágenes se siguen registrando en `image-digest.txt` con su
+nombre `NEXUS_REGISTRY` anunciado, de modo que la evidencia y los overlays de k3d continúan
+usando la dirección estable.
 
-## Failure notifications and rollback
+## Notificaciones de error y rollback
 
-- `ciNotify.failure` comments on GitHub with the **real failing stage** (captured in
-  `env.FAILED_STAGE` when each stage starts; `post.failure` restores it because
-  Jenkins has already replaced `STAGE_NAME` with `Declarative: Post Actions`) and sends
-  automatic notifications through **all configured channels**: Slack
-  (`SLACK_WEBHOOK_URL`) and Discord (`DISCORD_WEBHOOK_URL`). If none is configured, the
-  build warns explicitly that the assignment notification (E1.5, E2.3, P1.5, P2.5) is
-  incomplete. Both variables are injected into the Jenkins container from
+- `ciNotify.failure` comenta en GitHub con la **etapa real que produjo el error** (capturada
+  en `env.FAILED_STAGE` al iniciar cada etapa; `post.failure` la restaura porque Jenkins
+  ya ha reemplazado `STAGE_NAME` por `Declarative: Post Actions`) y envía notificaciones
+  automáticas por **todos los canales configurados**: Slack
+  (`SLACK_WEBHOOK_URL`) y Discord (`DISCORD_WEBHOOK_URL`). Si no hay ninguno configurado, la
+  compilación advierte explícitamente de que falta la notificación del enunciado
+  (E1.5, E2.3, P1.5, P2.5). Ambas variables se inyectan en el contenedor de Jenkins desde
   `deploy/compose/tools/.env`.
-- `ROLLBACK_TAG` skips build, tests, Sonar, publish and Docker; it only deploys to
-  production. HU-DASH-04 executed this flow (and the equivalent `kubectl rollout undo`)
-  for `dashboard` in `cg-prod`; the captured evidence is linked from
-  `docs/informe/HU-DASH-04.md`.
-- Logs, JaCoCo reports, JUnit results and digests are archived on every build.
+- `ROLLBACK_TAG` omite la compilación, las pruebas, Sonar, la publicación y Docker; solo
+  despliega en producción. HU-DASH-04 ejecutó este flujo (y el equivalente
+  `kubectl rollout undo`) para `dashboard` en `cg-prod`; la evidencia capturada está
+  enlazada desde `docs/informe/HU-DASH-04.md`.
+- Los registros, los informes de JaCoCo, los resultados de JUnit y los digests se archivan
+  en cada compilación.
 
-## Resource guardrails
+## Salvaguardas de recursos
 
-- `Preflight resources` reports `/proc/loadavg` and `MemAvailable` at the start of
-  every build. It warns above load 14 or below 2048 MB and fails only above load 24
-  or below 512 MB, so host pressure is visible without turning into a spurious failure.
-- JCasC sets `numExecutors: 2`: four concurrent Gradle + Testcontainers runs pushed the
-  host to load ~13 with swap in use, which made container health checks time out.
-- The promotion integration suite has a 15-minute timeout so a cold start under load
-  finishes before Jenkins kills it, while a real hang still fails with a clear message
-  and leaves JUnit XML behind.
+- `Preflight resources` informa de `/proc/loadavg` y `MemAvailable` al inicio de
+  cada compilación. Avisa cuando la carga supera 14 o la memoria baja de 2048 MB, y solo
+  produce un error cuando la carga supera 24 o la memoria baja de 512 MB, de modo que
+  la presión del host sea visible sin convertirse en un error espurio.
+- JCasC configura `numExecutors: 2`: cuatro ejecuciones concurrentes de Gradle +
+  Testcontainers llevaron al host a una carga de ~13 con swap en uso, lo que hizo que las
+  comprobaciones de salud de los contenedores agotaran el tiempo de espera.
+- La suite de integración de promotion tiene un tiempo de espera de 15 minutos para que
+  un arranque en frío bajo carga termine antes de que Jenkins lo interrumpa, mientras que
+  un bloqueo real sigue produciendo un error con un mensaje claro y deja el XML de JUnit.
 
-## Evidence
+## Evidencia
 
-Finalization evidence must include:
+La evidencia de cierre debe incluir:
 
-- A coverage table with the **real measured percentage** for all nine components
-  (eight Java services plus mobile), each with `>= 60 %` and the report path used.
-- A green `continuous-integration/jenkins/pr-merge` check plus the approving review;
-  merges use the normal GitHub merge, never `--admin`.
-- A production demo after approval, with the deploy/rollback record.
+- Una tabla de cobertura con el **porcentaje real medido** de los nueve componentes (ocho
+  servicios Java más móvil), cada uno con `>= 60 %` y la ruta del informe utilizada.
+- Una comprobación verde de `continuous-integration/jenkins/pr-merge` junto con la revisión
+  aprobatoria; las fusiones usan la fusión normal de GitHub, nunca `--admin`.
+- Una demostración en producción tras la aprobación, con el registro de despliegue/rollback.
 
-Historical evidence:
+Evidencia histórica:
 
 - `docs/informe/evidencia/jenkins-pr15.png`
 - `docs/informe/evidencia/sonarqube-quality-gate.png`

@@ -1,30 +1,30 @@
-<!-- CG-DOC: Documentation conventions for source, configuration, and actively maintained project documentation. -->
-# Documentation Standard
+<!-- CG-DOC: Convenciones de documentación para el código fuente, la configuración y la documentación del proyecto en mantenimiento activo. -->
+# Estándar de documentación
 
-## Purpose
+## Propósito
 
-This repository uses English for source comments, file headers, API documentation, and configuration notes. Documentation explains intent, responsibilities, inputs, outputs, side effects, and operational constraints. It does not repeat code that is already self-explanatory.
+Este repositorio usa el inglés para los comentarios del código fuente, los encabezados de archivos, la documentación de API y las notas de configuración. La documentación explica la intención, las responsabilidades, las entradas, las salidas, los efectos secundarios y las restricciones operativas. No repite código que ya se entiende por sí mismo.
 
-## Language
+## Idioma
 
-- All new comments, docstrings, Javadoc, TSDoc, and file headers are written in English.
-- Existing product documentation may remain in Spanish when it is part of a course deliverable, but every source/config file must include an English purpose header.
-- Commit messages and pull request titles are written in English.
+- Todos los comentarios nuevos, docstrings, Javadoc, TSDoc y encabezados de archivos se escriben en inglés.
+- La documentación de producto existente puede permanecer en español cuando forma parte de una entrega del curso, pero cada archivo de código fuente/configuración debe incluir un encabezado de propósito en inglés.
+- Los mensajes de commit y los títulos de los pull requests se escriben en inglés.
 
-## Required file header
+## Encabezado obligatorio de archivo
 
-Every new or actively maintained source, script, configuration, migration, template, and documentation file starts with a short English block:
+Todo archivo nuevo o en mantenimiento activo de código fuente, scripts, configuración, migraciones, plantillas y documentación comienza con un bloque breve en inglés:
 
 ```text
 CG-DOC: <one sentence describing the file purpose>
 ```
 
-**Exempt files.** The following are preserved as point-in-time records and do not need a `CG-DOC` header: sprint planning/review/retrospective notes, release notes, `CHANGELOG.md`, `IAG_REGISTRO.md`, evidence indexes and evidence files, final reports (PDF/DOCX and their Markdown sources), architecture and pattern reports, and other course deliverables. Do not rewrite them only to add a header; add the header when creating a new active document or when substantially updating an exempt file.
+**Archivos exentos.** Los siguientes se conservan como registros puntuales y no necesitan un encabezado `CG-DOC`: notas de planificación/revisión/retrospectiva de sprint, notas de versión, `CHANGELOG.md`, `IAG_REGISTRO.md`, índices de evidencia y archivos de evidencia, informes finales (PDF/DOCX y sus fuentes Markdown), informes de arquitectura y patrones, y otras entregas del curso. No los reescribas solo para añadir un encabezado; añádelo al crear un documento activo nuevo o al actualizar sustancialmente un archivo exento.
 
-Use the comment syntax of the file type:
+Usa la sintaxis de comentarios propia del tipo de archivo:
 
 - Java, TypeScript, TSX, JavaScript: `/** CG-DOC: ... */`
-- Shell, YAML, properties, env examples: `# CG-DOC: ...`
+- Shell, YAML, properties, ejemplos de env: `# CG-DOC: ...`
 - SQL: `-- CG-DOC: ...`
 - Groovy, Kotlin DSL, Cypher: `// CG-DOC: ...`
 - Markdown, HTML: `<!-- CG-DOC: ... -->`
@@ -34,52 +34,52 @@ Use the comment syntax of the file type:
 
 ## Java
 
-- Add Javadoc to public classes, interfaces, records, enums, and public methods.
-- Document parameters, return values, thrown exceptions, and security assumptions.
-- Add `package-info.java` when a package has a non-obvious responsibility.
-- Do not comment trivial getters, setters, or generated members.
+- Añade Javadoc a las clases, interfaces, records, enums y métodos públicos.
+- Documenta parámetros, valores de retorno, excepciones lanzadas y supuestos de seguridad.
+- Añade `package-info.java` cuando un paquete tenga una responsabilidad no evidente.
+- No comentes getters, setters ni miembros generados triviales.
 
-## TypeScript and React Native
+## TypeScript y React Native
 
-- Use TSDoc for exported hooks, components, contexts, and utilities.
-- Document props, return values, side effects, and external dependencies.
-- Add a header to screens, layouts, and configuration files.
+- Usa TSDoc para hooks, componentes, contextos y utilidades exportados.
+- Documenta props, valores de retorno, efectos secundarios y dependencias externas.
+- Añade un encabezado a las pantallas, los diseños y los archivos de configuración.
 
 ## SQL
 
-- Document the migration purpose, affected tables, dependencies, and ordering constraints.
-- Do not alter executable SQL while documenting it.
-- Keep migration files immutable after they have been applied.
+- Documenta el propósito de la migración, las tablas afectadas, las dependencias y las restricciones de orden.
+- No modifiques el SQL ejecutable mientras lo documentas.
+- Mantén los archivos de migración inmutables después de haberse aplicado.
 
-## YAML and Docker Compose
+## YAML y Docker Compose
 
-- Document each service, exposed port, volume, healthcheck, and required environment variable.
-- Mark optional values and safe defaults.
-- Never include real secrets.
+- Documenta cada servicio, puerto expuesto, volumen, healthcheck y variable de entorno requerida.
+- Marca los valores opcionales y los valores predeterminados seguros.
+- Nunca incluyas secretos reales.
 
-## Shell scripts
+## Scripts de shell
 
-- Start with purpose, usage, prerequisites, environment variables, idempotency behavior, side effects, and cleanup instructions.
-- Document functions that perform AWS, Docker, SSH, or file mutations.
-- Prefer `set -euo pipefail`.
+- Comienza con el propósito, el uso, los prerrequisitos, las variables de entorno, el comportamiento de idempotencia, los efectos secundarios y las instrucciones de limpieza.
+- Documenta las funciones que realizan operaciones con AWS, Docker, SSH o mutaciones de archivos.
+- Prefiere `set -euo pipefail`.
 
-## Jenkins and Groovy
+## Jenkins y Groovy
 
-- Document pipeline stages, parameters, credentials, artifacts, deployment targets, and rollback behavior.
-- Keep secrets out of source and logs.
+- Documenta las etapas del pipeline, los parámetros, las credenciales, los artefactos, los destinos de despliegue y el comportamiento de reversión.
+- Mantén los secretos fuera del código fuente y de los registros.
 
-## Documentation files
+## Archivos de documentación
 
-- Use English titles and summaries.
-- Link related modules and operational runbooks.
-- Keep the file index updated when adding or removing tracked files.
+- Usa títulos y resúmenes en inglés.
+- Enlaza los módulos relacionados y los runbooks operativos.
+- Mantén actualizado el índice de archivos al añadir o eliminar archivos rastreados.
 
-## Exclusions
+## Exclusiones
 
-The following do not receive inline headers:
+Los siguientes no reciben encabezados en línea:
 
-- Binary assets: PDF, PNG, JPG, TTF, JAR.
-- Generated dependency locks: `package-lock.json`.
-- Generated IDE output: `bin/`.
-- Generated Gradle wrappers: `gradlew`, `gradlew.bat`, wrapper JAR.
-- JSON files, because the format does not support comments.
+- Recursos binarios: PDF, PNG, JPG, TTF, JAR.
+- Bloqueos de dependencias generados: `package-lock.json`.
+- Salidas generadas por IDE: `bin/`.
+- Wrappers de Gradle generados: `gradlew`, `gradlew.bat`, wrapper JAR.
+- Archivos JSON, porque el formato no admite comentarios.

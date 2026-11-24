@@ -1,5 +1,5 @@
-<!-- CG-DOC: FinOps bonus verification (enunciado L284). -->
-# FinOps bonus verification (enunciado L284)
+<!-- CG-DOC: Verificación de la bonificación de FinOps (enunciado L284). -->
+# Verificación de la bonificación de FinOps (enunciado L284)
 
 Bonificación de **FinOps** del enunciado L284: monitoreo de costos, spot y
 scale-to-zero. Evidencia **real** obtenida en el clúster on-prem `k3d-cg`
@@ -14,7 +14,7 @@ valores provienen de `kubectl` sobre el clúster y de los manifiestos aplicados.
   de Prometheus para demostrar scale-to-zero de `file` y `notification`.
 - OpenCost desplegado en `monitoring` con ConfigMap de precios on-prem y
   dashboard de costo en Grafana.
-- Política spot documentada con sus trade-offs.
+- Política spot documentada con sus compromisos.
 
 ## Archivos
 
@@ -23,8 +23,8 @@ valores provienen de `kubectl` sobre el clúster y de los manifiestos aplicados.
 - `deploy/finops/opencost-install.sh` — OpenCost + pricing + dashboard.
 - `deploy/finops/opencost-prices.yml` — ConfigMap de precios del host.
 - `deploy/finops/grafana-cost-dashboard.yml` — dashboard de costo.
-- `docs/costos/spot-policy.md` — política spot y trade-offs.
-- `scripts/verify-finops.sh` — verificador de los 6 checks.
+- `docs/costos/spot-policy.md` — política spot y compromisos.
+- `scripts/verify-finops.sh` — verificador de las 6 comprobaciones.
 
 ## Verificación ejecutada
 

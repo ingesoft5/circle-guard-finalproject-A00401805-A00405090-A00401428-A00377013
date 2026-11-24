@@ -4,7 +4,7 @@
 Declara los buckets MinIO de archivos y backups del ambiente (con versioning)
 y el PVC de datos de las aplicaciones. `force_destroy` se habilita solo en dev.
 
-| Variable | Descripción | Default |
+| Variable | Descripción | Valor por defecto |
 |---|---|---|
 | `env` | Identificador del ambiente | — |
 | `namespace` | Namespace del PVC | — |
