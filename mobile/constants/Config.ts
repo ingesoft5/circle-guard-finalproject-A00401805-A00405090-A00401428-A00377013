@@ -3,6 +3,11 @@
  */
 /**
  * Global Configuration for CircleGuard Mobile.
+ * Native base URLs use the localhost convention with `adb reverse` during
+ * local development. The web export overrides every base URL in
+ * `Config.web.ts`, which Metro resolves automatically when bundling for web
+ * (the static export is served behind the Traefik ingress, so the client
+ * calls the same origin; see deploy/k8s/base/ingress.yml).
  */
 export const AUTH_BASE_URL = 'http://localhost:8180'; // Auth Service
 export const DASHBOARD_BASE_URL = 'http://localhost:8084'; // Dashboard Service
