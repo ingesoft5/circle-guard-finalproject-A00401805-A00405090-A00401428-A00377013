@@ -95,6 +95,10 @@ class FormPromotionKafkaIntegrationTest {
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
             // The broker with Zookeeper exceeded the 60 s wait strategy timeout in CI.
             // KRaft + bounded heap reduce startup time and memory usage.
+            // Wait for the startup script copy to finish: under E/S pressure the
+            // default command can hit "Text file busy" and exit 126.
+            .withCommand("sh", "-c",
+                    "while [ ! -f /tmp/testcontainers_start.sh ]; do sleep 0.1; done; sleep 2; /tmp/testcontainers_start.sh")
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx512M -Xms256M")
             .withStartupTimeout(Duration.ofMinutes(3));
 

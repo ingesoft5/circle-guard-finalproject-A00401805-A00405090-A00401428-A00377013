@@ -92,6 +92,10 @@ class NotificationKafkaIntegrationTest {
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
             // KRaft (Confluent image) + bounded heap: Zookeeper mode exceeded the
             // wait strategy in CI. Never return to the KafkaContainer with Zookeeper.
+            // Wait for the startup script copy to finish: under E/S pressure the
+            // default command can hit "Text file busy" and exit 126.
+            .withCommand("sh", "-c",
+                    "while [ ! -f /tmp/testcontainers_start.sh ]; do sleep 0.1; done; sleep 2; /tmp/testcontainers_start.sh")
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx512M -Xms256M")
             .withStartupTimeout(Duration.ofMinutes(3));
 

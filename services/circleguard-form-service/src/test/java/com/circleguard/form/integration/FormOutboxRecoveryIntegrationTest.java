@@ -59,6 +59,11 @@ class FormOutboxRecoveryIntegrationTest {
             .withStartupTimeout(Duration.ofMinutes(3));
     @Container static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer(
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
+            // Testcontainers starts the shell before it finishes copying the startup
+            // script; under E/S pressure "sh: /tmp/testcontainers_start.sh: Text file
+            // busy" kills the container (exit 126) and the wait strategy times out.
+            .withCommand("sh", "-c",
+                    "while [ ! -f /tmp/testcontainers_start.sh ]; do sleep 0.1; done; sleep 2; /tmp/testcontainers_start.sh")
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx512M -Xms256M")
             .withStartupTimeout(Duration.ofMinutes(3));
 
