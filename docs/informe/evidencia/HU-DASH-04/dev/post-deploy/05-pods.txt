@@ -1,3 +1,0 @@
-NAME                         READY   STATUS              RESTARTS   AGE   IP       NODE              NOMINATED NODE   READINESS GATES
-dashboard-7c7697f8d8-8ktpx   0/1     Pending             0          15s   <none>   k3d-cg-server-0   <none>           <none>
-dashboard-7d9674c744-5fjkx   0/1     ContainerCreating   0          37s   <none>   k3d-cg-server-0   <none>           <none>

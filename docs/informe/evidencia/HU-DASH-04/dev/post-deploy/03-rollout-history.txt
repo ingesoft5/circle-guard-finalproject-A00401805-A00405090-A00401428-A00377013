@@ -1,6 +1,0 @@
-deployment.apps/dashboard 
-REVISION  CHANGE-CAUSE
-1         <none>
-2         <none>
-3         <none>
-

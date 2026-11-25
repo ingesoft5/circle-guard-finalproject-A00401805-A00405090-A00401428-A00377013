@@ -1,2 +1,0 @@
-NAME        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
-dashboard   ClusterIP   10.43.231.62   <none>        8084/TCP   5d23h
