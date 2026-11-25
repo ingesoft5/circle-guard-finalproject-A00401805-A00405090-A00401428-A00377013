@@ -714,7 +714,7 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 
 **Alcance de la sección.** Se registran aquí las intervenciones sobre el gateway, el `file-service` y la plataforma CI/CD. Las historias de `dashboard-service` (HU-DASH-03, HU-DASH-04 y HU-DASH-05) tienen entrada propia en las secciones [5](#5-módulo-circleguard-dashboard-service-e-integración-cicd-hu-dash-03), [6](#6-módulo-circleguard-dashboard-service--observabilidad-y-seguridad-hu-dash-05) y [7](#7-entrada-ejecución-de-hu-dash-04-despliegue-y-rollback-on-premise-de-dashboard-service), y se referencian desde esta sección sin duplicar su contenido.
 
-**Convención de registro.** Los prompts marcados como *reconstruidos y contrastados* se derivaron del historial de la sesión y se cotejaron contra los commits, reportes y evidencias versionadas. Los prompts literales que se conservan se identifican como *transcripción de sesión*. Ninguna métrica se tomó de una conversación sin contraste con un artefacto del repositorio.
+**Convención de registro.** Los prompts sin transcripción literal se registran como *resumen fiel de lo que pedí*: conservan el sentido y el orden real de la petición (plan completo, revisión, ejecución y correcciones), sin presentarlos como citas textuales. Los prompts que sí se conservan palabra por palabra se identifican como *transcripción de sesión*. Ninguna métrica se tomó de una conversación sin contraste con un artefacto del repositorio.
 
 **Trazabilidad de las intervenciones**
 
@@ -1064,7 +1064,7 @@ La ausencia de video no puede resolverse escribiendo que «no aplica» sin una d
 ### 2.9 Lecciones transversales y límites de verificación
 
 1. **Evidencia antes que afirmación.** Las cifras de esta sección proceden de XML, logs, capturas o commits versionados. Las mediciones intermedias se marcan como históricas y no se presentan como resultado final cuando existe un consolidado posterior.
-2. **Prompts como insumo, no como prueba.** La salida de IAG se contrastó siempre con una ejecución local, un reporte publicado o un artefacto del repositorio. Los prompts reconstruidos se identifican como tales.
+2. **Prompts como insumo, no como prueba.** La salida de IAG se contrastó siempre con una ejecución local, un reporte publicado o un artefacto del repositorio. Los prompts que no tienen transcripción literal se identifican como resumen fiel de la petición.
 3. **Separación de responsabilidades.** Las intervenciones de dashboard-service se registran en las secciones 5, 6 y 7; esta sección solo las referencia. El rollback on-premise documentado en la sección 7 se apoya en el transcript restaurado `docs/informe/evidencia/HU-DASH-04/prod/rollback-commands.txt`.
 
 ---
