@@ -1,0 +1,84 @@
+2026-11-23T07:39:53Z
+=== NODOS ===
+NAME              STATUS   ROLES                  AGE    VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION     CONTAINER-RUNTIME
+k3d-cg-agent-0    Ready    <none>                 141m   v1.31.1+k3s1   172.20.0.3    <none>        K3s v1.31.1+k3s1   7.0.0-43-generic   containerd://1.7.21-k3s2
+k3d-cg-server-0   Ready    control-plane,master   141m   v1.31.1+k3s1   172.20.0.2    <none>        K3s v1.31.1+k3s1   7.0.0-43-generic   containerd://1.7.21-k3s2
+=== NAMESPACE cg-dev ===
+--- deployment dashboard ---
+NAME        READY   DESIRED   IMAGE
+dashboard   1       1         circleguard-docker/dashboard:1.10.0
+--- pods dashboard ---
+NAME                         READY   STATUS    RESTARTS   AGE    IP           NODE              NOMINATED NODE   READINESS GATES
+dashboard-6b5b89fcb6-7r2tq   1/1     Running   0          108m   10.42.0.41   k3d-cg-server-0   <none>           <none>
+--- pod postgres ---
+postgres-0   true   Running   3
+--- curl via port-forward pod/dashboard-6b5b89fcb6-7r2tq 18084:8084 ---
+--- GET /actuator/health ---
+{"status":"UP","components":{"db":{"status":"UP","details":{"database":"PostgreSQL","validationQuery":"isValid()"}},"diskSpace":{"status":"UP","details":{"total":982249091072,"free":692643344384,"threshold":10485760,"path":"/app/.","exists":true}},"livenessState":{"status":"UP"},"ping":{"status":"UP"},"readinessState":{"status":"UP"}},"groups":["liveness","readiness"]}
+HTTP 200
+
+--- GET /actuator/health/readiness ---
+{"status":"UP"}
+HTTP 200
+
+--- GET /actuator/health/liveness ---
+{"status":"UP"}
+HTTP 200
+
+--- GET /api/v1/analytics/summary ---
+{"error":"Service unavailable","timestamp":"2026-11-23T07:40:02.825+00:00"}
+HTTP 200
+
+=== NAMESPACE cg-stage ===
+--- deployment dashboard ---
+NAME        READY   DESIRED   IMAGE
+dashboard   1       1         circleguard-docker/dashboard:1.10.0
+--- pods dashboard ---
+NAME                         READY   STATUS    RESTARTS      AGE   IP           NODE              NOMINATED NODE   READINESS GATES
+dashboard-5dcd7774f9-k9ftl   1/1     Running   8 (12m ago)   25m   10.42.0.73   k3d-cg-server-0   <none>           <none>
+--- pod postgres ---
+postgres-0   true   Running   1
+--- curl via port-forward pod/dashboard-5dcd7774f9-k9ftl 18085:8084 ---
+--- GET /actuator/health ---
+{"status":"UP","components":{"db":{"status":"UP","details":{"database":"PostgreSQL","validationQuery":"isValid()"}},"diskSpace":{"status":"UP","details":{"total":982249091072,"free":692643110912,"threshold":10485760,"path":"/app/.","exists":true}},"livenessState":{"status":"UP"},"ping":{"status":"UP"},"readinessState":{"status":"UP"}},"groups":["liveness","readiness"]}
+HTTP 200
+
+--- GET /actuator/health/readiness ---
+{"status":"UP"}
+HTTP 200
+
+--- GET /actuator/health/liveness ---
+{"status":"UP"}
+HTTP 200
+
+--- GET /api/v1/analytics/summary ---
+{"timestamp":"2026-11-23T07:40:08.995+00:00","error":"Service unavailable"}
+HTTP 200
+
+=== NAMESPACE cg-prod ===
+--- deployment dashboard ---
+NAME        READY   DESIRED   IMAGE
+dashboard   1       1         circleguard-docker/dashboard:1.10.0
+--- pods dashboard ---
+NAME                         READY   STATUS    RESTARTS   AGE   IP           NODE             NOMINATED NODE   READINESS GATES
+dashboard-7749cccdb7-xj994   1/1     Running   0          12m   10.42.2.88   k3d-cg-agent-0   <none>           <none>
+--- pod postgres ---
+postgres-0   true   Running   0
+--- curl via port-forward pod/dashboard-7749cccdb7-xj994 18086:8084 ---
+--- GET /actuator/health ---
+{"status":"UP","components":{"db":{"status":"UP","details":{"database":"PostgreSQL","validationQuery":"isValid()"}},"diskSpace":{"status":"UP","details":{"total":982249091072,"free":692643155968,"threshold":10485760,"path":"/app/.","exists":true}},"livenessState":{"status":"UP"},"ping":{"status":"UP"},"readinessState":{"status":"UP"}},"groups":["liveness","readiness"]}
+HTTP 200
+
+--- GET /actuator/health/readiness ---
+{"status":"UP"}
+HTTP 200
+
+--- GET /actuator/health/liveness ---
+{"status":"UP"}
+HTTP 200
+
+--- GET /api/v1/analytics/summary ---
+{"error":"Service unavailable","timestamp":"2026-11-23T07:40:19.703+00:00"}
+HTTP 200
+
+2026-11-23T07:40:19Z
