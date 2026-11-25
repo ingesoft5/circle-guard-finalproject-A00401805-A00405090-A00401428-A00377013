@@ -27,6 +27,10 @@ dependencies {
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // Spring Boot 4 split TestRestTemplate into optional modules; the integration
+    // test injects the auto-configured template, so both must be on the test classpath.
+    testImplementation("org.springframework.boot:spring-boot-restclient")
+    testImplementation("org.springframework.boot:spring-boot-resttestclient")
     // HU-FILE-04: the S3 client backs the real file-storage adapter; Testcontainers only supplies
     // the ephemeral MinIO server used by the integration tests.
     implementation("software.amazon.awssdk:s3:2.29.52")
