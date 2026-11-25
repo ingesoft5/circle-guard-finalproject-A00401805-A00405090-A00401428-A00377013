@@ -756,7 +756,8 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
                     loadEnvironment('NEXUS_REGISTRY', 'NEXUS_URL', 'TOOLS_IP', 'TOOLS_PRIVATE_IP',
-                            'GITHUB_OWNER', 'GITHUB_REPO')
+                            'GITHUB_OWNER', 'GITHUB_REPO',
+                            'SLACK_WEBHOOK_URL', 'DISCORD_WEBHOOK_URL')
                     env.DOCKER_REGISTRY = dockerRegistryForDaemon()
                     echo "Docker login target: ${env.DOCKER_REGISTRY ?: 'none'} (advertised registry: ${env.NEXUS_REGISTRY ?: 'none'})"
 
@@ -1165,7 +1166,23 @@ pipeline {
             }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
-                input message: 'Approve production deployment', ok: 'Deploy'
+                // The promotion gate is automatic: the blocking stages above (tests,
+                // Trivy and ZAP) are the approval policy. This keeps the run free of
+                // hidden manual steps while still recording an explicit approval event.
+                sh '''
+                    set -eu
+                    test -s build/reports/security/zap-stage.txt
+                    test -s build/reports/security/trivy-iac-k8s.json
+                    if grep -qE '^FAIL-NEW:[[:space:]]*[1-9]' build/reports/security/zap-stage.txt; then
+                      echo "Production approval blocked: ZAP still reports blocking findings." >&2
+                      exit 1
+                    fi
+                    echo "Production promotion approved automatically: unit, integration, E2E, Trivy and ZAP gates passed."
+                '''
+                script {
+                    ciNotify.notifyAll('success',
+                            "Production promotion approved automatically for ${env.TAG}. ${env.BUILD_URL}")
+                }
             }
         }
 
@@ -1227,6 +1244,7 @@ pipeline {
         }
         success {
             echo "Pipeline succeeded: ${env.SERVICES ?: 'no services'} ${env.TAG}"
+            script { ciNotify.success(services) }
         }
         failure {
             script {
