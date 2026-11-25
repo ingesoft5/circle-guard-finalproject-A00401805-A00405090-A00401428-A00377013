@@ -35,6 +35,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    // Spring Boot 4 moved the tracing auto-configuration out of actuator-autoconfigure;
+    // the OpenTelemetry module provides the Tracer and Propagator beans used by Kafka.
+    implementation("org.springframework.boot:spring-boot-micrometer-tracing-opentelemetry")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
     testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")

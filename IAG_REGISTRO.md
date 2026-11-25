@@ -6,9 +6,9 @@
 **Política de uso declarada:** **Nivel 3 — Colaboración con IAG (con registro de prompts)**
 
 > **Declaración de uso:**  
-> De acuerdo con las directrices del proyecto final (Secciones 2.4 y 3.1 — Entregable E1.8), este documento registra el trabajo colaborativo con herramientas de Inteligencia Artificial Generativa durante el ciclo de vida DevOps de **CircleGuard**. Para cada intervención se documenta el análisis e insumo propio elaborado previamente por el estudiante, el prompt exacto empleado, las validaciones/ajustes manuales aplicados sobre la salida generada y una reflexión crítica sobre el resultado.
+> De acuerdo con las directrices del proyecto final (Secciones 2.4 y 3.1 — Entregable E1.8), este documento registra el trabajo colaborativo con herramientas de Inteligencia Artificial Generativa durante el ciclo de vida DevOps de **CircleGuard**. Para cada intervención se documenta el análisis e insumo propio elaborado previamente por el estudiante, el prompt exacto empleado —o, cuando la sesión original no está disponible, un resumen fiel de lo que se pidió, identificado como tal—, las validaciones/ajustes manuales aplicados sobre la salida generada y una reflexión crítica sobre el resultado.
 
-> **Nota de convención (Bloque B).** Cada intervención usa un único formato de encabezados de nivel 4: `#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)`, `#### B. Prompt empleado`, `#### C. Validación humana y hallazgos` y `#### D. Reflexión crítica`. El origen de cada prompt se declara dentro de la entrada correspondiente. El documento está en español; la única excepción es el `Executive Summary` en inglés exigido por E2.9, que se incorpora en el informe final y aquí solo se referencia.
+> **Nota de convención (Bloque B).** Cada intervención usa un único formato de encabezados de nivel 4: `#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)`, `#### B. Prompt empleado`, `#### C. Validación humana y hallazgos` y `#### D. Reflexión crítica`. El origen de cada prompt se declara dentro de la entrada correspondiente: las transcripciones literales van entre comillas o en bloque `text`; cuando no hay transcripción disponible se registra un resumen fiel de lo pedido, sin comillas. El documento está en español; la única excepción es el `Executive Summary` en inglés exigido por E2.9, que se incorpora en el informe final y aquí solo se referencia.
 
 ---
 
@@ -714,7 +714,7 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 
 **Alcance de la sección.** Se registran aquí las intervenciones sobre el gateway, el `file-service` y la plataforma CI/CD. Las historias de `dashboard-service` (HU-DASH-03, HU-DASH-04 y HU-DASH-05) tienen entrada propia en las secciones [5](#5-módulo-circleguard-dashboard-service-e-integración-cicd-hu-dash-03), [6](#6-módulo-circleguard-dashboard-service--observabilidad-y-seguridad-hu-dash-05) y [7](#7-entrada-ejecución-de-hu-dash-04-despliegue-y-rollback-on-premise-de-dashboard-service), y se referencian desde esta sección sin duplicar su contenido.
 
-**Convención de registro.** Los prompts marcados como *reconstruidos y contrastados* se derivaron del historial de la sesión y se cotejaron contra los commits, reportes y evidencias versionadas. Los prompts literales que se conservan se identifican como *transcripción de sesión*. Ninguna métrica se tomó de una conversación sin contraste con un artefacto del repositorio.
+**Convención de registro.** Los prompts sin transcripción literal se registran como *resumen fiel de lo que pedí*: conservan el sentido y el orden real de la petición (plan completo, revisión, ejecución y correcciones), sin presentarlos como citas textuales. Los prompts que sí se conservan palabra por palabra se identifican como *transcripción de sesión*. Ninguna métrica se tomó de una conversación sin contraste con un artefacto del repositorio.
 
 **Trazabilidad de las intervenciones**
 
@@ -748,10 +748,7 @@ Análisis de la estructura del servicio, lectura de los requisitos del enunciado
 
 #### B. Prompt empleado
 
-- Analizar la estructura del microservicio Gateway.
-- Validar el plan de la HU contra el PDF del proyecto.
-- Ajustar la HU a la Parte 1 / Sprint 1 y al microservicio gateway.
-- Generar scripts Bash idempotentes, Docker Compose y pipeline de Jenkins.
+Resumen de lo que pedí: analizar la estructura del microservicio Gateway y darme el plan completo de la HU; lo revisé contra el PDF del proyecto y pedí ajustarlo a la Parte 1 / Sprint 1 y al gateway. Después ejecuté el plan aprobado para generar los scripts Bash idempotentes, el Docker Compose y el pipeline de Jenkins.
 
 La sesión de trabajo original se conserva como referencia histórica: `https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6`.
 
@@ -819,7 +816,7 @@ Diagnóstico del estado previo: `FileStorageService.loadFile` era un stub que de
 
 #### B. Prompt empleado
 
-(reconstruido y contrastado) «Revisa los criterios de FS-CI-01 sobre el file-service, identifica el mínimo cambio de producción necesario para poder probarlos y genera las pruebas unitarias con JaCoCo; no introduzcas cambios de producción innecesarios».
+Resumen de lo que pedí: revisar los criterios de FS-CI-01 sobre el file-service, identificar el mínimo cambio de producción necesario para poder probarlos y darme el plan completo de pruebas unitarias con JaCoCo, sin introducir cambios de producción innecesarios. Ejecuté el plan aprobado y validé la cobertura y los XML.
 
 #### C. Validación humana y hallazgos
 
@@ -847,7 +844,7 @@ Revisión del Dockerfile del servicio y de las políticas de empaquetamiento del
 
 #### B. Prompt empleado
 
-(reconstruido y contrastado) «Ajusta el Dockerfile del file-service para que compile en multi-stage, ejecute como usuario no root, exponga healthcheck y labels, y revisa que no haya credenciales embebidas; luego verifica la imagen construida con docker inspect».
+Resumen de lo que pedí: el plan completo para ajustar el Dockerfile del file-service en multi-stage, con usuario no root, healthcheck, labels y sin credenciales embebidas, y verificar después la imagen con `docker inspect`. Ejecuté el plan y revisé los artefactos.
 
 #### C. Validación humana y hallazgos
 
@@ -875,7 +872,7 @@ Se partió del equivalente ya resuelto para el gateway (HU-GATEWAY-06) y se adap
 
 #### B. Prompt empleado
 
-(reconstruido y contrastado) «Aplica al file-service el mismo patrón de orquestación, sondas y observabilidad usado en el gateway: anotaciones de scrape en el Service, readiness/liveness Actuator en el Deployment, dependencias Micrometer y OTLP, y un contador de subidas con resultado. No versiones secretos».
+Resumen de lo que pedí: el plan completo para aplicar al file-service el mismo patrón de orquestación, sondas y observabilidad que ya usaba el gateway, con anotaciones de scrape, readiness/liveness Actuator, Micrometer y OTLP, y un contador de subidas; sin versionar secretos. Ejecuté el plan y verifiqué con Gradle y `kubectl diff`.
 
 #### C. Validación humana y hallazgos
 
@@ -985,7 +982,7 @@ Se detectó que la rama de HU-FILE-04 tenía un bloque JaCoCo local mientras `ma
 
 #### B. Prompt empleado
 
-(reconstruido y contrastado) «Revisa por qué el gate de cobertura no aplica igual a todos los servicios y unifica la configuración JaCoCo sin cambiar el umbral acordado ni relajar la verificación de pruebas omitidas».
+Resumen de lo que pedí: revisar por qué el gate de cobertura no aplicaba igual a todos los servicios y darme el plan completo para unificar la configuración JaCoCo sin cambiar el umbral acordado ni relajar la verificación de pruebas omitidas. Ejecuté el plan y comprobé los reportes versionados.
 
 #### C. Validación humana y hallazgos
 
@@ -1067,7 +1064,7 @@ La ausencia de video no puede resolverse escribiendo que «no aplica» sin una d
 ### 2.9 Lecciones transversales y límites de verificación
 
 1. **Evidencia antes que afirmación.** Las cifras de esta sección proceden de XML, logs, capturas o commits versionados. Las mediciones intermedias se marcan como históricas y no se presentan como resultado final cuando existe un consolidado posterior.
-2. **Prompts como insumo, no como prueba.** La salida de IAG se contrastó siempre con una ejecución local, un reporte publicado o un artefacto del repositorio. Los prompts reconstruidos se identifican como tales.
+2. **Prompts como insumo, no como prueba.** La salida de IAG se contrastó siempre con una ejecución local, un reporte publicado o un artefacto del repositorio. Los prompts que no tienen transcripción literal se identifican como resumen fiel de la petición.
 3. **Separación de responsabilidades.** Las intervenciones de dashboard-service se registran en las secciones 5, 6 y 7; esta sección solo las referencia. El rollback on-premise documentado en la sección 7 se apoya en el transcript restaurado `docs/informe/evidencia/HU-DASH-04/prod/rollback-commands.txt`.
 
 ---

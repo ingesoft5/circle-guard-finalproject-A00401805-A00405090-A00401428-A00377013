@@ -784,8 +784,7 @@ pipeline {
                         nodeServices = services.findAll { it.type == 'node' }
                         env.SERVICES = services.collect { it.short }.join(',')
                         echo "Semantic version: ${env.TAG}"
-                        echo "Components to build: ${env.SERVICES ?: 'none'}"
-                        echo "Java components: ${javaServices.collect { it.short }.join(',') ?: 'none'}"
+                        echo "Components to build: ${env.SERVICES ?: 'none'} | Java components: ${javaServices*.short.join(',') ?: 'none'}"
                         echo "Client components: ${nodeServices.collect { it.short }.join(',') ?: 'none'}"
                     }
                 }
