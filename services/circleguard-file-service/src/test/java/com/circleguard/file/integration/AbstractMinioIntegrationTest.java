@@ -62,7 +62,7 @@ public abstract class AbstractMinioIntegrationTest {
                     .withEnv("MINIO_ROOT_USER", ACCESS_KEY)
                     .withEnv("MINIO_ROOT_PASSWORD", SECRET_KEY)
                     .withExposedPorts(9000)
-                    .withStartupTimeout(Duration.ofSeconds(60))
+                    .withStartupTimeout(Duration.ofMinutes(3))
                     .waitingFor(Wait.forHttp("/minio/health/live").forPort(9000).forStatusCode(200));
 
     /** Client connected to the ephemeral endpoint; initialized after the container starts. */

@@ -81,7 +81,9 @@ tasks.check {
 }
 
 // Tarea dedicada a las pruebas de integración (etiquetadas con @Tag("integration")).
-// HU-FILE-04: same contract as the gateway integration task (hard 3-minute cap, always rerun).
+// HU-FILE-04: same contract as the gateway integration task (always rerun).
+// The container now tolerates a 3-minute cold start, so the task gets an 8-minute cap:
+// enough for a slow MinIO boot plus the suite, still below Jenkins' 12-minute cap.
 val integrationTest by tasks.registering(Test::class) {
     description = "Runs the ${project.name} integration tests against an ephemeral MinIO container."
     group = "verification"
@@ -91,7 +93,7 @@ val integrationTest by tasks.registering(Test::class) {
         includeTags("integration")
     }
     shouldRunAfter(tasks.test)
-    timeout.set(Duration.ofMinutes(3))
+    timeout.set(Duration.ofMinutes(8))
     outputs.upToDateWhen { false }
     reports {
         junitXml.required.set(true)
