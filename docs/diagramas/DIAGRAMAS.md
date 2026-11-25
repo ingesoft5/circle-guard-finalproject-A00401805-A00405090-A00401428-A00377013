@@ -70,15 +70,15 @@ middleware (PostgreSQL, OpenLDAP, Kafka, Redis, Neo4j y MinIO/S3). Coherente con
 
 Fuente: [`04-arquitectura-servicios.mmd`](04-arquitectura-servicios.mmd).
 
-## 05 Circuit Breaker / Retry / Bulkhead — resiliencia (E2.4)
+## 05 Circuit Breaker / Retry — resiliencia (E2.4)
 
-Circuit Breaker, Retry y Bulkhead con Resilience4j en gateway/identity, con
-fallback y alerta crítica asociada. Evidencia y *compromisos* en
+Circuit Breaker y Retry con Resilience4j en auth/gateway e identity, con
+fallback, métrica y alerta crítica asociada. Evidencia y *trade-offs* en
 [`docs/patrones/PATRONES.md`](../patrones/PATRONES.md).
 
-![Circuit Breaker / Retry / Bulkhead](05-circuit-breaker-retry-bulkhead.png)
+![Circuit Breaker / Retry](05-circuit-breaker-retry.png)
 
-Fuente: [`05-circuit-breaker-retry-bulkhead.mmd`](05-circuit-breaker-retry-bulkhead.mmd).
+Fuente: [`05-circuit-breaker-retry.mmd`](05-circuit-breaker-retry.mmd).
 
 ## 06 Patrón de configuración (E2.4)
 
@@ -99,5 +99,6 @@ Observer/Micrometer sobre arquitectura dirigida por eventos con outbox en
 
 Fuente: [`07-patron-adicional.mmd`](07-patron-adicional.mmd).
 
-> Las imágenes PNG se generaron desde los archivos `.mmd` con Mermaid CLI, que se
-> conservan como fuente editable. Ningún nombre incluye fechas.
+> Las imágenes PNG se generan desde los archivos `.mmd`, que se conservan como
+> fuente editable; la lámina 05 se redibujó para reflejar solo Circuit Breaker y
+> Retry. Ningún nombre incluye fechas.

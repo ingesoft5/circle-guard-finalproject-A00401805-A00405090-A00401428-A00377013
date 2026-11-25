@@ -59,6 +59,7 @@
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
     ],
     "collectCoverageFrom": [
+      "app/**/*.{ts,tsx}",
       "hooks/**/*.{ts,tsx}",
       "utils/**/*.{ts,tsx}",
       "constants/**/*.{ts,tsx}",
@@ -70,13 +71,38 @@
       "!**/*.web.{ts,tsx}"
     ],
     "coverageThreshold": {
-      "global": {
+      "./app/**/*.{ts,tsx}": {
+        "lines": 0,
+        "statements": 0,
+        "functions": 0,
+        "branches": 0
+      },
+      "./hooks/**/*.{ts,tsx}": {
+        "lines": 60,
+        "statements": 60,
+        "functions": 60,
+        "branches": 60
+      },
+      "./utils/**/*.{ts,tsx}": {
+        "lines": 60,
+        "statements": 60,
+        "functions": 60,
+        "branches": 60
+      },
+      "./constants/**/*.{ts,tsx}": {
+        "lines": 60,
+        "statements": 60,
+        "functions": 60,
+        "branches": 60
+      },
+      "./components/**/*.{ts,tsx}": {
         "lines": 60,
         "statements": 60,
         "functions": 60,
         "branches": 60
       }
-    }
+    },
+    "restoreMocks": true
   },
   "expo": {
     "install": {

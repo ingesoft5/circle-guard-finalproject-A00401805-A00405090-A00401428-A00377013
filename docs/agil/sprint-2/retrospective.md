@@ -1,7 +1,6 @@
 <!-- CG-DOC: Retrospectiva del Sprint 2 con responsables y fechas de seguimiento. -->
 # Sprint 2 — Retrospectiva
 
-**Fecha:** 23 de noviembre de 2026
 **Participantes:** Santiago Estrada, Daniela Castaño, Faiber Piedrahita y
 Alejandro Quiñones.
 
@@ -40,6 +39,10 @@ Alejandro Quiñones.
 | Cambiar el kubeconfig de Jenkins al `ServiceAccount circleguard-deployer` | Integrante 2 | 25 nov 2026 | Hecho |
 | Solicitar aprobación nueva del PR #145 tras el último push y completar merge | Integrante 4 | 23 nov 2026 | Done — mergeado (commit `4e12166`) |
 | Registrar la ejecución real del rollback de prod con `ROLLBACK_TAG` | Integrante 1 | 26 nov 2026 | Hecho |
+
+## Valoración de la estudiante — Daniela Castaño
+
+**[VALORACIÓN DE LA ESTUDIANTE].** Durante Sprint 2 casi todo el trabajo recayó en Daniela Castaño: gestión de incidencias en GitHub, correcciones (`fixes`) en código y configuración, configuración on-premise y actualización de Jira. No sentí apoyo en grupo; Santiago me ayudó un poco más, pero igual la carga para mí fue demasiado. Me tocó hacer de todo en todas las partes porque el resto no estaba comprometido con las entregas. Así fue durante todo el proyecto, pero en el Sprint 2 fue lo peor. Esa concentración de trabajo explica por qué la integración, las correcciones y la trazabilidad dependieron de una sola persona, con sobrecarga y con el riesgo de que la verificación final quedara concentrada en un único criterio. La lección conservada para el cierre del proyecto es asignar responsables explícitos por historia y exigir evidencia de avance de cada integrante antes de cerrar el sprint.
 
 ## Conclusión
 

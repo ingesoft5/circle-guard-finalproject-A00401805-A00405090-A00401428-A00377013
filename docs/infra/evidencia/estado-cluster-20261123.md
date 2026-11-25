@@ -1,4 +1,4 @@
-<!-- CG-DOC: Hallazgos de solo lectura sobre el clúster on-prem el 23 de noviembre de 2026. -->
+<!-- CG-DOC: Hallazgos de solo lectura sobre el clúster on-prem. -->
 # Estado del clúster on-prem verificado el 23 de noviembre de 2026
 
 ## Alcance

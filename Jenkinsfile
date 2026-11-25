@@ -99,12 +99,14 @@ def enrichServices(List resolved) {
         if (service.short == 'notification') {
             service.sonarSettings = 'services/circleguard-notification-service/sonar-project.properties'
         }
-        // The pinned main catalog still marks dashboard as integration:false, so
-        // the Integration Tests stage would print "Integration skipped" even when
-        // dashboard is the only selected service. Keep parity with the service's
-        // own integration suite until the catalog reaches main.
-        if (service.short == 'dashboard') {
-            service.integration = true
+        // E2.1: @Tag("integration") is reserved for suites that start a real
+        // container. Dashboard has none; auth (MockMvc + H2) and identity
+        // (@DataJpaTest) also run in the unit gate. The local overrides keep this
+        // build consistent with the catalog change while @Library stays pinned
+        // to main. Without them the pinned catalog would schedule an integration
+        // task with zero tagged tests, which the new anti-skip guard rejects.
+        if (['auth', 'identity', 'dashboard'].contains(service.short)) {
+            service.integration = false
         }
     }
     return [
@@ -682,14 +684,22 @@ pipeline {
                         'circleguard-dashboard-service',
                         'circleguard-file-service',
                         'circleguard-notification-service',
-                        'circleguard-promotion-service'
+                        'circleguard-promotion-service',
+                        // E3: the Expo client can be selected like any other component.
+                        'mobile',
+                        'circleguard-mobile'
                 ],
                 description: 'auto = only modified services; all = all services.'
         )
         string(name: 'TAG', defaultValue: '', description: 'Semver tag. Empty = derive from Git tags and Conventional Commits.')
-        booleanParam(name: 'SKIP_INTEGRATION', defaultValue: false, description: 'Skip integration tests.')
+        booleanParam(name: 'SKIP_INTEGRATION', defaultValue: false, description: 'Skip container integration tests.')
+        // E3: separate switches. External triggers that only send
+        // SERVICE=auto&TAG=&SKIP_INTEGRATION=false&DEPLOY=false&ROLLBACK_TAG=
+        // keep working: omitted parameters take these false defaults.
+        booleanParam(name: 'SKIP_E2E', defaultValue: false, description: 'Skip the Playwright E2E gate.')
+        booleanParam(name: 'SKIP_ZAP', defaultValue: false, description: 'Skip the OWASP ZAP security gate.')
         booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Compatibility: on main, deployment is automatic; it does not apply to other branches.')
-        string(name: 'ROLLBACK_TAG', defaultValue: '', description: 'If set, deploys that tag to production without rebuilding.')
+        string(name: 'ROLLBACK_TAG', defaultValue: '', description: 'If set, deploys that tag to production without rebuilding. Validated with normalizeSemver.')
     }
 
     stages {
@@ -749,7 +759,16 @@ pipeline {
                     writeFile file: 'sonar-links.txt', text: ''
                     writeFile file: 'image-digest.txt', text: ''
 
+                    // E3: results are per run. Without this, a failed/aborted build
+                    // could archive stale JUnit XML or a previous Playwright report.
+                    sh '''
+                        rm -rf tests/e2e/playwright-report tests/e2e/test-results
+                        rm -rf services/*/build/test-results/integrationTest
+                        rm -rf services/*/build/test-results/performanceTest
+                    '''
+
                     if (params.ROLLBACK_TAG?.trim()) {
+                        // Validate once, before any deploy stage reads the version.
                         env.TAG = normalizeSemver(params.ROLLBACK_TAG.trim())
                         services = []
                         javaServices = []
@@ -766,6 +785,7 @@ pipeline {
                         env.SERVICES = services.collect { it.short }.join(',')
                         echo "Semantic version: ${env.TAG}"
                         echo "Components to build: ${env.SERVICES ?: 'none'}"
+                        echo "Java components: ${javaServices.collect { it.short }.join(',') ?: 'none'}"
                         echo "Client components: ${nodeServices.collect { it.short }.join(',') ?: 'none'}"
                     }
                 }
@@ -898,15 +918,24 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script {
-                    javaServices.each { service ->
-                        if (service.integration) {
-                            timeout(time: 12, unit: 'MINUTES') {
-                                echo "Integration tests for ${service.name}..."
-                                ci.integrationTest(service)
-                            }
-                        } else {
-                            echo "Integration skipped for ${service.name}."
+                    def integrationServices = javaServices.findAll { it.integration }
+                    def executed = 0
+                    integrationServices.each { service ->
+                        // Gradle task caps are 10 min or less, below this 12 min gate.
+                        timeout(time: 12, unit: 'MINUTES') {
+                            echo "Integration tests for ${service.name}..."
+                            ci.integrationTest(service)
                         }
+                        executed++
+                    }
+                    javaServices.findAll { !it.integration }.each { service ->
+                        echo "Integration skipped for ${service.name}: no real container suite."
+                    }
+                    if (integrationServices && executed == 0) {
+                        error 'No integrationTest suite was executed although container suites were selected.'
+                    }
+                    if (!integrationServices) {
+                        echo 'No selected service declares a container-backed integration suite.'
                     }
                 }
             }
@@ -1171,15 +1200,27 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { javaServices && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.SKIP_E2E && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
-                script { ci.e2e() }
+                script {
+                    timeout(time: 12, unit: 'MINUTES') { ci.e2e() }
+                }
             }
             post {
+                success {
+                    // E3: keep the HTML report and JUnit XML for a successful run.
+                    // P2: never publish screenshots/videos/traces of failed runs.
+                    archiveArtifacts artifacts: 'tests/e2e/playwright-report/**,tests/e2e/test-results/**',
+                            excludes: '**/*.png,**/*.webm,**/*.zip,**/*.trace',
+                            allowEmptyArchive: true
+                }
                 failure {
+                    // Diagnostics only: JUnit XML has no binary captures.
+                    archiveArtifacts artifacts: 'tests/e2e/test-results/**/*.xml',
+                            allowEmptyArchive: true
                     // Preserve the real stage if the stage body aborted before the
                     // entry capture could be observed by the global post block.
                     script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
@@ -1221,12 +1262,14 @@ pipeline {
             when {
                 allOf {
                     branch 'main'
-                    expression { javaServices && !params.SKIP_INTEGRATION && !params.ROLLBACK_TAG?.trim() }
+                    expression { javaServices && !params.SKIP_ZAP && !params.ROLLBACK_TAG?.trim() }
                 }
             }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
-                script { owaspZapGateLocal('stage') }
+                script {
+                    timeout(time: 12, unit: 'MINUTES') { owaspZapGateLocal('stage') }
+                }
             }
             post {
                 failure {
@@ -1296,7 +1339,8 @@ pipeline {
             }
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
-                script { ci.deploy('prod', params.ROLLBACK_TAG) }
+                // env.TAG was normalized with normalizeSemver in Resolve services.
+                script { ci.deploy('prod', env.TAG) }
             }
             post {
                 failure {

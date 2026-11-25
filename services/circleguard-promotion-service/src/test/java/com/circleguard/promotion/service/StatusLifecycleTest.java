@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -102,7 +103,18 @@ class StatusLifecycleTest {
 
         // 3. Verify: Redis and Kafka updated
         verify(valueOperations).multiSet(ArgumentMatchers.anyMap());
-        verify(kafkaTemplate).send(ArgumentMatchers.eq("promotion.status.changed"), ArgumentMatchers.eq("EXPIRED_USER"), ArgumentMatchers.anyMap());
+        // Contract with Notification: the value payload must carry anonymousId/status,
+        // the exact keys read by ExposureNotificationListener.
+        @SuppressWarnings("unchecked")
+        org.mockito.ArgumentCaptor<Map<String, Object>> payload =
+                org.mockito.ArgumentCaptor.forClass(Map.class);
+        verify(kafkaTemplate).send(
+                ArgumentMatchers.eq("promotion.status.changed"),
+                ArgumentMatchers.eq("EXPIRED_USER"),
+                payload.capture());
+        assertThat(payload.getValue())
+                .containsEntry("anonymousId", "EXPIRED_USER")
+                .containsKey("status");
     }
 
     @Test

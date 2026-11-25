@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source": "Evidencia en docs/agil/backlog.md, IAG_REGISTRO.md, docs/arquitectura/ y titulos de PR. Solo se registran claves DCG con evidencia en el repositorio; no se inventan claves para HU sin mapear. HU-DASH-05 esta registrada en el backlog y en docs/informe/HU-DASH-05.md, pero no tiene clave Jira asignada al cierre de esta HU.",
+  "source": "Evidencia en docs/agil/backlog.md, IAG_REGISTRO.md, docs/arquitectura/ y titulos de PR. Solo se registran claves DCG con evidencia en el repositorio; no se inventan claves para HU sin mapear. HU-DASH-05 esta registrada en el backlog y en docs/informe/evidencia/HU-DASH-05/, pero no tiene clave Jira asignada al cierre de esta HU.",
   "transitions": {
     "opened": "In Progress",
     "reopened": "In Progress",

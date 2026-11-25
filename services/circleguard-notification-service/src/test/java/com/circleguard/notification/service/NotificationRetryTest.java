@@ -1,10 +1,10 @@
 /**
- * CG-DOC: Unit or integration tests for Notification Retry Test in the notification service.
+ * CG-DOC: Spring-context unit test for the retry policy (all collaborators are
+ * @MockitoBean). It starts no container, so it belongs to the unit gate.
  */
 package com.circleguard.notification.service;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -20,7 +20,6 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Tag("integration")
 public class NotificationRetryTest {
 
     @Autowired

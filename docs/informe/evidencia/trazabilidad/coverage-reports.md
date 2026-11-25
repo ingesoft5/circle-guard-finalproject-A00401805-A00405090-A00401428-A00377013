@@ -1,8 +1,6 @@
 <!-- CG-DOC: Índice de los reportes de cobertura versionados como evidencia de la Parte 2. -->
 # Reportes de cobertura versionados
 
-Este índice recoge únicamente artefactos presentes en el repositorio. No sustituye la ejecución del pipeline ni los informes publicados por Jenkins.
-
 | Servicio | Evidencia versionada | Formato |
 |---|---|---|
 | Auth | `13-jacoco-auth-coverage.png` | Captura del reporte JaCoCo |
@@ -19,4 +17,8 @@ Los reportes HTML completos se generan en `services/<servicio>/build/reports/jac
 ./gradlew :services:circleguard-promotion-service:test jacocoTestReport --no-daemon
 ```
 
-Las capturas `10-sonarqube-quality-gate.png` y `16-sonarqube-9of9-projects-passed.png` documentan el resultado del Quality Gate y el tablero 9/9 dentro del repositorio.
+La cobertura oficial de Java se mide sobre la tarea `test` (unitaria); las suites
+`integrationTest` se ejecutan en un gate separado y no alimentan el umbral de
+JaCoCo. Las capturas `10-sonarqube-quality-gate.png` y
+`16-sonarqube-9of9-projects-passed.png` documentan el resultado del Quality Gate
+y el tablero 9/9 dentro del repositorio.

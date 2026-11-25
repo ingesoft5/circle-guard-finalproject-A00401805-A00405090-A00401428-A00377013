@@ -373,3 +373,29 @@ webhook de GitHub apunta al canal `smee.io` (`nk4nvlnyB0u6Fqnn`) con el relay ve
   del `ServiceAccount` por Jenkins, según `deploy/k8s/K8S.md`.
 - **P2.4 (observabilidad) y P2.8 (pipeline con IaC y `kubectl`):** se apoyan en esta topología;
   comparten host, registro y clúster.
+
+## 8. Rutas públicas del Ingress y backends reales
+
+`deploy/k8s/base/ingress.yml` publica exactamente 11 rutas `Prefix` sobre el host
+`<env>.circleguard.local` y el Ingress de Traefik en `:30080`. Los siete backends
+reales son `auth`, `identity`, `form`, `gateway`, `promotion`, `dashboard` y `web`;
+el overlay sustituye únicamente el host.
+
+| Ruta (`pathType: Prefix`) | Backend | Puerto |
+| --- | --- | ---: |
+| `/api/v1/auth` | `auth` | 8180 |
+| `/api/v1/users/permissions` | `auth` | 8180 |
+| `/api/v1/identities` | `identity` | 8083 |
+| `/api/v1/questionnaires` | `form` | 8086 |
+| `/api/v1/surveys` | `form` | 8086 |
+| `/api/v1/attachments` | `form` | 8086 |
+| `/api/v1/certificates` | `form` | 8086 |
+| `/api/v1/gate` | `gateway` | 8087 |
+| `/api/v1/health-status` | `promotion` | 8088 (puerto técnico) |
+| `/api/v1/analytics` | `dashboard` | 8084 |
+| `/` | `web` | 80 |
+
+`notification` se comunica únicamente por Kafka y no publica ruta en el Ingress.
+`file` expone `/api/v1/files` como servicio interno del clúster, sin exposición
+pública. No se añaden rutas públicas nuevas: cualquier ampliación debe hacerse
+con un cambio versionado en el manifiesto y su evidencia.

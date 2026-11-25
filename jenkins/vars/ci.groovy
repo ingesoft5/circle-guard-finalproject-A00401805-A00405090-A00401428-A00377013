@@ -53,7 +53,8 @@ def unitTest(Map service) {
 }
 
 // The mobile client is not a Gradle module. Jest produces the LCOV report that
-// SonarQube consumes, and the global coverageThreshold enforces >= 60 %.
+// SonarQube consumes; coverage thresholds are grouped (60 % for core modules,
+// explicit 0 % baseline for app/ routes included in the report).
 def mobileTest(Map service) {
     if (service.type != 'node') {
         echo "Mobile tests: ${service.short} is not a Node component."
@@ -370,6 +371,10 @@ def e2e() {
         PROMOTION_URL=http://dev.circleguard.local:30080 \
         E2E_HOST_RESOLVER='MAP dev.circleguard.local 127.0.0.1' \
         E2E_ANONYMOUS_ID=${runId} \
+        E2E_STAFF_USER=\${E2E_STAFF_USER:-} \
+        E2E_STAFF_PASSWORD=\${E2E_STAFF_PASSWORD:-} \
+        E2E_HEALTH_USER=\${E2E_HEALTH_USER:-} \
+        E2E_HEALTH_PASSWORD=\${E2E_HEALTH_PASSWORD:-} \
         npx playwright test
     """
 }

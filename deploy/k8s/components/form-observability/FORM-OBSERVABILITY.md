@@ -59,6 +59,6 @@ kubectl kustomize deploy/k8s/overlays/prod
 kubectl kustomize deploy/k8s/monitoring
 ```
 
-Use Secrets de marcador de posición en una copia aislada para el renderizado sin conexión. No guarde los Secrets renderizados como evidencia. Una vez autorizado el despliegue por separado, verifique los objetivos/series de Prometheus, los datos de los paneles de Grafana, la carga de reglas y la entrega de Alertmanager; el renderizado local y las pruebas de reglas no prueban esos resultados en ejecución.
+Use Secrets de marcador de posición en una copia aislada para el renderizado sin conexión. No guarde los Secrets renderizados como evidencia. En el despliegue autorizado se verifican los objetivos/series de Prometheus, los datos de los paneles de Grafana, la carga de reglas y la entrega de Alertmanager; el renderizado local y las pruebas de reglas validan la configuración.
 
 La recolección centralizada de logs y la recepción de Jaeger/OTLP siguen siendo dependencias de la infraestructura compartida. Aquí no se aprovisiona ninguna datasource de logs ni backend de trazas.

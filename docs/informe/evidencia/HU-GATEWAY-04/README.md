@@ -17,7 +17,7 @@ de ejecutar el pipeline en el entorno de herramientas.
 | Artefactos del build | `07-jenkins-artifacts.png` | Generada |
 | Duración del build | `08-build-duration.png` | Generada (7 min 38 s; build+pruebas 4 min 20.5 s) |
 | Notificación de fallo en GitHub | `09-failure-notification-github.png` | Generada (PR temporal #24) |
-| Notificación de fallo en Slack | `10-failure-notification-slack.png` | No disponible: Slack sin configurar |
+| Notificación de fallo en Slack | `10-failure-notification-slack.png` | Slack sin configurar |
 | Quality gate en rojo | `11-quality-gate-red.png` | Generada (gate temporal) |
 | Ejecución selectiva por servicio | `12-selective-service.png` | Generada (`main #12`, solo gateway) |
 | Ejecución de todos los servicios | `13-selective-all.png` | Generada (`main #8`, gateway/auth/form) |

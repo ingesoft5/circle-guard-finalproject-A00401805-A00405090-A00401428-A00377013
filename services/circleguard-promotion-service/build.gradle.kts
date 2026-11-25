@@ -78,7 +78,7 @@ val dockerAvailable = providers.of(DockerProbe::class) {}
 
 tasks.test {
     useJUnitPlatform {
-        // PromotionPerformanceTest asserts a 1 s wall-clock budget against a Neo4j
+        // PromotionPerformanceBenchmark asserts a 1 s wall-clock budget against a Neo4j
         // container. That is a benchmark, not a unit test: it varies with host load and
         // fails at ~2 s on slower machines. Run it with `performanceTest`.
         excludeTags("performance", "integration")
@@ -203,10 +203,10 @@ val integrationTest by tasks.registering(Test::class) {
     }
     shouldRunAfter(tasks.test)
     // The suite takes ~4.5 min with images already cached (7 containers across 3 classes).
-    // 15 min leaves room for a cold start under load (3 containers × 3 min of
-    // startupTimeout); a real hang fails here with a clear message and leaves XML behind
-    // instead of dying silently under the Jenkins timeout.
-    timeout.set(Duration.ofMinutes(15))
+    // 10 min leaves room for a cold start under load while staying below the
+    // 12-minute Jenkins stage timeout; a real hang fails here with a clear message
+    // and leaves XML behind instead of dying silently under the Jenkins timeout.
+    timeout.set(Duration.ofMinutes(10))
     outputs.upToDateWhen { false }
 }
 

@@ -5,16 +5,16 @@ Todos los cambios relevantes de CircleGuard se documentan aquí. El formato sigu
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) y el proyecto usa
 Versionado Semántico.
 
-## [Sin publicar]
+## [1.17.0]
 
 ### Entrega final (2026-11-23)
 
 - **Reporte final**: `CircleGuard_INFORME_FINAL.docx`/`.pdf` ordenados (sección 14 antes de 15), texto crudo justificado, TOC completo, rutas canónicas y contradicciones E2.5/E2.7/E2.10 corregidas; se regeneró el PDF.
-- **IAG**: sección de Daniela reescrita con 9 entradas profesionales para gateway, file-service e infraestructura CI/CD, dejando explícito el criterio humano y el uso de IAG como apoyo; se restauraron registros históricos reales de HU-FILE/HU-GATEWAY/HU-DASH/HU-NOTIF.
+- **IAG**: sección de Daniela alineada con el Bloque B del registro (gateway, file-service e infraestructura CI/CD), dejando explícito el criterio humano y el uso de IAG como apoyo; se restauraron registros históricos reales de HU-FILE/HU-GATEWAY/HU-DASH/HU-NOTIF.
 - **Cobertura**: versionado del reporte JaCoCo real de `promotion` (76,9 % de líneas) y actualización del índice de cobertura.
-- **Release notes**: completadas las 7 notas históricas ausentes; ahora hay 35 notas para 34 tags.
+- **Release notes**: completadas las 7 notas históricas ausentes; ahora hay 35 notas para 35 versiones (34 tags existentes más `v1.17.0`).
 - **K8s**: las sondas de `gateway` y `promotion` usan `httpGet /actuator/health` conforme a `SecurityConfig`; `web` conserva `tcpSocket`.
-- **Sustentación**: añadida `docs/informe/CircleGuard_PRESENTACION_FINAL.pptx` (15 diapositivas con notas del orador).
+- **Sustentación**: añadida `docs/informe/CircleGuard_PRESENTACION_FINAL.pptx` (20 diapositivas con notas del orador).
 - **Evidencia externa**: documentado el estado degradado del clúster on-prem en `docs/infra/evidencia/estado-cluster-20261123.md`; Locust, ZAP, Jaeger y Alertmanager siguen pendientes de ejecución real, sin reportes fabricados.
 
 ### Cambiado
@@ -69,7 +69,7 @@ Versionado Semántico.
 - E2E (Playwright) se ejecuta contra el Ingress de Traefik en k3d (`http://dev.circleguard.local:30080`, `E2E_HOST_RESOLVER=--host-resolver-rules=MAP ...`); la siembra de Neo4j usa `kubectl exec` `cypher-shell`, la publicación de `survey.submitted` en Kafka usa `kubectl exec` `kafka-console-producer.sh` y `kafkajs` ya no es dependencia.
 - La documentación se trasladó a la plataforma on-premise como fuente principal; la topología AWS de cuatro hosts (consola, scripts y documentación de topología) queda explícitamente congelada como evidencia histórica de la Parte 1.
 - `Jenkinsfile` ya no espera `DEV/STAGE/PROD_PRIVATE_IP`; `tests/e2e` usa el Ingress por defecto.
-- Auditoría de documentación: `docs/infra/tutorial-e1.2.md`, `docs/arquitectura/despliegue-auth-service.md` y `despliegue-identity-service.md` ahora están marcados como históricos de la Parte 1; `aws-free-tier-validation.md`, `ci-cd-setup.md`, `environments.md`, `evidence/EVIDENCIA-INFRA.md` y `evidence/idempotency/IDEMPOTENCIA.md` están etiquetados in situ como históricos de la Parte 1 (se eliminó el índice `docs/FILE_INDEX.md`).
+- Auditoría de documentación: `docs/arquitectura/despliegue-auth-service.md` y `despliegue-identity-service.md` ahora están marcados como históricos de la Parte 1; `aws-free-tier-validation.md`, `ci-cd-setup.md`, `environments.md`, `evidence/EVIDENCIA-INFRA.md` y `evidence/idempotency/IDEMPOTENCIA.md` están etiquetados in situ como históricos de la Parte 1 (se eliminó el índice `docs/FILE_INDEX.md`).
 - `docs/agil/plan-circle-guard-5.0.md` marca los riesgos de webhook y SSH como mitigados (verificación en vivo del 2026-11-18) y añade el anexo §6 con el estado multibranch de P1.4; la compilación de `main` (ítem 8) se documenta con la evidencia de la canalización en verde.
 - La política de aprobación de PR cambió de 2 a 1 revisión aprobatoria requerida en `main` (ruleset `github-actions`), con vigencia para Sprint 2, para reducir la latencia de aprobación: esperar a dos revisores era demasiado lento y retrasaba los PR. La comprobación de estado `continuous-integration/jenkins/pr-merge` sigue siendo obligatoria, los pushes invalidan las aprobaciones anteriores y el aprobador debe aprobar la revisión más reciente. Se actualizaron `BRANCHING-STRATEGY.md`, `docs/agil/AGIL.md` y `docs/agil/backlog.md`; los registros históricos de la Parte 1 (`docs/informe/HU-GATEWAY-04.md`, `IAG_REGISTRO.md`) se consolidaron con la política vigente; se eliminó el informe obsoleto `docs/informe/P1.1-Branching-GitHub-Flow.*` y la especificación de GitHub Flow ahora está en `BRANCHING-STRATEGY.md` §1. `infra/bootstrap/bootstrap-github.sh` ahora versiona el mismo valor de 1 revisión y `docs/infra/migracion-onpremise.md` §3.7 lo documenta según E1.2.
 - SonarQube ahora cubre promotion e identity además de gateway, auth y form.
@@ -153,7 +153,7 @@ Versionado Semántico.
 
 - Flujo [GitHub Flow](BRANCHING-STRATEGY.md) inicial, canalización de Jenkins, empaquetado del gateway y scripts de infraestructura.
 
-[Sin publicar]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.2.5...HEAD
+[1.17.0]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.16.0...v1.17.0
 [1.2.5]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.2.0...v1.2.5
 [1.2.0]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/compare/v1.1.0...v1.1.1

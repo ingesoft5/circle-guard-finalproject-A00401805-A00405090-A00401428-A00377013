@@ -1,7 +1,6 @@
 <!-- CG-DOC: Planeación del Sprint 2 para la Parte 2 (infraestructura on-premise, entrega y reversión). -->
 # Sprint 2 — Planeación
 
-**Periodo:** 16–22 de noviembre de 2026 (cierre documental: 23 de noviembre)
 **Objetivo del sprint:** entregar la Parte 2 sobre infraestructura propia, con
 aprovisionamiento declarativo, despliegue Kubernetes, resiliencia, observabilidad,
 seguridad, pruebas de carga y documentación verificable.

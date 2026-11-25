@@ -1,52 +1,50 @@
 /**
- * CG-DOC: Unit or integration tests for Notification Dispatcher Test in the notification service.
+ * CG-DOC: pure unit tests for the multi-channel dispatcher. All collaborators
+ * are mocked and the service is instantiated directly: no Spring context, no
+ * container and no external channel is involved.
  */
 package com.circleguard.notification.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.ActiveProfiles;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest
-@ActiveProfiles("test")
 class NotificationDispatcherTest {
 
-    @Autowired
+    private EmailService emailService;
+    private SmsService smsService;
+    private PushService pushService;
+    private TemplateService templateService;
     private NotificationDispatcher dispatcher;
 
-    @MockitoBean
-    private EmailService emailService;
-
-    @MockitoBean
-    private SmsService smsService;
-
-    @MockitoBean
-    private TemplateService templateService;
-
-    @MockitoBean
-    private PushService pushService;
+    @BeforeEach
+    void setUp() {
+        emailService = mock(EmailService.class);
+        smsService = mock(SmsService.class);
+        pushService = mock(PushService.class);
+        templateService = mock(TemplateService.class);
+        dispatcher = new NotificationDispatcher(emailService, smsService, pushService, templateService);
+    }
 
     @Test
-    void shouldDispatchToAllChannelsConcurrently() throws Exception {
-        // Setup slow services to test concurrency
+    void shouldDispatchToAllChannelsConcurrently() {
         when(emailService.sendAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null));
         when(smsService.sendAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null));
         when(pushService.sendAsync(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null));
 
         dispatcher.dispatch("user-123", "Your health status has changed.");
 
-        verify(emailService, timeout(1000)).sendAsync(eq("user-123"), any());
-        verify(smsService, timeout(1000)).sendAsync(eq("user-123"), any());
-        verify(pushService, timeout(1000)).sendAsync(eq("user-123"), any(), any());
+        verify(emailService, timeout(1000)).sendAsync(org.mockito.ArgumentMatchers.eq("user-123"), any());
+        verify(smsService, timeout(1000)).sendAsync(org.mockito.ArgumentMatchers.eq("user-123"), any());
+        verify(pushService, timeout(1000)).sendAsync(org.mockito.ArgumentMatchers.eq("user-123"), any(), any());
     }
 
     @Test
@@ -74,6 +72,11 @@ class NotificationDispatcherTest {
         when(smsService.sendAsync(any(), any())).thenReturn(CompletableFuture.completedFuture(null));
         when(pushService.sendAsync(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null));
 
-        assertDoesNotThrow(() -> dispatcher.dispatch("user-123", "PROBABLE"));
+        dispatcher.dispatch("user-123", "PROBABLE");
+
+        // A failed channel must not stop the other two from being attempted.
+        verify(emailService, timeout(1000)).sendAsync(org.mockito.ArgumentMatchers.eq("user-123"), any());
+        verify(smsService, timeout(1000)).sendAsync(org.mockito.ArgumentMatchers.eq("user-123"), any());
+        verify(pushService, timeout(1000)).sendAsync(org.mockito.ArgumentMatchers.eq("user-123"), any(), any());
     }
 }

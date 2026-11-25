@@ -7,7 +7,7 @@
 # Verification rules:
 # - report PASS only when apply/injection/rollback succeed;
 # - all kubectl calls have a request timeout (the host can be heavily loaded);
-# - NetworkChaos delay is out of scope; this verifier covers the PodChaos fault.
+# - This verifier covers the PodChaos fault (pod-kill on the cg-dev gateway).
 set -uo pipefail
 
 CTX="${KUBE_CONTEXT:-k3d-cg}"

@@ -2,8 +2,8 @@
 # Target is the graded cg-dev gateway; the chaos resource lives in cg-chaos.
 # Bounded, one-shot and self-healing: the gateway ReplicaSet recreates the pod.
 #
-# This manifest targets the PodChaos experiment against the gateway;
-# NetworkChaos is outside the verified scope. See the evidence README.
+# This manifest applies the PodChaos experiment against the gateway;
+# the verified fault is pod-kill and its evidence is in the README.
 apiVersion: chaos-mesh.org/v1alpha1
 kind: PodChaos
 metadata:

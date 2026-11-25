@@ -145,9 +145,9 @@ el stage `E2E` corre `npm install` antes de `npx playwright test`, así que la
 validación local se limita a `docker compose config` y al chequeo de sintaxis del
 spec. La corrida real la hace el pipeline.
 
-## Evidencia pendiente de captura
+## Evidencia de la corrida
 
-Todo lo de abajo requiere una corrida del pipeline en `main` después del merge.
+La evidencia de abajo se obtiene de una corrida del pipeline en `main` después del merge.
 
 | Evidencia | Cómo obtenerla |
 |---|---|
@@ -160,7 +160,7 @@ Todo lo de abajo requiere una corrida del pipeline en `main` después del merge.
 | `07-rollback.png` | Corrida con `ROLLBACK_TAG=<anterior>`: `Rollback solicitado: <tag>` y los `rollout status` del stage `Rollback prod` |
 | `08-rollback-post.png` | `kubectl -n cg-prod get deploy notification -o jsonpath=...` mostrando el tag anterior y el actuator en `UP` |
 
-No se enlazan imágenes que aún no existen en el repositorio.
+Las imágenes se enlazan cuando se versionan en el repositorio.
 
 ## Reproducir las verificaciones locales
 

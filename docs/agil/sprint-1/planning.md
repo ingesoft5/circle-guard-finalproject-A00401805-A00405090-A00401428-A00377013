@@ -3,7 +3,6 @@
 
 **Proyecto:** CircleGuard
 **Sprint:** DCG Sprint 1
-**Periodo:** 3–8 de noviembre de 2026
 **Equipo:** Daniela Castaño Moreno, Santiago Alejandro Estrada, Faiber Piedrahita Perlaza y Alejandro Quiñones Caicedo
 **Tablero:** [DCG en Jira](https://bomastik-site.atlassian.net/jira/software/projects/DCG/boards/67?filter=&groupBy=none)
 

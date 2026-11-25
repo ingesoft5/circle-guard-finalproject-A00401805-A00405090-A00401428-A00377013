@@ -71,5 +71,5 @@ E2.5, E2.7 y E2.10, tal como aplica a todas las bonificaciones L284).
 
 La evidencia es real y reproducible: el PodChaos se creó, eliminó efectivamente
 un pod (cambió el conjunto de UIDs), el servicio recuperó su estado estable y el
-rollback dejó el clúster sin recursos de chaos. No se reporta NetworkChaos como
-evidencia de esta bonificación.
+rollback dejó el clúster sin recursos de chaos. La evidencia de esta bonificación
+corresponde al experimento PodChaos descrito arriba.
