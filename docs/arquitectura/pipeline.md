@@ -25,7 +25,7 @@ flowchart LR
     DW --> DEV[Deploy dev]
     DEV --> E[E2E Playwright]
     E --> ST[Deploy stage]
-    ST --> AP[Approval prod]
+    ST --> AP[Approval prod automática]
     AP --> PR[Deploy prod]
     PR --> OK[Optional rollback]
 ```
@@ -85,13 +85,13 @@ optimización opcional.
 | Deploy dev | `main` | Despliega la etiqueta en dev |
 | E2E | `main` + integración habilitada | Inicio de sesión, cuestionario, acceso |
 | Deploy stage | `main` | Promueve la misma etiqueta |
-| Approval prod | `main` | `input` manual |
-| Deploy prod | Aprobación | Despliega la etiqueta |
+| Approval prod | `main` | Comprueba que las compuertas de tests, Trivy y ZAP siguen en verde |
+| Deploy prod | Aprobación automática | Despliega la etiqueta |
 | Rollback prod | `ROLLBACK_TAG` | Despliega una etiqueta anterior sin recompilar |
 
 El parámetro `DEPLOY` se conserva por compatibilidad con invocaciones anteriores, pero no
-condiciona las etapas: en `main` la promoción es automática y la única pausa es la aprobación
-manual de producción.
+condiciona las etapas: en `main` la promoción es automática y la aprobación de producción se
+resuelve con las compuertas bloqueantes (tests, Trivy y ZAP), sin intervención manual.
 
 ## Versionado
 
@@ -152,7 +152,7 @@ externos se dejan intactos. Las imágenes se siguen registrando en `image-digest
 nombre `NEXUS_REGISTRY` anunciado, de modo que la evidencia y los overlays de k3d continúan
 usando la dirección estable.
 
-## Notificaciones de error y rollback
+## Notificaciones de error, aprobación y rollback
 
 - `ciNotify.failure` comenta en GitHub con la **etapa real que produjo el error** (capturada
   en `env.FAILED_STAGE` al iniciar cada etapa; `post.failure` la restaura porque Jenkins
@@ -161,11 +161,14 @@ usando la dirección estable.
   (`SLACK_WEBHOOK_URL`) y Discord (`DISCORD_WEBHOOK_URL`). Si no hay ninguno configurado, la
   compilación advierte explícitamente de que falta la notificación del enunciado
   (E1.5, E2.3, P1.5, P2.5). Ambas variables se inyectan en el contenedor de Jenkins desde
-  `deploy/compose/tools/.env`.
+  `deploy/compose/tools/.env` y el pipeline las carga en `Resolve services`.
+- La promoción a producción emite una notificación de aprobación automática al superar
+  las compuertas de tests, Trivy y ZAP, y `post.success` envía el cierre exitoso por los
+  mismos canales. Ninguna etapa requiere pulsar un botón.
 - `ROLLBACK_TAG` omite la compilación, las pruebas, Sonar, la publicación y Docker; solo
   despliega en producción. HU-DASH-04 ejecutó este flujo (y el equivalente
   `kubectl rollout undo`) para `dashboard` en `cg-prod`; la evidencia capturada está
-  enlazada desde `docs/informe/HU-DASH-04.md`.
+  enlazada desde `docs/infra/rollback.md` y `docs/informe/evidencia/HU-DASH-04/`.
 - Los registros, los informes de JaCoCo, los resultados de JUnit y los digests se archivan
   en cada compilación.
 
@@ -189,13 +192,13 @@ La evidencia de cierre debe incluir:
 - Una tabla de cobertura con el **porcentaje real medido** de los nueve componentes (ocho
   servicios Java más móvil), cada uno con `>= 60 %` y la ruta del informe utilizada.
 - Una comprobación verde de `continuous-integration/jenkins/pr-merge` junto con la revisión
-  aprobatoria; las fusiones usan la fusión normal de GitHub, nunca `--admin`.
-- Una demostración en producción tras la aprobación, con el registro de despliegue/rollback.
+  aprobatoria; las fusiones usan la fusión normal de GitHub y el bypass administrativo queda reservado para desbloqueos puntuales documentados, restaurando la protección de inmediato.
+- Una demostración en producción tras la aprobación automática de compuertas, con el registro de despliegue/rollback.
 
 Evidencia histórica:
 
-- `docs/informe/evidencia/jenkins-pr15.png`
-- `docs/informe/evidencia/sonarqube-quality-gate.png`
-- `docs/informe/evidencia/nexus-repositories.png`
-- `docs/informe/evidencia/gateway-jacoco.png`
+- `docs/informe/evidencia/trazabilidad/08-jenkins-stage-view.jpg`
+- `docs/informe/evidencia/trazabilidad/10-sonarqube-quality-gate.png`
+- `docs/informe/evidencia/trazabilidad/11-nexus-repositories.png`
+- `docs/informe/evidencia/trazabilidad/13-jacoco-auth-coverage.png`
 - `docs/agil/sprint-1/review.md`

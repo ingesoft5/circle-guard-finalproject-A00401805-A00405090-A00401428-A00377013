@@ -280,7 +280,7 @@ ruteo por header `Host`. Esto evita el conflicto del puerto `30080` y el límite
 #### 3. Pipeline (E2.3)
 
 Jenkins ejecuta `init → validate → verificación compute → plan → Trivy IaC → apply` para los tres ambientes, con
-`Approval prod` antes del apply de producción. Las credenciales se leen de los credentials
+`Approval prod` (aprobación automática de compuertas) antes del apply de producción. Las credenciales se leen de los credentials
 `terraform-minio-creds` y `terraform-grafana-password`, definidos en `jenkins/cac/jenkins.yml`
 y alimentados por `.env.onpremise`.
 

@@ -68,7 +68,7 @@ docker build -f services/circleguard-identity-service/Dockerfile \
 
 El contenedor de identidad requiere `SPRING_DATASOURCE_*`,
 `SPRING_KAFKA_BOOTSTRAP_SERVERS`, `VAULT_SECRET`, `VAULT_SALT`,
-`VAULT_HASH_SALT` y `JWT_SECRET`. Consulte `docs/informe/HU-ID-03.md`.
+`VAULT_HASH_SALT` y `JWT_SECRET`. Consulte `services/circleguard-identity-service/`.
 
 Empaquetado:
 

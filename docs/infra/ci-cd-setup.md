@@ -127,7 +127,7 @@ código de su rama o PR.
 11. **Publish** (en `main`): artefacto Nexus para los servicios Maven publicables.
 12. **Docker** (en `main`): compila y hace push de cada servicio con Dockerfile usando solo la etiqueta semver, nunca `latest`; verifica usuario no root y HEALTHCHECK.
 13. **Docker web** (en `main`): compila el cliente Expo con `mobile/Dockerfile` y publica `web:<tag>`.
-14. **Deploy** (opcional): dev, E2E, stage, aprobación de producción, producción, rollback. Solo cuando `DEPLOY=true` en `main`.
+14. **Deploy**: dev, E2E, stage, aprobación automática de compuertas, producción y rollback. En `main` se ejecuta siempre; `DEPLOY` solo se mantiene por compatibilidad.
 15. **Archive**: JUnit, JaCoCo HTML/XML, `sonar-links.txt`, `image-digest.txt` y notas de versión.
 
 ### Compuertas de seguridad
