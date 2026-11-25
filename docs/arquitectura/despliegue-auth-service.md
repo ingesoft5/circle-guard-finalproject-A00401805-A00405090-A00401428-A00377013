@@ -9,8 +9,7 @@
 **Módulo:** `services/circleguard-auth-service`  
 **Historia de Usuario en Jira:** `DCG-80` (`HU-AUTH-04`)  
 **Subtareas cubiertas:** `DCG-98`, `DCG-99`, `DCG-100`, `DCG-101`  
-**Autor:** Faiber Piedrahita (`A00405090`)  
-**Fecha:** 8 de noviembre de 2026
+**Autor:** Faiber Piedrahita (`A00405090`)
 
 ---
 

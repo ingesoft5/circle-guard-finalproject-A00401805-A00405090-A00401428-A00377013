@@ -1,11 +1,11 @@
 /**
- * CG-DOC: Unit or integration tests for Identity Mapping Repository Test in the identity service.
+ * CG-DOC: @DataJpaTest against the embedded H2 database (no Testcontainers).
+ * It belongs to the unit gate; the integration gate is reserved for real containers.
  */
 package com.circleguard.identity.repository;
 
 import com.circleguard.identity.model.IdentityMapping;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest
 @ActiveProfiles("test")
 @Transactional
-@Tag("integration")
 class IdentityMappingRepositoryTest {
 
     @Autowired

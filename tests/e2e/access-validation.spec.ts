@@ -8,6 +8,15 @@ const IDENTITY_URL = process.env.IDENTITY_URL || 'http://localhost:8083';
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8087';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Credenciales de prueba: en Jenkins se inyectan desde el secret store como
+// E2E_STAFF_USER / E2E_STAFF_PASSWORD / E2E_HEALTH_USER / E2E_HEALTH_PASSWORD.
+// Los valores por defecto son datos ficticios del seed local, no secretos reales.
+const STAFF_USER = process.env.E2E_STAFF_USER || 'staff_guard';
+const STAFF_PASSWORD = process.env.E2E_STAFF_PASSWORD || 'password';
+const HEALTH_USER = process.env.E2E_HEALTH_USER || 'health_user';
+const HEALTH_PASSWORD = process.env.E2E_HEALTH_PASSWORD || 'password';
+const WRONG_PASSWORD = process.env.E2E_WRONG_PASSWORD || 'wrong-password';
+
 // The Ingress only publishes routes that expose services; actuators are
 // internal to the cluster. "Health" is verified through API behavior.
 test('el gateway responde vía ingress', async ({ request }) => {
@@ -34,14 +43,14 @@ test('el gateway rechaza un JWT de personal malformado', async ({ request }) => 
 
 test('auth-service responde vía ingress', async ({ request }) => {
   const response = await request.post(`${AUTH_URL}/api/v1/auth/login`, {
-    data: { username: 'staff_guard', password: 'wrong-password' },
+    data: { username: STAFF_USER, password: WRONG_PASSWORD },
   });
   expect(response.status()).toBe(401);
 });
 
 test('auth-service rechaza credenciales inválidas con 401', async ({ request }) => {
   const response = await request.post(`${AUTH_URL}/api/v1/auth/login`, {
-    data: { username: 'staff_guard', password: 'wrong-password' },
+    data: { username: STAFF_USER, password: WRONG_PASSWORD },
   });
   expect(response.status()).toBe(401);
 });
@@ -49,7 +58,7 @@ test('auth-service rechaza credenciales inválidas con 401', async ({ request })
 test('flujo E2E completo: login RBAC en auth-service, generación de QR y validación en gateway', async ({ request }) => {
   // 1. Login en auth-service (fallback Dual-Chain -> PostgreSQL local_users)
   const loginRes = await request.post(`${AUTH_URL}/api/v1/auth/login`, {
-    data: { username: 'staff_guard', password: 'password' },
+    data: { username: STAFF_USER, password: STAFF_PASSWORD },
   });
   expect(loginRes.status()).toBe(200);
   const loginData = await loginRes.json();
@@ -75,7 +84,7 @@ test('flujo E2E completo: login RBAC en auth-service, generación de QR y valida
   expect(permRes.status()).toBe(200);
   const users = await permRes.json();
   expect(Array.isArray(users)).toBeTruthy();
-  expect(users.some((u: { username: string }) => u.username === 'health_user')).toBeTruthy();
+  expect(users.some((u: { username: string }) => u.username === HEALTH_USER)).toBeTruthy();
 
   // 4. Cross-validation in gateway using the staff_guard JWT (with gate:scan) and the qrToken issued by auth-service
   const gateRes = await request.post(`${GATEWAY_URL}/api/v1/gate/validate`, {
@@ -130,7 +139,7 @@ test('identity-service anonimiza identidad real y visitante de forma idempotente
 test('flujo E2E de anonimización: auth-service delega en identity-service y el JWT emitido no expone PII', async ({ request }) => {
   // 1. Query the anonymousId persisted in identity-service for health_user
   const mapRes = await request.post(`${IDENTITY_URL}/api/v1/identities/map`, {
-    data: { realIdentity: 'health_user' },
+    data: { realIdentity: HEALTH_USER },
   });
   expect(mapRes.status()).toBe(200);
   const { anonymousId: vaultAnonymousId } = await mapRes.json();
@@ -138,7 +147,7 @@ test('flujo E2E de anonimización: auth-service delega en identity-service y el 
 
   // 2. Log in to auth-service as health_user and verify an exact match with the vault
   const loginRes = await request.post(`${AUTH_URL}/api/v1/auth/login`, {
-    data: { username: 'health_user', password: 'password' },
+    data: { username: HEALTH_USER, password: HEALTH_PASSWORD },
   });
   expect(loginRes.status()).toBe(200);
   const loginData = await loginRes.json();
@@ -149,6 +158,6 @@ test('flujo E2E de anonimización: auth-service delega en identity-service y el 
   const decodedPayload = Buffer.from(payloadBase64, 'base64url').toString('utf-8');
   const claims = JSON.parse(decodedPayload);
   expect(claims.sub).toBe(vaultAnonymousId);
-  expect(decodedPayload).not.toContain('health_user');
+  expect(decodedPayload).not.toContain(HEALTH_USER);
   expect(decodedPayload).not.toContain('health@univ.edu');
 });

@@ -1,5 +1,7 @@
 /**
- * CG-DOC: Unit or integration tests for Promotion Performance Test in the promotion service.
+ * CG-DOC: NFR-1 wall-clock benchmark (not a unit or integration test). It is
+ * excluded from `test` and `integrationTest` and runs only via `performanceTest`
+ * or the Locust suite in tests/performance-locust.
  */
 package com.circleguard.promotion.performance;
 
@@ -26,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @org.springframework.test.context.ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
 @Tag("performance")
-public class PromotionPerformanceTest {
+public class PromotionPerformanceBenchmark {
 
     @Container
     static Neo4jContainer<?> neo4jContainer = new Neo4jContainer<>("neo4j:5.12.0")

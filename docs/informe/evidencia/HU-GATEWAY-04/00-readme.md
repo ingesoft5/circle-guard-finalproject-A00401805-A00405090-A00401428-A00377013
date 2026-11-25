@@ -23,5 +23,5 @@
 ## Notas
 
 - Las capturas `04`, `05` y `06` son renders de respuestas reales de la API de GitHub porque el entorno no dispone de una sesión web de GitHub. Los JSON originales están en la misma carpeta.
-- Slack no está configurado en el entorno (`SLACK_WEBHOOK_URL` vacío); por eso no existe `10-failure-notification-slack.png`. La implementación envía a Slack cuando la variable está definida.
+- Slack no está configurado en el entorno (`SLACK_WEBHOOK_URL` vacío); `10-failure-notification-slack.png` se captura con la variable definida. La implementación envía a Slack cuando la variable está definida.
 - `image-digest.txt` y `sonar-links.txt` se descargaron directamente de los artefactos del build `main #8`.

@@ -8,6 +8,8 @@
 > **Declaración de uso:**  
 > De acuerdo con las directrices del proyecto final (Secciones 2.4 y 3.1 — Entregable E1.8), este documento registra el trabajo colaborativo con herramientas de Inteligencia Artificial Generativa durante el ciclo de vida DevOps de **CircleGuard**. Para cada intervención se documenta el análisis e insumo propio elaborado previamente por el estudiante, el prompt exacto empleado, las validaciones/ajustes manuales aplicados sobre la salida generada y una reflexión crítica sobre el resultado.
 
+> **Nota de convención (Bloque B).** Cada intervención usa un único formato de encabezados de nivel 4: `#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)`, `#### B. Prompt empleado`, `#### C. Validación humana y hallazgos` y `#### D. Reflexión crítica`. El origen de cada prompt se declara dentro de la entrada correspondiente. El documento está en español; la única excepción es el `Executive Summary` en inglés exigido por E2.9, que se incorpora en el informe final y aquí solo se referencia.
+
 ---
 
 ## Tabla de Contenido
@@ -110,7 +112,7 @@ A partir de lo que te especifiqué anteriormente y del archivo `Proyecto_Final_C
      - Evidencia verificable del comando Gradle ejecutado y sus resultados, junto con la lista de preparación para `HU-AUTH-02` y `HU-AUTH-03`.
 ```
 
-#### C. Validación humana y hallazgos adicionales del contraste
+#### C. Validación humana y hallazgos
 
 - **Contraste con `SecurityConfig.java`:** Se verificó que el método `@Bean public LdapContextSource contextSource()` tiene quemados en Java `"ldap://localhost:389"`, `"dc=circleguard,dc=edu"`, `"cn=admin,dc=circleguard,dc=edu"` y `"admin"`, ignorando `application.yml`, y que `corsConfigurationSource()` fija `http://localhost:8081` y `http://localhost:8080`. Ambos puntos se incorporaron a la matriz de parametrización para `HU-AUTH-03`.
 - **Contraste con `QrTokenService.java`:** Se detectó una discrepancia de unidades entre el valor por defecto en Java (`60000` ms) y el valor en `application.yml` (`300` ms).
@@ -185,7 +187,7 @@ Con base en este diseño previo y el archivo `Proyecto_Final_CircleGuard.pdf` ad
 4. Ejecuta con Java 21 las tareas `:services:circleguard-auth-service:test`, `:services:circleguard-auth-service:jacocoTestReport` y `:services:circleguard-auth-service:jacocoTestCoverageVerification`, verifica el porcentaje exacto de cobertura alcanzado en el reporte JaCoCo y registra esta interacción en una nueva sección `1.2 HU-AUTH-02 (DCG-78)` dentro de `IAG_REGISTRO.md` manteniendo el mismo formato de Nivel 3.
 ```
 
-#### C. Validación humana y ajustes realizados
+#### C. Validación humana y hallazgos
 
 - **Ajuste de contexto `@WebMvcTest` en `QrTokenControllerTest` y `UserControllerTest`:** Durante la primera ejecución de pruebas, se detectó que al importar `SecurityConfig.class` en slices `@WebMvcTest` que no declaran `@MockBean AuthenticationManager`, Spring requiere los beans `JwtAuthenticationFilter` y `DualChainAuthenticationProvider` en el contexto del test. Se ajustó la anotación `@Import({SecurityConfig.class, JwtAuthenticationFilter.class, DualChainAuthenticationProvider.class})` en ambos tests, logrando que las **24 pruebas (unitarias y de integración)** pasen sin errores (`0 failures`).
 - **Verificación de métricas reales en el reporte XML/HTML de JaCoCo (`build/reports/jacoco/test/jacocoTestReport.xml`):**
@@ -273,7 +275,7 @@ Con base en este diseño previo y el archivo `Proyecto_Final_CircleGuard.pdf` ad
 4. Registra esta interacción en una nueva sección `1.3 HU-AUTH-03 (DCG-79)` dentro de `IAG_REGISTRO.md` manteniendo el mismo formato de Nivel 3.
 ```
 
-#### C. Validación humana y ajustes realizados
+#### C. Validación humana y hallazgos
 
 - **Normalización de rutas de subproyecto Gradle en `vars/ci.groovy`:** En `vars/ci.groovy` original se invocaba `./gradlew :${serviceDir}:clean test ...` donde `serviceDir` tenía formato `services/circleguard-...` (con `/` en vez de `:`). Se normalizó con `def gradleProject = serviceDir.replace('/', ':')` y se prefijaron explícitamente todas las tareas (`:${gradleProject}:clean :${gradleProject}:test :${gradleProject}:jacocoTestReport :${gradleProject}:jacocoTestCoverageVerification` y `:${gradleProject}:publish`) para evitar ejecutar tareas sobre servicios no configurados del monorepo.
 - **Verificación de Actuator `/actuator/health` en `AuthIntegrationTest`:** Se añadió una aserción en `AuthIntegrationTest` que realiza `GET /actuator/health` sin token JWT y comprueba HTTP `200 OK` con `$.status == "UP"`, validando que el endpoint del `HEALTHCHECK` de Docker responda correctamente incluso con OpenLDAP deshabilitado (`management.health.ldap.enabled: false`).
@@ -339,7 +341,7 @@ Tras verificar la conectividad SSH/AWS hacia nuestras 4 instancias EC2 (`cg-tool
    - Documentar las evidencias verificables del despliegue en `dev`, `stage` y `prod`, las pruebas E2E con Playwright y el procedimiento/ejecución de rollback en `docs/arquitectura/despliegue-auth-service.md` (o actualizando `docs/infra/runbook.md`), y registrar esta interacción en la sección `1.4 HU-AUTH-04 (DCG-80)` de `IAG_REGISTRO.md` manteniendo el estándar de Nivel 3 de la Universidad Icesi.
 ```
 
-#### C. Validación humana y ajustes realizados
+#### C. Validación humana y hallazgos
 
 - **Hallazgo crítico de integración RBAC entre `auth-service` y `gateway-service` (`V6__map_gate_staff_permission.sql`):** Al contrastar `services/circleguard-gateway-service/src/main/java/com/circleguard/gateway/config/SecurityConfig.java` con las migraciones Flyway de `auth-service`, se detectó que `POST /api/v1/gate/validate` exige `.hasAuthority("gate:scan")`, pero `V1__initial_auth_schema.sql` solo había asociado permisos al rol `HEALTH_CENTER` y había omitido asociar `gate:scan` al rol `GATE_STAFF` (`staff_guard`). Se creó la migración `V6__map_gate_staff_permission.sql` para vincular `GATE_STAFF` $\rightarrow$ `gate:scan`, permitiendo que el JWT emitido para `staff_guard` autorice directamente la validación de QR en `gateway-service`.
 - **Resiliencia controlada en `IdentityClient.java` (`identity.service.fallback-enabled`):** Dado que `identity-service` se despliega en una historia independiente, se añadió la propiedad opcional `identity.service.fallback-enabled` (por defecto `false` para no alterar las pruebas unitarias de fallo, y `true` en Compose mientras `identity-service` no esté activo) que genera un UUID determinístico (`UUID.nameUUIDFromBytes`) cuando `identity-service` no es alcanzable, junto con dos nuevos tests unitarios en `IdentityClientTest.java` manteniendo el `100%` de cobertura en `IdentityClient`.
@@ -386,7 +388,7 @@ Implementa `HU-ID-04` (`DCG-85`, subtareas `DCG-118`, `DCG-119`, `DCG-120` y `DC
 4. Demuestra el rollback en `cg-prod` entre dos tags semánticos, documenta la evidencia en `docs/arquitectura/despliegue-identity-service.md` y registra la iteración en `IAG_REGISTRO.md` (`DCG-121`).
 ```
 
-#### C. Validación humana y ajustes realizados
+#### C. Validación humana y hallazgos
 
 - **Registro del proyecto en SonarQube y Quality Gate (`configure-sonar-identity.sh`):** Se ejecutó `infra/bootstrap/configure-sonar-identity.sh` contra `http://77.112.223.174:9000` para aprovisionar el proyecto `circleguard-identity-service` y asociarle el Quality Gate obligatorio `CircleGuard Services` (`line_coverage < 60%`).
 - **Configuración de secretos hexadecimales para `Spring Security Crypto` (`VAULT_SALT`):** Se validó que `IdentityEncryptionConverter` instancia `Encryptors.text(secret, salt)`, el cual decodifica `salt` con `Hex.decode()`. Por ello se parametrizó `VAULT_SALT=5c0744940b5c369b` (hexadecimal de 16 caracteres) tanto en `docker-compose.yml` como en `.env` de `cg-dev`, `cg-stage` y `cg-prod`, previniendo fallos `IllegalArgumentException: Non-hex character` al cifrar identidades en PostgreSQL.
@@ -467,7 +469,7 @@ Con base en este diseño previo:
 4. Registra los cambios y el resultado obtenido en `IAG_REGISTRO.md` bajo la sección `1.5 HU-AUTH-05 (DCG-81 — Subtareas DCG-102 y DCG-103)`.
 ```
 
-#### C. Validación humana y hallazgos adicionales
+#### C. Validación humana y hallazgos
 
 - **Detección de condición de auto-configuración en Spring Boot 3:** Al ejecutar la primera prueba de integración, se detectó que el endpoint `/actuator/prometheus` retornaba `404 Not Found` a pesar de estar incluido en `management.endpoints.web.exposure.include`. Inspeccionando el bytecode de `PrometheusMetricsExportAutoConfiguration` se constató que la anotación `@ConditionalOnEnabledMetricsExport("prometheus")` requiere la propiedad explícita `management.prometheus.metrics.export.enabled: true`. Al incorporarla en `application.yml`, el endpoint quedó registrado y respondiendo métricas en formato texto plano de Prometheus.
 - **Validación de sondas de ciclo de vida:** Se verificó que `/actuator/health/liveness` y `/actuator/health/readiness` respondieron `200 OK` con `{"status":"UP"}` en la suite de pruebas automatizadas `AuthIntegrationTest`.
@@ -545,7 +547,7 @@ Con base en este diseño previo:
 4. Registra la interacción en `IAG_REGISTRO.md` bajo la sección `1.7 HU-AUTH-05 (DCG-81 — Subtareas DCG-104 y DCG-105)` siguiendo el formato de Nivel 3 (Insumo previo, Prompt, Validación humana y Reflexión crítica sobre los trade-offs del Circuit Breaker y Retry en la autenticación).
 ```
 
-#### C. Validación humana y hallazgos adicionales (incluyendo resolución de Code Review en PR)
+#### C. Validación humana y hallazgos
 
 - **Corrección de propagación de excepciones y orden de aspectos AOP en Resilience4j (`IdentityClient`):**
   - En la primera versión generada, `IdentityClient.getAnonymousId()` capturaba `RuntimeException` en un `try/catch` interno cuando `fallbackEnabled=true`, impidiendo que los aspectos `@Retry` y `@CircuitBreaker` observaran el fallo. Se eliminó el `try/catch` interno para que la excepción se propague por el proxy AOP y el fallback resida exclusivamente en `fallbackMethod = "fallbackAnonymousId"`.
@@ -604,7 +606,7 @@ Para esta primera etapa me enfocaré en las subtareas DCG-119 (Manifiestos K8s, 
 5. Agregar `IdentityActuatorObservabilityTest.java` verificando `/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness` y `/actuator/prometheus`, y ejecutar `:test`, `:jacocoTestReport` y `:jacocoTestCoverageVerification`.
 ```
 
-#### C. Validación humana y hallazgos adicionales
+#### C. Validación humana y hallazgos
 
 - Se verificó con `IdentityActuatorObservabilityTest` que los cuatro endpoints de observabilidad (`/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness` y `/actuator/prometheus`) responden `200 OK` sin requerir Bearer JWT.
 - Se validó la sintaxis YAML de `deploy/k8s/base/apps.yml` (18 documentos) y `deploy/k8s/base/hpa.yml` (4 documentos), corrigiendo una duplicación inicial al agregar el bloque HPA de `identity`.
@@ -653,7 +655,7 @@ Estoy desarrollando la segunda etapa de la historia HU-ID-05 (DCG-86) en la rama
    - Ejecutar `:test`, `:jacocoTestReport`, `:jacocoTestCoverageVerification` y documentar ambas etapas en `IAG_REGISTRO.md`.
 ```
 
-#### C. Validación humana y hallazgos adicionales
+#### C. Validación humana y hallazgos
 
 - **Prueba real de resiliencia sobre Spring AOP (`IdentityAuditPublisherResilienceTest`):** Se comprobó mediante `AopUtils.isAopProxy(auditPublisher)` que las anotaciones `@CircuitBreaker` y `@Retry` operan con la configuración externalizada `10/5/50` y `maxAttempts=3`: 2 fallos transitorios de Kafka reintentan y tienen éxito en el 3er intento manteniendo el circuito `CLOSED`, mientras que 5 fallos sostenidos (`15` intentos a `KafkaTemplate`) abren el circuito a `OPEN`, cortocircuitan la 6ta llamada sin invocar Kafka y exponen `resilience4j_circuitbreaker_state{name="identityAuditKafka",state="open",} 1.0` y `circleguard_identity_audit_fallback_total` en `/actuator/prometheus`.
 - **Resultados de pruebas y cobertura JaCoCo (`jacocoTestReport.xml`):**
@@ -691,11 +693,11 @@ Previo a la actualización del documento Word, definí el alcance y proporcioné
 Necesito que me ayudes a actualizar y ampliar el informe con capturas actuales, ten en cuenta todo lo que este pide y que ya estamos en la segunda fase del taller/parcial. Antes de agregar las capturas y editar el informe por favor déjalas en una carpeta en Desktop/Capturas para yo verlas y confirmarte si proseguir; en caso de proseguir crea una nueva rama para editar el informe. Primero analiza qué falta por actualizar en el informe y dime.
 ```
 
-#### C. Validación humana y hallazgos adicionales
+#### C. Validación humana y hallazgos
 
 - Se corrigió el error factual en la subsección `13.6` (que atribuía `IdentityClient` con Resilience4j al gateway en lugar de `auth-service`, y omitía `IdentityAuditPublisher` en `identity-service`, las 9 reglas de Alertmanager y el stack Loki/Promtail).
 - Se alineó la tabla de entregables `13.8` (`P2-01` a `P2-10`) con el estado real de `main` tras los merges de los PRs `#92`, `#93`, `#134`, `#136`, `#137`, `#138` y `#139` (`v1.14.0`), y se corrigió la ruta de `IAG_REGISTRO.md` en `13.9`.
-- Se añadieron las subsecciones obligatorias faltantes `13.10` (Patrones de diseño y arquitectura), `13.11` (Informe consolidado de pruebas y calidad), `13.12` (Change management y releases), `13.13` (Sprint 2 y retrospectiva), `13.14` (Análisis de costos AWS vs. on-premise) y `13.15` (Executive Summary en inglés), embebiendo las 14 capturas numeradas (`Figura 2` a `Figura 15`) sin alterar las Secciones 1–12 ni los Anexos A–C.
+- Se añadieron las subsecciones obligatorias faltantes `13.10` (Patrones de diseño y arquitectura), `13.11` (Informe consolidado de pruebas y calidad), `13.12` (Gestión del cambio y lanzamientos), `13.13` (Sprint 2 y retrospectiva), `13.14` (Análisis de costos AWS vs. on-premise) y `13.15` (Executive Summary en inglés, requerido por E2.9), embebiendo las 14 capturas numeradas (`Figura 2` a `Figura 15`) sin alterar las Secciones 1–12 ni los Anexos A–C. El texto completo del resumen en inglés se incorpora en el informe final; aquí solo se registra su inclusión.
 
 #### D. Reflexión crítica
 
@@ -740,13 +742,26 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 - **Entregable:** E1.4 — pipeline de integración continua con Jenkins.
 - **Objetivo:** dejar una plataforma CI/CD multibranch para el gateway, disparada por webhook, con etapas reutilizables y quality gate bloqueante, sin requerir intervención manual para cada rama.
 
-**A. Insumo propio.** Análisis de la estructura del servicio, lectura de los requisitos del enunciado para E1.4 y E1.6, y decisión de topología: dos instancias de gateway, ambientes `dev`/`stage`/`prod`, registro privado y SonarQube on-premise. Se definió que el job debía ser multibranch y que el disparador sería el webhook `/github-webhook/`, no un `cron`.
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
-**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Analiza la estructura del microservicio Gateway, valida el plan de la historia contra los entregables E1.4 y E1.6 del enunciado, y propón la configuración del job multibranch, el webhook y el pipeline con etapas reutilizables en la biblioteca compartida». La sesión de trabajo original se conserva como referencia histórica: `https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6`.
+Análisis de la estructura del servicio, lectura de los requisitos del enunciado para E1.4 y E1.6, y decisión de topología: dos instancias de gateway, ambientes `dev`/`stage`/`prod`, registro privado y SonarQube on-premise. Se definió que el job debía ser multibranch y que el disparador sería el webhook `/github-webhook/`, no un `cron`.
 
-**C. Validación y apreciación humana.** Se revisaron y ejecutaron los scripts `infra/bootstrap-*.sh`, se verificaron credenciales y se ajustó la configuración del webhook y de la protección de `main`. La salida quedó versionada en `Jenkinsfile`, `jenkins/vars/`, `deploy/compose/tools/jenkins/cac/jenkins.yml` y `docs/informe/HU-GATEWAY-04.md`. Las capturas de Jenkins, SonarQube y GitHub se conservan en `docs/informe/evidencia/HU-GATEWAY-04/`, incluidas la notificación de fallo (`09-failure-notification-github.png`) y la Reproducción del quality gate en rojo (`11-quality-gate-red.png`).
+#### B. Prompt empleado
 
-**D. Apreciación humana y reflexión.** La automatización no sustituye la verificación: un webhook configurado sin el check obligatorio en `main` deja el flujo expuesto a fusiones sin gate. La decisión de conservar capturas reales, aunque provengan de la API de GitHub y no de una sesión web, fue preferible a omitir la evidencia.
+- Analizar la estructura del microservicio Gateway.
+- Validar el plan de la HU contra el PDF del proyecto.
+- Ajustar la HU a la Parte 1 / Sprint 1 y al microservicio gateway.
+- Generar scripts Bash idempotentes, Docker Compose y pipeline de Jenkins.
+
+La sesión de trabajo original se conserva como referencia histórica: `https://claude.ai/chat/34eb30b0-e91f-4b8b-afba-8f22890194c6`.
+
+#### C. Validación humana y hallazgos
+
+Se revisaron y ejecutaron los scripts `infra/bootstrap-*.sh`, se verificaron credenciales y se ajustó la configuración del webhook y de la protección de `main`. La salida quedó versionada en `Jenkinsfile`, `jenkins/vars/`, `deploy/compose/tools/jenkins/cac/jenkins.yml` y `docs/informe/HU-GATEWAY-04.md`. Las capturas de Jenkins, SonarQube y GitHub se conservan en `docs/informe/evidencia/HU-GATEWAY-04/`, incluidas la notificación de fallo (`09-failure-notification-github.png`) y la Reproducción del quality gate en rojo (`11-quality-gate-red.png`).
+
+#### D. Reflexión crítica
+
+La automatización no sustituye la verificación: un webhook configurado sin el check obligatorio en `main` deja el flujo expuesto a fusiones sin gate. La decisión de conservar capturas reales, aunque provengan de la API de GitHub y no de una sesión web, fue preferible a omitir la evidencia.
 
 ---
 
@@ -760,13 +775,31 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 - **Entregable:** E1.6 — pruebas automatizadas.
 - **Objetivo:** validar el flujo de validación de QR contra una instancia real y efímera de Redis, sin mocks, y ejecutarlo como tarea Gradle independiente dentro de Jenkins.
 
-**A. Insumo propio.** Lectura de la sección 5 del documento de requerimientos del gateway y diagnóstico de `GatewayRedisIntegrationTest`. Se decidieron la imagen `redis:7.2-alpine`, el filtro `**/integration/**` para separar unitarias de integración, el cálculo de JaCoCo solo sobre unitarias y la convención de commits sin la clave interna `[CG-02]`.
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
-**B. Apoyo IAG — prompt (transcripción de sesión, ortografía normalizada).** «Analiza la integración Gateway–Redis con Testcontainers y valida el plan de pruebas» y, tras la revisión, «Ejecuta el plan». El detalle técnico se reconstruyó y contrastó con `docs/informe/GW-CI-02-Integracion-Redis.md` y `docs/informe/Gateway-Cobertura.md`.
+Lectura de la sección 5 del documento de requerimientos del gateway y diagnóstico de `GatewayRedisIntegrationTest`. Se decidieron la imagen `redis:7.2-alpine`, el filtro `**/integration/**` para separar unitarias de integración, el cálculo de JaCoCo solo sobre unitarias y la convención de commits sin la clave interna `[CG-02]`.
 
-**C. Validación y apreciación humana.** Tres ejecuciones consecutivas con 9 pruebas, 0 fallos y 0 errores. La primera serie registró 28 s, 25 s y 26 s; la serie posterior al rebase sobre `main` registró 24 s, 25 s y 24 s, con tiempos JUnit de 3.541 s, 3.628 s y 3.496 s y `count=0` de contenedores tras la ventana de limpieza de Ryuk. El reporte de cobertura unitaria del gateway quedó en 49/49 líneas (100 %) en el consolidado `Gateway-Cobertura.md`; el registro de la sesión reportó 95.92 % sobre una medición intermedia, que se conserva como histórico y no como cifra vigente en el informe. Se documentó el error de WSL (`/mnt/c` montado como 9p), resuelto con `gradle/wsl-ext4.init.gradle.kts` sin subir el límite de 3 minutos de CI.
+#### B. Prompt empleado
 
-**D. Apreciación humana y reflexión.** Un contenedor «arriba» no implica un servicio listo: fue necesario esperar `Ready to accept connections`. El límite de 3 minutos de la tarea es una restricción de infraestructura, no una tolerancia a código lento; mover las salidas a ext4 resolvió el síntoma sin relajar el gate.
+(transcripción de sesión)
+
+```text
+Dame el plan completo
+```
+
+```text
+Ejecuta el plan
+```
+
+El detalle técnico se reconstruyó y contrastó con `docs/informe/GW-CI-02-Integracion-Redis.md` y `docs/informe/Gateway-Cobertura.md`.
+
+#### C. Validación humana y hallazgos
+
+Tres ejecuciones consecutivas con 9 pruebas, 0 fallos y 0 errores. La primera serie registró 28 s, 25 s y 26 s; la serie posterior al rebase sobre `main` registró 24 s, 25 s y 24 s, con tiempos JUnit de 3.541 s, 3.628 s y 3.496 s y `count=0` de contenedores tras la ventana de limpieza de Ryuk. El reporte de cobertura unitaria del gateway quedó en 49/49 líneas (100 %) en el consolidado `Gateway-Cobertura.md`; el registro de la sesión reportó 95.92 % sobre una medición intermedia, que se conserva como histórico y no como cifra vigente en el informe. Se documentó el error de WSL (`/mnt/c` montado como 9p), resuelto con `gradle/wsl-ext4.init.gradle.kts` sin subir el límite de 3 minutos de CI.
+
+#### D. Reflexión crítica
+
+Un contenedor «arriba» no implica un servicio listo: fue necesario esperar `Ready to accept connections`. El límite de 3 minutos de la tarea es una restricción de infraestructura, no una tolerancia a código lento; mover las salidas a ext4 resolvió el síntoma sin relajar el gate.
 
 ---
 
@@ -780,13 +813,21 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 - **Entregable:** E1.6 — pruebas automatizadas.
 - **Objetivo:** cubrir carga válida, archivo vacío, descarga existente y descarga inexistente en `circleguard-file-service`, con cobertura JaCoCo superior al umbral acordado del 60 %.
 
-**A. Insumo propio.** Diagnóstico del estado previo: `FileStorageService.loadFile` era un stub que devolvía `null`, la interfaz `Resource` era package-private y no existía endpoint de descarga. Se acotó el arreglo a lo estrictamente necesario para hacer comprobables los criterios de la historia.
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
-**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Revisa los criterios de FS-CI-01 sobre el file-service, identifica el mínimo cambio de producción necesario para poder probarlos y genera las pruebas unitarias con JaCoCo; no introduzcas cambios de producción innecesarios».
+Diagnóstico del estado previo: `FileStorageService.loadFile` era un stub que devolvía `null`, la interfaz `Resource` era package-private y no existía endpoint de descarga. Se acotó el arreglo a lo estrictamente necesario para hacer comprobables los criterios de la historia.
 
-**C. Validación y apreciación humana.** Se implementó `GET /api/v1/files/download/{filename}` con respuestas 200/404 y un `loadFile` real con validación de path traversal. Resultado: 10 pruebas (6 de servicio y 4 de controlador), 0 fallos y 0 errores; cobertura de 23/29 líneas (79.31 %), 102/119 instrucciones (85.71 %) y 8/10 ramas (80 %). Los XML de JUnit y JaCoCo están restaurados en `docs/informe/evidencia/fs-ci-01/` y el detalle en `docs/informe/FS-CI-01-Informe-Pruebas.md`.
+#### B. Prompt empleado
 
-**D. Apreciación humana y reflexión.** La historia era de pruebas, pero era imposible cumplirla sin un arreglo mínimo de producción. Registrar el stub como hallazgo y documentar el parche evitó convertir una limitación del código en una prueba ficticia.
+(reconstruido y contrastado) «Revisa los criterios de FS-CI-01 sobre el file-service, identifica el mínimo cambio de producción necesario para poder probarlos y genera las pruebas unitarias con JaCoCo; no introduzcas cambios de producción innecesarios».
+
+#### C. Validación humana y hallazgos
+
+Se implementó `GET /api/v1/files/download/{filename}` con respuestas 200/404 y un `loadFile` real con validación de path traversal. Resultado: 10 pruebas (6 de servicio y 4 de controlador), 0 fallos y 0 errores; cobertura de 23/29 líneas (79.31 %), 102/119 instrucciones (85.71 %) y 8/10 ramas (80 %). Los XML de JUnit y JaCoCo están restaurados en `docs/informe/evidencia/fs-ci-01/` y el detalle en `docs/informe/FS-CI-01-Informe-Pruebas.md`.
+
+#### D. Reflexión crítica
+
+La historia era de pruebas, pero era imposible cumplirla sin un arreglo mínimo de producción. Registrar el stub como hallazgo y documentar el parche evitó convertir una limitación del código en una prueba ficticia.
 
 ---
 
@@ -800,13 +841,21 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 - **Entregable:** E1.3 — empaquetamiento inmutable.
 - **Objetivo:** empaquetar el file-service como imagen no root con healthcheck y metadatos verificables, y dejar la dependencia de MinIO declarada para el entorno de integración.
 
-**A. Insumo propio.** Revisión del Dockerfile del servicio y de las políticas de empaquetamiento del equipo: multi-stage, usuario no root, healthcheck sobre `/actuator/health` y sin secretos en la imagen. Se decidió conservar el puerto 8085 y publicar labels de OCI para trazabilidad.
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
-**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Ajusta el Dockerfile del file-service para que compile en multi-stage, ejecute como usuario no root, exponga healthcheck y labels, y revisa que no haya credenciales embebidas; luego verifica la imagen construida con docker inspect».
+Revisión del Dockerfile del servicio y de las políticas de empaquetamiento del equipo: multi-stage, usuario no root, healthcheck sobre `/actuator/health` y sin secretos en la imagen. Se decidió conservar el puerto 8085 y publicar labels de OCI para trazabilidad.
 
-**C. Validación y apreciación humana.** Los artefactos reales están en `docs/informe/evidencia/HU-FILE-02/`: `03-docker-inspect-user.txt` reporta `circleguard`, `05b-healthcheck.txt` muestra el `CMD-SHELL` con `wget` contra `/actuator/health`, `09-no-secrets.txt` confirma «OK: no hardcoded credentials in tracked sources» y `12-compose-config.txt` documenta la dependencia de MinIO. La imagen quedó referenciada por tag semver, sin `latest`.
+#### B. Prompt empleado
 
-**D. Apreciación humana y reflexión.** El healthcheck del contenedor y la sonda de Kubernetes son mecanismos distintos. Mantener ambos alineados evita que un contenedor «sano» para Docker sea declarative-mente inadecuado para el orquestador.
+(reconstruido y contrastado) «Ajusta el Dockerfile del file-service para que compile en multi-stage, ejecute como usuario no root, exponga healthcheck y labels, y revisa que no haya credenciales embebidas; luego verifica la imagen construida con docker inspect».
+
+#### C. Validación humana y hallazgos
+
+Los artefactos reales están en `docs/informe/evidencia/HU-FILE-02/`: `03-docker-inspect-user.txt` reporta `circleguard`, `05b-healthcheck.txt` muestra el `CMD-SHELL` con `wget` contra `/actuator/health`, `09-no-secrets.txt` confirma «OK: no hardcoded credentials in tracked sources» y `12-compose-config.txt` documenta la dependencia de MinIO. La imagen quedó referenciada por tag semver, sin `latest`.
+
+#### D. Reflexión crítica
+
+El healthcheck del contenedor y la sonda de Kubernetes son mecanismos distintos. Mantener ambos alineados evita que un contenedor «sano» para Docker sea declarativamente inadecuado para el orquestador.
 
 ---
 
@@ -820,13 +869,21 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 - **Entregable:** E2.4 / E2.5 — orquestación y observabilidad de la Parte 2.
 - **Objetivo:** llevar el file-service a Kubernetes con sondas Actuator nativas, métricas Prometheus, trazas OTLP y un contador propio de subidas, sin versionar secretos ni configuración sensible.
 
-**A. Insumo propio.** Se partió del equivalente ya resuelto para el gateway (HU-GATEWAY-06) y se adaptó al file-service. La decisión propia fue conservar `management.endpoints.web.exposure.include=health,info,prometheus`, habilitar los grupos de probes, fijar `show-details: never` y parametrizar el endpoint OTLP por variable de entorno.
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
-**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Aplica al file-service el mismo patrón de orquestación, sondas y observabilidad usado en el gateway: anotaciones de scrape en el Service, readiness/liveness Actuator en el Deployment, dependencias Micrometer y OTLP, y un contador de subidas con resultado. No versiones secretos».
+Se partió del equivalente ya resuelto para el gateway (HU-GATEWAY-06) y se adaptó al file-service. La decisión propia fue conservar `management.endpoints.web.exposure.include=health,info,prometheus`, habilitar los grupos de probes, fijar `show-details: never` y parametrizar el endpoint OTLP por variable de entorno.
 
-**C. Validación y apreciación humana.** `./gradlew :services:circleguard-file-service:test :services:circleguard-file-service:jacocoTestCoverageVerification --console=plain --no-daemon` terminó en `BUILD SUCCESSFUL` con 12 pruebas y cobertura por encima del 60 %. `git diff --check` quedó limpio y no se versionaron secretos, `*.tfstate`, `backend.hcl`, `tfplan` ni `.terraform/`. El detalle está en `docs/informe/HU-FILE-05.md`. La validación on-prem con `kubectl diff` en `cg-dev`, `cg-stage` y `cg-prod` se documenta en la evidencia de cierre de la HU.
+#### B. Prompt empleado
 
-**D. Apreciación humana y reflexión.** Añadir instrumentación cambia el contrato de observabilidad del servicio, no solo sus dependencias. Por eso el contador `circleguard_file_uploads_total{result="success"|"failure"}` se probó con `SimpleMeterRegistry` y se documentó su etiqueta antes de solicitarse al clúster.
+(reconstruido y contrastado) «Aplica al file-service el mismo patrón de orquestación, sondas y observabilidad usado en el gateway: anotaciones de scrape en el Service, readiness/liveness Actuator en el Deployment, dependencias Micrometer y OTLP, y un contador de subidas con resultado. No versiones secretos».
+
+#### C. Validación humana y hallazgos
+
+`./gradlew :services:circleguard-file-service:test :services:circleguard-file-service:jacocoTestCoverageVerification --console=plain --no-daemon` terminó en `BUILD SUCCESSFUL` con 12 pruebas y cobertura por encima del 60 %. `git diff --check` quedó limpio y no se versionaron secretos, `*.tfstate`, `backend.hcl`, `tfplan` ni `.terraform/`. El detalle está en `docs/informe/HU-FILE-05.md`. La validación on-prem con `kubectl diff` en `cg-dev`, `cg-stage` y `cg-prod` quedó declarada como pendiente de autorización, no como ejecutada.
+
+#### D. Reflexión crítica
+
+Añadir instrumentación cambia el contrato de observabilidad del servicio, no solo sus dependencias. Por eso el contador `circleguard_file_uploads_total{result="success"|"failure"}` se probó con `SimpleMeterRegistry` y se documentó su etiqueta antes de solicitarse al clúster.
 
 ---
 
@@ -840,13 +897,75 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 - **Entregable:** E1.6 — pruebas automatizadas.
 - **Objetivo:** validar el contrato S3-compatible real del file-service contra un MinIO efímero, usando el adaptador de producción y ejerciendo los endpoints HTTP de carga, descarga y borrado.
 
-**A. Insumo propio.** Se decidió un adaptador `S3FileStorageService` detrás del puerto `FileStorage`, con `file.storage.mode=local` por defecto para no exigir S3 en la Parte 1 y `s3` en el perfil de integración. Se fijó la imagen `bitnamilegacy/minio:2025.4.22`, espera `GET /minio/health/live → 200`, creación automática del bucket `circleguard-files` y tarea Gradle `integrationTest` con timeout de 3 minutos.
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
-**B. Apoyo IAG — prompt (reconstruido y contrastado a partir de la transcripción de sesión).** «Contrasta la evidencia con el enunciado del proyecto final y agrega un estilo universitario a la portada del informe usando el logo de la Icesi». La parte técnica se contrastó con `docs/informe/HU-FILE-04-Integracion-MinIO.md`; la petición de estilo se atendió en el DOCX, no en el código.
+Se decidió un adaptador `S3FileStorageService` detrás del puerto `FileStorage`, con `file.storage.mode=local` por defecto para no exigir S3 en la Parte 1 y `s3` en el perfil de integración. Se fijó la imagen `bitnamilegacy/minio:2025.4.22`, espera `GET /minio/health/live → 200`, creación automática del bucket `circleguard-files` y tarea Gradle `integrationTest` con timeout de 3 minutos.
 
-**C. Validación y apreciación humana.** Tres ejecuciones consecutivas sobre `21c406b`: 53 s, 52 s y 52 s; 5 pruebas de integración por corrida, 0 fallos y 0 errores; sin contenedores residuales tras Ryuk. La suite unitaria conservada tras el merge quedó en 32 pruebas y 81.31 % de líneas (87/107). El XML `tests=5 skipped=0 failures=0 errors=0` y los logs están en `docs/informe/evidencia/HU-FILE-04/`. El anexo B.1 del informe incorpora la portada y esta evidencia.
+#### B. Prompt empleado
 
-**D. Apreciación humana y reflexión.** El enunciado define al file-service como almacenamiento compatible S3, pero en la Parte 1 solo lo compila, prueba y empaqueta. separating claramente modo por defecto, perfil de integración y despliegue evitó inventar infraestructura fuera de alcance y dejó el mismo artefacto listo para la Parte 2.
+(transcripción de sesión)
+
+```text
+Corrige los conflictos que hay, primero haz merge del main actual a esta rama y resuelve conflictos
+```
+
+```text
+Ejecuta el plan
+```
+
+```text
+Haz push y actualiza la PR en ingles
+```
+
+```text
+Contrasta con el enunciado del proyecto final si está bien esta HU y si falta algo
+```
+
+```text
+Dame un plan completo para cerrar esta HU cumpliendo el enunciado del proyecto final
+```
+
+```text
+Ejecuta el plan
+```
+
+```text
+Con lo que hay en main, consideras que deberia haber hecho reload configuration as code en la interfaz de Jenkins?
+```
+
+```text
+Que sugieres hacer en esta rama para cerrarla?
+```
+
+```text
+Ejecuta el plan
+```
+
+```text
+La evidencia adjuntla al docx de informe final, ahi es donde realmente importante mas que todo
+```
+
+```text
+Continua y termina
+```
+
+```text
+Agrega un estilo universitario y bonito al informe, hazle una portada, que se vea muy ordenado y bonito
+```
+
+```text
+Hazlo como deepseek, el hace los estios bonitos
+```
+
+La parte técnica se contrastó con `docs/informe/HU-FILE-04-Integracion-MinIO.md`; la petición de estilo se atendió en el DOCX, no en el código.
+
+#### C. Validación humana y hallazgos
+
+Tres ejecuciones consecutivas sobre `21c406b`: 53 s, 52 s y 52 s; 5 pruebas de integración por corrida, 0 fallos y 0 errores; sin contenedores residuales tras Ryuk. La suite unitaria conservada tras el merge quedó en 32 pruebas y 81.31 % de líneas (87/107). El XML `tests=5 skipped=0 failures=0 errors=0` y los logs están en `docs/informe/evidencia/HU-FILE-04/`. El anexo B.1 del informe incorpora la portada y esta evidencia. El `@Library('circleguard@main')` del Jenkinsfile hace innecesario un `Reload Configuration as Code` para esta HU; el cambio de JCasC en `main` (`6c20d8b`) sí requiere reload o recreate como cierre de P1.4.
+
+#### D. Reflexión crítica
+
+El enunciado define al file-service como almacenamiento compatible S3, pero en la Parte 1 solo lo compila, prueba y empaqueta. Separar claramente el modo por defecto, el perfil de integración y el despliegue evitó inventar infraestructura fuera de alcance y dejó el mismo artefacto listo para la Parte 2.
 
 ---
 
@@ -860,13 +979,21 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 - **Entregable:** E1.4 / E1.6 — gates de cobertura y calidad.
 - **Objetivo:** unificar la convención JaCoCo de los servicios y evitar que el merge de HU-FILE-04 dejara el file-service fuera del gate del 60 %.
 
-**A. Insumo propio.** Se detectó que la rama de HU-FILE-04 tenía un bloque JaCoCo local mientras `main` ya usaba `gradle/jacoco-convention.gradle`. La decisión fue conservar ambos sin duplicar reglas: la convención aplica el mínimo y la verificación de pruebas no omitidas para todos los servicios, incluido `file-service`.
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
-**B. Apoyo IAG — prompt (reconstruido y contrastado).** «Revisa por qué el gate de cobertura no aplica igual a todos los servicios y unifica la configuración JaCoCo sin cambiar el umbral acordado ni relajar la verificación de pruebas omitidas».
+Se detectó que la rama de HU-FILE-04 tenía un bloque JaCoCo local mientras `main` ya usaba `gradle/jacoco-convention.gradle`. La decisión fue conservar ambos sin duplicar reglas: la convención aplica el mínimo y la verificación de pruebas no omitidas para todos los servicios, incluido `file-service`.
 
-**C. Validación y apreciación humana.** El merge final `21c406b` conservó `apply(from = "$rootDir/gradle/jacoco-convention.gradle")` junto al bloque local. El índice vigente de cobertura está en `docs/informe/evidencia/trazabilidad/coverage-reports.md`; los XML de form y promotion se versionaron como `jacoco-form-test-report.xml` y `jacoco-promotion-test-report.xml`. La medición de `promotion` (564/733 líneas, 76,9 %) quedó así incorporada como artefacto versionado y verificable.
+#### B. Prompt empleado
 
-**D. Apreciación humana y reflexión.** Una convención compartida solo es útil si se comprueba en cada servicio. Revisar el merge final, no solo la rama propia, fue lo que evitó una regla escrita pero no aplicada.
+(reconstruido y contrastado) «Revisa por qué el gate de cobertura no aplica igual a todos los servicios y unifica la configuración JaCoCo sin cambiar el umbral acordado ni relajar la verificación de pruebas omitidas».
+
+#### C. Validación humana y hallazgos
+
+El merge final `21c406b` conservó `apply(from = "$rootDir/gradle/jacoco-convention.gradle")` junto al bloque local. El índice vigente de cobertura está en `docs/informe/evidencia/trazabilidad/coverage-reports.md`; los XML de form y promotion se versionaron como `jacoco-form-test-report.xml` y `jacoco-promotion-test-report.xml`. La medición de `promotion` (564/733 líneas, 76,9 %) quedó así incorporada como artefacto versionado y verificable.
+
+#### D. Reflexión crítica
+
+Una convención compartida solo es útil si se comprueba en cada servicio. Revisar el merge final, no solo la rama propia, fue lo que evitó una regla escrita pero no aplicada.
 
 ---
 
@@ -879,13 +1006,60 @@ Realizar una auditoría previa del documento frente al enunciado del proyecto y 
 - **Entregable:** E1.2 — infraestructura idempotente y E1.8 — documentación.
 - **Objetivo:** demostrar que el bootstrap on-premise es repetible, cerrar la decisión de sustentación oral en lugar de video y conservar la evidencia documental sin duplicados.
 
-**A. Insumo propio.** Revisión del flujo de aprovisionamiento y del pipeline. Se encontraron efectos laterales que rompían la idempotencia: sincronización incompleta de `.env`, reconstrucción innecesaria de Jenkins, credenciales del docente y reglas de Security Group. Se decidió documentar cada corrección y no tocar los pares `before`/`after` de `docs/infra/evidencia/idempotency/`.
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
-**B. Apoyo IAG — prompt (transcripción de sesión, ortografía normalizada).** «Ejecuta el plan», «De ahora en adelante quiero solo docx» y «El video no aplica, usamos en cambio sustentación; acomoda la documentación y la bitácora de IAG».
+Revisión del flujo de aprovisionamiento y del pipeline. Se encontraron efectos laterales que rompían la idempotencia: sincronización incompleta de `.env`, reconstrucción innecesaria de Jenkins, credenciales del docente y reglas de Security Group. Se decidió documentar cada corrección y no tocar los pares `before`/`after` de `docs/infra/evidencia/idempotency/`.
 
-**C. Validación y apreciación humana.** Segunda ejecución de `./infra/bootstrap/bootstrap-all.sh` con `exit=0` y `diffs.txt` de 0 líneas, registrada en `docs/infra/evidencia/idempotency/IDEMPOTENCIA.md`. Se documentó que el disparador real del pipeline era `cron('H/5 * * * *')` y no un webhook en ese momento, por lo que no se dejó una allowlist injustificada en el puerto 8080. La protección de `main` pasó de dos a un aprobador en Sprint 2. La decisión de sustentación oral sustituyó al video en P1.8 y se registró en el informe.
+#### B. Prompt empleado
 
-**D. Apreciación humana y reflexión.** La ausencia de video no puede resolverse escribiendo que «no aplica» sin una decisión trazable. La bitácora dejó claro el cambio de modalidad, y el informe final conserva la limitación de forma explícita en el apartado de presentación.
+(transcripción de sesión)
+
+```text
+Ejecuta el plan
+```
+
+```text
+Restaura el informe de branching de GitHub FLow y ponlo en el commit,
+tambien debo hacer un informe de la idempotencia
+```
+
+```text
+Ejecuta el Plan Informes-E1.2 — Branching restaurado e idempotencia
+```
+
+```text
+Agrega captura al informe de idempotencia
+```
+
+```text
+Añade capturas reales
+```
+
+```text
+De ahora en adelante quiero solo docx
+```
+
+```text
+Ahora dame el plan cmpleto con las observations tambien
+```
+
+```text
+Ejecuta el Plan completo — E1.2, observaciones y bitácora IAG
+```
+
+```text
+El video no aplica, usamos en cambio sustentacion, acomoda documentacion y la bitácora de IAG
+```
+
+La decisión de sustentación oral sustituyó al video en P1.8 y se registró en el informe.
+
+#### C. Validación humana y hallazgos
+
+Segunda ejecución de `./infra/bootstrap/bootstrap-all.sh` con `exit=0` y `diffs.txt` de 0 líneas, registrada en `docs/infra/evidencia/idempotency/IDEMPOTENCIA.md`. Se documentó que el disparador real del pipeline era `cron('H/5 * * * *')` y no un webhook en ese momento, por lo que no se dejó una allowlist injustificada en el puerto 8080. La protección de `main` pasó de dos a un aprobador en Sprint 2. La decisión de sustentación oral sustituyó al video en P1.8 y se registró en el informe.
+
+#### D. Reflexión crítica
+
+La ausencia de video no puede resolverse escribiendo que «no aplica» sin una decisión trazable. La bitácora dejó claro el cambio de modalidad, y el informe final conserva la limitación de forma explícita en el apartado de presentación.
 
 ---
 
@@ -925,7 +1099,7 @@ Antes de redactar, se recorrió el módulo `services/circleguard-form-service/` 
 5. **Migraciones:** `V1` a `V5`, incluida la columna `responses` en JSONB y el estado de validación.
 6. **Integraciones:** PostgreSQL (`circleguard_form`) y Kafka con dos publicaciones: `survey.submitted` al guardar una encuesta y `certificate.validated` al aprobarla; `promotion-service` las consume en `SurveyListener` y no existe llamada HTTP directa entre ambos servicios.
 
-#### B. Prompt empleado (reconstruido y contrastado)
+#### B. Prompt empleado
 
 ```text
 Estoy documentando HU-FORM-01 del proyecto CircleGuard. Necesito el README de
@@ -988,7 +1162,7 @@ en HU-FORM-02.
 3. **Integración:** publicar una encuesta con síntomas, consumir `survey.submitted` desde un broker temporal y comprobar que `SurveyListener` de promotion invoca el cambio a `SUSPECT`.
 4. **Restricción técnica detectada:** incluir el módulo de promotion en el classpath de pruebas arrastraba su `application.yml`, sus migraciones y su cadena de seguridad, lo que rompía el contexto de Form.
 
-#### B. Prompt empleado (reconstruido y contrastado)
+#### B. Prompt empleado
 
 ```text
 Necesito completar HU-FORM-02 de CircleGuard en `services/circleguard-form-service/`.
@@ -1047,7 +1221,7 @@ vecino, lo está sustituyendo.
 3. **Configuración:** `application.yml` debía tomar PostgreSQL y Kafka de variables de entorno para funcionar en dev, stage y prod.
 4. **Pipeline:** el catálogo de servicios (`jenkins/vars/ciServices.groovy`) debía incluir form con sus tareas de test, integración, publicación y despliegue, y el `Jenkinsfile` debía seleccionarlo igual que a los demás.
 
-#### B. Prompt empleado (reconstruido y contrastado)
+#### B. Prompt empleado
 
 ```text
 Necesito empaquetar `circleguard-form-service` para HU-FORM-03 y conectarlo al pipeline.
@@ -1107,7 +1281,7 @@ de quien despliega.
 
 Tras revisar manualmente `services/circleguard-promotion-service/`, levanté como insumo base:
 
-1. **Puerto y tecnología:** Java 21 (toolchain de la raíz) con Spring Boot `3.2.4`, puerto `8088`, `jjwt 0.11.5`, Flyway y Spring Data Neo4j.
+1. **Puerto y tecnología:** Java 21 (toolchain de la raíz) con Spring Boot `3.2.4`, `jjwt 0.11.5`, Flyway y Spring Data Neo4j. El `8088` es el puerto técnico interno del contenedor y del Service `ClusterIP`; promotion no expone puerto público, en coherencia con la tabla canónica A11.
 2. **Controladores:** 11 clases (`AccessPoint`, `Admin`, `Building`, `Circle`, `Encounter`, `Floor`, `HealthStats`, `HealthStatus`, `LocationSignal`, `Mesh`, `SessionHandshake`) con 35 rutas.
 3. **Dependencias:** PostgreSQL (`circleguard_promotion`), Neo4j (`bolt://localhost:7687`), Redis (`localhost:6379`), Kafka (`localhost:9092`, grupo `promotion-service-group`).
 4. **Migraciones:** `V1` (topología y `system_settings`), `V2` (parámetros de tiempos), `V3` (coordenadas del edificio).
@@ -1136,7 +1310,7 @@ Contrastá mi levantamiento con el código fuente y completá las tres subtareas
 Entregá el resultado como documento Markdown en docs/arquitectura/.
 ```
 
-#### C. Validación humana y hallazgos adicionales del contraste
+#### C. Validación humana y hallazgos
 
 - Se verificó la compilación con `./gradlew :services:circleguard-promotion-service:compileJava` (BUILD SUCCESSFUL) y la suite con `:test` (16 casos, 5 fallos).
 - La revisión de un compañero detectó imprecisiones en la primera versión del documento: el inventario de endpoints estaba incompleto (faltaban dos rutas de `EncounterController`), la conclusión de seguridad ignoraba `@EnableMethodSecurity`, el modelo ER no coincidía con las migraciones y el flujo de estados atribuía a `StatusLifecycleService` una orquestación que no realiza. Todas se corrigieron contrastando el código fuente.
@@ -1157,14 +1331,14 @@ La IAG aceleró la redacción y el inventario, pero también produjo afirmacione
 - **Historia / Entregable:** `HU-DASH-03` — E1.3, E1.4, E1.5, E1.6 y E1.7.
 - **Rama base:** `main` (`1a9199d`).
 
-### A. Contenido propio entregado a la IAG
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
 1. **Insumo previo:** se revisaron `Proyecto_Final_CircleGuard.tex` (E1.3-E1.7 y la nota de alcance de la Parte 1, que excluye a dashboard del despliegue), el diagnóstico previo de `dashboard-service` y el registro histórico de 19 pruebas con 97,3 % de cobertura (commits `bdf2a14` y predecesores; documentos no versionados en HEAD), `Jenkinsfile`, `jenkins/vars/*.groovy`, `gradle/jacoco-convention.gradle` y los Dockerfile de los otros servicios.
 2. **Contraste con el código:** se determinó que multi-stage, usuario no root, catálogo del biblioteca compartida, quality gate, semver y archivado de reportes ya existían; las brechas reales eran los metadatos OCI no usados, el healthcheck no verificado para dashboard y la falta de evidencia documental del empaquetado.
 3. **Decisión de diseño:** alinear el Dockerfile con el patrón de `file-service` (UID/GID fijo 10001, `COPY --chown`, cachés BuildKit y labels), mantener `deploy: false` en Parte 1 y añadir `dashboard` a la verificación de healthcheck tanto en el catálogo como en el override local del Jenkinsfile.
 4. **Restricción respetada:** no se inventaron evidencias de Jenkins/SonarQube remotas; el informe distingue la verificación local ejecutada de la corrida que debe hacerse en el servidor con `SERVICE=dashboard`.
 
-### B. Prompts empleados
+#### B. Prompt empleado
 
 ```text
 Contrasta con el enunciado del proyecto final para hacer esta HU:
@@ -1208,18 +1382,18 @@ Verificar publicación de reportes y resultados en Jenkins.
 Ejecuta el plan
 ```
 
-### C. Validación humana y hallazgos
+#### C. Validación humana y hallazgos
 
 - `./gradlew :services:circleguard-dashboard-service:clean :...:check` terminó en `BUILD SUCCESSFUL`: 19 tests, 0 fallos, 0 omitidos; JaCoCo 73/75 líneas (97.33 %) y `verifyUnitTestsRan` sin hallazgos.
 - `jenkins/test/TestCiServices.groovy` terminó con `ALL CASES PASSED` tras modificar el catálogo.
 - `docker build` con los `--build-arg` de versión/commit/source terminó correctamente; la imagen resultante ejecuta `id -u` como `10001`, declara `HEALTHCHECK` en 8084, lleva los labels OCI con la revisión `1a9199d...` y no genera tag `latest`.
 - Se revisó el `git diff` de los cinco archivos tocados y se corrigió una redacción del informe antes de cerrarlo.
 
-### D. Reflexión crítica
+#### D. Reflexión crítica
 
 La IAG ayudó a convertir una HU aparentemente nueva en una brecha acotada: reescribir todo el pipeline habría duplicado trabajo ya cubierto y habría introducido riesgo. El punto delicado fue la distinción entre "imagen que compila" e "imagen auditable": sin los labels y el UID fijo, la imagen pasaría los checks funcionales pero no dejaría rastro del commit ni del tag que la originó. También quedó claro que `Jenkinsfile` y la librería comparten responsabilidades de forma intencional: el override local mantiene el PR verde mientras la librería fijada a `main` no incorpora el cambio, y el catálogo compartido lo vuelve permanente tras el merge. Finalmente, no falsificar enlaces de Jenkins o SonarQube evita que la evidencia parezca verificada cuando solo está configurada.
 
-### E. Registro de la corrida remota (23 de noviembre de 2026)
+#### E. Registro de la corrida remota (23 de noviembre de 2026)
 
 - Con credenciales de administrador de Jenkins se consultó la API y se lanzó `Build with Parameters` sobre `main` con `SERVICE=circleguard-dashboard-service`, `TAG` vacío y `ROLLBACK_TAG` vacío.
 - El PR #163 quedó mergeado en `main` (`cbe6cf7`). El build `PR-163/1` terminó en verde, pero el detector de cambios lo clasificó como `CI-only` y omitió Unit Tests, JaCoCo y Sonar.
@@ -1238,14 +1412,14 @@ La IAG ayudó a convertir una HU aparentemente nueva en una brecha acotada: rees
 - **Rama base:** `main` (`526219b`, igual que `origin/main`).
 - **Rama de trabajo:** `feat/HU-DASH-05-integrar-observabilidad-y-seguridad`.
 
-### A. Contenido propio entregado a la IAG
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
 1. **Insumo previo:** se contrastó la HU con `Proyecto_Final_CircleGuard.tex` (E2.2, E2.3, E2.5, E2.6 y la estructura sugerida `observability/`) y con el estado real de `main`: `dashboard-service` ya tenía Actuator y `HEALTHCHECK`, pero no `micrometer-registry-prometheus`, ni bloque `management:`, ni anotaciones de scrape, ni alertas, ni panel, ni instrumentación del cliente HTTP, ni evidencia Trivy propia.
 2. **Restricciones dadas por el estudiante:** la rama debía crearse desde `main` tras `git pull --ff-only`; no se incluirían trazas/OTEL en dashboard porque el enunciado reserva Jaeger para `form → Kafka → promotion → notification`; la integración con monitoring debía seguir lo correcto según el enunciado sin duplicar el stack real de `deploy/k8s/monitoring/`; las credenciales remotas se proveerían por separado, sin pegar secretos en el chat.
 3. **Decisión de diseño:** reutilizar `components/form-observability` como plantilla para un componente `dashboard-observability`, con panel de siete fuentes y dos reglas probadas con `promtool`; instrumentar solo métricas y logs con tags acotados; no tocar umbrales del `Jenkinsfile`. Las versiones de dependencias se actualizaron después por petición explícita del estudiante, sin introducir excepciones ni rebajar el gate.
 4. **Evidencia diferenciada:** se registró por separado lo ejecutado en local (Gradle, promtool, Kustomize, Trivy) y lo verificado en clúster/Jenkins durante el cierre (scrape real, panel con datos, Loki, entrega de alertas y build remoto).
 
-### B. Prompts empleados
+#### B. Prompt empleado
 
 ```text
 Necesito hacer esta HU, contraste con el main y el enunciado del proyecto final
@@ -1329,20 +1503,20 @@ Haz un sonido cuando termines
 
 Estos prompts posteriores pidieron, en orden: remediar los CRITICAL de Trivy mediante una actualización global a Spring Boot 4.0.10 en la misma rama; mantener la rama sincronizada con `main` en varios puntos; consolidar la integración de la HU; y avisar con una campana al terminar el rescan de Trivy ejecutado en segundo plano.
 
-### C. Validación humana y hallazgos
+#### C. Validación humana y hallazgos
 
 - `./gradlew :services:circleguard-dashboard-service:check --no-daemon`: 23 pruebas, 0 fallos, JaCoCo 92/94 líneas (97,87 %) y `verifyUnitTestsRan` sin hallazgos. La primera versión de `PromotionClientMetricsTest` falló porque dos `when(...)` sobre la misma llamada sobrescribían el stub; se corrigió encadenando `thenReturn(...).thenThrow(...)`.
 - `promtool check rules` y `promtool test rules` pasaron para las dos reglas; `verify.py` de dashboard y de Form pasaron después de separar el `monitoring-patch.yml` de Form en dos documentos (Kustomize 5.0.4 rechazaba el archivo multi-doc).
 - Trivy IaC sobre `deploy/k8s`: 31 archivos, 0 CRITICAL / 74 HIGH tras fusionar `main` (el archivo adicional es `dashboard-config.yml` de HU-DASH-04). El primer Trivy de imagen (antes de la remediación) reportó 9 CRITICAL y 35 HIGH; al revisar `Jenkinsfile:328-347` se confirmó que el gate cuenta CRITICAL con `jq` y no usa `--exit-code 1` en `trivy image`, por lo que ese build habría sido bloqueado. Por petición del estudiante se actualizó la plataforma compartida a Spring Boot `4.0.10` (Kotlin `2.2.21`, Resilience4j `2.4.0`, starters de test separados, Jackson 2 y WebClient explícitos) sin tocar el umbral ni añadir excepciones. El rescan con Trivy `0.57.1` (versión de Jenkins) y `0.70.0` sobre la imagen reconstruida terminó con **0 HIGH / 0 CRITICAL** en ambos casos y quedó registrado en `docs/informe/evidencia/HU-DASH-05/` (`trivy-image-0.57.1.json` y `trivy-image-0.70.0.json`); la corrida oficial en Jenkins se registra en la evidencia de cierre.
 - Se revisaron los JSON de evidencia, el `git diff` y los enlaces del informe. No se crearon capturas ni enlaces remotos falsos.
 
-### D. Reflexión crítica
+#### D. Reflexión crítica
 
 La IAG tendió inicialmente a proponer infraestructura nueva (otro colector, otro panel global, un gate específico para dashboard). El contraste con el código mostró que casi todo ya existía y que el valor estaba en conectar el servicio al stack compartido y en dejar evidencia honesta. El hallazgo más delicado fue el resultado de Trivy: existía la tentación de reportar “escaneo ejecutado” como éxito, cuando el JSON demuestra 9 CRITICAL y el pipeline bloquearía la entrega. Registrar ese bloqueo y no cambiar el umbral preserva la credibilidad de la HU. También quedó claro que `promtool` y `verify.py` validan lógica y render, pero no prueban que Prometheus, Grafana, Loki o Alertmanager estén sirviendo datos reales; esa distinción quedó explicada en el informe y en la evidencia. Finalmente, separar el parche multi-doc de Form fue un efecto colateral inesperado pero necesario para que la integración de ambos componentes funcionara con la versión de Kustomize disponible. Cuando el estudiante pidió «Arregla lo de seguridad», la IAG evaluó rebajar el gate, añadir excepciones y actualizar dependencias; la decisión correcta fue esta última, pero de forma global y controlada (Boot `4.0.10` en los ocho servicios) para no dejar un servicio desalineado. La migración reveló cambios de API en Spring 7, Kotlin 2, Kafka 4, Resilience4j y Micrometer; cada fallo de test se corrigió en código o dependencias, nunca relajando una aserción de seguridad.
 
 ## 7. Entrada: Ejecución de HU-DASH-04 (despliegue y rollback on-premise de dashboard-service)
 
-### A. Solicitud del usuario
+#### A. Contenido propio entregado a la IAG (Insumo previo del estudiante)
 
 > Quiero implementar esta HU, contrastala con el enunciado del proyecto final:
 > **Historia de usuario**: como integrante del equipo DevOps de CircleGuard, quiero desplegar `dashboard-service` en Kubernetes para los ambientes dev, stage y prod, de manera que el servicio pueda ejecutarse de forma controlada, configurable y recuperable dentro de la infraestructura de CircleGuard. **Dependencias**: HU-DASH-03 e infraestructura Kubernetes compartida. **Subtareas previstas**: crear los recursos de Kubernetes necesarios utilizando los mecanismos de configuración del equipo; externalizar la configuración de PostgreSQL y la URL de promotion-service mediante ConfigMaps y Secrets; incorporar Service e Ingress cuando sea necesario; integrar Spring Boot Actuator y sondas liveness/readiness; definir recursos y escalamiento mediante HPA; integrar el despliegue al pipeline compartido para dev, stage y prod usando la misma imagen versionada; verificar aprobación manual para producción; ejecutar y documentar una prueba de rollback. **Criterios de aceptación**: dashboard-service desplegado y operativo en los tres ambientes; configuración externalizada sin credenciales en el repositorio; sondas que identifiquen el estado del servicio; HPA y acceso según la arquitectura; promoción de la misma imagen versionada; aprobación manual en producción; rollback funcional y documentado.
@@ -1367,7 +1541,7 @@ La IAG tendió inicialmente a proponer infraestructura nueva (otro colector, otr
 
 > Termina
 
-### B. Instrucciones y actuación de la IAG
+#### B. Prompt empleado
 
 1. Contrasté la HU con el enunciado: jerarquía Parte 1/Parte 2, E1.5, E2.2,
    E2.3, E2.4, E2.5, E2.6, E2.8 y E2.9. Concluí que no era trabajo desde cero
@@ -1393,7 +1567,7 @@ La IAG tendió inicialmente a proponer infraestructura nueva (otro colector, otr
 7. Ejecuté el rollback real en `cg-prod` y preparé la documentación final con
    las rutas de evidencia y el sonido de terminación solicitado.
 
-### C. Validación humana y hallazgos
+#### C. Validación humana y hallazgos
 
 - `./gradlew :services:circleguard-dashboard-service:check --no-daemon --console=plain`: `BUILD SUCCESSFUL`, 20 tests, 0 fallos, 0 omitidos; JaCoCo 73/75 líneas (97.33 %).
 - Script de aserciones estáticas sobre manifiestos: `ALL STATIC CHECKS PASSED` (sin secretos hardcodeados, HPA y ruta de Ingress presentes, tag único).
@@ -1402,6 +1576,6 @@ La IAG tendió inicialmente a proponer infraestructura nueva (otro colector, otr
 - Aplicación de los overlays dev/stage/prod y captura de evidencia puntual por ambiente; rollback ejecutado en `cg-prod` de `1.10.0` a `1.4.0` con captura de `rollout history`, pods, sondas y endpoint analytics.
 - La credencial SSH facilitada por el usuario se usó solo en memoria mediante `SSH_ASKPASS`; no quedó registrada en el repositorio, los informes ni la evidencia.
 
-### D. Reflexión crítica
+#### D. Reflexión crítica
 
 El mayor riesgo era confundir "la HU ya existe en el repo" con "la HU ya está terminada": el despliegue estaba declarado pero no era funcional (URL de promotion apuntando a `localhost`, sondas genéricas, sin HPA ni Ingress y rollback nunca ejecutado). También fue importante no inventar aprobaciones de Jenkins: la compuerta `input` ya existía y se verificó por código, sin simular una corrida interactiva. El aviso sobre no quedarse en `watch` obligó a separar "disparar una acción" de "esperar pasivamente su stream", dejando comandos acotados y verificaciones puntuales. Finalmente, el requisito on-premise obligó a que la narrativa de la imagen cambiara de GitHub a una etiqueta local verificable, manteniendo la trazabilidad semver sin depender de la nube.

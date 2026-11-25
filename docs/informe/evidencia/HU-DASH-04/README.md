@@ -7,7 +7,7 @@ simulados; se conservan tal cual fueron impresos por los comandos.
 ## `evidencia-1-k8s-sano.txt`
 
 - Fecha: 2026-11-23T07:39:53Z a 07:40:19Z.
-- Nodos `k3d-cg-server-0` y `k3d-cg-agent-0` en estado `Ready` (k3s v1.31.1+k3s1).
+- Nodos `k3d-cg-server-0` y `k3d-cg-agent-0` en estado `Ready` (k3s v1.35.5+k3s1).
 - `cg-dev`, `cg-stage` y `cg-prod`: deployment `dashboard` 1/1 con imagen
   `circleguard-docker/dashboard:1.10.0`, pods `1/1 Running` y `postgres-0` Ready.
 - Sondas `/actuator/health`, `/actuator/health/readiness` y

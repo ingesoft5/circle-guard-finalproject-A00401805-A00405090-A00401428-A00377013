@@ -2,8 +2,6 @@
 # Sprint 1 — Revisión
 
 **Sprint:** DCG Sprint 1
-**Periodo:** 3–8 de noviembre de 2026
-**Fecha de revisión:** 8 de noviembre de 2026
 **Tablero:** [DCG en Jira](https://bomastik-site.atlassian.net/jira/software/projects/DCG/boards/67?filter=&groupBy=none)
 **Acta completa:** [Sprint-Review-Sprint-1.docx](Sprint-Review-Sprint-1.docx)
 
@@ -36,7 +34,7 @@ web, pruebas automatizadas y documentación de la Parte 1.
 | Flujos E2E | 4 (`login`, `health-form`, `access-validation`, `promotion-flow`) |
 | Integraciones Testcontainers | 5 servicios |
 
-> **Cierre (16 de noviembre de 2026):** el trabajo que estaba en la rama
+> **Cierre:** el trabajo que estaba en la rama
 > `feat/parte1-integracion` quedó integrado en `main` con el PR #38 y los PR de seguimiento
 > #39–#45, #47, #52 y #53. El backlog actualizado en `docs/agil/backlog.md` enlaza cada
 > historia con su PR y su evidencia, por lo que no quedan ítems en revisión dentro del

@@ -3,6 +3,7 @@
  */
 package com.circleguard.promotion.service;
 
+import com.circleguard.promotion.config.Neo4jSchemaConfig;
 import com.circleguard.promotion.model.graph.CircleNode;
 import com.circleguard.promotion.model.graph.UserNode;
 import com.circleguard.promotion.repository.graph.CircleNodeRepository;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.neo4j.core.Neo4jClient;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -23,6 +26,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -86,6 +90,12 @@ public class AdministrativeCorrectionTest {
     @Autowired
     private CircleNodeRepository circleRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private Neo4jClient neo4jClient;
+
     @MockitoBean
     private KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -137,5 +147,25 @@ public class AdministrativeCorrectionTest {
         // 3. Verify: Both should be PROBABLE
         assertThat(userRepository.findById("A").get().getStatus()).isEqualTo("PROBABLE");
         assertThat(userRepository.findById("B").get().getStatus()).isEqualTo("PROBABLE");
+    }
+
+    @Test
+    void flywayMigrationsAndNeo4jSchemaAreAppliedAgainstRealContainers() {
+        // Flyway is enabled by @DynamicPropertySource above: the V1-V3 scripts must
+        // really have been applied to PostgreSQL, not skipped by the test profile.
+        List<String> applied = jdbcTemplate.queryForList(
+                "SELECT version FROM flyway_schema_history WHERE success = true ORDER BY installed_rank",
+                String.class);
+        assertThat(applied).contains("1", "2", "3");
+
+        // Neo4jSchemaConfig is @Profile("!test"), so the Spring context does not run it.
+        // Invoke the production initializer explicitly to validate its Cypher against
+        // the real Neo4j container used by the integration gate.
+        new Neo4jSchemaConfig(neo4jClient).initializeSchema();
+        List<String> indexes = neo4jClient.query("SHOW INDEXES").fetch().all().stream()
+                .map(row -> String.valueOf(row.get("name")))
+                .toList();
+        assertThat(indexes).contains("user_anon_id_idx", "user_status_idx",
+                "encounter_time_idx", "circle_invite_idx", "circle_loc_idx");
     }
 }

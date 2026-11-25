@@ -1,8 +1,6 @@
 <!-- CG-DOC: Revisión del Sprint 2 y correspondencia de la evidencia con los entregables de la Parte 2. -->
 # Sprint 2 — Revisión
 
-**Periodo revisado:** 16–22 de noviembre de 2026
-**Cierre documental:** 23 de noviembre de 2026
 **Entrega:** PR [#145](https://github.com/ingesoft5/circle-guard-finalproject-A00401805-A00405090-A00401428-A00377013/pull/145)
 sobre `main`.
 **Acta completa:** [Sprint-Review-Sprint-2.docx](Sprint-Review-Sprint-2.docx)

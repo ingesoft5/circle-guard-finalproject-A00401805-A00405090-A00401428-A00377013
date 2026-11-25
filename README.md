@@ -24,6 +24,20 @@ There we rebuilt and verified Jenkins, SonarQube, Nexus, the Docker registry, an
 
 ---
 
+## Repositorio público
+
+El proyecto se entrega en un repositorio público de la organización `ingesoft5`.
+El docente autorizó el uso de GitHub rulesets sin costo para proteger `main` en este
+tipo de repositorio; la política vigente (una aprobación y el check obligatorio de
+Jenkins) se describe en [`BRANCHING-STRATEGY.md`](BRANCHING-STRATEGY.md).
+
+No hay credenciales versionadas: los secretos se guardan en archivos `.env` fuera
+del control de versiones, en variables del pipeline y en los `Secret` del clúster.
+En el repositorio solo se incluyen plantillas `.env.example` con marcadores de
+posición.
+
+---
+
 ## Vision & Mission
 
 Our vision is a university campus where health containment speed outpaces lab confirmation timelines without compromising student privacy. CircleGuard leverages campus-native intelligence—class schedules and WiFi infrastructure—to deliver a human-validated, graph-based protection ecosystem.

@@ -36,6 +36,7 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -115,9 +116,11 @@ class FormOutboxRecoveryIntegrationTest {
             reset(kafkaTemplate);
         }
 
-        Thread.sleep(1500); // The failed row is deferred for one second.
-        assertTrue(dispatcher.dispatchOne());
-        assertEquals(0, outbox.count());
+        // The failed row is deferred for one second. Poll the actual state instead
+        // of sleeping a fixed 1.5 s, which was flaky under host load.
+        await().atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(100))
+                .until(() -> dispatcher.dispatchOne() && outbox.count() == 0);
 
         Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());

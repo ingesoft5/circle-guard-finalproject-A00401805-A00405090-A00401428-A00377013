@@ -2,7 +2,6 @@
 # Sprint 1 — Retrospectiva
 
 **Sprint:** DCG Sprint 1
-**Periodo:** 3–8 de noviembre de 2026
 **Participantes:** Daniela Castaño Moreno, Santiago Alejandro Estrada, Faiber Piedrahita Perlaza y Alejandro Quiñones Caicedo
 
 ## Qué salió bien

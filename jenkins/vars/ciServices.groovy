@@ -25,7 +25,8 @@ def catalog() {
                     display       : 'CircleGuard Auth',
                     sonarSettings : 'services/circleguard-auth-service/sonar-project.properties',
                     jacoco        : true,
-                    integration   : true,
+                    // CG-DOC: MockMvc + H2 with mocked LDAP/IdentityClient; no container.
+                    integration   : false,
                     publish       : true,
                     docker        : true,
                     deploy        : true
@@ -53,7 +54,8 @@ def catalog() {
                     display       : 'CircleGuard Identity',
                     sonarSettings : 'services/circleguard-identity-service/sonar-project.properties',
                     jacoco        : true,
-                    integration   : true,
+                    // CG-DOC: @DataJpaTest against embedded H2; no container.
+                    integration   : false,
                     publish       : true,
                     docker        : true,
                     deploy        : true,
@@ -112,7 +114,10 @@ def catalog() {
                     display       : 'CircleGuard Dashboard',
                     sonarSettings : 'services/circleguard-dashboard-service/sonar-project.properties',
                     jacoco        : true,
-                    integration   : true,
+                    // CG-DOC: no @Tag("integration") suite and no Testcontainers here.
+                    // Safe option chosen (vs. inventing a tag): do not schedule an empty
+                    // integrationTest task for dashboard.
+                    integration   : false,
                     publish       : true,
                     docker        : true,
                     deploy        : true,

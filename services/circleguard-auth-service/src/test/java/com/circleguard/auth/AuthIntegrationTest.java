@@ -1,5 +1,6 @@
 /**
- * CG-DOC: Unit or integration tests for Auth Integration Test in the auth service.
+ * CG-DOC: Spring MVC + H2 flow test (LDAP and IdentityClient are mocked). It starts
+ * no Testcontainers container, so it is part of the unit gate, not the integration gate.
  */
 package com.circleguard.auth;
 
@@ -13,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -38,7 +38,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@Tag("integration")
 public class AuthIntegrationTest {
 
     @Autowired

@@ -1,7 +1,6 @@
 <!-- CG-DOC: Revisión de Sprint 0 — CircleGuard. -->
 # Revisión de Sprint 0 — CircleGuard
 
-**Fecha:** 1–2 de noviembre de 2026  
 **Equipo:** Daniela Castaño, Santiago Estrada, Faiber Piedrahita, Alejandro Quiñones  
 **Proyecto Jira:** DCG  
 **Acta completa:** [Sprint-Review-Sprint-0.docx](Sprint-Review-Sprint-0.docx)

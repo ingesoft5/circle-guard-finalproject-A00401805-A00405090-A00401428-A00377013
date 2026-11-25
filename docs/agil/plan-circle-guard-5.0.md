@@ -2,7 +2,6 @@
 # Plan CircleGuard 5.0 — Cierre P1 + P2 on-prem
 
 **Nombre corto:** Doble Cinco
-**Periodo:** 16–22 de noviembre de 2026
 **Meta:** cerrar la Parte 1 con evidencia verificable y entregar la Parte 2 sobre
 infraestructura propia.
 **Fórmula de la nota:** `(P1 × 15 + P2 × 25) / 40`. Un 5.0 exige 5.0 en ambas partes.

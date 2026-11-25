@@ -1,5 +1,5 @@
 <!-- CG-DOC: Dimensionamiento, exposición y validación de costos de una semana de los cuatro hosts de AWS. -->
-# Validación de recursos de AWS - CircleGuard
+# Validación de recursos de AWS - CircleGuard (obsoleto por bloqueo de cuenta AWS, se dejó en el repositorio para mostrar trazabilidad)
 
 ## Topología
 

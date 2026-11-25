@@ -1,8 +1,8 @@
 <!-- CG-DOC: Lista de verificación de la evidencia de CI/CD requerida para la entrega del gateway. -->
 # Evidencia de CI/CD
 
-Guarda las capturas y las salidas de comandos en este directorio. Cada elemento enlaza con la
-captura o el registro que lo respalda.
+Este directorio reúne las capturas y las salidas de comandos de la evidencia de CI/CD. Cada
+elemento enlaza con la captura o el registro que lo respalda.
 
 - [x] Pipeline del gateway con una compilación en verde — [`07-jenkins-main-pipeline.png`](../../informe/evidencia/trazabilidad/07-jenkins-main-pipeline.png) y [`08-jenkins-stage-view.jpg`](../../informe/evidencia/trazabilidad/08-jenkins-stage-view.jpg).
 - [x] Compuerta de calidad de SonarQube aprobada — [`09-sonarqube-projects-passed.png`](../../informe/evidencia/trazabilidad/09-sonarqube-projects-passed.png) y [`10-sonarqube-quality-gate.jpg`](../../informe/evidencia/trazabilidad/10-sonarqube-quality-gate.jpg).

@@ -2,7 +2,6 @@
 # Sprint 0 — Retrospectiva
 
 **Sprint:** DCG Sprint 0
-**Periodo:** 1–2 de noviembre de 2026
 **Participantes:** Daniela Castaño Moreno, Santiago Alejandro Estrada, Faiber Piedrahita Perlaza y Alejandro Quiñones Caicedo
 
 ## Qué salió bien

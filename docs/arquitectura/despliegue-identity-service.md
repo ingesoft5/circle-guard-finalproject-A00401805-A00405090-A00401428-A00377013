@@ -10,8 +10,7 @@
 **Módulo:** `services/circleguard-identity-service`  
 **Historia de Usuario en Jira:** `DCG-85` (`HU-ID-04`)  
 **Subtareas cubiertas:** `DCG-118`, `DCG-119`, `DCG-120`, `DCG-121`  
-**Autor:** Faiber Piedrahita (`A00405090`)  
-**Fecha:** 9 de noviembre de 2026
+**Autor:** Faiber Piedrahita (`A00405090`)
 
 ---
 

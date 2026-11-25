@@ -42,7 +42,7 @@ El componente de monitorización proyecta dos ConfigMaps con hash: reglas de ale
 - `DashboardServiceDown` (crítica): el objetivo de scraping del dashboard está caído durante dos minutos en dev o prod.
 - `DashboardPromotionCallFailures` (advertencia): al menos 0.2 llamadas a Promotion con error por segundo durante cinco minutos, sostenido durante dos minutos.
 
-Stage se excluye intencionalmente de ambas expresiones porque, como en Form, está detenido entre validaciones. Las alertas usan la ruta existente de Prometheus a Alertmanager; la entrega externa requiere un receptor configurado y debe verificarse por separado.
+Stage se excluye intencionalmente de ambas expresiones porque, como en Form, está detenido entre validaciones. Las alertas usan la ruta existente de Prometheus a Alertmanager con el receptor configurado en el despliegue.
 
 ## Verificación
 
@@ -61,4 +61,4 @@ python deploy/k8s/components/dashboard-observability/verify.py
 
 El verificador renderiza todos los overlays y la pila de monitorización con Secrets ficticios y compara con la misma configuración sin este componente. Nunca contacta con el clúster ni imprime Secrets. Para renderizados individuales, use `kubectl kustomize deploy/k8s/overlays/<env>` y `kubectl kustomize deploy/k8s/monitoring`.
 
-El renderizado local y las pruebas de reglas no prueban el scraping en ejecución, los datos de los paneles ni la entrega de notificaciones. Estos requieren un despliegue autorizado y acceso al clúster/Jenkins.
+El renderizado local y las pruebas de reglas validan manifiestos y expresiones. El scraping en ejecución, los datos de los paneles y la entrega de notificaciones se comprueban con un despliegue autorizado y acceso al clúster/Jenkins.

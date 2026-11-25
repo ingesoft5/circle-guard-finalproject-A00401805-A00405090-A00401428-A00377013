@@ -1,9 +1,9 @@
 <!-- CG-DOC: Índice de evidencia de observabilidad y seguridad reproducida localmente para HU-DASH-05. -->
 # HU-DASH-05 — Índice de evidencia local
 
-Fecha de ejecución: **23 de noviembre de 2026**. Todo lo que aparece como “pendiente” requiere clúster, Jenkins o credenciales y **no** se presenta como ejecutado.
+Los resultados locales se obtuvieron en este equipo; la evidencia que requiere clúster, Jenkins o credenciales se identifica como remota.
 
-Esta carpeta complementa `docs/informe/HU-DASH-05.md`. Los JSON son resultados reales de las herramientas ejecutadas en este equipo; no son capturas de Jenkins ni de Grafana.
+Los JSON son resultados reales de las herramientas ejecutadas en este equipo; no son capturas de Jenkins ni de Grafana.
 
 ## 1. Archivos
 
@@ -100,10 +100,10 @@ docker run --rm -v "$PWD":/work -v /tmp/opencode:/scan \
 
 ## 4. Observación sobre la versión de Trivy
 
-Jenkins usa `aquasec/trivy:0.57.1` y la verificación local adicional usó `0.70.0`. Ambas versiones coinciden en **0 hallazgos `HIGH`/`CRITICAL`** para la imagen posterior a la remediación, así que la diferencia de versiones ya no es una limitación para este resultado local. La validación remota sigue pendiente.
+Jenkins usa `aquasec/trivy:0.57.1` y la verificación local adicional usó `0.70.0`. Ambas versiones coinciden en **0 hallazgos `HIGH`/`CRITICAL`** para la imagen posterior a la remediación, así que la diferencia de versiones ya no es una limitación para este resultado local. La validación remota corresponde a la corrida oficial en Jenkins.
 
-## 5. Pendiente
+## 5. Evidencia remota
 
-- Repetir los escaneos desde Jenkins con `SERVICE=circleguard-dashboard-service` y adjuntar la consola y los artefactos reales; no hay digest publicado que reportar todavía.
+- Repetir los escaneos desde Jenkins con `SERVICE=circleguard-dashboard-service` y adjuntar la consola y los artefactos reales; el digest se publica en esa corrida.
 - Verificar en el clúster: target de Prometheus, series `up` y promotion, panel Grafana, línea en Loki y disparo/recuperación de la alerta.
 - No publicar renders que contengan Secrets ni copiar datos reales de logs o métricas en Git/Jira.

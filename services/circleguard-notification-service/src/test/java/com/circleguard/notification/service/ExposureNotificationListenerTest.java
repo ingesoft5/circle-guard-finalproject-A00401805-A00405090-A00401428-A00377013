@@ -1,50 +1,61 @@
 /**
- * CG-DOC: Unit or integration tests for Exposure Notification Listener Test in the notification service.
+ * CG-DOC: pure unit tests for the exposure listener: JSON parsing is real, while
+ * the dispatcher and the LMS integration are mocked. No Spring context and no
+ * Kafka container are started here, so this class is not tagged as integration.
  */
 package com.circleguard.notification.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@Tag("integration")
 class ExposureNotificationListenerTest {
 
-    @Autowired
+    private NotificationDispatcher dispatcher;
+    private LmsService lmsService;
     private ExposureNotificationListener listener;
 
-    @MockitoBean
-    private KafkaTemplate<String, String> kafkaTemplate;
-
-    @MockitoBean
-    private NotificationDispatcher dispatcher;
-
-    @MockitoBean
-    private org.springframework.mail.javamail.JavaMailSender mailSender;
-
-    @MockitoBean
-    private org.springframework.web.reactive.function.client.WebClient.Builder webClientBuilder;
-
-    @MockitoBean
-    private EmailService emailService;
-
-    @MockitoBean
-    private SmsService smsService;
-
-    @MockitoBean
-    private PushService pushService;
+    @BeforeEach
+    void setUp() {
+        dispatcher = mock(NotificationDispatcher.class);
+        lmsService = mock(LmsService.class);
+        listener = new ExposureNotificationListener(dispatcher, new ObjectMapper(), lmsService);
+    }
 
     @Test
-    void shouldHandleStatusChangeEventWithoutError() {
-        String mockEvent = "{\"userId\": \"user-123\", \"newStatus\": \"EXPOSED\"}";
-        assertDoesNotThrow(() -> listener.handleStatusChange(mockEvent));
+    void shouldDispatchAndSyncExposureUsingAnonymousIdAndStatus() {
+        // Contract event: form -> survey.submitted -> Promotion ->
+        // promotion.status.changed -> Notification -> notification.audit.
+        String event = "{\"anonymousId\":\"student-1\",\"status\":\"EXPOSED\"}";
+
+        listener.handleStatusChange(event);
+
+        verify(dispatcher).dispatch("student-1", "EXPOSED");
+        verify(lmsService).syncRemoteAttendance("student-1", "EXPOSED");
+    }
+
+    @Test
+    void shouldIgnoreActiveStatus() {
+        listener.handleStatusChange("{\"anonymousId\":\"student-2\",\"status\":\"ACTIVE\"}");
+
+        verifyNoInteractions(dispatcher, lmsService);
+    }
+
+    @Test
+    void shouldIgnoreEventWithMissingStatus() {
+        listener.handleStatusChange("{\"anonymousId\":\"student-3\"}");
+
+        verifyNoInteractions(dispatcher, lmsService);
+    }
+
+    @Test
+    void shouldIgnoreMalformedEvent() {
+        listener.handleStatusChange("{not json");
+
+        verifyNoInteractions(dispatcher, lmsService);
     }
 }
