@@ -68,10 +68,10 @@ compartidas de despliegue) y provoca un error en el pipeline si la selección re
 evidencia local de regresión.
 
 > La biblioteca está fijada a `@main`, por lo que una PR no puede ver los cambios en la
-> biblioteca que ella misma introduce. Hasta que la corrección de la ejecución selectiva se
-> integre en `main`, `Jenkinsfile` incluye una copia local temporal de la lógica de selección
-> (marcada como `REMOVE after merging to main`) y de la entrada del catálogo `mobile`.
-> Elimina ambas cuando los cambios de la biblioteca lleguen a `main`.
+> biblioteca que ella misma introduce. `Jenkinsfile` conserva una copia local de la lógica de
+> selección y de la entrada del catálogo `mobile` para que los builds de PR sean
+> autocontenidos. En `main` ambas copias son redundantes, pero se mantienen mientras la
+> biblioteca compartida no se desacople del propio repositorio.
 
 **Trazabilidad con el enunciado:** E1.4 exige *"ejecución por servicio (modificado o
 todos)"* y el criterio P1.4 evalúa *"ejecución selectiva por servicio"* frente a un
@@ -82,12 +82,16 @@ optimización opcional.
 
 | Etapa | Condición | Acción |
 |---|---|---|
-| Deploy dev | `main` + `DEPLOY=true` | Despliega la etiqueta en dev |
-| E2E | `main` + `DEPLOY=true` + integración habilitada | Inicio de sesión, cuestionario, acceso |
-| Deploy stage | `main` + `DEPLOY=true` | Promueve la misma etiqueta |
-| Approval prod | `main` + `DEPLOY=true` | `input` manual |
+| Deploy dev | `main` | Despliega la etiqueta en dev |
+| E2E | `main` + integración habilitada | Inicio de sesión, cuestionario, acceso |
+| Deploy stage | `main` | Promueve la misma etiqueta |
+| Approval prod | `main` | `input` manual |
 | Deploy prod | Aprobación | Despliega la etiqueta |
 | Rollback prod | `ROLLBACK_TAG` | Despliega una etiqueta anterior sin recompilar |
+
+El parámetro `DEPLOY` se conserva por compatibilidad con invocaciones anteriores, pero no
+condiciona las etapas: en `main` la promoción es automática y la única pausa es la aprobación
+manual de producción.
 
 ## Versionado
 
