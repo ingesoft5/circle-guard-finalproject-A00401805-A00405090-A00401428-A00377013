@@ -378,6 +378,25 @@ def owaspZapGateLocal(String environment) {
 // Shared library vars added in the same PR are not visible to that PR build:
 // @Library loads from LIBRARY_BRANCH, not from the checked-out PR branch.
 // Keep the semver helpers here so the pipeline can validate itself.
+def resolveBuildContext(Map options) {
+    def rollback = options.ROLLBACK_TAG?.trim()
+    if (rollback) {
+        return [tag: normalizeSemver(rollback), rollback: true,
+                services: [], javaServices: [], nodeServices: [],
+                servicesCsv: '', javaCsv: '', nodeCsv: '']
+    }
+    def enriched = enrichServices(resolveServicesLocal(options.SERVICE ?: 'auto'))
+    def nodes = enriched.services.findAll { it.type == 'node' }
+    return [tag: resolveSemver(options.TAG ?: ''),
+            rollback: false,
+            services: enriched.services,
+            javaServices: enriched.javaServices,
+            nodeServices: nodes,
+            servicesCsv: enriched.services.collect { it.short }.join(','),
+            javaCsv: enriched.javaServices*.short.join(','),
+            nodeCsv: nodes.collect { it.short }.join(',')]
+}
+
 def normalizeSemver(String value) {
     def candidate = (value ?: '').trim()
     if (candidate.startsWith('v')) {
@@ -723,26 +742,12 @@ pipeline {
                     '''
                 }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('Checkout') {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.checkoutRepo() }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
             }
         }
 
@@ -767,33 +772,20 @@ pipeline {
                         rm -rf services/*/build/test-results/performanceTest
                     '''
 
-                    if (params.ROLLBACK_TAG?.trim()) {
-                        // Validate once, before any deploy stage reads the version.
-                        env.TAG = normalizeSemver(params.ROLLBACK_TAG.trim())
-                        services = []
-                        javaServices = []
-                        nodeServices = []
+                    def context = resolveBuildContext([SERVICE: params.SERVICE,
+                            TAG: params.TAG, ROLLBACK_TAG: params.ROLLBACK_TAG])
+                    env.TAG = context.tag
+                    services = context.services
+                    javaServices = context.javaServices
+                    nodeServices = context.nodeServices
+                    if (context.rollback) {
                         echo "Rollback requested: ${env.TAG}"
                     } else {
-                        env.TAG = resolveSemver(params.TAG ?: '')
-                        def requestedService = params.SERVICE ?: 'auto'
-                        def resolved = resolveServicesLocal(requestedService)
-                        def enriched = enrichServices(resolved)
-                        services = enriched.services
-                        javaServices = enriched.javaServices
-                        nodeServices = services.findAll { it.type == 'node' }
-                        env.SERVICES = services.collect { it.short }.join(',')
+                        env.SERVICES = context.servicesCsv
                         echo "Semantic version: ${env.TAG}"
-                        echo "Components to build: ${env.SERVICES ?: 'none'} | Java components: ${javaServices*.short.join(',') ?: 'none'}"
-                        echo "Client components: ${nodeServices.collect { it.short }.join(',') ?: 'none'}"
+                        echo "Components to build: ${context.servicesCsv ?: 'none'} | Java components: ${context.javaCsv ?: 'none'}"
+                        echo "Client components: ${context.nodeCsv ?: 'none'}"
                     }
-                }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -855,13 +847,6 @@ pipeline {
                     }
                 }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('Build') {
@@ -875,13 +860,6 @@ pipeline {
                             ci.build(service)
                         }
                     }
-                }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -901,13 +879,6 @@ pipeline {
                             echo "SonarQube skipped for ${service.name}: no coverage configured."
                         }
                     }
-                }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -938,13 +909,6 @@ pipeline {
                     }
                 }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('Trivy IaC Security Gate') {
@@ -952,13 +916,6 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { trivyScanIaCLocal() }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
             }
         }
 
@@ -971,13 +928,6 @@ pipeline {
                         echo "Packaging ${service.name}..."
                         ci.packageService(service)
                     }
-                }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -995,13 +945,6 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { createSemverTag(env.TAG) }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('Release notes') {
@@ -1015,13 +958,6 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { writeReleaseNotes(env.TAG) }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('GitHub Release') {
@@ -1034,13 +970,6 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { publishGitHubRelease(env.TAG) }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
             }
         }
 
@@ -1061,13 +990,6 @@ pipeline {
                             ci.publish(service)
                         }
                     }
-                }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -1102,13 +1024,6 @@ pipeline {
                     }
                 }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('Docker client') {
@@ -1133,13 +1048,6 @@ pipeline {
                     }
                 }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('Trivy Image Security Gate') {
@@ -1154,13 +1062,6 @@ pipeline {
                 script {
                     def images = javaServices.findAll { it.docker }
                     trivyScanImagesLocal(images, env.TAG)
-                }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -1185,13 +1086,6 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.deploy('dev', env.TAG) }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
             }
         }
 
@@ -1220,9 +1114,6 @@ pipeline {
                     // Diagnostics only: JUnit XML has no binary captures.
                     archiveArtifacts artifacts: 'tests/e2e/test-results/**/*.xml',
                             allowEmptyArchive: true
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
                 }
             }
         }
@@ -1248,13 +1139,6 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.deploy('stage', env.TAG) }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('OWASP ZAP Security Gate') {
@@ -1270,13 +1154,6 @@ pipeline {
                     timeout(time: 12, unit: 'MINUTES') { owaspZapGateLocal('stage') }
                 }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('Approval prod') {
@@ -1289,13 +1166,6 @@ pipeline {
             steps {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 input message: 'Approve production deployment', ok: 'Deploy'
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
             }
         }
 
@@ -1320,13 +1190,6 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 script { ci.deploy('prod', env.TAG) }
             }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
-            }
         }
 
         stage('Rollback prod') {
@@ -1340,13 +1203,6 @@ pipeline {
                 script { env.FAILED_STAGE = env.STAGE_NAME }
                 // env.TAG was normalized with normalizeSemver in Resolve services.
                 script { ci.deploy('prod', env.TAG) }
-            }
-            post {
-                failure {
-                    // Preserve the real stage if the stage body aborted before the
-                    // entry capture could be observed by the global post block.
-                    script { if (!env.FAILED_STAGE?.trim()) env.FAILED_STAGE = env.STAGE_NAME }
-                }
             }
         }
     }
